@@ -1,0 +1,1647 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="أذكار الصباح والمساء في صفحة عربية خفيفة مع عدادات تحفظ التقدم محليًا.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f5ef" id="theme-color">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="أذكار المسلم">
+  <title>أذكار المسلم — الصباح والمساء</title>
+  <script>
+    (() => {
+      try {
+        const saved = localStorage.getItem("athkar-theme");
+        const theme = ["light", "dark", "system"].includes(saved) ? saved : "system";
+        const dark = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.resolvedTheme = dark ? "dark" : "light";
+      } catch (_) {}
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --background: #f7f5ef;
+      --background-glow: #eef7f7;
+      --surface: #fffefa;
+      --surface-raised: #ffffff;
+      --text-primary: #18232d;
+      --text-secondary: #69747d;
+      --reference: #15557a;
+      --accent: #137d91;
+      --accent-strong: #0d6879;
+      --accent-soft: #e2f1f1;
+      --border: #deddd5;
+      --divider: #c9d7d9;
+      --completed: #327557;
+      --completed-soft: #e8f2e9;
+      --warning: #8a622c;
+      --warning-soft: #fbf1dd;
+      --focus: #176f87;
+      --shadow: 0 14px 38px rgba(35, 49, 58, 0.08);
+      --shadow-soft: 0 6px 22px rgba(35, 49, 58, 0.06);
+      --radius-xl: 1.75rem;
+      --radius-lg: 1.25rem;
+      --content-width: 49rem;
+      --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Traditional Arabic", Tahoma, Arial, sans-serif;
+    }
+
+    :root[data-resolved-theme="dark"] {
+      color-scheme: dark;
+      --background: #202c38;
+      --background-glow: #263b47;
+      --surface: #293946;
+      --surface-raised: #30414f;
+      --text-primary: #f6f3ec;
+      --text-secondary: #aeb8c1;
+      --reference: #28b6d2;
+      --accent: #23b4cf;
+      --accent-strong: #6bd2e2;
+      --accent-soft: #183f4a;
+      --border: #435361;
+      --divider: #536775;
+      --completed: #70c58d;
+      --completed-soft: #254838;
+      --warning: #e0bc70;
+      --warning-soft: #4b4028;
+      --focus: #75d7e7;
+      --shadow: 0 18px 48px rgba(4, 11, 18, 0.22);
+      --shadow-soft: 0 8px 28px rgba(4, 11, 18, 0.16);
+    }
+
+    body[data-period="evening"] {
+      --accent: #b85f59;
+      --accent-strong: #914640;
+      --accent-soft: #f7e6e3;
+      --divider: #e6c2bf;
+      --focus: #a9514b;
+      --reference: #143872;
+      --background-glow: #faeeee;
+    }
+
+    :root[data-resolved-theme="dark"] body[data-period="evening"] {
+      --accent: #ef8d86;
+      --accent-strong: #ffc1bb;
+      --accent-soft: #4c302f;
+      --divider: #704b4a;
+      --focus: #ffaaa4;
+      --reference: #8cc7ef;
+      --background-glow: #3b3038;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      min-width: 20rem;
+      scroll-behavior: smooth;
+      background: var(--background);
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% -10rem, var(--background-glow), transparent 34rem),
+        var(--background);
+      color: var(--text-primary);
+      font-family: var(--font-arabic);
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    button, select { font: inherit; }
+    button, select, a { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+
+    .skip-link {
+      position: fixed;
+      inset-block-start: 0.5rem;
+      inset-inline-start: 0.5rem;
+      z-index: 100;
+      padding: 0.7rem 1rem;
+      border-radius: 0.75rem;
+      background: var(--text-primary);
+      color: var(--surface);
+      transform: translateY(-150%);
+      transition: transform 120ms ease;
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .app-shell {
+      width: min(100%, var(--content-width));
+      margin-inline: auto;
+      padding: max(1rem, env(safe-area-inset-top)) clamp(0.75rem, 3.5vw, 1.5rem) max(2rem, env(safe-area-inset-bottom));
+    }
+
+    .app-header { margin-block-end: 1.15rem; }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.45rem 0.35rem 1.15rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.2rem;
+      color: var(--accent-strong);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 8vw, 2.35rem);
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .theme-wrap {
+      position: relative;
+      flex: none;
+    }
+
+    .theme-wrap::before {
+      content: "◐";
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 0.72rem;
+      z-index: 1;
+      color: var(--text-secondary);
+      font-family: Arial, sans-serif;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .theme-select {
+      min-height: 2.75rem;
+      padding: 0.5rem 2.2rem 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      appearance: none;
+      background: var(--surface-raised);
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-soft);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .period-tabs {
+      position: sticky;
+      inset-block-start: max(0.65rem, env(safe-area-inset-top));
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+      padding: 0.35rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .period-tab {
+      display: inline-flex;
+      min-height: 3.15rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.55rem;
+      padding: 0.55rem 0.8rem;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+      transition: color 150ms ease, background-color 150ms ease, transform 100ms ease;
+    }
+
+    .period-tab[aria-selected="true"] {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .period-tab:active { transform: scale(0.985); }
+
+    .period-icon {
+      width: 1.2rem;
+      height: 1.2rem;
+      flex: none;
+    }
+
+    .session-summary {
+      margin-block-start: 0.85rem;
+      padding: 1.05rem 1.1rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .session-title {
+      margin: 0;
+      font-size: clamp(1.2rem, 5vw, 1.55rem);
+      line-height: 1.3;
+    }
+
+    .session-progress-copy {
+      margin: 0.22rem 0 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 650;
+    }
+
+    .session-reset,
+    .card-reset {
+      display: inline-flex;
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.32rem;
+      padding: 0.4rem 0.68rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-raised);
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 120ms ease, transform 100ms ease, border-color 120ms ease;
+    }
+
+    .session-reset:active,
+    .card-reset:active { transform: scale(0.96); }
+
+    .session-reset:disabled,
+    .card-reset:disabled {
+      opacity: 0.36;
+      cursor: default;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 0.34rem;
+      margin-block-start: 0.9rem;
+      overflow: hidden;
+      border: 0;
+      border-radius: 999px;
+      appearance: none;
+      background: var(--border);
+    }
+
+    .progress-track::-webkit-progress-bar {
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .progress-track::-webkit-progress-value {
+      border-radius: 999px;
+      background: var(--accent);
+      transition: width 220ms ease;
+    }
+
+    .progress-track::-moz-progress-bar {
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .session-summary.is-complete .progress-track::-webkit-progress-value { background: var(--completed); }
+    .session-summary.is-complete .progress-track::-moz-progress-bar { background: var(--completed); }
+
+    main { display: block; }
+
+    .athkar-list {
+      position: relative;
+      isolation: isolate;
+      block-size: clamp(30rem, 68vh, 38rem);
+      block-size: clamp(30rem, 68svh, 38rem);
+      margin: 0 0 1.35rem;
+      padding: 0 0 1rem;
+      list-style: none;
+      scroll-margin-block-start: 5.5rem;
+    }
+
+    .athkar-list::before,
+    .athkar-list::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset-block-end: 0.1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      background: color-mix(in srgb, var(--surface) 82%, var(--background));
+      box-shadow: var(--shadow-soft);
+      pointer-events: none;
+    }
+
+    .athkar-list::before {
+      inset-block-start: 1rem;
+      inset-inline: 1.15rem;
+      opacity: 0.48;
+    }
+
+    .athkar-list::after {
+      inset-block-start: 0.55rem;
+      inset-block-end: 0.55rem;
+      inset-inline: 0.58rem;
+      opacity: 0.72;
+    }
+
+    .athkar-list > li {
+      position: relative;
+      z-index: 2;
+      block-size: 100%;
+    }
+
+    .athkar-list > li[hidden] { display: none; }
+    .athkar-list.is-entering { animation: section-in 180ms ease both; }
+    .athkar-list > li.card-enter-forward { animation: card-forward 210ms ease both; }
+    .athkar-list > li.card-enter-back { animation: card-back 210ms ease both; }
+
+    .deck-navigation {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.75rem;
+      margin-block-start: 0.3rem;
+    }
+
+    .deck-button {
+      display: inline-flex;
+      min-width: 6.2rem;
+      min-height: 3rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.55rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-soft);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 100ms ease, opacity 120ms ease, border-color 120ms ease;
+    }
+
+    .deck-button:first-child { justify-self: start; }
+    .deck-button:last-child { justify-self: end; }
+    .deck-button:active { transform: scale(0.97); }
+    .deck-button:disabled { opacity: 0.34; cursor: default; }
+
+    .card-position {
+      min-width: 5.4rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .deck-hint {
+      margin: 0.75rem 0 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.77rem;
+      text-align: center;
+    }
+
+    .dhikr-card {
+      position: relative;
+      isolation: isolate;
+      block-size: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      overflow: hidden;
+      cursor: pointer;
+      padding: clamp(1.15rem, 4vw, 1.75rem);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      transform: translateZ(0);
+      transition: transform 110ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .dhikr-card::before {
+      content: "";
+      position: absolute;
+      inset-block: 1.1rem;
+      inset-inline-start: 0;
+      width: 0.22rem;
+      border-radius: 999px;
+      background: var(--divider);
+      transition: background-color 180ms ease, width 180ms ease;
+    }
+
+    .dhikr-card:has(.card-tap-target:active) { transform: scale(0.993); }
+
+    .dhikr-card:has(.card-tap-target:focus-visible),
+    .dhikr-card:focus-within {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 24%, transparent), var(--shadow-soft);
+    }
+
+    .dhikr-card.is-complete {
+      border-color: color-mix(in srgb, var(--completed) 48%, var(--border));
+      background: color-mix(in srgb, var(--completed-soft) 42%, var(--surface));
+    }
+
+    .dhikr-card.is-complete::before {
+      width: 0.3rem;
+      background: var(--completed);
+    }
+
+
+    .dhikr-card.needs-review {
+      border-style: dashed;
+      border-color: color-mix(in srgb, var(--warning) 60%, var(--border));
+      background: color-mix(in srgb, var(--warning-soft) 55%, var(--surface));
+      display: block;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      scrollbar-gutter: stable;
+      cursor: default;
+    }
+
+    .card-index {
+      display: inline-flex;
+      min-width: 2rem;
+      min-height: 2rem;
+      align-items: center;
+      justify-content: center;
+      margin-block-end: 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .review-badge {
+      display: inline-flex;
+      min-height: 2rem;
+      align-items: center;
+      margin-inline-start: 0.45rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--warning-soft);
+      color: var(--warning);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .dhikr-prefix {
+      margin: 0 0 0.85rem;
+      color: var(--accent-strong);
+      font-size: clamp(1.2rem, 5vw, 1.58rem);
+      font-weight: 800;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .dhikr-text {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      font-weight: 560;
+      line-height: 1.95;
+      text-align: start;
+      unicode-bidi: plaintext;
+    }
+
+    .dhikr-card.quran .dhikr-text {
+      font-size: clamp(1.3rem, 5.6vw, 1.82rem);
+      line-height: 2.05;
+    }
+
+    .dhikr-details {
+      display: grid;
+      gap: 0.7rem;
+      margin-block-start: 1.15rem;
+    }
+
+    .dhikr-detail {
+      margin: 0;
+      color: var(--reference);
+      font-size: clamp(1rem, 4.1vw, 1.27rem);
+      font-weight: 600;
+      line-height: 1.85;
+      text-align: start;
+      unicode-bidi: plaintext;
+    }
+
+    .dhikr-note {
+      padding: 0.9rem 1rem;
+      border-inline-start: 0.2rem solid var(--divider);
+      border-radius: 0.5rem;
+      background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+    }
+
+    .requirement-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-block-start: 1.2rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--divider);
+    }
+
+    .count-requirement {
+      margin: 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.83rem;
+      font-weight: 750;
+    }
+
+    .counter-cluster {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.55rem;
+    }
+
+    .counter-status {
+      display: inline-flex;
+      min-width: 5.3rem;
+      min-height: 2.75rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.48rem 0.82rem;
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.98rem;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .counter-status.numeric { direction: ltr; }
+    .counter-check { display: none; color: var(--completed); }
+    .is-complete .counter-status {
+      border-color: color-mix(in srgb, var(--completed) 55%, var(--border));
+      background: var(--completed-soft);
+      color: var(--completed);
+    }
+    .is-complete .counter-check { display: inline; }
+
+    .target-control {
+      position: relative;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+
+    .target-select {
+      min-width: 4.5rem;
+      min-height: 2.75rem;
+      padding: 0.35rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .card-reset {
+      position: relative;
+      z-index: 3;
+    }
+
+    .card-tap-target {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: inherit;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: none;
+    }
+
+    .card-tap-target[aria-disabled="true"] { cursor: default; }
+    .dhikr-card:has(.card-tap-target[aria-disabled="true"]) { cursor: default; }
+
+    .card-content,
+    .requirement-row { position: relative; }
+
+    .card-content {
+      z-index: 1;
+      min-block-size: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .requirement-row {
+      z-index: 3;
+      pointer-events: none;
+    }
+    .requirement-row .card-reset,
+    .requirement-row .target-control { pointer-events: auto; }
+
+    .review-copy {
+      margin: 0;
+      color: var(--warning);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.8;
+    }
+
+    .privacy-note {
+      margin: 1.5rem auto 0;
+      padding: 0.85rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.77rem;
+      text-align: center;
+    }
+
+    dialog {
+      width: min(calc(100% - 2rem), 27rem);
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 1.4rem;
+      background: var(--surface-raised);
+      color: var(--text-primary);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    dialog::backdrop {
+      background: rgba(12, 18, 23, 0.52);
+      backdrop-filter: blur(3px);
+    }
+
+    .dialog-body { padding: 1.4rem 1.4rem 1.1rem; }
+    .dialog-body h2 { margin: 0 0 0.45rem; font-size: 1.35rem; }
+    .dialog-body p { margin: 0; color: var(--text-secondary); line-height: 1.75; }
+    .dialog-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      padding: 0 1.4rem 1.4rem;
+    }
+
+    .dialog-button {
+      min-height: 3rem;
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .dialog-button.danger {
+      border-color: color-mix(in srgb, #a84c45 52%, var(--border));
+      background: color-mix(in srgb, #a84c45 12%, var(--surface));
+      color: #a84c45;
+    }
+
+    :root[data-resolved-theme="dark"] .dialog-button.danger { color: #ffaaa3; }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    @keyframes section-in {
+      from { opacity: 0; transform: translateY(0.35rem); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes card-forward {
+      from { opacity: 0; transform: translateX(-1rem) scale(0.988); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes card-back {
+      from { opacity: 0; transform: translateX(1rem) scale(0.988); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @media (min-width: 46rem) {
+      .app-shell { padding-inline: 1.75rem; }
+      .brand-row { padding-block-start: 1.2rem; }
+      .session-summary { padding: 1.25rem 1.35rem 1.15rem; }
+      .dhikr-card { padding: 1.8rem 2rem; }
+    }
+
+    @media (max-width: 23rem) {
+      .app-shell { padding-inline: 0.62rem; }
+      .brand-row { align-items: flex-end; }
+      .eyebrow { display: none; }
+      .theme-select { width: 5.8rem; }
+      .period-tab { min-height: 3rem; padding-inline: 0.5rem; }
+      .session-summary { padding-inline: 0.85rem; }
+      .session-reset span { display: none; }
+      .dhikr-card { border-radius: 1.4rem; }
+      .dhikr-text { line-height: 1.88; }
+      .requirement-row { align-items: flex-start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (prefers-contrast: more) {
+      :root { --border: #7b8083; }
+      .dhikr-card, .session-summary, .period-tabs { border-width: 2px; }
+    }
+  </style>
+</head>
+<body data-period="morning">
+  <a class="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">وِرْدُكَ اليومي</p>
+          <h1>أذكار المسلم</h1>
+        </div>
+        <div class="theme-wrap">
+          <label class="sr-only" for="theme-select">اختيار المظهر</label>
+          <select class="theme-select" id="theme-select" aria-label="اختيار المظهر">
+            <option value="system">تلقائي</option>
+            <option value="light">فاتح</option>
+            <option value="dark">داكن</option>
+          </select>
+        </div>
+      </div>
+
+      <nav class="period-tabs" role="tablist" aria-label="اختيار وقت الأذكار">
+        <button class="period-tab" id="morning-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="true" data-period="morning">
+          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
+          </svg>
+          <span>أذكار الصباح</span>
+        </button>
+        <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
+          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
+          </svg>
+          <span>أذكار المساء</span>
+        </button>
+      </nav>
+
+      <section class="session-summary" id="session-summary" aria-labelledby="session-title">
+        <div class="summary-row">
+          <div>
+            <h2 class="session-title" id="session-title">أذكار الصباح</h2>
+            <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
+          </div>
+          <button class="session-reset" id="session-reset" type="button" disabled aria-label="إعادة أذكار الصباح">
+            <span aria-hidden="true">↻</span><span>إعادة الكل</span>
+          </button>
+        </div>
+        <progress class="progress-track" id="session-progress" value="0" max="25" aria-label="تقدم أذكار الصباح"></progress>
+      </section>
+    </header>
+
+    <main id="main-content">
+      <section id="athkar-panel" role="tabpanel" aria-labelledby="morning-tab">
+        <ol class="athkar-list" id="athkar-list" aria-label="بطاقات أذكار الصباح"></ol>
+        <nav class="deck-navigation" aria-label="التنقل بين بطاقات الأذكار">
+          <button class="deck-button" id="previous-card" type="button" disabled>
+            <span aria-hidden="true">→</span><span>السابق</span>
+          </button>
+          <output class="card-position" id="card-position" aria-live="polite">١ من ٢٥</output>
+          <button class="deck-button" id="next-card" type="button" disabled>
+            <span>التالي</span><span aria-hidden="true">←</span>
+          </button>
+        </nav>
+        <p class="deck-hint">يظهر الذكر التالي تلقائيًا بعد إكمال الحالي.</p>
+      </section>
+    </main>
+
+  </div>
+
+  <dialog id="confirm-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-copy">
+    <div class="dialog-body">
+      <h2 id="dialog-title">إعادة العداد؟</h2>
+      <p id="dialog-copy">سيعود العداد إلى الصفر.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="dialog-cancel" type="button">إلغاء</button>
+      <button class="dialog-button danger" id="dialog-confirm" type="button">إعادة</button>
+    </div>
+  </dialog>
+
+  <div class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript><p class="privacy-note">يلزم تفعيل JavaScript لتشغيل العدادات وحفظ التقدّم.</p></noscript>
+
+  <script>
+    "use strict";
+
+    const ayatAlKursi = {
+      quran: true,
+      text: `اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَؤُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ ﴿٢٥٥﴾`,
+      details: [
+        `من قالها حين يصبح أجير من الجن حتى يمسي ومن قالها حين يمسي أجير منهم حتى يصبح. (رواه الحاكم)`,
+        `«البقرة»`
+      ]
+    };
+
+    const alIkhlas = {
+      quran: true,
+      prefix: `بسم الله الرحمن الرحيم`,
+      text: `قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾`,
+      details: [`«الإخلاص»`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const alFalaq = {
+      quran: true,
+      prefix: `بسم الله الرحمن الرحيم`,
+      text: `قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ﴿١﴾ مِنْ شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ﴿٤﴾ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾`,
+      details: [`«الفلق»`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const anNas = {
+      quran: true,
+      prefix: `بسم الله الرحمن الرحيم`,
+      text: `قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَٰهِ النَّاسِ ﴿٣﴾ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ﴿٥﴾ مِنَ الْجِنَّةِ وَالنَّاسِ ﴿٦﴾`,
+      details: [`«الناس»`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const sayyidAlIstighfar = {
+      text: `اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي، فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ.`,
+      details: [`من قالها موقنًا بها حين يصبح فمات من يومه دخل الجنة، ومن قالها موقنًا بها حين يمسي فمات من ليلته دخل الجنة. (رواه البخاري)`]
+    };
+
+    const healthDhikr = {
+      text: `اللَّهُمَّ عَافِنِي فِي بَدَنِي، اللَّهُمَّ عَافِنِي فِي سَمْعِي، اللَّهُمَّ عَافِنِي فِي بَصَرِي، لَا إِلَهَ إِلَّا أَنْتَ، اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْكُفْرِ وَالْفَقْرِ وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ، لَا إِلَهَ إِلَّا أَنْتَ.`,
+      details: [`(رواه أحمد)`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const worryDhikr = {
+      text: `اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَأَعُوذُ بِكَ مِنَ الْعَجْزِ وَالْكَسَلِ، وَأَعُوذُ بِكَ مِنَ الْجُبْنِ وَالْبُخْلِ، وَأَعُوذُ بِكَ مِنْ غَلَبَةِ الدَّيْنِ وَقَهْرِ الرِّجَالِ.`,
+      details: [`(رواه أبوداود)`]
+    };
+
+    const hasbiAllah = {
+      text: `حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ، وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ.`,
+      details: [
+        `من قالها حين يصبح وحين يمسي سبع مرات كفاه الله ما أهمه من أمر الدنيا والآخرة. (رواه ابن السني)`,
+        `** فتاوى ابن باز: هذا الحديث ورد عن النبي ﷺ لكنه ضعيف، حديث ضعيف وهذا الكلام طيب إذا كرره الإنسان كثيرًا طيب، حسبي الله لا إله إلا هو عليه توكلت وهو رب العرش العظيم هذا آخر سورة التوبة، هذا كلام طيب وعظيم إذا قاله الإنسان وكرره كلام طيب، لكن كونه ثبت عن النبي ﷺ من كرره سبعًا يحصل له ما ذكر هذا فيه ضعف ليس بثابت عن النبي ﷺ.`
+      ],
+      noteIndex: 1,
+      count: 7,
+      countLabel: `سبع مرات`
+    };
+
+    const pardonDhikr = {
+      text: `اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ وَمِنْ خَلْفِي، وَعَنْ يَمِينِي وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي.`,
+      details: [`(رواه أبوداود).`]
+    };
+
+    const unseenDhikr = {
+      text: `اللَّهُمَّ عَالِمَ الْغَيْبِ وَالشَّهَادَةِ، فَاطِرَ السَّمَوَاتِ وَالْأَرْضِ، رَبَّ كُلِّ شَيْءٍ وَمَلِيكَهُ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَعُوذُ بِكَ مِنْ شَرِّ نَفْسِي، وَمِنْ شَرِّ الشَّيْطَانِ وَشِرْكِهِ، وَأَنْ أَقْتَرِفَ عَلَى نَفْسِي سُوءًا أَوْ أَجُرَّهُ إِلَى مُسْلِمٍ.`,
+      details: [`(رواه الترمذي)`]
+    };
+
+    const protectionDhikr = {
+      text: `بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ، فِي الْأَرْضِ، وَلَا فِي السَّمَاءِ، وَهُوَ السَّمِيعُ الْعَلِيمُ.`,
+      details: [`من قالها ثلاثًا إذا أصبح و ثلاثًا إذا أمسى لم يضره شيء. (رواه ابن ماجة)`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const contentmentDhikr = {
+      text: `رَضِيتُ بِاللَّهِ رَبًّا، وَبِالْإِسْلَامِ دِينًا، وَبِمُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ نَبِيًّا.`,
+      details: [`من قالها ثلاثًا حين يصبح و ثلاثًا حين يمسي كان حقًا على الله أن يرضيه يوم القيامة. (رواه أحمد)`],
+      count: 3,
+      countLabel: `ثلاث مرات`
+    };
+
+    const yaHayyu = {
+      text: `يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ، وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ.`,
+      details: [`(رواه الترمذي)`]
+    };
+
+    const tawhidDhikr = {
+      text: `لَا إِلَهَ إِلَّا اللَّهُ، وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.`,
+      details: [
+        `يقولها عشر مرات أو مرة واحدة عند الكسل. (رواه أبو داود).`,
+        `من قالها مائة مرة في يوم كانت له عدل عشر رقاب وكتبت له مائة حسنة ومحيت عنه مائة سيئة وكانت له حرزًا من الشيطان يومه ذلك حتى يمسي ولم يأت أحد بأفضل مما جاء به إلا أحد عمل أكثر من ذلك. (رواه الترمذي)`
+      ],
+      targetOptions: [1, 10, 100],
+      defaultTarget: 100,
+      countLabel: `عشر مرات أو مائة مرة`
+    };
+
+    const tasbihHundred = {
+      text: `سُبْحَانَ اللَّهِ وَبِحَمْدِهِ.`,
+      details: [`من قالها مائة مرة حين يصبح وحين يمسي لم يأت احد يوم القيامة بأفضل مما جاء به إلا احد قال مثلما قال أو زاد عليه. (رواه مسلم)`],
+      count: 100,
+      countLabel: `مائة مرة`
+    };
+
+    const salatUponProphet = {
+      text: `اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.`,
+      details: [
+        `الله سبحانه وتعالى يقول في كتابه العزيز: إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا (سورة الأحزاب/56)`,
+        `وقال عليه الصلاة والسلام في الحديث الصحيح: من صلى علي صلاة واحدة صلى الله عليه بها عشرًا.`
+      ],
+      count: 10,
+      countLabel: `عشر مرات`
+    };
+
+    const morningAthkar = [
+      { ...ayatAlKursi, id: "morning-01" },
+      { ...alIkhlas, id: "morning-02" },
+      { ...alFalaq, id: "morning-03" },
+      { ...anNas, id: "morning-04" },
+      {
+        id: "morning-05",
+        text: `أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ لَا إِلَهَ إِلَّا اللَّهُ، وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذَا الْيَوْمِ وَخَيْرَ مَا بَعْدَهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذَا الْيَوْمِ وَشَرِّ مَا بَعْدَهُ رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ. وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ.`,
+        details: [`(رواه مسلم)`]
+      },
+      {
+        id: "morning-06",
+        text: `اللَّهُمَّ بِكَ أَصْبَحْنَا، وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ.`,
+        details: [`(رواه الترمذي)`]
+      },
+      { ...sayyidAlIstighfar, id: "morning-07" },
+      {
+        id: "morning-08",
+        text: `اللَّهُمَّ إِنِّي أَصْبَحْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلَائِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لَا إِلَهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.`,
+        details: [`من قالها حين يصبح أو يمسي أربع مرات أعتقه الله من النار. (رواه أبو داود)`],
+        count: 4,
+        countLabel: `أربع مرات`
+      },
+      {
+        id: "morning-09",
+        text: `اللَّهُمَّ مَا أَصْبَحَ بِي مِنْ نِعْمَةٍ، أَوْ بِأَحَدٍ مِنْ خَلْقِكَ، فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.`,
+        details: [`من قالها حين يصبح فقد أدى شكر يومه ومن قالها حين يمسي فقد أدى شكر ليلته (رواه أبوداود)`]
+      },
+      { ...healthDhikr, id: "morning-10" },
+      { ...worryDhikr, id: "morning-11" },
+      { ...hasbiAllah, id: "morning-12" },
+      { ...pardonDhikr, id: "morning-13" },
+      { ...unseenDhikr, id: "morning-14" },
+      { ...protectionDhikr, id: "morning-15" },
+      { ...contentmentDhikr, id: "morning-16" },
+      { ...yaHayyu, id: "morning-17" },
+      {
+        id: "morning-18",
+        text: `أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذَا الْيَوْمِ فَتْحَهُ وَنَصْرَهُ وَنُورَهُ وَبَرَكَتَهُ وَهُدَاهُ، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهِ وَشَرِّ مَا بَعْدَهُ.`,
+        details: [`(رواه أبوداود)`]
+      },
+      {
+        id: "morning-19",
+        text: `أَصْبَحْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.`,
+        details: [`(رواه أحمد)`]
+      },
+      { ...tawhidDhikr, id: "morning-20" },
+      { ...tasbihHundred, id: "morning-21" },
+      {
+        id: "morning-22",
+        text: `سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، عَدَدَ خَلْقِهِ وَرِضَا نَفْسِهِ وَزِنَةَ عَرْشِهِ وَمِدَادَ كَلِمَاتِهِ.`,
+        details: [`(يقولها ثلاث مرات إذا أصبح. رواه مسلم)`],
+        count: 3,
+        countLabel: `ثلاث مرات`
+      },
+      {
+        id: "morning-23",
+        text: `اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا.`,
+        details: [`(رواه ابن ماجة)`]
+      },
+      {
+        id: "morning-24",
+        text: `أَسْتَغْفِرُ اللَّهَ وَأَتُوبُ إِلَيْهِ.`,
+        details: [`(رواه البخاري)`],
+        count: 100,
+        countLabel: `مائة مرة`
+      },
+      { ...salatUponProphet, id: "morning-25" }
+    ];
+
+    const eveningAthkar = [
+      { ...ayatAlKursi, id: "evening-01" },
+      { ...alIkhlas, id: "evening-02" },
+      { ...alFalaq, id: "evening-03" },
+      { ...anNas, id: "evening-04" },
+      {
+        id: "evening-05",
+        text: `أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ لَا إِلَهَ إِلَّا اللَّهُ، وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ رَبِّ أَسْأَلُكَ خَيْرَ مَا فِي هَذِهِ اللَّيْلَةِ وَخَيْرَ مَا بَعْدَهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِي هَذِهِ اللَّيْلَةِ وَشَرِّ مَا بَعْدَهَا، رَبِّ أَعُوذُ بِكَ مِنَ الْكَسَلِ. وَسُوءِ الْكِبَرِ، رَبِّ أَعُوذُ بِكَ مِنْ عَذَابٍ فِي النَّارِ وَعَذَابٍ فِي الْقَبْرِ.`,
+        details: [`(رواه مسلم)`]
+      },
+      {
+        id: "evening-06",
+        text: `اللَّهُمَّ بِكَ أَمْسَيْنَا، وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا، وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ.`,
+        details: [`(رواه الترمذي)`]
+      },
+      { ...sayyidAlIstighfar, id: "evening-07" },
+      {
+        id: "evening-08",
+        text: `اللَّهُمَّ إِنِّي أَمْسَيْتُ أُشْهِدُكَ، وَأُشْهِدُ حَمَلَةَ عَرْشِكَ، وَمَلَائِكَتَكَ، وَجَمِيعَ خَلْقِكَ، أَنَّكَ أَنْتَ اللَّهُ لَا إِلَهَ إِلَّا أَنْتَ وَحْدَكَ لَا شَرِيكَ لَكَ، وَأَنَّ مُحَمَّدًا عَبْدُكَ وَرَسُولُكَ.`,
+        details: [`من قالها حين يصبح أو يمسي أربع مرات أعتقه الله من النار. (رواه أبو داود)`],
+        count: 4,
+        countLabel: `أربع مرات`
+      },
+      {
+        id: "evening-09",
+        text: `اللَّهُمَّ مَا أَمْسَى بِي مِنْ نِعْمَةٍ، أَوْ بِأَحَدٍ مِنْ خَلْقِكَ، فَمِنْكَ وَحْدَكَ لَا شَرِيكَ لَكَ، فَلَكَ الْحَمْدُ وَلَكَ الشُّكْرُ.`,
+        details: [`من قالها حين يصبح فقد أدى شكر يومه ومن قالها حين يمسي فقد أدى شكر ليلته (رواه أبوداود)`]
+      },
+      { ...healthDhikr, id: "evening-10" },
+      { ...worryDhikr, id: "evening-11" },
+      { ...hasbiAllah, id: "evening-12" },
+      { ...pardonDhikr, id: "evening-13" },
+      { ...unseenDhikr, id: "evening-14" },
+      { ...protectionDhikr, id: "evening-15" },
+      { ...contentmentDhikr, id: "evening-16" },
+      { ...yaHayyu, id: "evening-17" },
+      {
+        id: "evening-18",
+        text: `أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ رَبِّ الْعَالَمِينَ، اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَ هَذِهِ اللَّيْلَةِ، فَتْحَهَا وَنَصْرَهَا وَنُورَهَا وَبَرَكَتَهَا وَهُدَاهَا، وَأَعُوذُ بِكَ مِنْ شَرِّ مَا فِيهَا وَشَرِّ مَا بَعْدَهَا.`,
+        details: [`(رواه أبوداود)`]
+      },
+      {
+        id: "evening-19",
+        text: `أَمْسَيْنَا عَلَى فِطْرَةِ الْإِسْلَامِ، وَعَلَى كَلِمَةِ الْإِخْلَاصِ، وَعَلَى دِينِ نَبِيِّنَا مُحَمَّدٍ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ، وَعَلَى مِلَّةِ أَبِينَا إِبْرَاهِيمَ، حَنِيفًا مُسْلِمًا وَمَا كَانَ مِنَ الْمُشْرِكِينَ.`,
+        details: [`(رواه أحمد)`]
+      },
+      { ...tawhidDhikr, id: "evening-20" },
+      { ...tasbihHundred, id: "evening-21" },
+      {
+        id: "evening-22",
+        text: `أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.`,
+        details: [`(من قالها حين يمسي ثلاث مرات لا تضره حُمَّةٌ هذه الليلة)`],
+        count: 3,
+        countLabel: `ثلاث مرات`
+      },
+      { ...salatUponProphet, id: "evening-23" }
+    ];
+
+    const collections = { morning: morningAthkar, evening: eveningAthkar };
+    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء" };
+    const storageKey = "athkar-progress-v1";
+    const numberFormatter = new Intl.NumberFormat("ar-EG", { useGrouping: false });
+    const root = document.documentElement;
+    const body = document.body;
+    const list = document.getElementById("athkar-list");
+    const panel = document.getElementById("athkar-panel");
+    const previousCardButton = document.getElementById("previous-card");
+    const nextCardButton = document.getElementById("next-card");
+    const cardPosition = document.getElementById("card-position");
+    const sessionTitle = document.getElementById("session-title");
+    const progressCopy = document.getElementById("session-progress-copy");
+    const progressBar = document.getElementById("session-progress");
+    const sessionSummary = document.getElementById("session-summary");
+    const sessionReset = document.getElementById("session-reset");
+    const themeSelect = document.getElementById("theme-select");
+    const themeColor = document.getElementById("theme-color");
+    const liveRegion = document.getElementById("live-region");
+    const dialog = document.getElementById("confirm-dialog");
+    const dialogTitle = document.getElementById("dialog-title");
+    const dialogCopy = document.getElementById("dialog-copy");
+    const dialogConfirm = document.getElementById("dialog-confirm");
+    const dialogCancel = document.getElementById("dialog-cancel");
+    const motionIsReduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const colorScheme = matchMedia("(prefers-color-scheme: dark)");
+    const currentIndices = { morning: null, evening: null };
+
+    let activePeriod = location.hash === "#evening" ? "evening" : "morning";
+    let pendingConfirmation = null;
+    let advanceTimer = null;
+    let state = loadState();
+
+    function emptyState() {
+      return {
+        progress: { morning: {}, evening: {} },
+        targets: { morning: {}, evening: {} }
+      };
+    }
+
+    function loadState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(storageKey));
+        if (!parsed || typeof parsed !== "object") return emptyState();
+        return {
+          progress: {
+            morning: parsed.progress?.morning && typeof parsed.progress.morning === "object" ? parsed.progress.morning : {},
+            evening: parsed.progress?.evening && typeof parsed.progress.evening === "object" ? parsed.progress.evening : {}
+          },
+          targets: {
+            morning: parsed.targets?.morning && typeof parsed.targets.morning === "object" ? parsed.targets.morning : {},
+            evening: parsed.targets?.evening && typeof parsed.targets.evening === "object" ? parsed.targets.evening : {}
+          }
+        };
+      } catch (_) {
+        return emptyState();
+      }
+    }
+
+    function saveState() {
+      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {}
+    }
+
+    function formatNumber(value) {
+      return numberFormatter.format(value);
+    }
+
+    function targetFor(item, period = activePeriod) {
+      if (item.targetOptions) {
+        const stored = Number(state.targets[period][item.id]);
+        return item.targetOptions.includes(stored) ? stored : item.defaultTarget;
+      }
+      return item.count || 1;
+    }
+
+    function countFor(item, period = activePeriod) {
+      const raw = Number(state.progress[period][item.id]);
+      if (!Number.isFinite(raw) || raw < 0) return 0;
+      return Math.min(Math.floor(raw), targetFor(item, period));
+    }
+
+    function isExplicitlyCounted(item) {
+      return Boolean(item.count || item.targetOptions);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function cardMarkup(item, index) {
+      if (item.review) {
+        return `
+          <li data-card-index="${index}">
+            <article class="dhikr-card needs-review" id="${item.id}" aria-labelledby="${item.id}-title">
+              <span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>
+              <span class="review-badge">بحاجة إلى مراجعة</span>
+              <h3 class="dhikr-text" id="${item.id}-title">${escapeHtml(item.reviewTitle)}</h3>
+              <p class="review-copy">${escapeHtml(item.reviewCopy)}</p>
+            </article>
+          </li>`;
+      }
+
+      const counted = isExplicitlyCounted(item);
+      const target = targetFor(item);
+      const count = countFor(item);
+      const details = (item.details || []).map((detail, detailIndex) =>
+        `<p class="dhikr-detail${detailIndex === item.noteIndex ? " dhikr-note" : ""}">${escapeHtml(detail)}</p>`
+      ).join("");
+      const options = item.targetOptions ? `
+        <label class="target-control">
+          <span>الهدف</span>
+          <select class="target-select" data-target-for="${item.id}" aria-label="اختيار عدد تكرار الذكر ${formatNumber(index + 1)}">
+            ${item.targetOptions.map(option => `<option value="${option}"${option === target ? " selected" : ""}>${formatNumber(option)}</option>`).join("")}
+          </select>
+        </label>` : "";
+      const requirement = item.countLabel
+        ? `<p class="count-requirement">${escapeHtml(item.countLabel)}</p>`
+        : `<p class="count-requirement">ذكر للقراءة</p>`;
+      const visibleStatus = counted
+        ? `<output class="counter-status numeric" id="${item.id}-status"><span class="counter-current">${formatNumber(count)}</span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(target)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`
+        : `<output class="counter-status" id="${item.id}-status"><span class="single-copy">${count ? "تمت القراءة" : "اضغط بعد القراءة"}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
+
+      return `
+        <li data-card-index="${index}">
+          <article class="dhikr-card${item.quran ? " quran" : ""}" id="${item.id}" data-id="${item.id}">
+            <div class="card-content">
+              <span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>
+              ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.prefix)}</p>` : ""}
+              <p class="dhikr-text">${escapeHtml(item.text)}</p>
+              ${details ? `<div class="dhikr-details">${details}</div>` : ""}
+            </div>
+            <div class="requirement-row">
+              <div>
+                ${requirement}
+                ${options}
+              </div>
+              <div class="counter-cluster">
+                ${visibleStatus}
+                <button class="card-reset" type="button" data-reset="${item.id}" aria-label="إعادة عداد الذكر ${formatNumber(index + 1)}"${count === 0 ? " disabled" : ""}>
+                  <span aria-hidden="true">↻</span><span>إعادة</span>
+                </button>
+              </div>
+            </div>
+            <button class="card-tap-target" type="button" data-increment="${item.id}" aria-describedby="${item.id}-status"></button>
+          </article>
+        </li>`;
+    }
+
+    function progressLabel(item, index, count, target) {
+      if (!isExplicitlyCounted(item)) {
+        return count >= 1
+          ? `ذكر ${formatNumber(index + 1)}، تمت قراءته`
+          : `ذكر ${formatNumber(index + 1)}، لم يُعلَّم كمقروء`;
+      }
+      const completed = count >= target;
+      return `ذكر ${formatNumber(index + 1)}، تم تكراره ${formatNumber(count)} من أصل ${formatNumber(target)} مرات${completed ? "، اكتمل" : ""}`;
+    }
+
+    function updateCard(item, card, index, announce = false) {
+      const target = targetFor(item);
+      const count = countFor(item);
+      const completed = count >= target;
+      const status = card.querySelector(".counter-status");
+      const tapTarget = card.querySelector(".card-tap-target");
+      const reset = card.querySelector(".card-reset");
+      const label = progressLabel(item, index, count, target);
+
+      card.classList.toggle("is-complete", completed);
+      reset.disabled = count === 0;
+      tapTarget.setAttribute("aria-disabled", String(completed));
+      tapTarget.setAttribute("aria-label", isExplicitlyCounted(item)
+        ? `زيادة عداد الذكر ${formatNumber(index + 1)}. ${label}`
+        : `${count ? "اكتمل" : "تحديد كمقروء"}، الذكر ${formatNumber(index + 1)}. ${label}`);
+      status.setAttribute("aria-label", label);
+
+      if (isExplicitlyCounted(item)) {
+        status.querySelector(".counter-current").textContent = formatNumber(count);
+        status.querySelector(".counter-target").textContent = formatNumber(target);
+      } else {
+        status.querySelector(".single-copy").textContent = completed ? "تمت القراءة" : "اضغط بعد القراءة";
+      }
+
+      if (announce) liveRegion.textContent = label;
+    }
+
+    function firstIncompleteIndex(period) {
+      const items = collections[period];
+      const index = items.findIndex(item => !item.review && countFor(item, period) < targetFor(item, period));
+      return index === -1 ? Math.max(0, items.length - 1) : index;
+    }
+
+    function updateDeckNavigation() {
+      const items = collections[activePeriod];
+      const index = currentIndices[activePeriod] ?? 0;
+      const item = items[index];
+      const completed = item?.review || countFor(item) >= targetFor(item);
+
+      previousCardButton.disabled = index <= 0;
+      nextCardButton.disabled = index >= items.length - 1 || !completed;
+      cardPosition.textContent = `${formatNumber(index + 1)} من ${formatNumber(items.length)}`;
+      cardPosition.setAttribute("aria-label", `الذكر ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
+      list.setAttribute("aria-label", `بطاقات ${sectionNames[activePeriod]}، الذكر ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
+    }
+
+    function showCard(index, direction = "forward", scrollToCard = false, announce = false) {
+      clearTimeout(advanceTimer);
+      const items = collections[activePeriod];
+      const nextIndex = Math.max(0, Math.min(index, items.length - 1));
+      currentIndices[activePeriod] = nextIndex;
+
+      [...list.children].forEach((listItem, itemIndex) => {
+        const active = itemIndex === nextIndex;
+        listItem.hidden = !active;
+        listItem.classList.remove("card-enter-forward", "card-enter-back");
+        const card = listItem.querySelector(".dhikr-card");
+        if (active) card?.setAttribute("aria-current", "step");
+        else card?.removeAttribute("aria-current");
+      });
+
+      const activeItem = list.children[nextIndex];
+      if (direction && activeItem) {
+        requestAnimationFrame(() => {
+          activeItem.classList.add(direction === "back" ? "card-enter-back" : "card-enter-forward");
+          setTimeout(() => activeItem.classList.remove("card-enter-forward", "card-enter-back"), 240);
+        });
+      }
+
+      updateDeckNavigation();
+      if (announce) {
+        liveRegion.textContent = `الذكر ${formatNumber(nextIndex + 1)} من ${formatNumber(items.length)}`;
+      }
+      if (scrollToCard) {
+        requestAnimationFrame(() => list.scrollIntoView({
+          behavior: motionIsReduced.matches ? "auto" : "smooth",
+          block: "start"
+        }));
+      }
+    }
+
+    function scheduleAdvance(item, index) {
+      if (index >= collections[activePeriod].length - 1) return;
+      const period = activePeriod;
+      advanceTimer = setTimeout(() => {
+        if (activePeriod !== period || currentIndices[period] !== index) return;
+        if (countFor(item, period) < targetFor(item, period)) return;
+        showCard(index + 1, "forward", true, true);
+      }, motionIsReduced.matches ? 20 : 320);
+    }
+
+    function renderCards() {
+      const items = collections[activePeriod];
+      if (!Number.isInteger(currentIndices[activePeriod])) {
+        currentIndices[activePeriod] = firstIncompleteIndex(activePeriod);
+      }
+      currentIndices[activePeriod] = Math.min(currentIndices[activePeriod], items.length - 1);
+      list.innerHTML = items.map(cardMarkup).join("");
+      list.classList.remove("is-entering");
+      requestAnimationFrame(() => list.classList.add("is-entering"));
+
+      items.forEach((item, index) => {
+        if (item.review) return;
+        const card = document.getElementById(item.id);
+        const tapTarget = card.querySelector(".card-tap-target");
+        const resetButton = card.querySelector(".card-reset");
+        const targetSelect = card.querySelector(".target-select");
+
+        updateCard(item, card, index);
+        tapTarget.addEventListener("click", () => increment(item, card, index));
+        card.addEventListener("click", event => {
+          if (event.target.closest(".card-tap-target, .card-reset, .target-control")) return;
+          increment(item, card, index);
+        });
+        resetButton.addEventListener("click", () => requestItemReset(item, card, index));
+
+        if (targetSelect) {
+          targetSelect.addEventListener("change", event => {
+            const wasComplete = countFor(item) >= targetFor(item);
+            const target = Number(event.target.value);
+            if (!item.targetOptions.includes(target)) return;
+            state.targets[activePeriod][item.id] = target;
+            state.progress[activePeriod][item.id] = Math.min(countFor(item), target);
+            saveState();
+            updateCard(item, card, index, true);
+            updateSessionProgress();
+            updateDeckNavigation();
+            if (!wasComplete && countFor(item) >= targetFor(item)) scheduleAdvance(item, index);
+          });
+        }
+      });
+
+      showCard(currentIndices[activePeriod], "forward");
+      updateSessionProgress();
+    }
+
+    function increment(item, card, index) {
+      const target = targetFor(item);
+      const before = countFor(item);
+      if (before >= target) return;
+
+      const next = before + 1;
+      state.progress[activePeriod][item.id] = next;
+      saveState();
+      updateCard(item, card, index, true);
+      updateSessionProgress();
+      updateDeckNavigation();
+
+      if (next === target) {
+        if (!motionIsReduced.matches && navigator.vibrate) navigator.vibrate(12);
+        scheduleAdvance(item, index);
+      }
+    }
+
+    function requestItemReset(item, card, index) {
+      const count = countFor(item);
+      if (!count) return;
+      const reset = () => {
+        state.progress[activePeriod][item.id] = 0;
+        saveState();
+        updateCard(item, card, index, true);
+        updateSessionProgress();
+        updateDeckNavigation();
+      };
+
+      if (targetFor(item) >= 50) {
+        openConfirmation(
+          `إعادة عداد الذكر ${formatNumber(index + 1)}؟`,
+          `سيعود العداد من ${formatNumber(count)} إلى الصفر.`,
+          reset
+        );
+      } else {
+        reset();
+      }
+    }
+
+    function updateSessionProgress() {
+      const items = collections[activePeriod].filter(item => !item.review);
+      const completed = items.filter(item => countFor(item) >= targetFor(item)).length;
+      const hasProgress = items.some(item => countFor(item) > 0);
+      const isComplete = completed === items.length;
+      const suffix = activePeriod === "morning" && collections.morning.some(item => item.review) ? " ذكرًا متاحًا" : " ذكرًا";
+
+      progressCopy.textContent = isComplete
+        ? `اكتملت ${sectionNames[activePeriod]} بحمد الله`
+        : `${formatNumber(completed)} من ${formatNumber(items.length)}${suffix}`;
+      progressBar.max = items.length;
+      progressBar.value = completed;
+      progressBar.setAttribute("aria-label", `${sectionNames[activePeriod]}: ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`);
+      sessionReset.disabled = !hasProgress;
+      sessionSummary.classList.toggle("is-complete", isComplete);
+    }
+
+    function switchPeriod(period, updateHash = true) {
+      if (!collections[period]) return;
+      activePeriod = period;
+      body.dataset.period = period;
+      sessionTitle.textContent = sectionNames[period];
+      sessionReset.setAttribute("aria-label", `إعادة ${sectionNames[period]}`);
+      panel.setAttribute("aria-labelledby", `${period}-tab`);
+      document.title = `${sectionNames[period]} — أذكار المسلم`;
+
+      document.querySelectorAll(".period-tab").forEach(tab => {
+        const selected = tab.dataset.period === period;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+
+      if (updateHash && location.hash !== `#${period}`) {
+        history.replaceState(null, "", `#${period}`);
+      }
+
+      renderCards();
+    }
+
+    function requestSessionReset() {
+      const items = collections[activePeriod].filter(item => !item.review);
+      if (!items.some(item => countFor(item) > 0)) return;
+      const periodAtRequest = activePeriod;
+      openConfirmation(
+        `إعادة ${sectionNames[periodAtRequest]}؟`,
+        `ستعود جميع عدادات ${sectionNames[periodAtRequest]} إلى الصفر. لا يؤثر ذلك في القسم الآخر.`,
+        () => {
+          state.progress[periodAtRequest] = {};
+          state.targets[periodAtRequest] = {};
+          currentIndices[periodAtRequest] = 0;
+          saveState();
+          if (activePeriod === periodAtRequest) renderCards();
+          liveRegion.textContent = `أُعيدت ${sectionNames[periodAtRequest]}`;
+        }
+      );
+    }
+
+    function openConfirmation(title, copy, callback) {
+      dialogTitle.textContent = title;
+      dialogCopy.textContent = copy;
+      pendingConfirmation = callback;
+      if (typeof dialog.showModal === "function") {
+        dialog.showModal();
+      } else if (window.confirm(`${title}\n${copy}`)) {
+        const action = pendingConfirmation;
+        pendingConfirmation = null;
+        action?.();
+      }
+    }
+
+    function resolveTheme(preference) {
+      return preference === "dark" || (preference === "system" && colorScheme.matches) ? "dark" : "light";
+    }
+
+    function applyTheme(preference, save = true) {
+      const normalized = ["light", "dark", "system"].includes(preference) ? preference : "system";
+      const resolved = resolveTheme(normalized);
+      root.dataset.theme = normalized;
+      root.dataset.resolvedTheme = resolved;
+      themeSelect.value = normalized;
+      themeColor.content = resolved === "dark" ? "#202c38" : "#f7f5ef";
+      if (save) {
+        try { localStorage.setItem("athkar-theme", normalized); } catch (_) {}
+      }
+    }
+
+    document.querySelectorAll(".period-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        if (tab.dataset.period === activePeriod) return;
+        switchPeriod(tab.dataset.period);
+        window.scrollTo({ top: 0, behavior: "auto" });
+      });
+      tab.addEventListener("keydown", event => {
+        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        event.preventDefault();
+        const nextPeriod = activePeriod === "morning" ? "evening" : "morning";
+        switchPeriod(nextPeriod);
+        document.getElementById(`${nextPeriod}-tab`).focus();
+      });
+    });
+
+    sessionReset.addEventListener("click", requestSessionReset);
+    previousCardButton.addEventListener("click", () => {
+      showCard((currentIndices[activePeriod] ?? 0) - 1, "back", true, true);
+    });
+    nextCardButton.addEventListener("click", () => {
+      showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
+    });
+    themeSelect.addEventListener("change", event => applyTheme(event.target.value));
+
+    colorScheme.addEventListener?.("change", () => {
+      if (root.dataset.theme === "system") applyTheme("system", false);
+    });
+
+    addEventListener("hashchange", () => {
+      const period = location.hash === "#evening" ? "evening" : location.hash === "#morning" ? "morning" : null;
+      if (period && period !== activePeriod) switchPeriod(period, false);
+    });
+
+    dialogCancel.addEventListener("click", () => {
+      pendingConfirmation = null;
+      dialog.close();
+    });
+
+    dialogConfirm.addEventListener("click", () => {
+      const action = pendingConfirmation;
+      pendingConfirmation = null;
+      dialog.close();
+      action?.();
+    });
+
+    dialog.addEventListener("cancel", () => { pendingConfirmation = null; });
+    dialog.addEventListener("click", event => {
+      if (event.target === dialog) {
+        pendingConfirmation = null;
+        dialog.close();
+      }
+    });
+
+    if ("serviceWorker" in navigator) {
+      addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+      }, { once: true });
+    }
+
+    let storedTheme = "system";
+    try {
+      const savedTheme = localStorage.getItem("athkar-theme");
+      if (["light", "dark", "system"].includes(savedTheme)) storedTheme = savedTheme;
+    } catch (_) {}
+    applyTheme(storedTheme, false);
+    switchPeriod(activePeriod, false);
+  </script>
+</body>
+</html>

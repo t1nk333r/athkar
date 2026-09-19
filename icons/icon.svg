@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="أذكار المسلم">
+  <defs>
+    <linearGradient id="background" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#314a5a"/>
+      <stop offset="1" stop-color="#182733"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="110" y1="110" x2="402" y2="402" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#69d2df"/>
+      <stop offset="1" stop-color="#19a4bf"/>
+    </linearGradient>
+    <mask id="crescent">
+      <rect width="512" height="512" fill="black"/>
+      <circle cx="300" cy="248" r="112" fill="white"/>
+      <circle cx="346" cy="205" r="112" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" fill="url(#background)"/>
+  <rect x="38" y="38" width="436" height="436" rx="92" fill="none" stroke="#ffffff" stroke-opacity=".09" stroke-width="4"/>
+  <circle cx="172" cy="180" r="55" fill="#efc96d"/>
+  <g stroke="#efc96d" stroke-width="14" stroke-linecap="round">
+    <path d="M172 92v-22M172 290v-22M84 180H62M282 180h-22M110 118l-16-16M250 258l-16-16M110 242l-16 16M250 102l-16 16"/>
+  </g>
+  <circle cx="300" cy="248" r="112" fill="url(#accent)" mask="url(#crescent)"/>
+  <path d="M122 364c42-22 86-22 132 0 46-22 90-22 136 0v44c-46-22-90-22-136 0-46-22-90-22-132 0z" fill="#f7f2e8" fill-opacity=".94"/>
+  <path d="M254 364v44" stroke="#1b303d" stroke-opacity=".35" stroke-width="5"/>
+</svg>
