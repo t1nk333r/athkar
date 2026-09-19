@@ -1,13 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v1";
+const CACHE_NAME = "athkar-static-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./fonts/kfgqpc-uthman-taha-naskh.ttf",
 ];
 
 self.addEventListener("install", event => {

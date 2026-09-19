@@ -9,6 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="preload" href="./fonts/kfgqpc-uthman-taha-naskh.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="أذكار المسلم">
@@ -25,6 +26,14 @@
     })();
   </script>
   <style>
+    @font-face {
+      font-family: "KFGQPC Uthman Taha Naskh";
+      src: url("./fonts/kfgqpc-uthman-taha-naskh.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
     :root {
       color-scheme: light;
       --background: #f7f5ef;
@@ -539,6 +548,12 @@
       line-height: 1.95;
       text-align: start;
       unicode-bidi: plaintext;
+    }
+
+    .dhikr-card.quran .dhikr-prefix,
+    .dhikr-card.quran .dhikr-text {
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      font-weight: 400;
     }
 
     .dhikr-card.quran .dhikr-text {
@@ -1273,7 +1288,7 @@
         </label>` : "";
       const requirement = item.countLabel
         ? `<p class="count-requirement">${escapeHtml(item.countLabel)}</p>`
-        : `<p class="count-requirement">ذكر للقراءة</p>`;
+        : `<p class="count-requirement">مرة واحدة</p>`;
       const visibleStatus = counted
         ? `<output class="counter-status numeric" id="${item.id}-status"><span class="counter-current">${formatNumber(count)}</span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(target)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`
         : `<output class="counter-status" id="${item.id}-status"><span class="single-copy">${count ? "تمت القراءة" : "اضغط بعد القراءة"}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
