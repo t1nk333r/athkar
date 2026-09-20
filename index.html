@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light">
+<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light" data-text-size="medium">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -22,6 +22,12 @@
         const dark = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.resolvedTheme = dark ? "dark" : "light";
+      } catch (_) {}
+      try {
+        const savedTextSize = localStorage.getItem("athkar-text-size");
+        document.documentElement.dataset.textSize = ["small", "medium", "large", "xlarge"].includes(savedTextSize)
+          ? savedTextSize
+          : "medium";
       } catch (_) {}
       try {
         const switchProbe = document.createElement("input");
@@ -68,6 +74,27 @@
       --radius-lg: 1.25rem;
       --content-width: 49rem;
       --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Traditional Arabic", Tahoma, Arial, sans-serif;
+      --dhikr-prefix-size: clamp(1.2rem, 5vw, 1.58rem);
+      --dhikr-text-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      --quran-text-size: clamp(1.3rem, 5.6vw, 1.82rem);
+    }
+
+    :root[data-text-size="small"] {
+      --dhikr-prefix-size: clamp(1.05rem, 4.45vw, 1.4rem);
+      --dhikr-text-size: clamp(1.1rem, 4.75vw, 1.55rem);
+      --quran-text-size: clamp(1.15rem, 5vw, 1.62rem);
+    }
+
+    :root[data-text-size="large"] {
+      --dhikr-prefix-size: clamp(1.35rem, 5.75vw, 1.82rem);
+      --dhikr-text-size: clamp(1.4rem, 6.15vw, 2.02rem);
+      --quran-text-size: clamp(1.45rem, 6.4vw, 2.12rem);
+    }
+
+    :root[data-text-size="xlarge"] {
+      --dhikr-prefix-size: clamp(1.52rem, 6.55vw, 2.08rem);
+      --dhikr-text-size: clamp(1.58rem, 7vw, 2.3rem);
+      --quran-text-size: clamp(1.65rem, 7.3vw, 2.42rem);
     }
 
     :root[data-resolved-theme="dark"] {
@@ -286,6 +313,59 @@
       align-items: center;
       justify-content: flex-end;
       gap: 0.45rem;
+    }
+
+    .text-size-control {
+      display: inline-flex;
+      min-height: 2.75rem;
+      flex: none;
+      align-items: center;
+      gap: 0.08rem;
+      padding: 0.2rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      direction: ltr;
+      background: var(--surface-raised);
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .text-size-button {
+      display: inline-grid;
+      width: 2rem;
+      min-height: 2.1rem;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: Arial, sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      transition: color 120ms ease, background-color 120ms ease, opacity 120ms ease, transform 100ms ease;
+    }
+
+    .text-size-button:not(:disabled):active {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      transform: scale(0.94);
+    }
+
+    .text-size-button:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+
+    .text-size-sample {
+      min-width: 1rem;
+      color: var(--accent-strong);
+      font-family: var(--font-arabic);
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-align: center;
     }
 
     .haptics-control {
@@ -678,7 +758,7 @@
     .dhikr-prefix {
       margin: 0 0 0.85rem;
       color: var(--accent-strong);
-      font-size: clamp(1.2rem, 5vw, 1.58rem);
+      font-size: var(--dhikr-prefix-size);
       font-weight: 800;
       line-height: 1.7;
       text-align: center;
@@ -687,7 +767,7 @@
     .dhikr-text {
       margin: 0;
       color: var(--text-primary);
-      font-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      font-size: var(--dhikr-text-size);
       font-weight: 560;
       line-height: 1.95;
       text-align: start;
@@ -701,7 +781,7 @@
     }
 
     .dhikr-card.quran .dhikr-text {
-      font-size: clamp(1.3rem, 5.6vw, 1.82rem);
+      font-size: var(--quran-text-size);
       line-height: 2.05;
     }
 
@@ -998,6 +1078,14 @@
 
       .summary-row { gap: 0.55rem; }
       .summary-actions { gap: 0.35rem; }
+      .text-size-control {
+        min-height: 2.3rem;
+        padding: 0.12rem;
+      }
+      .text-size-button {
+        width: 1.9rem;
+        min-height: 2rem;
+      }
       .haptics-control {
         min-height: 2.3rem;
         gap: 0.32rem;
@@ -1089,6 +1177,7 @@
       .session-summary { padding-inline: 0.85rem; }
       .session-reset span { display: none; }
       .haptics-label { display: none; }
+      .text-size-sample { display: none; }
       .dhikr-card { border-radius: 1.4rem; }
       .dhikr-text { line-height: 1.88; }
       .requirement-row { align-items: flex-start; }
@@ -1152,6 +1241,11 @@
             <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
           </div>
           <div class="summary-actions">
+            <div class="text-size-control" id="text-size-control" role="group" aria-label="حجم نص الأذكار: متوسط">
+              <button class="text-size-button" id="text-size-decrease" type="button" aria-label="تصغير نص الأذكار">−</button>
+              <span class="text-size-sample" aria-hidden="true">أ</span>
+              <button class="text-size-button" id="text-size-increase" type="button" aria-label="تكبير نص الأذكار">+</button>
+            </div>
             <label class="haptics-control" for="haptics-toggle">
               <span class="haptics-label">الاهتزاز</span>
               <span class="haptics-switch">
@@ -1457,6 +1551,13 @@
     const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء" };
     const storageKey = "athkar-progress-v1";
     const hapticsStorageKey = "athkar-haptics";
+    const textSizeStorageKey = "athkar-text-size";
+    const textSizeLevels = [
+      { value: "small", label: "صغير" },
+      { value: "medium", label: "متوسط" },
+      { value: "large", label: "كبير" },
+      { value: "xlarge", label: "كبير جدًا" }
+    ];
     const numberFormatter = new Intl.NumberFormat("ar-EG", { useGrouping: false });
     const root = document.documentElement;
     const body = document.body;
@@ -1471,6 +1572,9 @@
     const sessionSummary = document.getElementById("session-summary");
     const sessionReset = document.getElementById("session-reset");
     const hapticsToggle = document.getElementById("haptics-toggle");
+    const textSizeControl = document.getElementById("text-size-control");
+    const textSizeDecrease = document.getElementById("text-size-decrease");
+    const textSizeIncrease = document.getElementById("text-size-increase");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
@@ -1491,6 +1595,8 @@
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
     hapticsToggle.checked = hapticsEnabled;
+    let textSizeIndex = textSizeLevels.findIndex(level => level.value === root.dataset.textSize);
+    if (textSizeIndex === -1) textSizeIndex = 1;
 
     function emptyState() {
       return {
@@ -1889,6 +1995,19 @@
       }
     }
 
+    function applyTextSize(index, save = true, announce = true) {
+      textSizeIndex = Math.max(0, Math.min(textSizeLevels.length - 1, index));
+      const level = textSizeLevels[textSizeIndex];
+      root.dataset.textSize = level.value;
+      textSizeDecrease.disabled = textSizeIndex === 0;
+      textSizeIncrease.disabled = textSizeIndex === textSizeLevels.length - 1;
+      textSizeControl.setAttribute("aria-label", `حجم نص الأذكار: ${level.label}`);
+      if (save) {
+        try { localStorage.setItem(textSizeStorageKey, level.value); } catch (_) {}
+      }
+      if (announce) liveRegion.textContent = `حجم نص الأذكار ${level.label}`;
+    }
+
     document.querySelectorAll(".period-tab").forEach(tab => {
       tab.addEventListener("click", () => {
         if (tab.dataset.period === activePeriod) return;
@@ -1912,6 +2031,8 @@
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
     themeSelect.addEventListener("change", event => applyTheme(event.target.value));
+    textSizeDecrease.addEventListener("click", () => applyTextSize(textSizeIndex - 1));
+    textSizeIncrease.addEventListener("click", () => applyTextSize(textSizeIndex + 1));
     hapticsToggle.addEventListener("click", () => {
       if (!nativeSwitchSupported && typeof navigator.vibrate === "function") {
         navigator.vibrate(15);
@@ -1963,6 +2084,7 @@
       const savedTheme = localStorage.getItem("athkar-theme");
       if (["light", "dark", "system"].includes(savedTheme)) storedTheme = savedTheme;
     } catch (_) {}
+    applyTextSize(textSizeIndex, false, false);
     applyTheme(storedTheme, false);
     switchPeriod(activePeriod, false);
   </script>
