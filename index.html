@@ -692,18 +692,30 @@
     }
 
     .card-index {
-      display: inline-flex;
-      min-width: 2rem;
-      min-height: 2rem;
-      align-items: center;
-      justify-content: center;
-      margin-block-end: 0.85rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
+      position: relative;
+      display: inline-grid;
+      min-width: 1.7rem;
+      place-items: center;
+      margin-block-end: 0.5rem;
+      padding: 0 0.2rem 0.3rem;
+      border: 0;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
       font-size: 0.75rem;
       font-weight: 800;
+      line-height: 1;
+    }
+
+    .card-index::after {
+      content: "";
+      position: absolute;
+      inset-block-end: 0;
+      left: 50%;
+      width: 1.2rem;
+      height: 0.12rem;
+      border-radius: 999px;
+      background: var(--divider);
+      transform: translateX(-50%);
     }
 
     .card-toolbar {
@@ -833,6 +845,71 @@
       border-radius: 0.5rem;
       background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
     }
+    .dhikr-card.is-content-dense {
+      padding: clamp(0.8rem, 3.5vw, 1.35rem);
+    }
+
+    .dhikr-card.is-content-dense .dhikr-text {
+      font-size: clamp(1.12rem, 4.9vw, 1.54rem);
+      line-height: 1.76;
+    }
+
+    .dhikr-card.is-content-dense .dhikr-details {
+      gap: 0.45rem;
+      margin-block-start: 0.68rem;
+    }
+
+    .dhikr-card.is-content-dense .dhikr-detail {
+      font-size: clamp(0.94rem, 3.85vw, 1.1rem);
+      line-height: 1.62;
+    }
+
+    .dhikr-card.is-content-dense .dhikr-note {
+      padding: 0.5rem 0.7rem;
+    }
+
+    .dhikr-card.is-content-dense .requirement-row {
+      align-items: center;
+      margin-block-start: 0.65rem;
+      padding-block-start: 0.58rem;
+    }
+
+    .dhikr-card.is-content-dense .counter-status,
+    .dhikr-card.is-content-dense .card-reset,
+    .dhikr-card.is-content-dense .target-select {
+      min-height: 2.35rem;
+    }
+    .dhikr-card.is-content-tight .dhikr-text {
+      font-size: clamp(1.08rem, 4.7vw, 1.48rem);
+      line-height: 1.65;
+    }
+
+    .dhikr-card.is-content-tight .dhikr-details {
+      gap: 0.3rem;
+      margin-block-start: 0.5rem;
+    }
+
+    .dhikr-card.is-content-tight .dhikr-detail {
+      font-size: clamp(0.9rem, 3.7vw, 1.04rem);
+      line-height: 1.5;
+    }
+
+    .dhikr-card.is-content-tight .dhikr-note {
+      padding: 0.35rem 0.6rem;
+    }
+
+    .dhikr-card.is-content-tight .requirement-row {
+      margin-block-start: 0.48rem;
+      padding-block-start: 0.45rem;
+    }
+
+    .dhikr-card.is-content-tight .counter-status,
+    .dhikr-card.is-content-tight .card-reset,
+    .dhikr-card.is-content-tight .target-select {
+      min-height: 2.2rem;
+    }
+
+
 
     .requirement-row {
       display: flex;
@@ -941,7 +1018,6 @@
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior-y: contain;
-      scrollbar-gutter: stable;
     }
 
     .requirement-row {
@@ -1784,6 +1860,24 @@
       const index = items.findIndex(item => !item.review && countFor(item, period) < targetFor(item, period));
       return index === -1 ? Math.max(0, items.length - 1) : index;
     }
+    function fitCardContent(card) {
+      if (!card || card.matches(".quran, .needs-review")) return;
+      const content = card.querySelector(".card-content");
+      if (!content) return;
+
+      card.classList.remove("is-content-dense", "is-content-tight");
+      if (content.scrollHeight > content.clientHeight + 1) {
+        card.classList.add("is-content-dense");
+        if (content.scrollHeight > content.clientHeight + 1) {
+          card.classList.add("is-content-tight");
+        }
+      }
+    }
+
+    function fitVisibleCard() {
+      fitCardContent(list.querySelector("li:not([hidden]) .dhikr-card"));
+    }
+
 
     function updateDeckNavigation() {
       const items = collections[activePeriod];
@@ -1814,6 +1908,8 @@
       });
 
       const activeItem = list.children[nextIndex];
+      fitCardContent(activeItem?.querySelector(".dhikr-card"));
+
       if (direction && activeItem) {
         requestAnimationFrame(() => {
           activeItem.classList.add(direction === "back" ? "card-enter-back" : "card-enter-forward");
@@ -1873,8 +1969,8 @@
 
       event.preventDefault();
       suppressCardClicksUntil = performance.now() + 450;
-      if (deltaX < 0 && !nextCardButton.disabled) nextCardButton.click();
-      if (deltaX > 0 && !previousCardButton.disabled) previousCardButton.click();
+      if (deltaX > 0 && !nextCardButton.disabled) nextCardButton.click();
+      if (deltaX < 0 && !previousCardButton.disabled) previousCardButton.click();
     }
 
     function renderCards() {
@@ -2106,6 +2202,8 @@
     list.addEventListener("pointerdown", beginCardSwipe);
     addEventListener("pointerup", finishCardSwipe);
     addEventListener("pointercancel", cancelCardSwipe);
+    addEventListener("resize", () => requestAnimationFrame(fitVisibleCard));
+
 
     sessionReset.addEventListener("click", requestSessionReset);
     previousCardButton.addEventListener("click", () => {
@@ -2169,6 +2267,7 @@
     applyAyahTextSize(ayahTextSizeIndex, false, false);
     applyTheme(storedTheme, false);
     switchPeriod(activePeriod, false);
+    document.fonts?.ready.then(() => fitVisibleCard());
   </script>
 </body>
 </html>
