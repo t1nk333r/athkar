@@ -23,6 +23,15 @@
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.resolvedTheme = dark ? "dark" : "light";
       } catch (_) {}
+      try {
+        const switchProbe = document.createElement("input");
+        switchProbe.type = "checkbox";
+        switchProbe.setAttribute("switch", "");
+        switchProbe.indeterminate = true;
+        if (!switchProbe.matches(":indeterminate")) {
+          document.documentElement.classList.add("supports-native-switch");
+        }
+      } catch (_) {}
     })();
   </script>
   <style>
@@ -363,6 +372,28 @@
     }
 
     .haptics-input:focus-visible + .haptics-track {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    :root.supports-native-switch .haptics-switch {
+      display: inline-flex;
+      width: auto;
+      height: auto;
+      align-items: center;
+    }
+
+    :root.supports-native-switch .haptics-input {
+      position: static;
+      inset: auto;
+      width: auto;
+      height: auto;
+      opacity: 1;
+    }
+
+    :root.supports-native-switch .haptics-track { display: none; }
+
+    :root.supports-native-switch .haptics-input:focus-visible {
       outline: 3px solid var(--focus);
       outline-offset: 3px;
     }
@@ -1440,6 +1471,7 @@
     const sessionSummary = document.getElementById("session-summary");
     const sessionReset = document.getElementById("session-reset");
     const hapticsToggle = document.getElementById("haptics-toggle");
+    const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
     const liveRegion = document.getElementById("live-region");
@@ -1726,22 +1758,27 @@
       updateSessionProgress();
     }
 
+    function triggerHaptic(duration) {
+      if (!hapticsEnabled || typeof navigator.vibrate !== "function") return false;
+      return navigator.vibrate(duration);
+    }
+
     function increment(item, card, index) {
       const target = targetFor(item);
       const before = countFor(item);
       if (before >= target) return;
 
       const next = before + 1;
+      const completesItem = next === target;
+      if (completesItem) triggerHaptic(35);
+
       state.progress[activePeriod][item.id] = next;
       saveState();
       updateCard(item, card, index, true);
       updateSessionProgress();
       updateDeckNavigation();
 
-      if (next === target) {
-        if (hapticsEnabled && typeof navigator.vibrate === "function") navigator.vibrate(30);
-        scheduleAdvance(item, index);
-      }
+      if (completesItem) scheduleAdvance(item, index);
     }
 
     function requestItemReset(item, card, index) {
@@ -1875,6 +1912,11 @@
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
     themeSelect.addEventListener("change", event => applyTheme(event.target.value));
+    hapticsToggle.addEventListener("click", () => {
+      if (!nativeSwitchSupported && typeof navigator.vibrate === "function") {
+        navigator.vibrate(15);
+      }
+    });
     hapticsToggle.addEventListener("change", () => {
       hapticsEnabled = hapticsToggle.checked;
       try { localStorage.setItem(hapticsStorageKey, hapticsEnabled ? "on" : "off"); } catch (_) {}
