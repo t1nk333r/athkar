@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light" data-text-size="medium">
+<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light" data-ayah-text-size="medium">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -24,9 +24,9 @@
         document.documentElement.dataset.resolvedTheme = dark ? "dark" : "light";
       } catch (_) {}
       try {
-        const savedTextSize = localStorage.getItem("athkar-text-size");
-        document.documentElement.dataset.textSize = ["small", "medium", "large", "xlarge"].includes(savedTextSize)
-          ? savedTextSize
+        const savedAyahTextSize = localStorage.getItem("athkar-text-size");
+        document.documentElement.dataset.ayahTextSize = ["small", "medium", "large", "xlarge"].includes(savedAyahTextSize)
+          ? savedAyahTextSize
           : "medium";
       } catch (_) {}
       try {
@@ -74,26 +74,22 @@
       --radius-lg: 1.25rem;
       --content-width: 49rem;
       --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Traditional Arabic", Tahoma, Arial, sans-serif;
-      --dhikr-prefix-size: clamp(1.2rem, 5vw, 1.58rem);
-      --dhikr-text-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      --quran-prefix-size: clamp(1.2rem, 5vw, 1.58rem);
       --quran-text-size: clamp(1.3rem, 5.6vw, 1.82rem);
     }
 
-    :root[data-text-size="small"] {
-      --dhikr-prefix-size: clamp(1.05rem, 4.45vw, 1.4rem);
-      --dhikr-text-size: clamp(1.1rem, 4.75vw, 1.55rem);
+    :root[data-ayah-text-size="small"] {
+      --quran-prefix-size: clamp(1.05rem, 4.45vw, 1.4rem);
       --quran-text-size: clamp(1.15rem, 5vw, 1.62rem);
     }
 
-    :root[data-text-size="large"] {
-      --dhikr-prefix-size: clamp(1.35rem, 5.75vw, 1.82rem);
-      --dhikr-text-size: clamp(1.4rem, 6.15vw, 2.02rem);
+    :root[data-ayah-text-size="large"] {
+      --quran-prefix-size: clamp(1.35rem, 5.75vw, 1.82rem);
       --quran-text-size: clamp(1.45rem, 6.4vw, 2.12rem);
     }
 
-    :root[data-text-size="xlarge"] {
-      --dhikr-prefix-size: clamp(1.52rem, 6.55vw, 2.08rem);
-      --dhikr-text-size: clamp(1.58rem, 7vw, 2.3rem);
+    :root[data-ayah-text-size="xlarge"] {
+      --quran-prefix-size: clamp(1.52rem, 6.55vw, 2.08rem);
       --quran-text-size: clamp(1.65rem, 7.3vw, 2.42rem);
     }
 
@@ -315,58 +311,6 @@
       gap: 0.45rem;
     }
 
-    .text-size-control {
-      display: inline-flex;
-      min-height: 2.75rem;
-      flex: none;
-      align-items: center;
-      gap: 0.08rem;
-      padding: 0.2rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      direction: ltr;
-      background: var(--surface-raised);
-      color: var(--text-secondary);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .text-size-button {
-      display: inline-grid;
-      width: 2rem;
-      min-height: 2.1rem;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      border-radius: 999px;
-      background: transparent;
-      color: var(--text-primary);
-      font-family: Arial, sans-serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      line-height: 1;
-      cursor: pointer;
-      transition: color 120ms ease, background-color 120ms ease, opacity 120ms ease, transform 100ms ease;
-    }
-
-    .text-size-button:not(:disabled):active {
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-      transform: scale(0.94);
-    }
-
-    .text-size-button:disabled {
-      opacity: 0.28;
-      cursor: default;
-    }
-
-    .text-size-sample {
-      min-width: 1rem;
-      color: var(--accent-strong);
-      font-family: var(--font-arabic);
-      font-size: 0.9rem;
-      font-weight: 800;
-      text-align: center;
-    }
 
     .haptics-control {
       display: inline-flex;
@@ -663,7 +607,8 @@
       padding: clamp(1.15rem, 4vw, 1.75rem);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
-      background: var(--surface);
+      --card-background: var(--surface);
+      background: var(--card-background);
       box-shadow: var(--shadow-soft);
       transform: translateZ(0);
       transition: transform 110ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
@@ -694,7 +639,8 @@
 
     .dhikr-card:active::after { opacity: 0.09; }
     .dhikr-card:has(.card-reset:active)::after,
-    .dhikr-card:has(.target-select:active)::after { opacity: 0; }
+    .dhikr-card:has(.target-select:active)::after,
+    .dhikr-card:has(.ayah-size-button:active)::after { opacity: 0; }
 
     .dhikr-card:has(.card-tap-target:active) { transform: scale(0.993); }
 
@@ -706,7 +652,8 @@
 
     .dhikr-card.is-complete {
       border-color: color-mix(in srgb, var(--completed) 48%, var(--border));
-      background: color-mix(in srgb, var(--completed-soft) 42%, var(--surface));
+      --card-background: color-mix(in srgb, var(--completed-soft) 42%, var(--surface));
+      background: var(--card-background);
     }
 
     .dhikr-card.is-complete::before {
@@ -741,6 +688,65 @@
       font-weight: 800;
     }
 
+    .card-toolbar {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-block-end: 0.3rem;
+      padding-block-end: 0.55rem;
+      background: var(--card-background);
+      box-shadow: 0 0.65rem 0 var(--card-background);
+    }
+
+    .card-toolbar .card-index { margin-block-end: 0; }
+
+    .ayah-size-control {
+      display: inline-flex;
+      min-height: 2.25rem;
+      align-items: center;
+      gap: 0.12rem;
+      padding: 0.14rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      direction: ltr;
+      background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .ayah-size-button {
+      display: inline-grid;
+      width: 2.15rem;
+      min-height: 1.95rem;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      line-height: 1;
+      cursor: pointer;
+      transition: color 120ms ease, background-color 120ms ease, opacity 120ms ease, transform 100ms ease;
+    }
+
+    .ayah-size-button:not(:disabled):active {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      transform: scale(0.94);
+    }
+
+    .ayah-size-button:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+
+    .ayah-size-glyph-small { font-size: 0.92rem; }
+    .ayah-size-glyph-large { font-size: 1.42rem; }
+
     .review-badge {
       display: inline-flex;
       min-height: 2rem;
@@ -758,7 +764,7 @@
     .dhikr-prefix {
       margin: 0 0 0.85rem;
       color: var(--accent-strong);
-      font-size: var(--dhikr-prefix-size);
+      font-size: clamp(1.2rem, 5vw, 1.58rem);
       font-weight: 800;
       line-height: 1.7;
       text-align: center;
@@ -767,7 +773,7 @@
     .dhikr-text {
       margin: 0;
       color: var(--text-primary);
-      font-size: var(--dhikr-text-size);
+      font-size: clamp(1.24rem, 5.35vw, 1.72rem);
       font-weight: 560;
       line-height: 1.95;
       text-align: start;
@@ -779,6 +785,8 @@
       font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
       font-weight: 400;
     }
+
+    .dhikr-card.quran .dhikr-prefix { font-size: var(--quran-prefix-size); }
 
     .dhikr-card.quran .dhikr-text {
       font-size: var(--quran-text-size);
@@ -1078,14 +1086,6 @@
 
       .summary-row { gap: 0.55rem; }
       .summary-actions { gap: 0.35rem; }
-      .text-size-control {
-        min-height: 2.3rem;
-        padding: 0.12rem;
-      }
-      .text-size-button {
-        width: 1.9rem;
-        min-height: 2rem;
-      }
       .haptics-control {
         min-height: 2.3rem;
         gap: 0.32rem;
@@ -1177,7 +1177,6 @@
       .session-summary { padding-inline: 0.85rem; }
       .session-reset span { display: none; }
       .haptics-label { display: none; }
-      .text-size-sample { display: none; }
       .dhikr-card { border-radius: 1.4rem; }
       .dhikr-text { line-height: 1.88; }
       .requirement-row { align-items: flex-start; }
@@ -1241,11 +1240,6 @@
             <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
           </div>
           <div class="summary-actions">
-            <div class="text-size-control" id="text-size-control" role="group" aria-label="حجم نص الأذكار: متوسط">
-              <button class="text-size-button" id="text-size-decrease" type="button" aria-label="تصغير نص الأذكار">−</button>
-              <span class="text-size-sample" aria-hidden="true">أ</span>
-              <button class="text-size-button" id="text-size-increase" type="button" aria-label="تكبير نص الأذكار">+</button>
-            </div>
             <label class="haptics-control" for="haptics-toggle">
               <span class="haptics-label">الاهتزاز</span>
               <span class="haptics-switch">
@@ -1551,8 +1545,8 @@
     const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء" };
     const storageKey = "athkar-progress-v1";
     const hapticsStorageKey = "athkar-haptics";
-    const textSizeStorageKey = "athkar-text-size";
-    const textSizeLevels = [
+    const ayahTextSizeStorageKey = "athkar-text-size";
+    const ayahTextSizeLevels = [
       { value: "small", label: "صغير" },
       { value: "medium", label: "متوسط" },
       { value: "large", label: "كبير" },
@@ -1572,9 +1566,6 @@
     const sessionSummary = document.getElementById("session-summary");
     const sessionReset = document.getElementById("session-reset");
     const hapticsToggle = document.getElementById("haptics-toggle");
-    const textSizeControl = document.getElementById("text-size-control");
-    const textSizeDecrease = document.getElementById("text-size-decrease");
-    const textSizeIncrease = document.getElementById("text-size-increase");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
@@ -1595,8 +1586,8 @@
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
     hapticsToggle.checked = hapticsEnabled;
-    let textSizeIndex = textSizeLevels.findIndex(level => level.value === root.dataset.textSize);
-    if (textSizeIndex === -1) textSizeIndex = 1;
+    let ayahTextSizeIndex = ayahTextSizeLevels.findIndex(level => level.value === root.dataset.ayahTextSize);
+    if (ayahTextSizeIndex === -1) ayahTextSizeIndex = 1;
 
     function emptyState() {
       return {
@@ -1691,12 +1682,24 @@
       const visibleStatus = counted
         ? `<output class="counter-status numeric" id="${item.id}-status"><span class="counter-current">${formatNumber(count)}</span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(target)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`
         : `<output class="counter-status" id="${item.id}-status"><span class="single-copy">${count ? "تمت القراءة" : "اضغط بعد القراءة"}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
+      const cardHeader = item.quran ? `
+        <div class="card-toolbar">
+          <span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>
+          <div class="ayah-size-control" role="group" aria-label="حجم نص الآيات: ${ayahTextSizeLevels[ayahTextSizeIndex].label}">
+            <button class="ayah-size-button ayah-size-decrease" type="button" aria-label="تصغير نص الآيات"${ayahTextSizeIndex === 0 ? " disabled" : ""}>
+              <span class="ayah-size-glyph-small" aria-hidden="true">أ</span>
+            </button>
+            <button class="ayah-size-button ayah-size-increase" type="button" aria-label="تكبير نص الآيات"${ayahTextSizeIndex === ayahTextSizeLevels.length - 1 ? " disabled" : ""}>
+              <span class="ayah-size-glyph-large" aria-hidden="true">أ</span>
+            </button>
+          </div>
+        </div>` : `<span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>`;
 
       return `
         <li data-card-index="${index}">
           <article class="dhikr-card${item.quran ? " quran" : ""}" id="${item.id}" data-id="${item.id}">
             <div class="card-content">
-              <span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>
+              ${cardHeader}
               ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.prefix)}</p>` : ""}
               <p class="dhikr-text">${escapeHtml(item.text)}</p>
               ${details ? `<div class="dhikr-details">${details}</div>` : ""}
@@ -1826,6 +1829,7 @@
       }
       currentIndices[activePeriod] = Math.min(currentIndices[activePeriod], items.length - 1);
       list.innerHTML = items.map(cardMarkup).join("");
+      syncAyahTextSizeControls();
       list.classList.remove("is-entering");
       requestAnimationFrame(() => list.classList.add("is-entering"));
 
@@ -1835,14 +1839,24 @@
         const tapTarget = card.querySelector(".card-tap-target");
         const resetButton = card.querySelector(".card-reset");
         const targetSelect = card.querySelector(".target-select");
+        const sizeDecrease = card.querySelector(".ayah-size-decrease");
+        const sizeIncrease = card.querySelector(".ayah-size-increase");
 
         updateCard(item, card, index);
         tapTarget.addEventListener("click", () => increment(item, card, index));
         card.addEventListener("click", event => {
-          if (event.target.closest(".card-tap-target, .card-reset, .target-control")) return;
+          if (event.target.closest(".card-tap-target, .card-reset, .target-control, .ayah-size-control")) return;
           increment(item, card, index);
         });
         resetButton.addEventListener("click", () => requestItemReset(item, card, index));
+        sizeDecrease?.addEventListener("click", event => {
+          event.stopPropagation();
+          applyAyahTextSize(ayahTextSizeIndex - 1);
+        });
+        sizeIncrease?.addEventListener("click", event => {
+          event.stopPropagation();
+          applyAyahTextSize(ayahTextSizeIndex + 1);
+        });
 
         if (targetSelect) {
           targetSelect.addEventListener("change", event => {
@@ -1995,17 +2009,24 @@
       }
     }
 
-    function applyTextSize(index, save = true, announce = true) {
-      textSizeIndex = Math.max(0, Math.min(textSizeLevels.length - 1, index));
-      const level = textSizeLevels[textSizeIndex];
-      root.dataset.textSize = level.value;
-      textSizeDecrease.disabled = textSizeIndex === 0;
-      textSizeIncrease.disabled = textSizeIndex === textSizeLevels.length - 1;
-      textSizeControl.setAttribute("aria-label", `حجم نص الأذكار: ${level.label}`);
+    function syncAyahTextSizeControls() {
+      const level = ayahTextSizeLevels[ayahTextSizeIndex];
+      list.querySelectorAll(".ayah-size-control").forEach(control => {
+        control.setAttribute("aria-label", `حجم نص الآيات: ${level.label}`);
+        control.querySelector(".ayah-size-decrease").disabled = ayahTextSizeIndex === 0;
+        control.querySelector(".ayah-size-increase").disabled = ayahTextSizeIndex === ayahTextSizeLevels.length - 1;
+      });
+    }
+
+    function applyAyahTextSize(index, save = true, announce = true) {
+      ayahTextSizeIndex = Math.max(0, Math.min(ayahTextSizeLevels.length - 1, index));
+      const level = ayahTextSizeLevels[ayahTextSizeIndex];
+      root.dataset.ayahTextSize = level.value;
+      syncAyahTextSizeControls();
       if (save) {
-        try { localStorage.setItem(textSizeStorageKey, level.value); } catch (_) {}
+        try { localStorage.setItem(ayahTextSizeStorageKey, level.value); } catch (_) {}
       }
-      if (announce) liveRegion.textContent = `حجم نص الأذكار ${level.label}`;
+      if (announce) liveRegion.textContent = `حجم نص الآيات ${level.label}`;
     }
 
     document.querySelectorAll(".period-tab").forEach(tab => {
@@ -2031,8 +2052,6 @@
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
     themeSelect.addEventListener("change", event => applyTheme(event.target.value));
-    textSizeDecrease.addEventListener("click", () => applyTextSize(textSizeIndex - 1));
-    textSizeIncrease.addEventListener("click", () => applyTextSize(textSizeIndex + 1));
     hapticsToggle.addEventListener("click", () => {
       if (!nativeSwitchSupported && typeof navigator.vibrate === "function") {
         navigator.vibrate(15);
@@ -2084,7 +2103,7 @@
       const savedTheme = localStorage.getItem("athkar-theme");
       if (["light", "dark", "system"].includes(savedTheme)) storedTheme = savedTheme;
     } catch (_) {}
-    applyTextSize(textSizeIndex, false, false);
+    applyAyahTextSize(ayahTextSizeIndex, false, false);
     applyTheme(storedTheme, false);
     switchPeriod(activePeriod, false);
   </script>
