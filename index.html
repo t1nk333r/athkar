@@ -506,6 +506,7 @@
       padding: 0 0 1rem;
       list-style: none;
       scroll-margin-block-start: 5.5rem;
+      touch-action: pan-y pinch-zoom;
     }
 
     .athkar-list::before,
@@ -1281,7 +1282,7 @@
           </button>
         </nav>
         <footer class="app-footer">
-          <p class="deck-hint">يظهر الذكر التالي تلقائيًا بعد إكمال الحالي.</p>
+          <p class="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
           <label class="haptics-control footer-haptics" for="haptics-toggle" title="الاهتزاز">
             <svg class="haptics-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <rect x="8" y="3" width="8" height="18" rx="2"></rect>
@@ -1602,6 +1603,8 @@
     const motionIsReduced = matchMedia("(prefers-reduced-motion: reduce)");
     const colorScheme = matchMedia("(prefers-color-scheme: dark)");
     const currentIndices = { morning: null, evening: null };
+    let swipeGesture = null;
+    let suppressCardClicksUntil = 0;
 
     let activePeriod = location.hash === "#evening" ? "evening" : "morning";
     let pendingConfirmation = null;
@@ -1846,6 +1849,40 @@
       }, motionIsReduced.matches ? 20 : 320);
     }
 
+    function beginCardSwipe(event) {
+      if (!event.isPrimary || event.pointerType === "mouse") return;
+      if (event.target.closest("button, select, input, label")) return;
+      swipeGesture = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        startedAt: performance.now()
+      };
+    }
+
+    function cancelCardSwipe(event) {
+      if (!swipeGesture || event.pointerId !== swipeGesture.pointerId) return;
+      swipeGesture = null;
+    }
+
+    function finishCardSwipe(event) {
+      if (!swipeGesture || event.pointerId !== swipeGesture.pointerId) return;
+      const gesture = swipeGesture;
+      swipeGesture = null;
+
+      const deltaX = event.clientX - gesture.startX;
+      const deltaY = event.clientY - gesture.startY;
+      const distance = Math.abs(deltaX);
+      const threshold = Math.max(48, Math.min(72, innerWidth * 0.14));
+      const horizontal = distance >= threshold && distance > Math.abs(deltaY) * 1.25;
+      if (!horizontal || performance.now() - gesture.startedAt > 900) return;
+
+      event.preventDefault();
+      suppressCardClicksUntil = performance.now() + 450;
+      if (deltaX < 0 && !nextCardButton.disabled) nextCardButton.click();
+      if (deltaX > 0 && !previousCardButton.disabled) previousCardButton.click();
+    }
+
     function renderCards() {
       const items = collections[activePeriod];
       if (!Number.isInteger(currentIndices[activePeriod])) {
@@ -1867,8 +1904,12 @@
         const sizeIncrease = card.querySelector(".ayah-size-increase");
 
         updateCard(item, card, index);
-        tapTarget.addEventListener("click", () => increment(item, card, index));
+        tapTarget.addEventListener("click", () => {
+          if (performance.now() < suppressCardClicksUntil) return;
+          increment(item, card, index);
+        });
         card.addEventListener("click", event => {
+          if (performance.now() < suppressCardClicksUntil) return;
           if (event.target.closest(".card-tap-target, .card-reset, .target-control, .ayah-size-control")) return;
           increment(item, card, index);
         });
@@ -2067,6 +2108,10 @@
         document.getElementById(`${nextPeriod}-tab`).focus();
       });
     });
+
+    list.addEventListener("pointerdown", beginCardSwipe);
+    addEventListener("pointerup", finishCardSwipe);
+    addEventListener("pointercancel", cancelCardSwipe);
 
     sessionReset.addEventListener("click", requestSessionReset);
     previousCardButton.addEventListener("click", () => {
