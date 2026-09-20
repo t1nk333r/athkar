@@ -587,12 +587,31 @@
       text-align: center;
     }
 
+    .app-footer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.55rem;
+      margin-block-start: 0.4rem;
+    }
+
     .deck-hint {
-      margin: 0.75rem 0 0;
+      margin: 0;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
       font-size: 0.77rem;
       text-align: center;
+    }
+
+    .footer-haptics {
+      justify-self: end;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .haptics-icon {
+      width: 1.15rem;
+      height: 1.15rem;
+      flex: none;
     }
 
     .dhikr-card {
@@ -1092,6 +1111,7 @@
         padding: 0.3rem 0.48rem;
         font-size: 0.72rem;
       }
+      .app-footer { gap: 0.35rem; }
       .session-title {
         font-size: 1.05rem;
         line-height: 1.15;
@@ -1162,7 +1182,7 @@
       }
 
       .deck-hint {
-        margin-block-start: 0.4rem;
+        margin: 0;
         font-size: 0.7rem;
         line-height: 1.2;
       }
@@ -1176,7 +1196,6 @@
       .period-tab { min-height: 3rem; padding-inline: 0.5rem; }
       .session-summary { padding-inline: 0.85rem; }
       .session-reset span { display: none; }
-      .haptics-label { display: none; }
       .dhikr-card { border-radius: 1.4rem; }
       .dhikr-text { line-height: 1.88; }
       .requirement-row { align-items: flex-start; }
@@ -1240,13 +1259,6 @@
             <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
           </div>
           <div class="summary-actions">
-            <label class="haptics-control" for="haptics-toggle">
-              <span class="haptics-label">الاهتزاز</span>
-              <span class="haptics-switch">
-                <input class="haptics-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-label="الاهتزاز عند إكمال الذكر">
-                <span class="haptics-track" aria-hidden="true"></span>
-              </span>
-            </label>
             <button class="session-reset" id="session-reset" type="button" disabled aria-label="إعادة أذكار الصباح">
               <span aria-hidden="true">↻</span><span>إعادة الكل</span>
             </button>
@@ -1268,7 +1280,19 @@
             <span>التالي</span><span aria-hidden="true">←</span>
           </button>
         </nav>
-        <p class="deck-hint">يظهر الذكر التالي تلقائيًا بعد إكمال الحالي.</p>
+        <footer class="app-footer">
+          <p class="deck-hint">يظهر الذكر التالي تلقائيًا بعد إكمال الحالي.</p>
+          <label class="haptics-control footer-haptics" for="haptics-toggle" title="الاهتزاز">
+            <svg class="haptics-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <rect x="8" y="3" width="8" height="18" rx="2"></rect>
+              <path d="M5 8.5a5 5 0 0 0 0 7M2.5 6a8.5 8.5 0 0 0 0 12M19 8.5a5 5 0 0 1 0 7M21.5 6a8.5 8.5 0 0 1 0 12"></path>
+            </svg>
+            <span class="haptics-switch">
+              <input class="haptics-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-label="الاهتزاز عند إكمال الذكر">
+              <span class="haptics-track" aria-hidden="true"></span>
+            </span>
+          </label>
+        </footer>
       </section>
     </main>
 
