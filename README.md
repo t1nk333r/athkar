@@ -4,6 +4,10 @@ A mobile-first Arabic PWA for morning and evening adhkar.
 
 **Live app:** https://t1nk333r.github.io/athkar/
 
+## Planning
+
+- [Native iOS and Android product and engineering plan](MOBILE_APP_PLAN.md)
+
 ## TODO
 
 - [ ] **Quick card index** — jump directly to any dhikr in the current wird.
