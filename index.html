@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="أذكار الصباح والمساء في صفحة عربية خفيفة مع عدادات تحفظ التقدم محليًا.">
+  <meta name="description" content="أذكار الصباح والمساء بواجهة عربية هادئة، تذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f7f5ef" id="theme-color">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="manifest" href="./manifest.webmanifest?v=13">
+  <link rel="icon" href="./icons/icon.svg?v=13" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=13">
   <link rel="preload" href="./fonts/kfgqpc-uthman-taha-naskh.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1132,8 +1132,7 @@
       font-weight: 700;
     }
 
-    .settings-select,
-    .time-input {
+    .settings-select {
       width: 100%;
       min-height: 2.65rem;
       padding: 0.45rem 0.6rem;
@@ -1145,18 +1144,12 @@
       font-weight: 700;
     }
 
-    .time-input {
-      min-width: 7rem;
-      direction: ltr;
-      text-align: center;
-    }
-
     .reminder-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      padding-block: 0.35rem;
+      padding-block: 0.45rem;
     }
 
     .reminder-toggle {
@@ -1171,6 +1164,34 @@
       width: 1.15rem;
       height: 1.15rem;
       accent-color: var(--accent);
+    }
+
+    .reminder-schedule {
+      display: grid;
+      justify-items: end;
+      gap: 0.05rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.68rem;
+      line-height: 1.45;
+      text-align: end;
+    }
+
+    .prayer-time {
+      color: var(--accent-strong);
+      font-size: 0.8rem;
+      font-weight: 850;
+    }
+
+    .location-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-block: 0.85rem 0.45rem;
+    }
+
+    .location-row .settings-note {
+      margin: 0;
     }
 
     .settings-note {
@@ -1627,28 +1648,52 @@
       </section>
 
       <section class="settings-section" aria-labelledby="reminder-settings-title">
-        <h3 id="reminder-settings-title">التذكيرات</h3>
+        <h3 id="reminder-settings-title">التذكيرات المرتبطة بالصلاة</h3>
+        <p class="settings-note">يُحسب تذكير الصباح بعد الفجر بساعة، وتذكير المساء بعد العصر بساعة.</p>
+        <div class="settings-grid">
+          <label class="settings-field" for="prayer-method-select">
+            <span>طريقة حساب الفجر</span>
+            <select class="settings-select" id="prayer-method-select">
+              <option value="mwl">رابطة العالم الإسلامي</option>
+              <option value="umm-al-qura">أم القرى</option>
+              <option value="egyptian">الهيئة المصرية</option>
+              <option value="karachi">جامعة كراتشي</option>
+              <option value="north-america">أمريكا الشمالية</option>
+            </select>
+          </label>
+          <label class="settings-field" for="asr-school-select">
+            <span>حساب وقت العصر</span>
+            <select class="settings-select" id="asr-school-select">
+              <option value="standard">الجمهور</option>
+              <option value="hanafi">الحنفي</option>
+            </select>
+          </label>
+        </div>
+        <div class="location-row">
+          <button class="settings-action" id="prayer-location-button" type="button">تحديد الموقع</button>
+          <p class="settings-note" id="prayer-location-status">لم يُحدّد الموقع بعد. يبقى محفوظًا على هذا الجهاز.</p>
+        </div>
         <div class="reminder-row">
           <label class="reminder-toggle" for="morning-reminder-enabled">
             <input id="morning-reminder-enabled" type="checkbox">
             <span>أذكار الصباح</span>
           </label>
-          <label class="time-field" for="morning-reminder-time">
-            <span class="sr-only">وقت تذكير أذكار الصباح</span>
-            <input class="time-input" id="morning-reminder-time" type="time" value="06:00">
-          </label>
+          <div class="reminder-schedule">
+            <span>بعد الفجر بساعة</span>
+            <time class="prayer-time" id="morning-reminder-time">—</time>
+          </div>
         </div>
         <div class="reminder-row">
           <label class="reminder-toggle" for="evening-reminder-enabled">
             <input id="evening-reminder-enabled" type="checkbox">
             <span>أذكار المساء</span>
           </label>
-          <label class="time-field" for="evening-reminder-time">
-            <span class="sr-only">وقت تذكير أذكار المساء</span>
-            <input class="time-input" id="evening-reminder-time" type="time" value="18:00">
-          </label>
+          <div class="reminder-schedule">
+            <span>بعد العصر بساعة</span>
+            <time class="prayer-time" id="evening-reminder-time">—</time>
+          </div>
         </div>
-        <p class="settings-note" id="reminder-status">التذكيرات محلية، ويعتمد وصولها في الخلفية على دعم المتصفح والنظام.</p>
+        <p class="settings-note" id="reminder-status">حدّد الموقع لحساب الموعدين محليًا دون إرسال موقعك.</p>
       </section>
 
       <section class="settings-section" aria-labelledby="app-settings-title">
@@ -1674,6 +1719,17 @@
     <div class="dialog-actions">
       <button class="dialog-button" id="completion-close" type="button">تم</button>
       <button class="dialog-button primary" id="completion-switch" type="button">الانتقال إلى القسم الآخر</button>
+    </div>
+  </dialog>
+
+  <dialog id="install-dialog" aria-labelledby="install-dialog-title" aria-describedby="install-dialog-copy">
+    <div class="dialog-body">
+      <h2 id="install-dialog-title">ثبّت أذكار المسلم</h2>
+      <p id="install-dialog-copy">ثبّت التطبيق لفتحه بسرعة والقراءة دون اتصال.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="install-dialog-later" type="button">ليس الآن</button>
+      <button class="dialog-button primary" id="install-dialog-confirm" type="button">تثبيت الآن</button>
     </div>
   </dialog>
 
@@ -1948,7 +2004,17 @@
     const hapticsStorageKey = "athkar-haptics";
     const textSizeStorageKey = "athkar-reading-text-size";
     const lineSpacingStorageKey = "athkar-line-spacing";
-    const remindersStorageKey = "athkar-reminders-v1";
+    const remindersStorageKey = "athkar-reminders-v2";
+    const legacyRemindersStorageKey = "athkar-reminders-v1";
+    const installOnboardingStorageKey = "athkar-install-onboarding-v1";
+    const prayerCalculationMethods = Object.freeze({
+      "mwl": { fajrAngle: 18 },
+      "umm-al-qura": { fajrAngle: 18.5 },
+      "egyptian": { fajrAngle: 19.5 },
+      "karachi": { fajrAngle: 18 },
+      "north-america": { fajrAngle: 15 }
+    });
+    const asrShadowFactors = Object.freeze({ standard: 1, hanafi: 2 });
     const numberFormatter = new Intl.NumberFormat("ar-EG", { useGrouping: false });
     const timeFormatter = new Intl.DateTimeFormat("ar-EG", { hour: "numeric", minute: "2-digit" });
     const historyDateFormatter = new Intl.DateTimeFormat("ar-EG", { weekday: "short", day: "numeric", month: "short" });
@@ -1984,9 +2050,17 @@
     const morningReminderTime = document.getElementById("morning-reminder-time");
     const eveningReminderEnabled = document.getElementById("evening-reminder-enabled");
     const eveningReminderTime = document.getElementById("evening-reminder-time");
+    const prayerMethodSelect = document.getElementById("prayer-method-select");
+    const asrSchoolSelect = document.getElementById("asr-school-select");
+    const prayerLocationButton = document.getElementById("prayer-location-button");
+    const prayerLocationStatus = document.getElementById("prayer-location-status");
     const reminderStatus = document.getElementById("reminder-status");
     const installButton = document.getElementById("install-button");
     const installStatus = document.getElementById("install-status");
+    const installDialog = document.getElementById("install-dialog");
+    const installDialogCopy = document.getElementById("install-dialog-copy");
+    const installDialogLater = document.getElementById("install-dialog-later");
+    const installDialogConfirm = document.getElementById("install-dialog-confirm");
     const updateBanner = document.getElementById("update-banner");
     const updateApply = document.getElementById("update-apply");
     const updateDismiss = document.getElementById("update-dismiss");
@@ -2011,15 +2085,19 @@
     let pendingConfirmation = null;
     let advanceTimer = null;
     let dayRolloverTimer = null;
+    let installOnboardingTimer = null;
     let deferredInstallPrompt = null;
     let waitingWorker = null;
     let reloadingForUpdate = false;
+    let prayerLocationRequest = null;
+    let reminderStatusOverride = "";
     let state = loadState();
     let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
     hapticsToggle.checked = hapticsEnabled;
     saveState();
+    saveReminderPreferences();
 
     function localDateKey(date = new Date()) {
       const year = date.getFullYear();
@@ -2667,31 +2745,45 @@
 
     function emptyReminderPreferences() {
       return {
-        morning: { enabled: false, time: "06:00" },
-        evening: { enabled: false, time: "18:00" },
+        morning: { enabled: false },
+        evening: { enabled: false },
+        calculationMethod: "mwl",
+        asrSchool: "standard",
+        location: null,
         lastShown: { morning: null, evening: null }
       };
     }
 
-    function normalizeReminderTime(value, fallback) {
-      if (!/^\d{2}:\d{2}$/.test(value || "")) return fallback;
-      const [hours, minutes] = value.split(":").map(Number);
-      return hours <= 23 && minutes <= 59 ? value : fallback;
+    function normalizePrayerLocation(value) {
+      const latitude = Number(value?.latitude);
+      const longitude = Number(value?.longitude);
+      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null;
+      if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null;
+      return {
+        latitude,
+        longitude,
+        updatedAt: typeof value?.updatedAt === "string" ? value.updatedAt : null
+      };
     }
 
     function loadReminderPreferences() {
       const fallback = emptyReminderPreferences();
       try {
-        const parsed = JSON.parse(localStorage.getItem(remindersStorageKey));
+        const current = JSON.parse(localStorage.getItem(remindersStorageKey));
+        const legacy = current ? null : JSON.parse(localStorage.getItem(legacyRemindersStorageKey));
+        const parsed = current || legacy;
+        const calculationMethod = prayerCalculationMethods[parsed?.calculationMethod]
+          ? parsed.calculationMethod
+          : fallback.calculationMethod;
+        const asrSchool = asrShadowFactors[parsed?.asrSchool]
+          ? parsed.asrSchool
+          : fallback.asrSchool;
         return {
-          morning: {
-            enabled: Boolean(parsed?.morning?.enabled),
-            time: normalizeReminderTime(parsed?.morning?.time, fallback.morning.time)
-          },
-          evening: {
-            enabled: Boolean(parsed?.evening?.enabled),
-            time: normalizeReminderTime(parsed?.evening?.time, fallback.evening.time)
-          },
+          morning: { enabled: Boolean(current?.morning?.enabled) },
+          evening: { enabled: Boolean(current?.evening?.enabled) },
+          calculationMethod,
+          asrSchool,
+          location: normalizePrayerLocation(parsed?.location),
           lastShown: {
             morning: typeof parsed?.lastShown?.morning === "string" ? parsed.lastShown.morning : null,
             evening: typeof parsed?.lastShown?.evening === "string" ? parsed.lastShown.evening : null
@@ -2703,43 +2795,236 @@
     }
 
     function saveReminderPreferences() {
-      try { localStorage.setItem(remindersStorageKey, JSON.stringify(reminderPreferences)); } catch (_) {}
+      try {
+        localStorage.setItem(remindersStorageKey, JSON.stringify(reminderPreferences));
+        localStorage.removeItem(legacyRemindersStorageKey);
+      } catch (_) {}
+    }
+
+    function toRadians(value) {
+      return value * Math.PI / 180;
+    }
+
+    function toDegrees(value) {
+      return value * 180 / Math.PI;
+    }
+
+    function normalizeDegrees(value) {
+      return ((value % 360) + 360) % 360;
+    }
+
+    function solarTerms(julianDay) {
+      const century = (julianDay - 2451545) / 36525;
+      const meanLongitude = normalizeDegrees(280.46646 + century * (36000.76983 + century * 0.0003032));
+      const meanAnomaly = 357.52911 + century * (35999.05029 - 0.0001537 * century);
+      const eccentricity = 0.016708634 - century * (0.000042037 + 0.0000001267 * century);
+      const equationOfCenter =
+        Math.sin(toRadians(meanAnomaly)) * (1.914602 - century * (0.004817 + 0.000014 * century)) +
+        Math.sin(toRadians(2 * meanAnomaly)) * (0.019993 - 0.000101 * century) +
+        Math.sin(toRadians(3 * meanAnomaly)) * 0.000289;
+      const apparentLongitude =
+        meanLongitude + equationOfCenter - 0.00569 -
+        0.00478 * Math.sin(toRadians(125.04 - 1934.136 * century));
+      const meanObliquity =
+        23 + (26 + (21.448 - century * (46.815 + century * (0.00059 - century * 0.001813))) / 60) / 60;
+      const obliquity =
+        meanObliquity + 0.00256 * Math.cos(toRadians(125.04 - 1934.136 * century));
+      const declination = toDegrees(
+        Math.asin(Math.sin(toRadians(obliquity)) * Math.sin(toRadians(apparentLongitude)))
+      );
+      const y = Math.tan(toRadians(obliquity / 2)) ** 2;
+      const equationOfTime = 4 * toDegrees(
+        y * Math.sin(2 * toRadians(meanLongitude)) -
+        2 * eccentricity * Math.sin(toRadians(meanAnomaly)) +
+        4 * eccentricity * y * Math.sin(toRadians(meanAnomaly)) * Math.cos(2 * toRadians(meanLongitude)) -
+        0.5 * y ** 2 * Math.sin(4 * toRadians(meanLongitude)) -
+        1.25 * eccentricity ** 2 * Math.sin(2 * toRadians(meanAnomaly))
+      );
+      return { declination, equationOfTime };
+    }
+
+    function dateAtLocalMinutes(date, minutes) {
+      const wholeMinutes = Math.floor(minutes);
+      const milliseconds = Math.round((minutes - wholeMinutes) * 60 * 1000);
+      const result = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
+      result.setHours(0, wholeMinutes, 0, milliseconds);
+      return result;
+    }
+
+    function solarDay(date, location, fajrAngle, asrShadowFactor) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+      const timezoneHours = -new Date(year, month, day, 12).getTimezoneOffset() / 60;
+      const julianDay = Date.UTC(year, month, day) / 86400000 + 2440587.5;
+      let terms = solarTerms(julianDay + 0.5);
+      let solarNoon = 720 - 4 * location.longitude - terms.equationOfTime + timezoneHours * 60;
+      terms = solarTerms(julianDay + (solarNoon - timezoneHours * 60) / 1440);
+      solarNoon = 720 - 4 * location.longitude - terms.equationOfTime + timezoneHours * 60;
+
+      const latitude = toRadians(location.latitude);
+      const declination = toRadians(terms.declination);
+      const hourAngleMinutes = altitude => {
+        const cosine =
+          (Math.sin(toRadians(altitude)) - Math.sin(latitude) * Math.sin(declination)) /
+          (Math.cos(latitude) * Math.cos(declination));
+        return Math.abs(cosine) <= 1 ? toDegrees(Math.acos(cosine)) * 4 : null;
+      };
+      const fajrOffset = hourAngleMinutes(-fajrAngle);
+      const horizonOffset = hourAngleMinutes(-0.833);
+      const asrAltitude = toDegrees(
+        Math.atan(1 / (asrShadowFactor + Math.tan(Math.abs(latitude - declination))))
+      );
+      const asrOffset = hourAngleMinutes(asrAltitude);
+
+      return {
+        fajr: fajrOffset === null ? null : dateAtLocalMinutes(date, solarNoon - fajrOffset),
+        sunrise: horizonOffset === null ? null : dateAtLocalMinutes(date, solarNoon - horizonOffset),
+        asr: asrOffset === null ? null : dateAtLocalMinutes(date, solarNoon + asrOffset),
+        sunset: horizonOffset === null ? null : dateAtLocalMinutes(date, solarNoon + horizonOffset)
+      };
+    }
+
+    function prayerTimesForDate(date = new Date(), preferences = reminderPreferences) {
+      const location = normalizePrayerLocation(preferences.location);
+      const method = prayerCalculationMethods[preferences.calculationMethod];
+      const asrShadowFactor = asrShadowFactors[preferences.asrSchool];
+      if (!location || !method || !asrShadowFactor) return null;
+
+      const today = solarDay(date, location, method.fajrAngle, asrShadowFactor);
+      const yesterdayDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1, 12);
+      const yesterday = solarDay(yesterdayDate, location, method.fajrAngle, asrShadowFactor);
+      if (!today.sunrise || !today.asr) return null;
+
+      let fajr = today.fajr;
+      if (yesterday.sunset) {
+        const nightDuration = today.sunrise.getTime() - yesterday.sunset.getTime();
+        if (nightDuration > 0) {
+          const safeFajr = new Date(
+            today.sunrise.getTime() - nightDuration * method.fajrAngle / 60
+          );
+          if (!fajr || fajr < safeFajr) fajr = safeFajr;
+        }
+      }
+      if (!fajr) return null;
+
+      return {
+        fajr,
+        asr: today.asr,
+        morning: new Date(fajr.getTime() + 60 * 60 * 1000),
+        evening: new Date(today.asr.getTime() + 60 * 60 * 1000)
+      };
     }
 
     function notificationPermission() {
-      return "Notification" in window ? Notification.permission : "unsupported";
+      return "Notification" in window && "serviceWorker" in navigator
+        ? Notification.permission
+        : "unsupported";
     }
 
     function updateReminderControls() {
       morningReminderEnabled.checked = reminderPreferences.morning.enabled;
-      morningReminderTime.value = reminderPreferences.morning.time;
       eveningReminderEnabled.checked = reminderPreferences.evening.enabled;
-      eveningReminderTime.value = reminderPreferences.evening.time;
+      prayerMethodSelect.value = reminderPreferences.calculationMethod;
+      asrSchoolSelect.value = reminderPreferences.asrSchool;
+      prayerLocationButton.disabled = Boolean(prayerLocationRequest);
+      prayerLocationButton.textContent = prayerLocationRequest
+        ? "جارٍ تحديد الموقع…"
+        : reminderPreferences.location ? "تحديث الموقع" : "تحديد الموقع";
+
+      const schedule = prayerTimesForDate();
+      for (const [element, time] of [
+        [morningReminderTime, schedule?.morning],
+        [eveningReminderTime, schedule?.evening]
+      ]) {
+        element.textContent = time ? timeFormatter.format(time) : "—";
+        element.dateTime = time ? time.toISOString() : "";
+      }
+
+      prayerLocationStatus.textContent = reminderPreferences.location
+        ? "تم تحديد الموقع وحفظه محليًا على هذا الجهاز."
+        : "لم يُحدّد الموقع بعد. يبقى محفوظًا على هذا الجهاز.";
+
       const permission = notificationPermission();
-      if (permission === "unsupported") {
+      if (reminderStatusOverride) {
+        reminderStatus.textContent = reminderStatusOverride;
+      } else if (!reminderPreferences.location) {
+        reminderStatus.textContent = "حدّد الموقع لحساب الموعدين محليًا دون إرسال موقعك.";
+      } else if (!schedule) {
+        reminderStatus.textContent = "تعذر حساب مواقيت الصلاة لهذا الموقع والتاريخ.";
+      } else if (permission === "unsupported") {
         reminderStatus.textContent = "هذا المتصفح لا يدعم إشعارات التذكير.";
       } else if (permission === "denied") {
         reminderStatus.textContent = "الإشعارات محظورة. اسمح بها من إعدادات المتصفح لتشغيل التذكيرات.";
       } else if (reminderPreferences.morning.enabled || reminderPreferences.evening.enabled) {
         reminderStatus.textContent = permission === "granted"
-          ? "التذكيرات مضبوطة محليًا. يعمل الموعد أثناء تشغيل التطبيق، ويعتمد العمل في الخلفية على دعم النظام."
+          ? "الموعدان محسوبان محليًا. يعمل المؤقت أثناء فتح التطبيق، ويعتمد العمل بعد إغلاقه على دعم النظام."
           : "سيطلب المتصفح إذن الإشعارات عند تشغيل أول تذكير.";
       } else {
         reminderStatus.textContent = "التذكيرات متوقفة ومحفوظة محليًا على هذا الجهاز.";
       }
     }
 
-    function nextReminderTime(period) {
-      const [hours, minutes] = reminderPreferences[period].time.split(":").map(Number);
-      const now = new Date();
-      const next = new Date(now);
-      next.setHours(hours, minutes, 0, 0);
-      const shownToday = reminderPreferences.lastShown[period] === localDateKey(now);
-      if (next <= now) {
-        if (!shownToday && now - next <= 15 * 60 * 1000) return new Date(now.getTime() + 300);
-        next.setDate(next.getDate() + 1);
+    function geolocationErrorMessage(error) {
+      if (error?.code === 1) return "تعذر تحديد الموقع لأن الإذن مرفوض. اسمح بالموقع من إعدادات المتصفح.";
+      if (error?.code === 2) return "تعذر تحديد الموقع الحالي. حاول مرة أخرى في مكان تتوفر فيه إشارة الموقع.";
+      if (error?.code === 3) return "انتهت مهلة تحديد الموقع. حاول مرة أخرى.";
+      return "تعذر تحديد الموقع الحالي.";
+    }
+
+    async function requestPrayerLocation(announce = true) {
+      if (prayerLocationRequest) return prayerLocationRequest;
+      if (!("geolocation" in navigator)) {
+        reminderStatusOverride = "هذا المتصفح لا يدعم تحديد الموقع.";
+        updateReminderControls();
+        return false;
       }
-      return next;
+
+      reminderStatusOverride = "";
+      prayerLocationRequest = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 12000,
+          maximumAge: 6 * 60 * 60 * 1000
+        });
+      }).then(position => {
+        const location = normalizePrayerLocation({
+          latitude: Number(position.coords.latitude.toFixed(4)),
+          longitude: Number(position.coords.longitude.toFixed(4)),
+          updatedAt: new Date().toISOString()
+        });
+        if (!location) throw new Error("Invalid coordinates");
+        reminderPreferences.location = location;
+        saveReminderPreferences();
+        if (announce) liveRegion.textContent = "تم تحديد الموقع وحساب مواعيد التذكير";
+        return true;
+      }).catch(error => {
+        reminderStatusOverride = geolocationErrorMessage(error);
+        if (announce) liveRegion.textContent = reminderStatusOverride;
+        return false;
+      });
+
+      updateReminderControls();
+      const succeeded = await prayerLocationRequest;
+      prayerLocationRequest = null;
+      updateReminderControls();
+      scheduleReminders();
+      return succeeded;
+    }
+
+    function nextReminderTime(period, now = new Date()) {
+      const schedule = prayerTimesForDate(now);
+      const next = schedule?.[period];
+      if (!next) return null;
+
+      const shownToday = reminderPreferences.lastShown[period] === localDateKey(now);
+      if (!shownToday && next > now) return next;
+      if (!shownToday && now - next <= 15 * 60 * 1000) {
+        return new Date(now.getTime() + 300);
+      }
+
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12);
+      return prayerTimesForDate(tomorrow)?.[period] || null;
     }
 
     function scheduleReminders() {
@@ -2747,7 +3032,9 @@
         clearTimeout(reminderTimers[period]);
         reminderTimers[period] = null;
         if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") continue;
-        const delay = Math.max(0, nextReminderTime(period).getTime() - Date.now());
+        const next = nextReminderTime(period);
+        if (!next) continue;
+        const delay = Math.max(0, next.getTime() - Date.now());
         reminderTimers[period] = setTimeout(() => showReminder(period), delay);
       }
     }
@@ -2756,10 +3043,11 @@
       if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") return;
       try {
         const registration = await navigator.serviceWorker.ready;
+        const prayerName = period === "morning" ? "الفجر" : "العصر";
         await registration.showNotification(sectionNames[period], {
-          body: `حان وقت ${sectionNames[period]}.`,
-          icon: "./icons/icon-192.png",
-          badge: "./icons/icon-192.png",
+          body: `مرّت ساعة على صلاة ${prayerName}. حان وقت ${sectionNames[period]}.`,
+          icon: "./icons/icon-192.png?v=13",
+          badge: "./icons/icon-192.png?v=13",
           tag: `athkar-${period}-${localDateKey()}`,
           renotify: false,
           data: { url: new URL(`./#${period}`, location.href).href }
@@ -2767,26 +3055,41 @@
         reminderPreferences.lastShown[period] = localDateKey();
         saveReminderPreferences();
       } catch (_) {
-        reminderStatus.textContent = "تعذر إرسال التذكير. تحقق من إذن الإشعارات.";
+        reminderStatusOverride = "تعذر إرسال التذكير. تحقق من إذن الإشعارات.";
+        updateReminderControls();
       }
       scheduleReminders();
     }
 
     async function setReminderEnabled(period, enabled) {
       if (enabled) {
-        if (!("Notification" in window)) {
+        if (notificationPermission() === "unsupported") {
           reminderPreferences[period].enabled = false;
+          saveReminderPreferences();
           updateReminderControls();
           return;
         }
         let permission = Notification.permission;
-        if (permission === "default") permission = await Notification.requestPermission();
+        try {
+          if (permission === "default") permission = await Notification.requestPermission();
+        } catch (_) {
+          permission = "denied";
+          reminderStatusOverride = "تعذر طلب إذن الإشعارات في هذا المتصفح.";
+        }
         if (permission !== "granted") {
           reminderPreferences[period].enabled = false;
+          saveReminderPreferences();
+          updateReminderControls();
+          return;
+        }
+        if (!reminderPreferences.location && !await requestPrayerLocation()) {
+          reminderPreferences[period].enabled = false;
+          saveReminderPreferences();
           updateReminderControls();
           return;
         }
       }
+      reminderStatusOverride = "";
       reminderPreferences[period].enabled = enabled;
       saveReminderPreferences();
       updateReminderControls();
@@ -2804,28 +3107,88 @@
       }, nextDay.getTime() - Date.now());
     }
 
+    function isIosDevice() {
+      return /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
     function isInstalled() {
       return standaloneDisplay.matches || navigator.standalone === true;
     }
 
+    function hasSeenInstallOnboarding() {
+      try { return localStorage.getItem(installOnboardingStorageKey) === "seen"; }
+      catch (_) { return false; }
+    }
+
+    function markInstallOnboardingSeen() {
+      try { localStorage.setItem(installOnboardingStorageKey, "seen"); } catch (_) {}
+    }
+
+    function updateInstallDialogUi() {
+      if (isIosDevice()) {
+        installDialogCopy.textContent =
+          "على آيفون وآيباد: افتح الموقع في سفاري، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».";
+        installDialogConfirm.textContent = "فهمت";
+      } else if (deferredInstallPrompt) {
+        installDialogCopy.textContent =
+          "ثبّت التطبيق لفتحه بسرعة، واستخدامه كنافذة مستقلة، والقراءة دون اتصال.";
+        installDialogConfirm.textContent = "تثبيت الآن";
+      } else {
+        installDialogCopy.textContent =
+          "افتح قائمة المتصفح واختر «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية».";
+        installDialogConfirm.textContent = "فهمت";
+      }
+    }
+
     function updateInstallUi() {
+      installButton.textContent = "تثبيت التطبيق";
       if (isInstalled()) {
         installButton.disabled = true;
         installStatus.textContent = "التطبيق مثبت على هذا الجهاز.";
+      } else if (isIosDevice()) {
+        installButton.disabled = false;
+        installButton.textContent = "طريقة التثبيت على آيفون وآيباد";
+        installStatus.textContent = "يُثبّت من سفاري عبر «المشاركة» ثم «إضافة إلى الشاشة الرئيسية».";
       } else if (deferredInstallPrompt) {
         installButton.disabled = false;
         installStatus.textContent = "يمكن تثبيت التطبيق ليعمل كنافذة مستقلة ويسهل فتحه.";
       } else {
-        installButton.disabled = true;
-        installStatus.textContent = "استخدم «إضافة إلى الشاشة الرئيسية» من قائمة المتصفح إذا لم يظهر زر التثبيت.";
+        installButton.disabled = false;
+        installButton.textContent = "طريقة التثبيت";
+        installStatus.textContent = "استخدم «تثبيت التطبيق» أو «إضافة إلى الشاشة الرئيسية» من قائمة المتصفح.";
       }
+      if (installDialog.open) updateInstallDialogUi();
+    }
+
+    function showInstallDialog() {
+      if (isInstalled() || installDialog.open) return;
+      if (settingsDialog.open) settingsDialog.close();
+      updateInstallDialogUi();
+      installDialog.showModal();
+    }
+
+    function scheduleFirstUseInstallPrompt(delay = 1200) {
+      clearTimeout(installOnboardingTimer);
+      if (isInstalled() || hasSeenInstallOnboarding()) return;
+      installOnboardingTimer = setTimeout(() => {
+        if (document.querySelector("dialog[open]")) {
+          scheduleFirstUseInstallPrompt(1800);
+          return;
+        }
+        showInstallDialog();
+      }, delay);
     }
 
     async function installApp() {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
+      if (!deferredInstallPrompt) {
+        showInstallDialog();
+        return;
+      }
+      const prompt = deferredInstallPrompt;
       deferredInstallPrompt = null;
+      prompt.prompt();
+      await prompt.userChoice;
       updateInstallUi();
     }
 
@@ -2908,20 +3271,42 @@
     lineSpacingSelect.addEventListener("change", event => applyLineSpacing(event.target.value));
     morningReminderEnabled.addEventListener("change", () => setReminderEnabled("morning", morningReminderEnabled.checked));
     eveningReminderEnabled.addEventListener("change", () => setReminderEnabled("evening", eveningReminderEnabled.checked));
-    morningReminderTime.addEventListener("change", () => {
-      reminderPreferences.morning.time = normalizeReminderTime(morningReminderTime.value, "06:00");
+    prayerMethodSelect.addEventListener("change", event => {
+      reminderStatusOverride = "";
+      reminderPreferences.calculationMethod = event.target.value;
       saveReminderPreferences();
       updateReminderControls();
       scheduleReminders();
     });
-    eveningReminderTime.addEventListener("change", () => {
-      reminderPreferences.evening.time = normalizeReminderTime(eveningReminderTime.value, "18:00");
+    asrSchoolSelect.addEventListener("change", event => {
+      reminderStatusOverride = "";
+      reminderPreferences.asrSchool = event.target.value;
       saveReminderPreferences();
       updateReminderControls();
       scheduleReminders();
     });
+    prayerLocationButton.addEventListener("click", () => requestPrayerLocation());
 
-    installButton.addEventListener("click", installApp);
+    installButton.addEventListener("click", showInstallDialog);
+    installDialogLater.addEventListener("click", () => {
+      markInstallOnboardingSeen();
+      installDialog.close();
+    });
+    installDialogConfirm.addEventListener("click", async () => {
+      markInstallOnboardingSeen();
+      if (deferredInstallPrompt) {
+        installDialog.close();
+        await installApp();
+      } else {
+        installDialog.close();
+      }
+    });
+    installDialog.addEventListener("cancel", markInstallOnboardingSeen);
+    installDialog.addEventListener("click", event => {
+      if (event.target !== installDialog) return;
+      markInstallOnboardingSeen();
+      installDialog.close();
+    });
     addEventListener("beforeinstallprompt", event => {
       event.preventDefault();
       deferredInstallPrompt = event;
@@ -2929,10 +3314,15 @@
     });
     addEventListener("appinstalled", () => {
       deferredInstallPrompt = null;
+      markInstallOnboardingSeen();
+      if (installDialog.open) installDialog.close();
       updateInstallUi();
       liveRegion.textContent = "تم تثبيت التطبيق";
     });
-    standaloneDisplay.addEventListener?.("change", updateInstallUi);
+    standaloneDisplay.addEventListener?.("change", () => {
+      if (isInstalled()) markInstallOnboardingSeen();
+      updateInstallUi();
+    });
 
     updateApply.addEventListener("click", () => {
       if (!waitingWorker) return;
@@ -2996,6 +3386,7 @@
         if (reloadingForUpdate) location.reload();
       });
       addEventListener("load", registerServiceWorker, { once: true });
+      addEventListener("load", () => scheduleFirstUseInstallPrompt(), { once: true });
     }
 
     let storedTheme = "system";

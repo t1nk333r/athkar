@@ -1,26 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="أذكار المسلم">
   <defs>
-    <linearGradient id="background" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#314a5a"/>
-      <stop offset="1" stop-color="#182733"/>
+    <linearGradient id="background" x1="76" y1="40" x2="438" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#294654"/>
+      <stop offset="0.55" stop-color="#1b3542"/>
+      <stop offset="1" stop-color="#112632"/>
     </linearGradient>
-    <linearGradient id="accent" x1="110" y1="110" x2="402" y2="402" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#69d2df"/>
-      <stop offset="1" stop-color="#19a4bf"/>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientTransform="translate(256 235) rotate(90) scale(190)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4bc4d4" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#4bc4d4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beads" x1="118" y1="92" x2="398" y2="398" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#78dce5"/>
+      <stop offset="1" stop-color="#2caec1"/>
+    </linearGradient>
+    <linearGradient id="crescent-fill" x1="177" y1="151" x2="318" y2="323" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff5d7"/>
+      <stop offset="1" stop-color="#f1c76d"/>
     </linearGradient>
     <mask id="crescent">
       <rect width="512" height="512" fill="black"/>
-      <circle cx="300" cy="248" r="112" fill="white"/>
-      <circle cx="346" cy="205" r="112" fill="black"/>
+      <circle cx="244" cy="236" r="92" fill="white"/>
+      <circle cx="286" cy="197" r="86" fill="black"/>
     </mask>
+    <filter id="soft-shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#081820" flood-opacity="0.28"/>
+    </filter>
   </defs>
+
   <rect width="512" height="512" fill="url(#background)"/>
-  <rect x="38" y="38" width="436" height="436" rx="92" fill="none" stroke="#ffffff" stroke-opacity=".09" stroke-width="4"/>
-  <circle cx="172" cy="180" r="55" fill="#efc96d"/>
-  <g stroke="#efc96d" stroke-width="14" stroke-linecap="round">
-    <path d="M172 92v-22M172 290v-22M84 180H62M282 180h-22M110 118l-16-16M250 258l-16-16M110 242l-16 16M250 102l-16 16"/>
+  <circle cx="256" cy="238" r="190" fill="url(#halo)"/>
+
+  <circle
+    cx="256"
+    cy="238"
+    r="153"
+    fill="none"
+    stroke="url(#beads)"
+    stroke-width="19"
+    stroke-linecap="round"
+    stroke-dasharray="0.1 39.95"
+    transform="rotate(-90 256 238)"
+  />
+
+  <g filter="url(#soft-shadow)">
+    <circle cx="244" cy="236" r="92" fill="url(#crescent-fill)" mask="url(#crescent)"/>
+    <path d="M333 142l7 17 17 7-17 7-7 17-7-17-17-7 17-7 7-17Z" fill="#f4cf79"/>
   </g>
-  <circle cx="300" cy="248" r="112" fill="url(#accent)" mask="url(#crescent)"/>
-  <path d="M122 364c42-22 86-22 132 0 46-22 90-22 136 0v44c-46-22-90-22-136 0-46-22-90-22-132 0z" fill="#f7f2e8" fill-opacity=".94"/>
-  <path d="M254 364v44" stroke="#1b303d" stroke-opacity=".35" stroke-width="5"/>
+
+  <path d="M256 384v16" stroke="#6bd3dd" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="256" cy="414" r="15" fill="#f2ca70"/>
+  <path d="M242 434c9-6 19-6 28 0l7 18h-42l7-18Z" fill="#f2ca70"/>
+  <path d="M246 440h20" stroke="#fff5d7" stroke-opacity="0.45" stroke-width="4" stroke-linecap="round"/>
 </svg>

@@ -1,13 +1,13 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v12";
+const CACHE_NAME = "athkar-static-v13";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./manifest.webmanifest",
-  "./icons/icon.svg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./manifest.webmanifest?v=13",
+  "./icons/icon.svg?v=13",
+  "./icons/icon-192.png?v=13",
+  "./icons/icon-512.png?v=13",
   "./fonts/kfgqpc-uthman-taha-naskh.ttf",
 ];
 
