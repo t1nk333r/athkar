@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v10";
+const CACHE_NAME = "athkar-static-v12";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,9 +13,7 @@ const APP_SHELL = [
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
 });
 
@@ -24,6 +22,25 @@ self.addEventListener("activate", event => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
       .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener("message", event => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || new URL("./", self.registration.scope).href;
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(async openClients => {
+      const existing = openClients.find(client => new URL(client.url).origin === new URL(targetUrl).origin);
+      if (existing) {
+        await existing.navigate(targetUrl);
+        return existing.focus();
+      }
+      return clients.openWindow(targetUrl);
+    })
   );
 });
 

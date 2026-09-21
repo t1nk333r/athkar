@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light" data-ayah-text-size="medium">
+<html lang="ar" dir="rtl" data-theme="system" data-resolved-theme="light" data-text-size="medium" data-line-spacing="comfortable">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -24,10 +24,16 @@
         document.documentElement.dataset.resolvedTheme = dark ? "dark" : "light";
       } catch (_) {}
       try {
-        const savedAyahTextSize = localStorage.getItem("athkar-text-size");
-        document.documentElement.dataset.ayahTextSize = ["small", "medium", "large", "xlarge"].includes(savedAyahTextSize)
-          ? savedAyahTextSize
+        const legacyTextSize = localStorage.getItem("athkar-text-size");
+        const savedTextSize = localStorage.getItem("athkar-reading-text-size")
+          || (legacyTextSize === "xlarge" ? "large" : legacyTextSize);
+        const savedLineSpacing = localStorage.getItem("athkar-line-spacing");
+        document.documentElement.dataset.textSize = ["small", "medium", "large"].includes(savedTextSize)
+          ? savedTextSize
           : "medium";
+        document.documentElement.dataset.lineSpacing = ["compact", "comfortable", "wide"].includes(savedLineSpacing)
+          ? savedLineSpacing
+          : "comfortable";
       } catch (_) {}
       try {
         const switchProbe = document.createElement("input");
@@ -74,23 +80,39 @@
       --radius-lg: 1.25rem;
       --content-width: 49rem;
       --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Traditional Arabic", Tahoma, Arial, sans-serif;
+      --dhikr-text-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      --detail-text-size: clamp(1rem, 4.1vw, 1.27rem);
       --quran-prefix-size: clamp(1.2rem, 5vw, 1.58rem);
       --quran-text-size: clamp(1.3rem, 5.6vw, 1.82rem);
+      --dhikr-line-height: 1.95;
+      --detail-line-height: 1.85;
+      --quran-line-height: 2.05;
     }
 
-    :root[data-ayah-text-size="small"] {
+    :root[data-text-size="small"] {
+      --dhikr-text-size: clamp(1.08rem, 4.7vw, 1.5rem);
+      --detail-text-size: clamp(0.9rem, 3.7vw, 1.12rem);
       --quran-prefix-size: clamp(1.05rem, 4.45vw, 1.4rem);
       --quran-text-size: clamp(1.15rem, 5vw, 1.62rem);
     }
 
-    :root[data-ayah-text-size="large"] {
+    :root[data-text-size="large"] {
+      --dhikr-text-size: clamp(1.4rem, 6vw, 1.95rem);
+      --detail-text-size: clamp(1.08rem, 4.5vw, 1.4rem);
       --quran-prefix-size: clamp(1.35rem, 5.75vw, 1.82rem);
       --quran-text-size: clamp(1.45rem, 6.4vw, 2.12rem);
     }
 
-    :root[data-ayah-text-size="xlarge"] {
-      --quran-prefix-size: clamp(1.52rem, 6.55vw, 2.08rem);
-      --quran-text-size: clamp(1.65rem, 7.3vw, 2.42rem);
+    :root[data-line-spacing="compact"] {
+      --dhikr-line-height: 1.7;
+      --detail-line-height: 1.62;
+      --quran-line-height: 1.82;
+    }
+
+    :root[data-line-spacing="wide"] {
+      --dhikr-line-height: 2.16;
+      --detail-line-height: 2.05;
+      --quran-line-height: 2.3;
     }
 
     :root[data-resolved-theme="dark"] {
@@ -216,37 +238,6 @@
       line-height: 1.15;
     }
 
-    .theme-wrap {
-      position: relative;
-      flex: none;
-    }
-
-    .theme-wrap::before {
-      content: "◐";
-      position: absolute;
-      inset-block-start: 50%;
-      inset-inline-start: 0.72rem;
-      z-index: 1;
-      color: var(--text-secondary);
-      font-family: Arial, sans-serif;
-      transform: translateY(-50%);
-      pointer-events: none;
-    }
-
-    .theme-select {
-      min-height: 2.75rem;
-      padding: 0.5rem 2.2rem 0.5rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      appearance: none;
-      background: var(--surface-raised);
-      color: var(--text-secondary);
-      box-shadow: var(--shadow-soft);
-      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.82rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
 
     .period-tabs {
       position: sticky;
@@ -293,6 +284,16 @@
       height: 1.2rem;
       flex: none;
     }
+    .period-complete {
+      display: none;
+      color: var(--completed);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .period-tab.is-complete .period-complete { display: inline; }
+
 
     .session-summary {
       margin-block-start: 0.85rem;
@@ -433,6 +434,7 @@
     }
 
     .session-reset,
+    .settings-button,
     .card-reset {
       display: inline-flex;
       min-width: 2.75rem;
@@ -453,6 +455,7 @@
     }
 
     .session-reset:active,
+    .settings-button:active,
     .card-reset:active { transform: scale(0.96); }
 
     .session-reset:disabled,
@@ -460,6 +463,11 @@
       opacity: 0.36;
       cursor: default;
     }
+    .settings-button svg {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
 
     .progress-track {
       width: auto;
@@ -658,7 +666,7 @@
     .dhikr-card:active::after { opacity: 0.09; }
     .dhikr-card:has(.card-reset:active)::after,
     .dhikr-card:has(.target-select:active)::after,
-    .dhikr-card:has(.ayah-size-button:active)::after { opacity: 0; }
+    .dhikr-card:has(.source-button:active)::after { opacity: 0; }
 
     .dhikr-card:has(.card-tap-target:active) { transform: scale(0.993); }
 
@@ -718,64 +726,6 @@
       transform: translateX(-50%);
     }
 
-    .card-toolbar {
-      position: sticky;
-      inset-block-start: 0;
-      z-index: 3;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-block-end: 0.3rem;
-      padding-block-end: 0.55rem;
-      background: var(--card-background);
-      box-shadow: 0 0.65rem 0 var(--card-background);
-    }
-
-    .card-toolbar .card-index { margin-block-end: 0; }
-
-    .ayah-size-control {
-      display: inline-flex;
-      min-height: 2.25rem;
-      align-items: center;
-      gap: 0.12rem;
-      padding: 0.14rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      direction: ltr;
-      background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .ayah-size-button {
-      display: inline-grid;
-      width: 2.15rem;
-      min-height: 1.95rem;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      border-radius: 999px;
-      background: transparent;
-      color: var(--text-primary);
-      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
-      line-height: 1;
-      cursor: pointer;
-      transition: color 120ms ease, background-color 120ms ease, opacity 120ms ease, transform 100ms ease;
-    }
-
-    .ayah-size-button:not(:disabled):active {
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-      transform: scale(0.94);
-    }
-
-    .ayah-size-button:disabled {
-      opacity: 0.28;
-      cursor: default;
-    }
-
-    .ayah-size-glyph-small { font-size: 0.92rem; }
-    .ayah-size-glyph-large { font-size: 1.42rem; }
 
     .review-badge {
       display: inline-flex;
@@ -803,9 +753,9 @@
     .dhikr-text {
       margin: 0;
       color: var(--text-primary);
-      font-size: clamp(1.24rem, 5.35vw, 1.72rem);
+      font-size: var(--dhikr-text-size);
       font-weight: 560;
-      line-height: 1.95;
+      line-height: var(--dhikr-line-height);
       text-align: start;
       unicode-bidi: plaintext;
     }
@@ -820,7 +770,7 @@
 
     .dhikr-card.quran .dhikr-text {
       font-size: var(--quran-text-size);
-      line-height: 2.05;
+      line-height: var(--quran-line-height);
     }
 
     .dhikr-details {
@@ -832,9 +782,9 @@
     .dhikr-detail {
       margin: 0;
       color: var(--reference);
-      font-size: clamp(1rem, 4.1vw, 1.27rem);
+      font-size: var(--detail-text-size);
       font-weight: 600;
-      line-height: 1.85;
+      line-height: var(--detail-line-height);
       text-align: start;
       unicode-bidi: plaintext;
     }
@@ -845,6 +795,21 @@
       border-radius: 0.5rem;
       background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
     }
+    .source-button {
+      position: relative;
+      z-index: 3;
+      justify-self: start;
+      padding: 0.3rem 0;
+      border: 0;
+      border-block-end: 1px solid currentColor;
+      background: transparent;
+      color: var(--reference);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
     .dhikr-card.is-content-dense {
       padding: clamp(0.8rem, 3.5vw, 1.35rem);
     }
@@ -1089,6 +1054,236 @@
     }
 
     :root[data-resolved-theme="dark"] .dialog-button.danger { color: #ffaaa3; }
+    .dialog-button.primary,
+    .settings-action {
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .sheet-dialog {
+      width: min(calc(100% - 2rem), 34rem);
+      max-height: min(86vh, 44rem);
+    }
+
+    .sheet-dialog[open] {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      border-block-end: 1px solid var(--border);
+    }
+
+    .sheet-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .sheet-close,
+    .settings-action,
+    .update-actions button {
+      min-height: 2.55rem;
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .sheet-body {
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      padding: 0 1.2rem 1.2rem;
+    }
+
+    .settings-section {
+      padding-block: 1.1rem;
+      border-block-end: 1px solid var(--border);
+    }
+
+    .settings-section:last-child { border-block-end: 0; }
+    .settings-section h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    .settings-field {
+      display: grid;
+      gap: 0.35rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .settings-select,
+    .time-input {
+      width: 100%;
+      min-height: 2.65rem;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-weight: 700;
+    }
+
+    .time-input {
+      min-width: 7rem;
+      direction: ltr;
+      text-align: center;
+    }
+
+    .reminder-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-block: 0.35rem;
+    }
+
+    .reminder-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-weight: 750;
+    }
+
+    .reminder-toggle input {
+      width: 1.15rem;
+      height: 1.15rem;
+      accent-color: var(--accent);
+    }
+
+    .settings-note {
+      margin: 0.65rem 0 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.74rem;
+      line-height: 1.65;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.8rem;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.76rem;
+    }
+
+    .history-row.is-today {
+      border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+      background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+    }
+
+    .history-state.is-complete {
+      color: var(--completed);
+      font-weight: 850;
+    }
+
+    .source-sheet-body {
+      display: grid;
+      gap: 0.8rem;
+      padding-block-start: 1.1rem;
+    }
+
+    .source-sheet-body .dhikr-detail {
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .completion-dialog { text-align: center; }
+    .completion-mark {
+      width: 3.2rem;
+      height: 3.2rem;
+      display: grid;
+      place-items: center;
+      margin: 1.35rem auto 0;
+      border-radius: 50%;
+      background: var(--completed-soft);
+      color: var(--completed);
+      font-family: Arial, sans-serif;
+      font-size: 1.65rem;
+      font-weight: 900;
+    }
+
+    .completion-time {
+      display: block;
+      margin-block-start: 0.65rem;
+      color: var(--completed);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-weight: 800;
+    }
+
+    .update-banner {
+      position: fixed;
+      inset-inline: 50%;
+      inset-block-end: max(0.8rem, env(safe-area-inset-bottom));
+      z-index: 110;
+      width: min(calc(100% - 1.5rem), 32rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--surface-raised);
+      box-shadow: var(--shadow);
+      transform: translateX(50%);
+    }
+
+    .update-banner[hidden] { display: none; }
+    .update-banner p {
+      margin: 0;
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 750;
+    }
+
+    .update-actions {
+      display: flex;
+      flex: none;
+      gap: 0.35rem;
+    }
+
+    .update-actions button:last-child {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
 
     :focus-visible {
       outline: 3px solid var(--focus);
@@ -1149,11 +1344,6 @@
       .eyebrow { display: none; }
       h1 { font-size: 1.6rem; }
 
-      .theme-select {
-        min-height: 2.35rem;
-        padding-block: 0.35rem;
-        font-size: 0.76rem;
-      }
 
       .period-tabs {
         position: relative;
@@ -1187,13 +1377,28 @@
         padding: 0.3rem 0.48rem;
         font-size: 0.72rem;
       }
+      .sheet-dialog {
+        width: 100%;
+        max-width: none;
+        max-height: 88svh;
+        margin: auto 0 0;
+        border-radius: 1.4rem 1.4rem 0 0;
+      }
+
+      .sheet-body {
+        padding-block-end: max(1.2rem, env(safe-area-inset-bottom));
+      }
+
+      .settings-grid { grid-template-columns: 1fr; }
+
       .app-footer { gap: 0.35rem; }
 
       .session-progress-copy {
         font-size: 0.72rem;
       }
 
-      .session-reset {
+      .session-reset,
+      .settings-button {
         min-width: 2.3rem;
         min-height: 2.3rem;
         padding: 0.3rem 0.55rem;
@@ -1262,11 +1467,9 @@
       .app-shell { padding-inline: 0.62rem; }
       .brand-row { align-items: flex-end; }
       .eyebrow { display: none; }
-      .theme-select { width: 5.8rem; }
       .period-tab { min-height: 3rem; padding-inline: 0.5rem; }
       .session-summary { padding-inline: 0.65rem; }
       .dhikr-card { border-radius: 1.4rem; }
-      .dhikr-text { line-height: 1.88; }
       .requirement-row { align-items: flex-start; }
     }
 
@@ -1304,14 +1507,11 @@
           <button class="session-reset" id="session-reset" type="button" disabled aria-label="إعادة أذكار الصباح">
             <span aria-hidden="true">↻</span><span class="reset-label">إعادة الكل</span>
           </button>
-          <div class="theme-wrap">
-            <label class="sr-only" for="theme-select">اختيار المظهر</label>
-            <select class="theme-select" id="theme-select" aria-label="اختيار المظهر">
-              <option value="system">تلقائي</option>
-              <option value="light">فاتح</option>
-              <option value="dark">داكن</option>
-            </select>
-          </div>
+          <button class="settings-button" id="settings-button" type="button" aria-haspopup="dialog" aria-label="فتح الإعدادات">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M10 14v6"></path>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -1321,12 +1521,14 @@
             <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
           </svg>
           <span>أذكار الصباح</span>
+          <span class="period-complete" aria-hidden="true">✓</span>
         </button>
         <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
           </svg>
           <span>أذكار المساء</span>
+          <span class="period-complete" aria-hidden="true">✓</span>
         </button>
       </nav>
 
@@ -1379,6 +1581,109 @@
       <button class="dialog-button danger" id="dialog-confirm" type="button">إعادة</button>
     </div>
   </dialog>
+
+  <dialog class="sheet-dialog" id="source-dialog" aria-labelledby="source-dialog-title">
+    <div class="sheet-header">
+      <h2 id="source-dialog-title">المصدر والتفاصيل</h2>
+      <button class="sheet-close" id="source-dialog-close" type="button">إغلاق</button>
+    </div>
+    <div class="sheet-body source-sheet-body" id="source-dialog-content"></div>
+  </dialog>
+
+  <dialog class="sheet-dialog settings-dialog" id="settings-dialog" aria-labelledby="settings-dialog-title">
+    <div class="sheet-header">
+      <h2 id="settings-dialog-title">الإعدادات</h2>
+      <button class="sheet-close" id="settings-dialog-close" type="button">إغلاق</button>
+    </div>
+    <div class="sheet-body">
+      <section class="settings-section" aria-labelledby="reading-settings-title">
+        <h3 id="reading-settings-title">القراءة والمظهر</h3>
+        <div class="settings-grid">
+          <label class="settings-field" for="theme-select">
+            <span>المظهر</span>
+            <select class="settings-select" id="theme-select">
+              <option value="system">تلقائي</option>
+              <option value="light">فاتح</option>
+              <option value="dark">داكن</option>
+            </select>
+          </label>
+          <label class="settings-field" for="text-size-select">
+            <span>حجم نص الأذكار</span>
+            <select class="settings-select" id="text-size-select">
+              <option value="small">صغير</option>
+              <option value="medium">متوسط</option>
+              <option value="large">كبير</option>
+            </select>
+          </label>
+          <label class="settings-field" for="line-spacing-select">
+            <span>تباعد السطور</span>
+            <select class="settings-select" id="line-spacing-select">
+              <option value="compact">متقارب</option>
+              <option value="comfortable">مريح</option>
+              <option value="wide">واسع</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="reminder-settings-title">
+        <h3 id="reminder-settings-title">التذكيرات</h3>
+        <div class="reminder-row">
+          <label class="reminder-toggle" for="morning-reminder-enabled">
+            <input id="morning-reminder-enabled" type="checkbox">
+            <span>أذكار الصباح</span>
+          </label>
+          <label class="time-field" for="morning-reminder-time">
+            <span class="sr-only">وقت تذكير أذكار الصباح</span>
+            <input class="time-input" id="morning-reminder-time" type="time" value="06:00">
+          </label>
+        </div>
+        <div class="reminder-row">
+          <label class="reminder-toggle" for="evening-reminder-enabled">
+            <input id="evening-reminder-enabled" type="checkbox">
+            <span>أذكار المساء</span>
+          </label>
+          <label class="time-field" for="evening-reminder-time">
+            <span class="sr-only">وقت تذكير أذكار المساء</span>
+            <input class="time-input" id="evening-reminder-time" type="time" value="18:00">
+          </label>
+        </div>
+        <p class="settings-note" id="reminder-status">التذكيرات محلية، ويعتمد وصولها في الخلفية على دعم المتصفح والنظام.</p>
+      </section>
+
+      <section class="settings-section" aria-labelledby="app-settings-title">
+        <h3 id="app-settings-title">التطبيق</h3>
+        <button class="settings-action" id="install-button" type="button" disabled>تثبيت التطبيق</button>
+        <p class="settings-note" id="install-status">يمكن تثبيت التطبيق من قائمة المتصفح عند توفر الخيار.</p>
+      </section>
+
+      <section class="settings-section" aria-labelledby="history-title">
+        <h3 id="history-title">سجل الإكمال</h3>
+        <ol class="history-list" id="history-list"></ol>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog class="completion-dialog" id="completion-dialog" aria-labelledby="completion-title" aria-describedby="completion-copy">
+    <div class="completion-mark" aria-hidden="true">✓</div>
+    <div class="dialog-body">
+      <h2 id="completion-title">اكتملت الأذكار بحمد الله</h2>
+      <p id="completion-copy"></p>
+      <time class="completion-time" id="completion-time"></time>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="completion-close" type="button">تم</button>
+      <button class="dialog-button primary" id="completion-switch" type="button">الانتقال إلى القسم الآخر</button>
+    </div>
+  </dialog>
+
+  <aside class="update-banner" id="update-banner" hidden aria-live="polite">
+    <p>يتوفر إصدار جديد من التطبيق.</p>
+    <div class="update-actions">
+      <button id="update-dismiss" type="button">لاحقًا</button>
+      <button id="update-apply" type="button">تحديث الآن</button>
+    </div>
+  </aside>
 
   <div class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></div>
 
@@ -1638,16 +1943,15 @@
 
     const collections = { morning: morningAthkar, evening: eveningAthkar };
     const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء" };
-    const storageKey = "athkar-progress-v1";
+    const storageKey = "athkar-progress-v2";
+    const legacyStorageKey = "athkar-progress-v1";
     const hapticsStorageKey = "athkar-haptics";
-    const ayahTextSizeStorageKey = "athkar-text-size";
-    const ayahTextSizeLevels = [
-      { value: "small", label: "صغير" },
-      { value: "medium", label: "متوسط" },
-      { value: "large", label: "كبير" },
-      { value: "xlarge", label: "كبير جدًا" }
-    ];
+    const textSizeStorageKey = "athkar-reading-text-size";
+    const lineSpacingStorageKey = "athkar-line-spacing";
+    const remindersStorageKey = "athkar-reminders-v1";
     const numberFormatter = new Intl.NumberFormat("ar-EG", { useGrouping: false });
+    const timeFormatter = new Intl.DateTimeFormat("ar-EG", { hour: "numeric", minute: "2-digit" });
+    const historyDateFormatter = new Intl.DateTimeFormat("ar-EG", { weekday: "short", day: "numeric", month: "short" });
     const root = document.documentElement;
     const body = document.body;
     const list = document.getElementById("athkar-list");
@@ -1660,6 +1964,32 @@
     const progressBar = document.getElementById("session-progress");
     const sessionSummary = document.getElementById("session-summary");
     const sessionReset = document.getElementById("session-reset");
+    const settingsButton = document.getElementById("settings-button");
+    const settingsDialog = document.getElementById("settings-dialog");
+    const settingsDialogClose = document.getElementById("settings-dialog-close");
+    const textSizeSelect = document.getElementById("text-size-select");
+    const lineSpacingSelect = document.getElementById("line-spacing-select");
+    const historyList = document.getElementById("history-list");
+    const sourceDialog = document.getElementById("source-dialog");
+    const sourceDialogTitle = document.getElementById("source-dialog-title");
+    const sourceDialogContent = document.getElementById("source-dialog-content");
+    const sourceDialogClose = document.getElementById("source-dialog-close");
+    const completionDialog = document.getElementById("completion-dialog");
+    const completionTitle = document.getElementById("completion-title");
+    const completionCopy = document.getElementById("completion-copy");
+    const completionTime = document.getElementById("completion-time");
+    const completionClose = document.getElementById("completion-close");
+    const completionSwitch = document.getElementById("completion-switch");
+    const morningReminderEnabled = document.getElementById("morning-reminder-enabled");
+    const morningReminderTime = document.getElementById("morning-reminder-time");
+    const eveningReminderEnabled = document.getElementById("evening-reminder-enabled");
+    const eveningReminderTime = document.getElementById("evening-reminder-time");
+    const reminderStatus = document.getElementById("reminder-status");
+    const installButton = document.getElementById("install-button");
+    const installStatus = document.getElementById("install-status");
+    const updateBanner = document.getElementById("update-banner");
+    const updateApply = document.getElementById("update-apply");
+    const updateDismiss = document.getElementById("update-dismiss");
     const hapticsToggle = document.getElementById("haptics-toggle");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
@@ -1672,48 +2002,144 @@
     const dialogCancel = document.getElementById("dialog-cancel");
     const motionIsReduced = matchMedia("(prefers-reduced-motion: reduce)");
     const colorScheme = matchMedia("(prefers-color-scheme: dark)");
+    const standaloneDisplay = matchMedia("(display-mode: standalone)");
     const currentIndices = { morning: null, evening: null };
+    const reminderTimers = { morning: null, evening: null };
     let swipeGesture = null;
     let suppressCardClicksUntil = 0;
-
     let activePeriod = location.hash === "#evening" ? "evening" : "morning";
     let pendingConfirmation = null;
     let advanceTimer = null;
+    let dayRolloverTimer = null;
+    let deferredInstallPrompt = null;
+    let waitingWorker = null;
+    let reloadingForUpdate = false;
     let state = loadState();
+    let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
     hapticsToggle.checked = hapticsEnabled;
-    let ayahTextSizeIndex = ayahTextSizeLevels.findIndex(level => level.value === root.dataset.ayahTextSize);
-    if (ayahTextSizeIndex === -1) ayahTextSizeIndex = 1;
+    saveState();
 
-    function emptyState() {
+    function localDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function emptyState(date = localDateKey()) {
       return {
+        date,
         progress: { morning: {}, evening: {} },
-        targets: { morning: {}, evening: {} }
+        targets: { morning: {}, evening: {} },
+        completedAt: { morning: null, evening: null },
+        history: []
       };
+    }
+
+    function normalizeState(parsed) {
+      const fallback = emptyState();
+      const date = typeof parsed?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date)
+        ? parsed.date
+        : fallback.date;
+      const history = Array.isArray(parsed?.history)
+        ? parsed.history.filter(entry => entry && typeof entry.date === "string").slice(0, 7).map(entry => ({
+            date: entry.date,
+            morning: Boolean(entry.morning),
+            evening: Boolean(entry.evening),
+            morningAt: typeof entry.morningAt === "string" ? entry.morningAt : null,
+            eveningAt: typeof entry.eveningAt === "string" ? entry.eveningAt : null
+          }))
+        : [];
+
+      return {
+        date,
+        progress: {
+          morning: parsed?.progress?.morning && typeof parsed.progress.morning === "object" ? parsed.progress.morning : {},
+          evening: parsed?.progress?.evening && typeof parsed.progress.evening === "object" ? parsed.progress.evening : {}
+        },
+        targets: {
+          morning: parsed?.targets?.morning && typeof parsed.targets.morning === "object" ? parsed.targets.morning : {},
+          evening: parsed?.targets?.evening && typeof parsed.targets.evening === "object" ? parsed.targets.evening : {}
+        },
+        completedAt: {
+          morning: typeof parsed?.completedAt?.morning === "string" ? parsed.completedAt.morning : null,
+          evening: typeof parsed?.completedAt?.evening === "string" ? parsed.completedAt.evening : null
+        },
+        history
+      };
+    }
+
+    function targetForState(item, period, candidate) {
+      if (item.targetOptions) {
+        const stored = Number(candidate.targets[period][item.id]);
+        return item.targetOptions.includes(stored) ? stored : item.defaultTarget;
+      }
+      return item.count || 1;
+    }
+
+    function countForState(item, period, candidate) {
+      const raw = Number(candidate.progress[period][item.id]);
+      if (!Number.isFinite(raw) || raw < 0) return 0;
+      return Math.min(Math.floor(raw), targetForState(item, period, candidate));
+    }
+
+    function periodIsComplete(period, candidate = state) {
+      return collections[period]
+        .filter(item => !item.review)
+        .every(item => countForState(item, period, candidate) >= targetForState(item, period, candidate));
+    }
+
+    function historyEntryFor(candidate) {
+      return {
+        date: candidate.date,
+        morning: periodIsComplete("morning", candidate),
+        evening: periodIsComplete("evening", candidate),
+        morningAt: candidate.completedAt.morning,
+        eveningAt: candidate.completedAt.evening
+      };
+    }
+
+    function rollStateToDate(candidate, nextDate) {
+      const previous = historyEntryFor(candidate);
+      const history = [previous, ...candidate.history.filter(entry => entry.date !== previous.date)].slice(0, 7);
+      return { ...emptyState(nextDate), history };
     }
 
     function loadState() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(storageKey));
-        if (!parsed || typeof parsed !== "object") return emptyState();
-        return {
-          progress: {
-            morning: parsed.progress?.morning && typeof parsed.progress.morning === "object" ? parsed.progress.morning : {},
-            evening: parsed.progress?.evening && typeof parsed.progress.evening === "object" ? parsed.progress.evening : {}
-          },
-          targets: {
-            morning: parsed.targets?.morning && typeof parsed.targets.morning === "object" ? parsed.targets.morning : {},
-            evening: parsed.targets?.evening && typeof parsed.targets.evening === "object" ? parsed.targets.evening : {}
-          }
-        };
+        const current = localStorage.getItem(storageKey);
+        const legacy = current ? null : localStorage.getItem(legacyStorageKey);
+        const parsed = JSON.parse(current || legacy);
+        const normalized = parsed && typeof parsed === "object" ? normalizeState(parsed) : emptyState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollStateToDate(normalized, today);
       } catch (_) {
         return emptyState();
       }
     }
 
     function saveState() {
-      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch (_) {}
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        localStorage.removeItem(legacyStorageKey);
+      } catch (_) {}
+    }
+
+    function ensureCurrentDay(refresh = true) {
+      const today = localDateKey();
+      if (state.date === today) return false;
+      state = rollStateToDate(state, today);
+      currentIndices.morning = null;
+      currentIndices.evening = null;
+      saveState();
+      if (refresh) {
+        renderCards();
+        updateHistoryView();
+        liveRegion.textContent = "بدأ وِرد يوم جديد";
+      }
+      return true;
     }
 
     function formatNumber(value) {
@@ -1721,17 +2147,11 @@
     }
 
     function targetFor(item, period = activePeriod) {
-      if (item.targetOptions) {
-        const stored = Number(state.targets[period][item.id]);
-        return item.targetOptions.includes(stored) ? stored : item.defaultTarget;
-      }
-      return item.count || 1;
+      return targetForState(item, period, state);
     }
 
     function countFor(item, period = activePeriod) {
-      const raw = Number(state.progress[period][item.id]);
-      if (!Number.isFinite(raw) || raw < 0) return 0;
-      return Math.min(Math.floor(raw), targetFor(item, period));
+      return countForState(item, period, state);
     }
 
     function isExplicitlyCounted(item) {
@@ -1763,9 +2183,15 @@
       const counted = isExplicitlyCounted(item);
       const target = targetFor(item);
       const count = countFor(item);
-      const details = (item.details || []).map((detail, detailIndex) =>
-        `<p class="dhikr-detail${detailIndex === item.noteIndex ? " dhikr-note" : ""}">${escapeHtml(detail)}</p>`
+      const allDetails = item.details || [];
+      const hasExtendedDetails = Number.isInteger(item.noteIndex) && item.noteIndex < allDetails.length;
+      const visibleDetails = hasExtendedDetails ? allDetails.slice(0, item.noteIndex) : allDetails;
+      const details = visibleDetails.map(detail =>
+        `<p class="dhikr-detail">${escapeHtml(detail)}</p>`
       ).join("");
+      const sourceButton = hasExtendedDetails
+        ? `<button class="source-button" type="button" data-source="${item.id}">المصدر والتفاصيل</button>`
+        : "";
       const options = item.targetOptions ? `
         <label class="target-control">
           <span>الهدف</span>
@@ -1779,18 +2205,7 @@
       const visibleStatus = counted
         ? `<output class="counter-status numeric" id="${item.id}-status"><span class="counter-current">${formatNumber(count)}</span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(target)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`
         : `<output class="counter-status" id="${item.id}-status"><span class="single-copy">${count ? "تمت القراءة" : "اضغط بعد القراءة"}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
-      const cardHeader = item.quran ? `
-        <div class="card-toolbar">
-          <span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>
-          <div class="ayah-size-control" role="group" aria-label="حجم نص الآيات: ${ayahTextSizeLevels[ayahTextSizeIndex].label}">
-            <button class="ayah-size-button ayah-size-decrease" type="button" aria-label="تصغير نص الآيات"${ayahTextSizeIndex === 0 ? " disabled" : ""}>
-              <span class="ayah-size-glyph-small" aria-hidden="true">أ</span>
-            </button>
-            <button class="ayah-size-button ayah-size-increase" type="button" aria-label="تكبير نص الآيات"${ayahTextSizeIndex === ayahTextSizeLevels.length - 1 ? " disabled" : ""}>
-              <span class="ayah-size-glyph-large" aria-hidden="true">أ</span>
-            </button>
-          </div>
-        </div>` : `<span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>`;
+      const cardHeader = `<span class="card-index" aria-hidden="true">${formatNumber(index + 1)}</span>`;
 
       return `
         <li data-card-index="${index}">
@@ -1799,7 +2214,7 @@
               ${cardHeader}
               ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.prefix)}</p>` : ""}
               <p class="dhikr-text">${escapeHtml(item.text)}</p>
-              ${details ? `<div class="dhikr-details">${details}</div>` : ""}
+              ${details || sourceButton ? `<div class="dhikr-details">${details}${sourceButton}</div>` : ""}
             </div>
             <div class="requirement-row">
               <div>
@@ -1980,7 +2395,6 @@
       }
       currentIndices[activePeriod] = Math.min(currentIndices[activePeriod], items.length - 1);
       list.innerHTML = items.map(cardMarkup).join("");
-      syncAyahTextSizeControls();
       list.classList.remove("is-entering");
       requestAnimationFrame(() => list.classList.add("is-entering"));
 
@@ -1990,8 +2404,7 @@
         const tapTarget = card.querySelector(".card-tap-target");
         const resetButton = card.querySelector(".card-reset");
         const targetSelect = card.querySelector(".target-select");
-        const sizeDecrease = card.querySelector(".ayah-size-decrease");
-        const sizeIncrease = card.querySelector(".ayah-size-increase");
+        const sourceButton = card.querySelector(".source-button");
 
         updateCard(item, card, index);
         tapTarget.addEventListener("click", () => {
@@ -2000,31 +2413,29 @@
         });
         card.addEventListener("click", event => {
           if (performance.now() < suppressCardClicksUntil) return;
-          if (event.target.closest(".card-tap-target, .card-reset, .target-control, .ayah-size-control")) return;
+          if (event.target.closest(".card-tap-target, .card-reset, .target-control, .source-button")) return;
           increment(item, card, index);
         });
         resetButton.addEventListener("click", () => requestItemReset(item, card, index));
-        sizeDecrease?.addEventListener("click", event => {
+        sourceButton?.addEventListener("click", event => {
           event.stopPropagation();
-          applyAyahTextSize(ayahTextSizeIndex - 1);
-        });
-        sizeIncrease?.addEventListener("click", event => {
-          event.stopPropagation();
-          applyAyahTextSize(ayahTextSizeIndex + 1);
+          openSourceDetails(item, index);
         });
 
         if (targetSelect) {
           targetSelect.addEventListener("change", event => {
-            const wasComplete = countFor(item) >= targetFor(item);
+            const wasItemComplete = countFor(item) >= targetFor(item);
             const target = Number(event.target.value);
             if (!item.targetOptions.includes(target)) return;
             state.targets[activePeriod][item.id] = target;
             state.progress[activePeriod][item.id] = Math.min(countFor(item), target);
+            const completion = syncCompletionState(activePeriod);
             saveState();
             updateCard(item, card, index, true);
             updateSessionProgress();
             updateDeckNavigation();
-            if (!wasComplete && countFor(item) >= targetFor(item)) scheduleAdvance(item, index);
+            if (completion.newlyCompleted) openCompletionDialog(activePeriod);
+            else if (!wasItemComplete && countFor(item) >= targetFor(item)) scheduleAdvance(item, index);
           });
         }
       });
@@ -2037,6 +2448,64 @@
       if (!hapticsEnabled || typeof navigator.vibrate !== "function") return false;
       return navigator.vibrate(duration);
     }
+    function syncCompletionState(period) {
+      const complete = periodIsComplete(period);
+      const completedAt = state.completedAt[period];
+      if (complete && !completedAt) {
+        state.completedAt[period] = new Date().toISOString();
+        return { complete: true, newlyCompleted: true };
+      }
+      if (!complete && completedAt) state.completedAt[period] = null;
+      return { complete, newlyCompleted: false };
+    }
+
+    function openCompletionDialog(period) {
+      const otherPeriod = period === "morning" ? "evening" : "morning";
+      const completedAt = new Date(state.completedAt[period]);
+      completionTitle.textContent = `اكتملت ${sectionNames[period]} بحمد الله`;
+      completionCopy.textContent = "تم حفظ إكمال اليوم محليًا على هذا الجهاز.";
+      completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(completedAt)}`;
+      completionSwitch.dataset.period = otherPeriod;
+      completionSwitch.textContent = `الانتقال إلى ${sectionNames[otherPeriod]}`;
+      completionDialog.showModal();
+    }
+
+    function openSourceDetails(item, index) {
+      const details = item.details || [];
+      sourceDialogTitle.textContent = `المصدر والتفاصيل — الذكر ${formatNumber(index + 1)}`;
+      sourceDialogContent.innerHTML = details.map((detail, detailIndex) =>
+        `<p class="dhikr-detail${detailIndex === item.noteIndex ? " dhikr-note" : ""}">${escapeHtml(detail)}</p>`
+      ).join("");
+      sourceDialog.showModal();
+    }
+
+    function updatePeriodTabs() {
+      document.querySelectorAll(".period-tab").forEach(tab => {
+        const complete = periodIsComplete(tab.dataset.period);
+        tab.classList.toggle("is-complete", complete);
+        tab.setAttribute("aria-label", `${sectionNames[tab.dataset.period]}${complete ? "، مكتملة اليوم" : ""}`);
+      });
+    }
+
+    function historyDateLabel(date, isToday = false) {
+      if (isToday) return "اليوم";
+      return historyDateFormatter.format(new Date(`${date}T12:00:00`));
+    }
+
+    function updateHistoryView() {
+      const entries = [
+        { date: state.date, morning: periodIsComplete("morning"), evening: periodIsComplete("evening"), isToday: true },
+        ...state.history.map(entry => ({ ...entry, isToday: false }))
+      ];
+      historyList.innerHTML = entries.map(entry => `
+        <li class="history-row${entry.isToday ? " is-today" : ""}">
+          <time datetime="${escapeHtml(entry.date)}">${escapeHtml(historyDateLabel(entry.date, entry.isToday))}</time>
+          <span class="history-state${entry.morning ? " is-complete" : ""}">الصباح ${entry.morning ? "✓" : "—"}</span>
+          <span class="history-state${entry.evening ? " is-complete" : ""}">المساء ${entry.evening ? "✓" : "—"}</span>
+        </li>
+      `).join("");
+    }
+
 
     function increment(item, card, index) {
       const target = targetFor(item);
@@ -2048,12 +2517,14 @@
       if (completesItem) triggerHaptic(35);
 
       state.progress[activePeriod][item.id] = next;
+      const completion = syncCompletionState(activePeriod);
       saveState();
       updateCard(item, card, index, true);
       updateSessionProgress();
       updateDeckNavigation();
 
-      if (completesItem) scheduleAdvance(item, index);
+      if (completion.newlyCompleted) openCompletionDialog(activePeriod);
+      else if (completesItem) scheduleAdvance(item, index);
     }
 
     function requestItemReset(item, card, index) {
@@ -2061,6 +2532,7 @@
       if (!count) return;
       const reset = () => {
         state.progress[activePeriod][item.id] = 0;
+        syncCompletionState(activePeriod);
         saveState();
         updateCard(item, card, index, true);
         updateSessionProgress();
@@ -2086,14 +2558,17 @@
       const suffix = activePeriod === "morning" && collections.morning.some(item => item.review) ? " ذكرًا متاحًا" : " ذكرًا";
 
       progressCopy.textContent = isComplete
-        ? `اكتملت ${sectionNames[activePeriod]} بحمد الله`
+        ? `اكتملت ${sectionNames[activePeriod]} اليوم`
         : `${formatNumber(completed)} من ${formatNumber(items.length)}${suffix}`;
       progressBar.max = items.length;
       progressBar.value = completed;
       progressBar.setAttribute("aria-label", `${sectionNames[activePeriod]}: ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`);
       sessionReset.disabled = !hasProgress;
       sessionSummary.classList.toggle("is-complete", isComplete);
+      updatePeriodTabs();
+      updateHistoryView();
     }
+
 
     function switchPeriod(period, updateHash = true) {
       if (!collections[period]) return;
@@ -2127,6 +2602,7 @@
         () => {
           state.progress[periodAtRequest] = {};
           state.targets[periodAtRequest] = {};
+          state.completedAt[periodAtRequest] = null;
           currentIndices[periodAtRequest] = 0;
           saveState();
           if (activePeriod === periodAtRequest) renderCards();
@@ -2164,24 +2640,215 @@
       }
     }
 
-    function syncAyahTextSizeControls() {
-      const level = ayahTextSizeLevels[ayahTextSizeIndex];
-      list.querySelectorAll(".ayah-size-control").forEach(control => {
-        control.setAttribute("aria-label", `حجم نص الآيات: ${level.label}`);
-        control.querySelector(".ayah-size-decrease").disabled = ayahTextSizeIndex === 0;
-        control.querySelector(".ayah-size-increase").disabled = ayahTextSizeIndex === ayahTextSizeLevels.length - 1;
-      });
+    function applyTextSize(value, save = true, announce = true) {
+      const normalized = ["small", "medium", "large"].includes(value) ? value : "medium";
+      root.dataset.textSize = normalized;
+      textSizeSelect.value = normalized;
+      if (save) {
+        try {
+          localStorage.setItem(textSizeStorageKey, normalized);
+          localStorage.removeItem("athkar-text-size");
+        } catch (_) {}
+      }
+      requestAnimationFrame(fitVisibleCard);
+      if (announce) liveRegion.textContent = `حجم نص الأذكار ${textSizeSelect.selectedOptions[0].textContent}`;
     }
 
-    function applyAyahTextSize(index, save = true, announce = true) {
-      ayahTextSizeIndex = Math.max(0, Math.min(ayahTextSizeLevels.length - 1, index));
-      const level = ayahTextSizeLevels[ayahTextSizeIndex];
-      root.dataset.ayahTextSize = level.value;
-      syncAyahTextSizeControls();
+    function applyLineSpacing(value, save = true, announce = true) {
+      const normalized = ["compact", "comfortable", "wide"].includes(value) ? value : "comfortable";
+      root.dataset.lineSpacing = normalized;
+      lineSpacingSelect.value = normalized;
       if (save) {
-        try { localStorage.setItem(ayahTextSizeStorageKey, level.value); } catch (_) {}
+        try { localStorage.setItem(lineSpacingStorageKey, normalized); } catch (_) {}
       }
-      if (announce) liveRegion.textContent = `حجم نص الآيات ${level.label}`;
+      requestAnimationFrame(fitVisibleCard);
+      if (announce) liveRegion.textContent = `تباعد السطور ${lineSpacingSelect.selectedOptions[0].textContent}`;
+    }
+
+    function emptyReminderPreferences() {
+      return {
+        morning: { enabled: false, time: "06:00" },
+        evening: { enabled: false, time: "18:00" },
+        lastShown: { morning: null, evening: null }
+      };
+    }
+
+    function normalizeReminderTime(value, fallback) {
+      if (!/^\d{2}:\d{2}$/.test(value || "")) return fallback;
+      const [hours, minutes] = value.split(":").map(Number);
+      return hours <= 23 && minutes <= 59 ? value : fallback;
+    }
+
+    function loadReminderPreferences() {
+      const fallback = emptyReminderPreferences();
+      try {
+        const parsed = JSON.parse(localStorage.getItem(remindersStorageKey));
+        return {
+          morning: {
+            enabled: Boolean(parsed?.morning?.enabled),
+            time: normalizeReminderTime(parsed?.morning?.time, fallback.morning.time)
+          },
+          evening: {
+            enabled: Boolean(parsed?.evening?.enabled),
+            time: normalizeReminderTime(parsed?.evening?.time, fallback.evening.time)
+          },
+          lastShown: {
+            morning: typeof parsed?.lastShown?.morning === "string" ? parsed.lastShown.morning : null,
+            evening: typeof parsed?.lastShown?.evening === "string" ? parsed.lastShown.evening : null
+          }
+        };
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function saveReminderPreferences() {
+      try { localStorage.setItem(remindersStorageKey, JSON.stringify(reminderPreferences)); } catch (_) {}
+    }
+
+    function notificationPermission() {
+      return "Notification" in window ? Notification.permission : "unsupported";
+    }
+
+    function updateReminderControls() {
+      morningReminderEnabled.checked = reminderPreferences.morning.enabled;
+      morningReminderTime.value = reminderPreferences.morning.time;
+      eveningReminderEnabled.checked = reminderPreferences.evening.enabled;
+      eveningReminderTime.value = reminderPreferences.evening.time;
+      const permission = notificationPermission();
+      if (permission === "unsupported") {
+        reminderStatus.textContent = "هذا المتصفح لا يدعم إشعارات التذكير.";
+      } else if (permission === "denied") {
+        reminderStatus.textContent = "الإشعارات محظورة. اسمح بها من إعدادات المتصفح لتشغيل التذكيرات.";
+      } else if (reminderPreferences.morning.enabled || reminderPreferences.evening.enabled) {
+        reminderStatus.textContent = permission === "granted"
+          ? "التذكيرات مضبوطة محليًا. يعمل الموعد أثناء تشغيل التطبيق، ويعتمد العمل في الخلفية على دعم النظام."
+          : "سيطلب المتصفح إذن الإشعارات عند تشغيل أول تذكير.";
+      } else {
+        reminderStatus.textContent = "التذكيرات متوقفة ومحفوظة محليًا على هذا الجهاز.";
+      }
+    }
+
+    function nextReminderTime(period) {
+      const [hours, minutes] = reminderPreferences[period].time.split(":").map(Number);
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(hours, minutes, 0, 0);
+      const shownToday = reminderPreferences.lastShown[period] === localDateKey(now);
+      if (next <= now) {
+        if (!shownToday && now - next <= 15 * 60 * 1000) return new Date(now.getTime() + 300);
+        next.setDate(next.getDate() + 1);
+      }
+      return next;
+    }
+
+    function scheduleReminders() {
+      for (const period of ["morning", "evening"]) {
+        clearTimeout(reminderTimers[period]);
+        reminderTimers[period] = null;
+        if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") continue;
+        const delay = Math.max(0, nextReminderTime(period).getTime() - Date.now());
+        reminderTimers[period] = setTimeout(() => showReminder(period), delay);
+      }
+    }
+
+    async function showReminder(period) {
+      if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") return;
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(sectionNames[period], {
+          body: `حان وقت ${sectionNames[period]}.`,
+          icon: "./icons/icon-192.png",
+          badge: "./icons/icon-192.png",
+          tag: `athkar-${period}-${localDateKey()}`,
+          renotify: false,
+          data: { url: new URL(`./#${period}`, location.href).href }
+        });
+        reminderPreferences.lastShown[period] = localDateKey();
+        saveReminderPreferences();
+      } catch (_) {
+        reminderStatus.textContent = "تعذر إرسال التذكير. تحقق من إذن الإشعارات.";
+      }
+      scheduleReminders();
+    }
+
+    async function setReminderEnabled(period, enabled) {
+      if (enabled) {
+        if (!("Notification" in window)) {
+          reminderPreferences[period].enabled = false;
+          updateReminderControls();
+          return;
+        }
+        let permission = Notification.permission;
+        if (permission === "default") permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          reminderPreferences[period].enabled = false;
+          updateReminderControls();
+          return;
+        }
+      }
+      reminderPreferences[period].enabled = enabled;
+      saveReminderPreferences();
+      updateReminderControls();
+      scheduleReminders();
+    }
+
+    function scheduleDayRollover() {
+      clearTimeout(dayRolloverTimer);
+      const nextDay = new Date();
+      nextDay.setHours(24, 0, 1, 0);
+      dayRolloverTimer = setTimeout(() => {
+        ensureCurrentDay();
+        scheduleReminders();
+        scheduleDayRollover();
+      }, nextDay.getTime() - Date.now());
+    }
+
+    function isInstalled() {
+      return standaloneDisplay.matches || navigator.standalone === true;
+    }
+
+    function updateInstallUi() {
+      if (isInstalled()) {
+        installButton.disabled = true;
+        installStatus.textContent = "التطبيق مثبت على هذا الجهاز.";
+      } else if (deferredInstallPrompt) {
+        installButton.disabled = false;
+        installStatus.textContent = "يمكن تثبيت التطبيق ليعمل كنافذة مستقلة ويسهل فتحه.";
+      } else {
+        installButton.disabled = true;
+        installStatus.textContent = "استخدم «إضافة إلى الشاشة الرئيسية» من قائمة المتصفح إذا لم يظهر زر التثبيت.";
+      }
+    }
+
+    async function installApp() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      updateInstallUi();
+    }
+
+    function showUpdatePrompt(worker) {
+      waitingWorker = worker;
+      updateBanner.hidden = false;
+    }
+
+    async function registerServiceWorker() {
+      try {
+        const registration = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+        if (registration.waiting && navigator.serviceWorker.controller) showUpdatePrompt(registration.waiting);
+        registration.addEventListener("updatefound", () => {
+          const worker = registration.installing;
+          worker?.addEventListener("statechange", () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdatePrompt(worker);
+          });
+        });
+        registration.update().catch(() => {});
+        scheduleReminders();
+      } catch (_) {
+        reminderStatus.textContent = "تعذر تشغيل الخدمات المحلية للتذكير والعمل دون اتصال.";
+      }
     }
 
     document.querySelectorAll(".period-tab").forEach(tab => {
@@ -2204,7 +2871,6 @@
     addEventListener("pointercancel", cancelCardSwipe);
     addEventListener("resize", () => requestAnimationFrame(fitVisibleCard));
 
-
     sessionReset.addEventListener("click", requestSessionReset);
     previousCardButton.addEventListener("click", () => {
       showCard((currentIndices[activePeriod] ?? 0) - 1, "back", true, true);
@@ -2212,7 +2878,71 @@
     nextCardButton.addEventListener("click", () => {
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
+
+    settingsButton.addEventListener("click", () => {
+      updateHistoryView();
+      updateReminderControls();
+      updateInstallUi();
+      settingsDialog.showModal();
+    });
+    settingsDialogClose.addEventListener("click", () => settingsDialog.close());
+    settingsDialog.addEventListener("click", event => {
+      if (event.target === settingsDialog) settingsDialog.close();
+    });
+
+    sourceDialogClose.addEventListener("click", () => sourceDialog.close());
+    sourceDialog.addEventListener("click", event => {
+      if (event.target === sourceDialog) sourceDialog.close();
+    });
+
+    completionClose.addEventListener("click", () => completionDialog.close());
+    completionSwitch.addEventListener("click", () => {
+      const period = completionSwitch.dataset.period;
+      completionDialog.close();
+      switchPeriod(period);
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+
     themeSelect.addEventListener("change", event => applyTheme(event.target.value));
+    textSizeSelect.addEventListener("change", event => applyTextSize(event.target.value));
+    lineSpacingSelect.addEventListener("change", event => applyLineSpacing(event.target.value));
+    morningReminderEnabled.addEventListener("change", () => setReminderEnabled("morning", morningReminderEnabled.checked));
+    eveningReminderEnabled.addEventListener("change", () => setReminderEnabled("evening", eveningReminderEnabled.checked));
+    morningReminderTime.addEventListener("change", () => {
+      reminderPreferences.morning.time = normalizeReminderTime(morningReminderTime.value, "06:00");
+      saveReminderPreferences();
+      updateReminderControls();
+      scheduleReminders();
+    });
+    eveningReminderTime.addEventListener("change", () => {
+      reminderPreferences.evening.time = normalizeReminderTime(eveningReminderTime.value, "18:00");
+      saveReminderPreferences();
+      updateReminderControls();
+      scheduleReminders();
+    });
+
+    installButton.addEventListener("click", installApp);
+    addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      updateInstallUi();
+    });
+    addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      updateInstallUi();
+      liveRegion.textContent = "تم تثبيت التطبيق";
+    });
+    standaloneDisplay.addEventListener?.("change", updateInstallUi);
+
+    updateApply.addEventListener("click", () => {
+      if (!waitingWorker) return;
+      reloadingForUpdate = true;
+      waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    });
+    updateDismiss.addEventListener("click", () => {
+      updateBanner.hidden = true;
+    });
+
     hapticsToggle.addEventListener("click", () => {
       if (!nativeSwitchSupported && typeof navigator.vibrate === "function") {
         navigator.vibrate(15);
@@ -2231,6 +2961,14 @@
     addEventListener("hashchange", () => {
       const period = location.hash === "#evening" ? "evening" : location.hash === "#morning" ? "morning" : null;
       if (period && period !== activePeriod) switchPeriod(period, false);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible") return;
+      ensureCurrentDay();
+      updateReminderControls();
+      scheduleReminders();
+      scheduleDayRollover();
     });
 
     dialogCancel.addEventListener("click", () => {
@@ -2254,9 +2992,10 @@
     });
 
     if ("serviceWorker" in navigator) {
-      addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
-      }, { once: true });
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloadingForUpdate) location.reload();
+      });
+      addEventListener("load", registerServiceWorker, { once: true });
     }
 
     let storedTheme = "system";
@@ -2264,9 +3003,14 @@
       const savedTheme = localStorage.getItem("athkar-theme");
       if (["light", "dark", "system"].includes(savedTheme)) storedTheme = savedTheme;
     } catch (_) {}
-    applyAyahTextSize(ayahTextSizeIndex, false, false);
+    applyTextSize(root.dataset.textSize, true, false);
+    applyLineSpacing(root.dataset.lineSpacing, false, false);
     applyTheme(storedTheme, false);
+    updateReminderControls();
+    updateInstallUi();
     switchPeriod(activePeriod, false);
+    scheduleReminders();
+    scheduleDayRollover();
     document.fonts?.ready.then(() => fitVisibleCard());
   </script>
 </body>
