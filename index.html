@@ -1748,7 +1748,7 @@
 
       <section class="settings-section" aria-labelledby="manual-completion-title">
         <h3 id="manual-completion-title">إكمال الورد يدويًا</h3>
-        <p class="settings-note" id="manual-completion-note">فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات.</p>
+        <p class="settings-note" id="manual-completion-note">فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية.</p>
         <div class="manual-completion-list">
           <label class="manual-completion-control" for="morning-manual-completion">
             <span class="manual-completion-copy">
@@ -2473,7 +2473,7 @@
       const completed = item?.review || countFor(item) >= targetFor(item);
 
       previousCardButton.disabled = index <= 0;
-      nextCardButton.disabled = index >= items.length - 1 || !completed;
+      nextCardButton.disabled = index >= items.length - 1 || (!completed && !periodIsManuallyComplete(activePeriod));
       cardPosition.textContent = `${formatNumber(index + 1)} من ${formatNumber(items.length)}`;
       cardPosition.setAttribute("aria-label", `الذكر ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
       list.setAttribute("aria-label", `بطاقات ${sectionNames[activePeriod]}، الذكر ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
@@ -2683,6 +2683,7 @@
         : null;
       saveState();
       updateSessionProgress();
+      updateDeckNavigation();
       scheduleReminders();
       liveRegion.textContent = completed
         ? `سُجلت ${sectionNames[period]} مكتملة خارج التطبيق`
