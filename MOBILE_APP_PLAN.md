@@ -597,13 +597,14 @@ Build a disposable React Native/Expo prototype that proves:
 
 ### Phase 1: shared foundation and migration
 
+- Complete the iOS organization-membership conversion and freeze the public publisher identity before creating or releasing the App Store record.
 - Define content, domain, and backup schemas.
 - Extract the current content into a validated pack without changing wording or order.
 - Capture PWA parity fixtures.
 - Add PWA export/import before native beta.
 - Establish SQLite migrations and repository interfaces.
 
-**Exit:** PWA export to native import round-trips with no semantic difference, and content checks pass.
+**Exit:** the iOS organization membership and public identity are approved before any App Store Connect record or TestFlight upload, PWA export to native import round-trips with no semantic difference, and content checks pass.
 
 ### Phase 2: native PWA parity
 
@@ -630,6 +631,8 @@ Build a disposable React Native/Expo prototype that proves:
 
 ### Phase 5: privacy, release, and migration beta
 
+**Entry:** Phase 1’s organization-identity gate is complete before anyone creates the App Store Connect app record or uploads a TestFlight build.
+
 - Backup/import UI, privacy screen, delete-all, store disclosures, diagnostics export, support copy, and PWA migration banner.
 - TestFlight external and Play closed testing across regions, time zones, and OEMs.
 
@@ -649,6 +652,84 @@ Proceed only after a threat model and product decision confirm demand.
 
 ## 20. CI/CD and release operations
 
+### iOS public identity: remove the Account Holder’s personal name
+
+#### What can and cannot be hidden
+
+Apple must know the real Account Holder and legal entity. The goal is to remove the person’s name from public App Store surfaces, not to provide false information to Apple.
+
+| Surface | What controls it | Required action |
+| --- | --- | --- |
+| Seller name | Apple Developer Program membership | An individual membership uses the member’s legal name. Use a verified organization membership so the organization’s legal name is the seller. |
+| Developer name shown below the app | App Store Connect publisher identity | An individual cannot choose another name. An organization may choose a registered trade name, DBA, or fictitious business name when adding its first app; Apple says this choice cannot later be edited. |
+| App name and icon label | App Store metadata and `CFBundleDisplayName`/Expo configuration | Set these to the product brand, but understand that changing them does not change the seller or developer name. |
+| Support, privacy, marketing, copyright, and trader details | App Store Connect metadata and compliance records | Use organization-owned domains, email addresses, phone numbers, and lawful business details in every public field. |
+| Bundle ID, Team ID, and signing certificate | Developer and build configuration | These are technical identifiers. Changing the app name does not change the public seller; changing teams requires a signing and entitlement cutover. |
+
+There is no supported self-service switch that replaces an individual seller name with a brand. Apple states that changing the Apple Account profile name does not change an existing individual membership or App Store seller name in its [account-information guidance](https://developer.apple.com/help/account/membership/updating-your-account-information/). If no qualifying legal entity exists, the choices are to create one and have Apple verify it, retain the legal personal seller name, or delay iOS distribution. A DBA or trade name by itself does not qualify as the organization legal entity.
+
+#### Recommended path: convert the existing individual membership
+
+Use this path before creating the first App Store app record. It is also the first path to request when an unreleased app record already exists.
+
+1. **Pause App Store setup.** Do not submit or release the app under the individual identity merely to make it transferable.
+2. **Confirm the legal entity.** Use an existing corporation, LLC, nonprofit, or other entity that can enter contracts with Apple. If none exists, establish the appropriate entity through the applicable jurisdiction before continuing; a DBA alone is insufficient.
+3. **Verify the organization’s D-U-N-S record.** Obtain or look up the D-U-N-S Number and make its legal name, address, and phone match the formation documents exactly.
+4. **Prepare the organization presence.** Provide a functional public website on the organization’s domain and a work email address on that domain. Social-media-only or parked pages do not satisfy Apple’s published organization requirements.
+5. **Confirm authority and account security.** Apple’s current [individual-to-organization guidance](https://developer.apple.com/help/account/membership/updating-your-account-information/#updating-an-individual-membership-to-an-organization-membership) says the current Account Holder must be a founder or cofounder; that person must also have authority to bind the entity and use an Apple Account with two-factor authentication.
+6. **Gather verification material.** Prepare formation/registration documents, D-U-N-S details, organization address and phone, website, domain email, and the existing Team ID. Keep these private and never commit them to this repository.
+7. **Submit Apple’s migration request.** Sign in as the Account Holder and use [Update an individual membership to an organization membership](https://developer.apple.com/contact/request/migrate-individual-account). Include any existing app Apple ID and bundle ID so Apple can advise on the unreleased record.
+8. **Complete Apple’s verification.** Respond to requests for business documents or a verification call. Do not change the D-U-N-S or legal-entity spelling while review is in progress.
+9. **Verify the approved membership.** In the Apple Developer account and App Store Connect, confirm that the entity type is Organization and that the seller/legal-entity name is correct before uploading a release build.
+10. **Set the developer name deliberately.** If this organization has never added an app, choose the registered public trade/DBA name in the **Company Name** field while creating its first app. If any app record already exists, include the desired developer name in the migration case and obtain Apple’s written answer; do not assume it is editable afterward.
+11. **Freeze the security owner before storing keys.** Compare the Team ID before and after conversion. Until the final Team ID is confirmed, do not place an unrecoverable database, app-lock, backup, or sync key only in a team-scoped Keychain group. If users already have such keys, require a reviewed recovery/migration design before changing teams.
+12. **Reaccept operational records.** Complete any new agreements, tax, banking, trader-status, and compliance prompts using accurate organization information.
+13. **Record the final identity privately.** Record the legal seller name, public developer name, Team ID, App Store Connect provider, support domain, and responsible Account Holder in the private release runbook. Only non-sensitive public values belong in the repository.
+
+If Apple cannot migrate an unreleased app record, open a Developer Support case for the record and bundle ID. Do not publish a placeholder version under the personal name just to satisfy the transfer requirement.
+
+#### Fallback path: transfer an already released app
+
+Use this only when the app already has at least one App Store release and a separate verified organization account will become its real legal owner. An app transfer preserves the bundle ID, reviews, ratings, availability, and user updates, but it changes ownership and has entitlement/signing consequences.
+
+1. **Finish the receiving organization account first.** Confirm its organization seller name and, where still configurable, its public developer name.
+2. **Accept current agreements on both accounts.** Neither account may be pending a membership change, and both Account Holders must accept the latest free and paid agreements. If the transferor accepted the Alternative Terms Addendum for EU distribution, the recipient must accept it too.
+3. **Check Apple’s transfer criteria.** The app must have a released version, must not be in pre-order or a blocked review/release state, and must satisfy current in-app-purchase and asset-pack conditions. Confirm that none of its in-app-purchase product IDs collide with IDs in the recipient account.
+4. **Inventory capabilities before touching the transfer button.** Record APNs/remote push, the default and custom Keychain access groups, App Groups/widgets, associated domains/universal links, iCloud/CloudKit, and Xcode Cloud usage. Assign an owner and cutover action for each enabled capability.
+5. **Back up App Store records.** Save metadata, pricing, availability dates, sales/download reports, privacy answers, screenshots, build details, and support/compliance values outside the public repository.
+6. **Prepare the app.** Turn off TestFlight testing and remove its builds, testers, and localized test information as Apple directs. Remove Xcode Cloud data when applicable and resolve every failed transfer criterion.
+7. **Initiate as the current Account Holder.** In App Store Connect, open **Apps → Athkar → App Information → Additional Information → Transfer App**, pass the criteria screen, enter the receiving Account Holder’s Apple Account and Team ID, accept the terms, and request the transfer.
+8. **Accept within 60 days.** The receiving Account Holder opens **Business → Agreements → App Transfers → Review**, supplies organization support/marketing/privacy URLs and contact details, reviews app privacy and user access, accepts the terms, and completes any export-compliance request.
+9. **Wait for completion.** Apple states that processing can take up to two business days. Do not alter ownership assumptions or ship from the receiving team until both Account Holders receive completion notice.
+10. **Recreate signing assets.** The receiving team creates new development/distribution provisioning profiles for the transferred App ID and configures new team-owned credentials. Never reuse or publish private keys from the old account.
+11. **Migrate capability-specific assets.** Recreate or update APNs keys or certificates, associated domains, iCloud entitlements, and every other item identified in step 4. Re-register transferred App Groups in the recipient account, and account for Apple converting a wildcard App ID to an explicit App ID. Local-only notifications do not require an APNs server, but they still receive a physical-device regression run.
+12. **Protect Keychain-backed data.** Apple states that old keychain sharing works only until the app is updated under the recipient. Before transfer, ship or require a reviewed migration/recovery path for every recovery-critical key; after transfer, replace groups with recipient-Team-ID groups and verify explicit restore, reauthentication, or unlock behavior. Never silently reset encrypted worship data, backup keys, or app-lock state.
+13. **Move the build pipeline.** Point Expo/EAS and CI signing to the receiving organization, verify the final Team ID and provider, and remove the former account’s access after a successful organization-signed build.
+14. **Verify the public result.** Confirm that the live App Store product page and install sheet show the approved organization seller/developer identity and that no public support, privacy, copyright, or trader field exposes the personal name.
+
+Do not transfer the app to a friend’s or unrelated company’s account merely to mask the name: the recipient becomes the legal owner and controls future releases.
+
+#### Repository and build cutover
+
+1. Freeze the final product display name, organization-owned reverse-DNS bundle ID, support domain, privacy-policy URL, and public contact email before the first production signing.
+2. Set the Expo app name and iOS display-name localization to the product brand; set the final `ios.bundleIdentifier` once and avoid throwaway identifiers.
+3. Bind the Expo/EAS project and iOS credentials to the organization team. Compare the Team ID before and after conversion instead of assuming it remains unchanged.
+4. Regenerate provisioning profiles and revalidate widgets, App Groups, keychain access and recovery, associated domains, universal links, local notifications, and export/import on physical iOS devices.
+5. Search public store copy, About screens, source notices, support pages, privacy pages, screenshots, copyright text, and repository metadata for the personal name. Replace it only where the organization lawfully owns that public identity; do not falsify required private Apple records.
+6. Store Apple verification documents, tax/banking data, certificates, private keys, and account screenshots outside the repository and outside ordinary diagnostics.
+
+#### Identity and first-record gate
+
+No App Store Connect app record, TestFlight upload, or iOS public release may proceed until:
+
+- App Store Connect identifies the provider as the approved organization.
+- The seller name and developer name match the approved identity and contain no personal name.
+- Public support, privacy, marketing, copyright, and applicable trader disclosures use organization-controlled details.
+- A TestFlight build signed by the final team installs, launches, schedules reminders, writes/restores local data, opens widgets and deep links, and upgrades without data loss.
+- Every Keychain-held secret remains readable after an organization-signed upgrade, or an explicit tested recovery/restore path preserves the protected data after a Team ID change.
+- The final bundle ID, Team ID, App Store app ID, and EAS project owner are recorded in the private release runbook.
+- Evidence contains no credentials or private verification documents; public-facing identity checks may be retained as redacted screenshots.
+
 ### Continuous integration
 
 - Type checking, unit tests, schema/content checks, dependency/license audit, and backup fixtures on every pull request.
@@ -659,7 +740,7 @@ Proceed only after a threat model and product decision confirm demand.
 
 ### Distribution
 
-- Apple Developer and Google Play accounts, final bundle/package identifiers, signing, support contact, and privacy-policy URL are prerequisites.
+- Verified organization-owned Apple Developer and Google Play accounts, final bundle/package identifiers, signing, organization support contact, and privacy-policy URL are prerequisites; do not create or release the iOS App Store record under a personal seller identity.
 - Use TestFlight and Play internal/closed tracks before public rollout.
 - Arabic RTL screenshots, store copy, age rating, permission explanations, privacy labels, Data Safety, exact-alarm declaration if used, export-compliance declarations for backup/sync cryptography, and third-party licenses are part of the release artifact.
 - Roll out gradually with explicit halt criteria for crashes, data loss, reminder duplication, content errors, or migration failures.
@@ -690,7 +771,7 @@ Proceed only after a threat model and product decision confirm demand.
 
 ## 22. Decisions required before implementation
 
-1. Final app name, bundle identifiers, support address, privacy-policy host, and store accounts.
+1. Final app name, organization legal seller name, public iOS developer name, bundle identifiers, Team ID/provider, support address, privacy-policy host, and store accounts.
 2. Named content/religious reviewers and the review record format.
 3. Launch regions and their default calculation profiles.
 4. Approved Arabic wording for timing, travel, Friday, not-applicable, and make-up states.
@@ -717,6 +798,8 @@ Proceed only after a threat model and product decision confirm demand.
 - [ ] Privacy policy, Apple privacy details, Google Data Safety, permissions, licenses, and exact-alarm declarations are accurate.
 - [ ] Delete-all, backup restore, database migration, and rollback paths are proven.
 - [ ] Store beta and gradual-release halt criteria are in place.
+- [ ] The public iOS seller, developer, support, privacy, copyright, and applicable trader identity uses the approved organization and exposes no personal name.
+- [ ] Team-change and Keychain migration is proven on an upgrade build, or recorded as not applicable because the final organization owned the app before any user data existed.
 
 ## 24. Primary implementation references
 
@@ -731,3 +814,10 @@ Proceed only after a threat model and product decision confirm demand.
 - [Android app widgets](https://developer.android.com/develop/ui/views/appwidgets/overview)
 - [Apple App Privacy Details](https://developer.apple.com/app-store/app-privacy-details/)
 - [Google Play Data Safety](https://support.google.com/googleplay/android-developer/answer/10787469)
+- [Apple Developer Program organization requirements](https://developer.apple.com/programs/enroll/)
+- [Apple individual-to-organization membership update](https://developer.apple.com/help/account/membership/updating-your-account-information/#updating-an-individual-membership-to-an-organization-membership)
+- [Apple developer-name rules](https://developer.apple.com/help/app-store-connect/create-an-app-record/set-your-developer-name/)
+- [Apple app-transfer overview](https://developer.apple.com/help/app-store-connect/transfer-an-app/overview-of-app-transfer/)
+- [Apple app-transfer criteria](https://developer.apple.com/help/app-store-connect/transfer-an-app/app-transfer-criteria/)
+- [Apple app-transfer initiation](https://developer.apple.com/help/app-store-connect/transfer-an-app/initiate-an-app-transfer/)
+- [Apple app-transfer acceptance](https://developer.apple.com/help/app-store-connect/transfer-an-app/accept-an-app-transfer/)
