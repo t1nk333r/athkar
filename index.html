@@ -284,15 +284,19 @@
       height: 1.2rem;
       flex: none;
     }
-    .period-complete {
+    .period-status {
       display: none;
-      color: var(--completed);
+      color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
       font-size: 0.8rem;
       font-weight: 900;
     }
 
-    .period-tab.is-complete .period-complete { display: inline; }
+    .period-tab.is-skipped .period-status { display: inline; }
+    .period-tab.is-complete .period-status {
+      display: inline;
+      color: var(--completed);
+    }
 
 
     .session-summary {
@@ -331,12 +335,12 @@
       transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
     }
 
-    .haptics-control:has(.haptics-input:checked) {
+    .haptics-control:has(.toggle-input:checked) {
       border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
       color: var(--accent-strong);
     }
 
-    .haptics-switch {
+    .toggle-switch {
       position: relative;
       display: inline-block;
       width: 2.25rem;
@@ -345,7 +349,7 @@
       direction: ltr;
     }
 
-    .haptics-input {
+    .toggle-input {
       position: absolute;
       inset: 0;
       z-index: 2;
@@ -360,9 +364,9 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .haptics-input:focus-visible { outline: none; }
+    .toggle-input:focus-visible { outline: none; }
 
-    .haptics-track {
+    .toggle-track {
       position: absolute;
       inset: 0;
       border: 1px solid var(--border);
@@ -372,7 +376,7 @@
       transition: background-color 150ms ease, border-color 150ms ease;
     }
 
-    .haptics-track::after {
+    .toggle-track::after {
       content: "";
       position: absolute;
       inset-block-start: 50%;
@@ -386,28 +390,28 @@
       transition: transform 150ms ease;
     }
 
-    .haptics-input:checked + .haptics-track {
+    .toggle-input:checked + .toggle-track {
       border-color: var(--accent);
       background: var(--accent);
     }
 
-    .haptics-input:checked + .haptics-track::after {
+    .toggle-input:checked + .toggle-track::after {
       transform: translate(0.94rem, -50%);
     }
 
-    .haptics-input:focus-visible + .haptics-track {
+    .toggle-input:focus-visible + .toggle-track {
       outline: 3px solid var(--focus);
       outline-offset: 3px;
     }
 
-    :root.supports-native-switch .haptics-switch {
+    :root.supports-native-switch .toggle-switch {
       display: inline-flex;
       width: auto;
       height: auto;
       align-items: center;
     }
 
-    :root.supports-native-switch .haptics-input {
+    :root.supports-native-switch .toggle-input {
       position: static;
       inset: auto;
       width: auto;
@@ -415,9 +419,9 @@
       opacity: 1;
     }
 
-    :root.supports-native-switch .haptics-track { display: none; }
+    :root.supports-native-switch .toggle-track { display: none; }
 
-    :root.supports-native-switch .haptics-input:focus-visible {
+    :root.supports-native-switch .toggle-input:focus-visible {
       outline: 3px solid var(--focus);
       outline-offset: 3px;
     }
@@ -500,6 +504,10 @@
 
     .session-summary.is-complete .progress-track::-webkit-progress-value { background: var(--completed); }
     .session-summary.is-complete .progress-track::-moz-progress-bar { background: var(--completed); }
+    .session-summary.is-skipped {
+      border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+      border-style: dashed;
+    }
 
     main { display: block; }
 
@@ -1194,6 +1202,52 @@
       margin: 0;
     }
 
+    .daily-skip-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-block-start: 0.85rem;
+    }
+
+    .daily-skip-control {
+      display: flex;
+      min-height: 3.65rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface);
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease, opacity 150ms ease;
+    }
+
+    .daily-skip-control:has(.toggle-input:checked) {
+      border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+      background: var(--accent-soft);
+    }
+
+    .daily-skip-control:has(.toggle-input:disabled) {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .daily-skip-copy {
+      display: grid;
+      gap: 0.08rem;
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+    }
+
+    .daily-skip-copy strong {
+      font-size: 0.86rem;
+    }
+
+    .daily-skip-copy small {
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
     .settings-note {
       margin: 0.65rem 0 0;
       color: var(--text-secondary);
@@ -1231,6 +1285,11 @@
     .history-state.is-complete {
       color: var(--completed);
       font-weight: 850;
+    }
+
+    .history-state.is-skipped {
+      color: var(--accent-strong);
+      font-weight: 800;
     }
 
     .source-sheet-body {
@@ -1542,14 +1601,14 @@
             <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
           </svg>
           <span>أذكار الصباح</span>
-          <span class="period-complete" aria-hidden="true">✓</span>
+          <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
           </svg>
           <span>أذكار المساء</span>
-          <span class="period-complete" aria-hidden="true">✓</span>
+          <span class="period-status" aria-hidden="true"></span>
         </button>
       </nav>
 
@@ -1581,9 +1640,9 @@
               <rect x="8" y="3" width="8" height="18" rx="2"></rect>
               <path d="M5 8.5a5 5 0 0 0 0 7M2.5 6a8.5 8.5 0 0 0 0 12M19 8.5a5 5 0 0 1 0 7M21.5 6a8.5 8.5 0 0 1 0 12"></path>
             </svg>
-            <span class="haptics-switch">
-              <input class="haptics-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-label="الاهتزاز عند إكمال الذكر">
-              <span class="haptics-track" aria-hidden="true"></span>
+            <span class="toggle-switch">
+              <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-label="الاهتزاز عند إكمال الذكر">
+              <span class="toggle-track" aria-hidden="true"></span>
             </span>
           </label>
         </footer>
@@ -1694,6 +1753,33 @@
           </div>
         </div>
         <p class="settings-note" id="reminder-status">حدّد الموقع لحساب الموعدين محليًا دون إرسال موقعك.</p>
+      </section>
+
+      <section class="settings-section" aria-labelledby="daily-skip-title">
+        <h3 id="daily-skip-title">تخطي وِرد اليوم</h3>
+        <p class="settings-note" id="daily-skip-note">يوقف تذكير هذا الورد اليوم ويظهر «تخطي» في السجل. يعاد تلقائيًا غدًا، ولا يُحذف التقدم.</p>
+        <div class="daily-skip-list">
+          <label class="daily-skip-control" for="morning-skip-today">
+            <span class="daily-skip-copy">
+              <strong>أذكار الصباح</strong>
+              <small id="morning-skip-status">غير متخطاة</small>
+            </span>
+            <span class="toggle-switch">
+              <input class="toggle-input" id="morning-skip-today" type="checkbox" switch role="switch" aria-describedby="daily-skip-note morning-skip-status">
+              <span class="toggle-track" aria-hidden="true"></span>
+            </span>
+          </label>
+          <label class="daily-skip-control" for="evening-skip-today">
+            <span class="daily-skip-copy">
+              <strong>أذكار المساء</strong>
+              <small id="evening-skip-status">غير متخطاة</small>
+            </span>
+            <span class="toggle-switch">
+              <input class="toggle-input" id="evening-skip-today" type="checkbox" switch role="switch" aria-describedby="daily-skip-note evening-skip-status">
+              <span class="toggle-track" aria-hidden="true"></span>
+            </span>
+          </label>
+        </div>
       </section>
 
       <section class="settings-section" aria-labelledby="app-settings-title">
@@ -2055,6 +2141,10 @@
     const prayerLocationButton = document.getElementById("prayer-location-button");
     const prayerLocationStatus = document.getElementById("prayer-location-status");
     const reminderStatus = document.getElementById("reminder-status");
+    const morningSkipToday = document.getElementById("morning-skip-today");
+    const morningSkipStatus = document.getElementById("morning-skip-status");
+    const eveningSkipToday = document.getElementById("evening-skip-today");
+    const eveningSkipStatus = document.getElementById("evening-skip-status");
     const installButton = document.getElementById("install-button");
     const installStatus = document.getElementById("install-status");
     const installDialog = document.getElementById("install-dialog");
@@ -2112,6 +2202,7 @@
         progress: { morning: {}, evening: {} },
         targets: { morning: {}, evening: {} },
         completedAt: { morning: null, evening: null },
+        skipped: { morning: false, evening: false },
         history: []
       };
     }
@@ -2126,6 +2217,8 @@
             date: entry.date,
             morning: Boolean(entry.morning),
             evening: Boolean(entry.evening),
+            morningSkipped: Boolean(entry.morningSkipped),
+            eveningSkipped: Boolean(entry.eveningSkipped),
             morningAt: typeof entry.morningAt === "string" ? entry.morningAt : null,
             eveningAt: typeof entry.eveningAt === "string" ? entry.eveningAt : null
           }))
@@ -2144,6 +2237,10 @@
         completedAt: {
           morning: typeof parsed?.completedAt?.morning === "string" ? parsed.completedAt.morning : null,
           evening: typeof parsed?.completedAt?.evening === "string" ? parsed.completedAt.evening : null
+        },
+        skipped: {
+          morning: Boolean(parsed?.skipped?.morning),
+          evening: Boolean(parsed?.skipped?.evening)
         },
         history
       };
@@ -2169,11 +2266,17 @@
         .every(item => countForState(item, period, candidate) >= targetForState(item, period, candidate));
     }
 
+    function periodIsSkipped(period, candidate = state) {
+      return Boolean(candidate.skipped?.[period]);
+    }
+
     function historyEntryFor(candidate) {
       return {
         date: candidate.date,
         morning: periodIsComplete("morning", candidate),
         evening: periodIsComplete("evening", candidate),
+        morningSkipped: periodIsSkipped("morning", candidate),
+        eveningSkipped: periodIsSkipped("evening", candidate),
         morningAt: candidate.completedAt.morning,
         eveningAt: candidate.completedAt.evening
       };
@@ -2529,12 +2632,15 @@
     function syncCompletionState(period) {
       const complete = periodIsComplete(period);
       const completedAt = state.completedAt[period];
-      if (complete && !completedAt) {
-        state.completedAt[period] = new Date().toISOString();
-        return { complete: true, newlyCompleted: true };
+      const newlyCompleted = complete && !completedAt;
+      if (complete) {
+        state.skipped[period] = false;
+        if (newlyCompleted) state.completedAt[period] = new Date().toISOString();
+      } else if (completedAt) {
+        state.completedAt[period] = null;
       }
-      if (!complete && completedAt) state.completedAt[period] = null;
-      return { complete, newlyCompleted: false };
+      scheduleReminders();
+      return { complete, newlyCompleted };
     }
 
     function openCompletionDialog(period) {
@@ -2557,11 +2663,49 @@
       sourceDialog.showModal();
     }
 
+    function updateDailySkipControls() {
+      for (const [period, input, status] of [
+        ["morning", morningSkipToday, morningSkipStatus],
+        ["evening", eveningSkipToday, eveningSkipStatus]
+      ]) {
+        const complete = periodIsComplete(period);
+        const skipped = !complete && periodIsSkipped(period);
+        input.checked = skipped;
+        input.disabled = complete;
+        status.textContent = complete
+          ? "اكتملت اليوم"
+          : skipped ? "تم تخطيها اليوم" : "نشطة اليوم";
+      }
+    }
+
+    function setDailySkip(period, skipped) {
+      if (skipped && periodIsComplete(period)) {
+        updateDailySkipControls();
+        liveRegion.textContent = `${sectionNames[period]} مكتملة اليوم`;
+        return;
+      }
+      state.skipped[period] = skipped;
+      saveState();
+      updateSessionProgress();
+      scheduleReminders();
+      liveRegion.textContent = skipped
+        ? `تم تخطي ${sectionNames[period]} اليوم`
+        : `أُلغي تخطي ${sectionNames[period]} اليوم`;
+    }
+
     function updatePeriodTabs() {
       document.querySelectorAll(".period-tab").forEach(tab => {
-        const complete = periodIsComplete(tab.dataset.period);
+        const period = tab.dataset.period;
+        const complete = periodIsComplete(period);
+        const skipped = !complete && periodIsSkipped(period);
+        const status = tab.querySelector(".period-status");
         tab.classList.toggle("is-complete", complete);
-        tab.setAttribute("aria-label", `${sectionNames[tab.dataset.period]}${complete ? "، مكتملة اليوم" : ""}`);
+        tab.classList.toggle("is-skipped", skipped);
+        status.textContent = complete ? "✓" : skipped ? "—" : "";
+        tab.setAttribute(
+          "aria-label",
+          `${sectionNames[period]}${complete ? "، مكتملة اليوم" : skipped ? "، متخطاة اليوم" : ""}`
+        );
       });
     }
 
@@ -2570,16 +2714,29 @@
       return historyDateFormatter.format(new Date(`${date}T12:00:00`));
     }
 
+    function historyStateMarkup(label, complete, skipped) {
+      const className = complete ? " is-complete" : skipped ? " is-skipped" : "";
+      const marker = complete ? "✓" : skipped ? "تخطي" : "—";
+      return `<span class="history-state${className}">${label} ${marker}</span>`;
+    }
+
     function updateHistoryView() {
       const entries = [
-        { date: state.date, morning: periodIsComplete("morning"), evening: periodIsComplete("evening"), isToday: true },
+        {
+          date: state.date,
+          morning: periodIsComplete("morning"),
+          evening: periodIsComplete("evening"),
+          morningSkipped: periodIsSkipped("morning"),
+          eveningSkipped: periodIsSkipped("evening"),
+          isToday: true
+        },
         ...state.history.map(entry => ({ ...entry, isToday: false }))
       ];
       historyList.innerHTML = entries.map(entry => `
         <li class="history-row${entry.isToday ? " is-today" : ""}">
           <time datetime="${escapeHtml(entry.date)}">${escapeHtml(historyDateLabel(entry.date, entry.isToday))}</time>
-          <span class="history-state${entry.morning ? " is-complete" : ""}">الصباح ${entry.morning ? "✓" : "—"}</span>
-          <span class="history-state${entry.evening ? " is-complete" : ""}">المساء ${entry.evening ? "✓" : "—"}</span>
+          ${historyStateMarkup("الصباح", entry.morning, entry.morningSkipped)}
+          ${historyStateMarkup("المساء", entry.evening, entry.eveningSkipped)}
         </li>
       `).join("");
     }
@@ -2633,17 +2790,27 @@
       const completed = items.filter(item => countFor(item) >= targetFor(item)).length;
       const hasProgress = items.some(item => countFor(item) > 0);
       const isComplete = completed === items.length;
+      const isSkipped = !isComplete && periodIsSkipped(activePeriod);
       const suffix = activePeriod === "morning" && collections.morning.some(item => item.review) ? " ذكرًا متاحًا" : " ذكرًا";
 
       progressCopy.textContent = isComplete
         ? `اكتملت ${sectionNames[activePeriod]} اليوم`
-        : `${formatNumber(completed)} من ${formatNumber(items.length)}${suffix}`;
+        : isSkipped
+          ? `تم تخطي ${sectionNames[activePeriod]} اليوم`
+          : `${formatNumber(completed)} من ${formatNumber(items.length)}${suffix}`;
       progressBar.max = items.length;
       progressBar.value = completed;
-      progressBar.setAttribute("aria-label", `${sectionNames[activePeriod]}: ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`);
+      progressBar.setAttribute(
+        "aria-label",
+        isSkipped
+          ? `${sectionNames[activePeriod]} متخطاة اليوم؛ ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`
+          : `${sectionNames[activePeriod]}: ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`
+      );
       sessionReset.disabled = !hasProgress;
       sessionSummary.classList.toggle("is-complete", isComplete);
+      sessionSummary.classList.toggle("is-skipped", isSkipped);
       updatePeriodTabs();
+      updateDailySkipControls();
       updateHistoryView();
     }
 
@@ -2683,6 +2850,7 @@
           state.completedAt[periodAtRequest] = null;
           currentIndices[periodAtRequest] = 0;
           saveState();
+          scheduleReminders();
           if (activePeriod === periodAtRequest) renderCards();
           liveRegion.textContent = `أُعيدت ${sectionNames[periodAtRequest]}`;
         }
@@ -3031,7 +3199,12 @@
       for (const period of ["morning", "evening"]) {
         clearTimeout(reminderTimers[period]);
         reminderTimers[period] = null;
-        if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") continue;
+        if (
+          !reminderPreferences[period].enabled ||
+          notificationPermission() !== "granted" ||
+          periodIsComplete(period) ||
+          periodIsSkipped(period)
+        ) continue;
         const next = nextReminderTime(period);
         if (!next) continue;
         const delay = Math.max(0, next.getTime() - Date.now());
@@ -3040,7 +3213,15 @@
     }
 
     async function showReminder(period) {
-      if (!reminderPreferences[period].enabled || notificationPermission() !== "granted") return;
+      if (
+        !reminderPreferences[period].enabled ||
+        notificationPermission() !== "granted" ||
+        periodIsComplete(period) ||
+        periodIsSkipped(period)
+      ) {
+        scheduleReminders();
+        return;
+      }
       try {
         const registration = await navigator.serviceWorker.ready;
         const prayerName = period === "morning" ? "الفجر" : "العصر";
@@ -3245,6 +3426,7 @@
     settingsButton.addEventListener("click", () => {
       updateHistoryView();
       updateReminderControls();
+      updateDailySkipControls();
       updateInstallUi();
       settingsDialog.showModal();
     });
@@ -3271,6 +3453,8 @@
     lineSpacingSelect.addEventListener("change", event => applyLineSpacing(event.target.value));
     morningReminderEnabled.addEventListener("change", () => setReminderEnabled("morning", morningReminderEnabled.checked));
     eveningReminderEnabled.addEventListener("change", () => setReminderEnabled("evening", eveningReminderEnabled.checked));
+    morningSkipToday.addEventListener("change", () => setDailySkip("morning", morningSkipToday.checked));
+    eveningSkipToday.addEventListener("change", () => setDailySkip("evening", eveningSkipToday.checked));
     prayerMethodSelect.addEventListener("change", event => {
       reminderStatusOverride = "";
       reminderPreferences.calculationMethod = event.target.value;
@@ -3398,6 +3582,7 @@
     applyLineSpacing(root.dataset.lineSpacing, false, false);
     applyTheme(storedTheme, false);
     updateReminderControls();
+    updateDailySkipControls();
     updateInstallUi();
     switchPeriod(activePeriod, false);
     scheduleReminders();
