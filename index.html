@@ -315,29 +315,6 @@
 
 
 
-    .haptics-control {
-      display: inline-flex;
-      min-height: 2.75rem;
-      align-items: center;
-      justify-content: center;
-      gap: 0.42rem;
-      padding: 0.35rem 0.55rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--surface-raised);
-      color: var(--text-secondary);
-      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-      white-space: nowrap;
-      cursor: pointer;
-      transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
-    }
-
-    .haptics-control:has(.toggle-input:checked) {
-      border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-      color: var(--accent-strong);
-    }
 
     .toggle-switch {
       position: relative;
@@ -552,8 +529,18 @@
 
     .athkar-list > li[hidden] { display: none; }
     .athkar-list.is-entering { animation: section-in 180ms ease both; }
-    .athkar-list > li.card-enter-forward { animation: card-forward 210ms ease both; }
-    .athkar-list > li.card-enter-back { animation: card-back 210ms ease both; }
+    .athkar-list > li.card-enter-forward { animation: card-forward 150ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .athkar-list > li.card-enter-back { animation: card-back 150ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
+    .athkar-list > li.is-swiping {
+      will-change: transform, opacity;
+      transition: none;
+    }
+
+    .athkar-list > li.is-swipe-settling {
+      will-change: transform, opacity;
+      transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 120ms ease-out;
+    }
 
     .deck-navigation {
       display: grid;
@@ -598,10 +585,6 @@
     }
 
     .app-footer {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 0.55rem;
       margin-block-start: 0.4rem;
     }
 
@@ -613,10 +596,6 @@
       text-align: center;
     }
 
-    .footer-haptics {
-      justify-self: end;
-      box-shadow: var(--shadow-soft);
-    }
 
     .haptics-icon {
       width: 1.15rem;
@@ -1203,7 +1182,7 @@
       margin-block-start: 0.85rem;
     }
 
-    .manual-completion-control {
+    .settings-toggle-control {
       display: flex;
       min-height: 3.65rem;
       align-items: center;
@@ -1217,30 +1196,36 @@
       transition: border-color 150ms ease, background-color 150ms ease, opacity 150ms ease;
     }
 
-    .manual-completion-control:has(.toggle-input:checked) {
+    .settings-toggle-control:has(.toggle-input:checked) {
       border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
       background: var(--accent-soft);
     }
 
-    .manual-completion-control:has(.toggle-input:disabled) {
+    .settings-toggle-control:has(.toggle-input:disabled) {
       opacity: 0.6;
       cursor: default;
     }
 
-    .manual-completion-copy {
+    .settings-toggle-copy {
       display: grid;
       gap: 0.08rem;
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
     }
 
-    .manual-completion-copy strong {
+    .settings-toggle-copy strong {
       font-size: 0.86rem;
     }
 
-    .manual-completion-copy small {
+    .settings-toggle-copy small {
       color: var(--text-secondary);
       font-size: 0.7rem;
       font-weight: 600;
+    }
+
+    .settings-toggle-heading {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .settings-note {
@@ -1442,12 +1427,6 @@
       }
 
       .summary-row { gap: 0.6rem; }
-      .haptics-control {
-        min-height: 2.3rem;
-        gap: 0.32rem;
-        padding: 0.3rem 0.48rem;
-        font-size: 0.72rem;
-      }
       .sheet-dialog {
         width: 100%;
         max-width: none;
@@ -1626,16 +1605,6 @@
         </nav>
         <footer class="app-footer">
           <p class="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
-          <label class="haptics-control footer-haptics" for="haptics-toggle" title="الاهتزاز">
-            <svg class="haptics-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-              <rect x="8" y="3" width="8" height="18" rx="2"></rect>
-              <path d="M5 8.5a5 5 0 0 0 0 7M2.5 6a8.5 8.5 0 0 0 0 12M19 8.5a5 5 0 0 1 0 7M21.5 6a8.5 8.5 0 0 1 0 12"></path>
-            </svg>
-            <span class="toggle-switch">
-              <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-label="الاهتزاز عند إكمال الذكر">
-              <span class="toggle-track" aria-hidden="true"></span>
-            </span>
-          </label>
         </footer>
       </section>
     </main>
@@ -1750,8 +1719,8 @@
         <h3 id="manual-completion-title">إكمال الورد يدويًا</h3>
         <p class="settings-note" id="manual-completion-note">فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية.</p>
         <div class="manual-completion-list">
-          <label class="manual-completion-control" for="morning-manual-completion">
-            <span class="manual-completion-copy">
+          <label class="settings-toggle-control" for="morning-manual-completion">
+            <span class="settings-toggle-copy">
               <strong>أذكار الصباح</strong>
               <small id="morning-manual-completion-status">لم تُسجل كمكتملة</small>
             </span>
@@ -1760,8 +1729,8 @@
               <span class="toggle-track" aria-hidden="true"></span>
             </span>
           </label>
-          <label class="manual-completion-control" for="evening-manual-completion">
-            <span class="manual-completion-copy">
+          <label class="settings-toggle-control" for="evening-manual-completion">
+            <span class="settings-toggle-copy">
               <strong>أذكار المساء</strong>
               <small id="evening-manual-completion-status">لم تُسجل كمكتملة</small>
             </span>
@@ -1771,6 +1740,26 @@
             </span>
           </label>
         </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="haptics-settings-title">
+        <h3 id="haptics-settings-title">الاهتزاز</h3>
+        <label class="settings-toggle-control" for="haptics-toggle">
+          <span class="settings-toggle-copy">
+            <strong class="settings-toggle-heading">
+              <svg class="haptics-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                <rect x="8" y="3" width="8" height="18" rx="2"></rect>
+                <path d="M5 8.5a5 5 0 0 0 0 7M2.5 6a8.5 8.5 0 0 0 0 12M19 8.5a5 5 0 0 1 0 7M21.5 6a8.5 8.5 0 0 1 0 12"></path>
+              </svg>
+              <span>الاهتزاز عند إكمال الذكر</span>
+            </strong>
+            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال الذكر.</small>
+          </span>
+          <span class="toggle-switch">
+            <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-describedby="haptics-note">
+            <span class="toggle-track" aria-hidden="true"></span>
+          </span>
+        </label>
       </section>
 
       <section class="settings-section" aria-labelledby="app-settings-title">
@@ -2079,6 +2068,7 @@
     const storageKey = "athkar-progress-v2";
     const legacyStorageKey = "athkar-progress-v1";
     const hapticsStorageKey = "athkar-haptics";
+    const hapticDurationMs = 45;
     const textSizeStorageKey = "athkar-reading-text-size";
     const lineSpacingStorageKey = "athkar-line-spacing";
     const remindersStorageKey = "athkar-reminders-v2";
@@ -2161,6 +2151,7 @@
     const currentIndices = { morning: null, evening: null };
     const reminderTimers = { morning: null, evening: null };
     let swipeGesture = null;
+    let swipeSettleTimer = null;
     let suppressCardClicksUntil = 0;
     let activePeriod = location.hash === "#evening" ? "evening" : "morning";
     let pendingConfirmation = null;
@@ -2500,7 +2491,7 @@
       if (direction && activeItem) {
         requestAnimationFrame(() => {
           activeItem.classList.add(direction === "back" ? "card-enter-back" : "card-enter-forward");
-          setTimeout(() => activeItem.classList.remove("card-enter-forward", "card-enter-back"), 240);
+          setTimeout(() => activeItem.classList.remove("card-enter-forward", "card-enter-back"), 170);
         });
       }
 
@@ -2526,20 +2517,98 @@
       }, motionIsReduced.matches ? 20 : 320);
     }
 
+    function clearCardSwipeStyles(item) {
+      if (!item) return;
+      item.classList.remove("is-swiping", "is-swipe-settling");
+      item.style.removeProperty("transform");
+      item.style.removeProperty("opacity");
+    }
+
+    function settleCardSwipe(item) {
+      clearTimeout(swipeSettleTimer);
+      if (!item || motionIsReduced.matches) {
+        clearCardSwipeStyles(item);
+        return;
+      }
+
+      item.classList.remove("is-swiping");
+      item.classList.add("is-swipe-settling");
+      item.style.transform = "translate3d(0, 0, 0)";
+      item.style.opacity = "1";
+      swipeSettleTimer = setTimeout(() => clearCardSwipeStyles(item), 130);
+    }
+
     function beginCardSwipe(event) {
       if (!event.isPrimary || event.pointerType === "mouse") return;
-      if (event.target.closest("button, select, input, label")) return;
+      if (event.target.closest(".card-reset, .target-control, .source-button, select, input, label")) return;
+
+      const item = list.querySelector("li:not([hidden])");
+      if (!item) return;
+      clearTimeout(swipeSettleTimer);
+      clearCardSwipeStyles(item);
+      const startedAt = performance.now();
       swipeGesture = {
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
-        startedAt: performance.now()
+        startedAt,
+        lastX: event.clientX,
+        lastAt: startedAt,
+        velocityX: 0,
+        axis: null,
+        item
       };
+    }
+
+    function moveCardSwipe(event) {
+      if (!swipeGesture || event.pointerId !== swipeGesture.pointerId) return;
+      const gesture = swipeGesture;
+      const deltaX = event.clientX - gesture.startX;
+      const deltaY = event.clientY - gesture.startY;
+      const distanceX = Math.abs(deltaX);
+      const distanceY = Math.abs(deltaY);
+
+      if (!gesture.axis) {
+        if (Math.max(distanceX, distanceY) < 8) return;
+        if (distanceY >= distanceX) {
+          swipeGesture = null;
+          clearCardSwipeStyles(gesture.item);
+          return;
+        }
+        gesture.axis = "horizontal";
+        gesture.item.classList.add("is-swiping");
+        suppressCardClicksUntil = performance.now() + 450;
+      }
+
+      if (event.cancelable) event.preventDefault();
+      const now = performance.now();
+      const elapsed = now - gesture.lastAt;
+      if (elapsed > 0) {
+        const velocity = (event.clientX - gesture.lastX) / elapsed;
+        gesture.velocityX = gesture.velocityX === 0
+          ? velocity
+          : gesture.velocityX * 0.6 + velocity * 0.4;
+      }
+      gesture.lastX = event.clientX;
+      gesture.lastAt = now;
+
+      const canNavigate = deltaX > 0 ? !nextCardButton.disabled : !previousCardButton.disabled;
+      const visualDelta = canNavigate ? deltaX : deltaX * 0.2;
+      const width = Math.max(1, gesture.item.clientWidth);
+      gesture.item.style.transform = `translate3d(${visualDelta}px, 0, 0)`;
+      gesture.item.style.opacity = String(1 - Math.min(Math.abs(visualDelta) / width * 0.18, 0.18));
     }
 
     function cancelCardSwipe(event) {
       if (!swipeGesture || event.pointerId !== swipeGesture.pointerId) return;
+      const gesture = swipeGesture;
       swipeGesture = null;
+      if (gesture.axis === "horizontal") {
+        suppressCardClicksUntil = performance.now() + 450;
+        settleCardSwipe(gesture.item);
+      } else {
+        clearCardSwipeStyles(gesture.item);
+      }
     }
 
     function finishCardSwipe(event) {
@@ -2547,17 +2616,37 @@
       const gesture = swipeGesture;
       swipeGesture = null;
 
+      if (gesture.axis !== "horizontal") {
+        clearCardSwipeStyles(gesture.item);
+        return;
+      }
+
+      if (event.cancelable) event.preventDefault();
+      suppressCardClicksUntil = performance.now() + 450;
       const deltaX = event.clientX - gesture.startX;
       const deltaY = event.clientY - gesture.startY;
       const distance = Math.abs(deltaX);
-      const threshold = Math.max(48, Math.min(72, innerWidth * 0.14));
-      const horizontal = distance >= threshold && distance > Math.abs(deltaY) * 1.25;
-      if (!horizontal || performance.now() - gesture.startedAt > 900) return;
+      const duration = Math.max(1, performance.now() - gesture.startedAt);
+      const averageVelocity = deltaX / duration;
+      const velocity = Math.sign(gesture.velocityX) === Math.sign(deltaX)
+        ? Math.max(Math.abs(gesture.velocityX), Math.abs(averageVelocity))
+        : Math.abs(averageVelocity);
+      const threshold = Math.max(32, Math.min(52, list.clientWidth * 0.1));
+      const hasDistance = distance >= threshold;
+      const isFlick = distance >= 18 && velocity >= 0.35;
+      const horizontal = distance > Math.abs(deltaY) * 0.75;
+      const movesForward = deltaX > 0;
+      const canNavigate = movesForward ? !nextCardButton.disabled : !previousCardButton.disabled;
 
-      event.preventDefault();
-      suppressCardClicksUntil = performance.now() + 450;
-      if (deltaX > 0 && !nextCardButton.disabled) nextCardButton.click();
-      if (deltaX < 0 && !previousCardButton.disabled) previousCardButton.click();
+      if (!horizontal || (!hasDistance && !isFlick) || !canNavigate) {
+        settleCardSwipe(gesture.item);
+        return;
+      }
+
+      clearTimeout(swipeSettleTimer);
+      clearCardSwipeStyles(gesture.item);
+      const index = currentIndices[activePeriod] ?? 0;
+      showCard(index + (movesForward ? 1 : -1), movesForward ? "forward" : "back", false, true);
     }
 
     function renderCards() {
@@ -2742,7 +2831,7 @@
 
       const next = before + 1;
       const completesItem = next === target;
-      if (completesItem) triggerHaptic(35);
+      if (completesItem) triggerHaptic(hapticDurationMs);
 
       state.progress[activePeriod][item.id] = next;
       const completion = syncCompletionState(activePeriod);
@@ -3402,6 +3491,7 @@
     });
 
     list.addEventListener("pointerdown", beginCardSwipe);
+    addEventListener("pointermove", moveCardSwipe, { passive: false });
     addEventListener("pointerup", finishCardSwipe);
     addEventListener("pointercancel", cancelCardSwipe);
     addEventListener("resize", () => requestAnimationFrame(fitVisibleCard));
@@ -3510,7 +3600,7 @@
 
     hapticsToggle.addEventListener("click", () => {
       if (!nativeSwitchSupported && typeof navigator.vibrate === "function") {
-        navigator.vibrate(15);
+        navigator.vibrate(hapticDurationMs);
       }
     });
     hapticsToggle.addEventListener("change", () => {
