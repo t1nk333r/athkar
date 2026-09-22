@@ -1622,6 +1622,17 @@
     </div>
   </dialog>
 
+  <dialog id="long-order-dialog" aria-labelledby="long-order-title" aria-describedby="long-order-copy">
+    <div class="dialog-body">
+      <h2 id="long-order-title">تأجيل الأذكار الطويلة؟</h2>
+      <p id="long-order-copy">بعض الأذكار تُكرَّر عشر مرات فأكثر، مثل التهليل والتسبيح والاستغفار. هل تفضّل قراءتها في آخر الورد قبل الذكر الأخير؟ يمكنك تغيير ذلك لاحقًا من الإعدادات.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="long-order-keep" type="button">لا، أبقِ الترتيب</button>
+      <button class="dialog-button primary" id="long-order-accept" type="button">نعم، أخّرها</button>
+    </div>
+  </dialog>
+
   <dialog class="sheet-dialog" id="source-dialog" aria-labelledby="source-dialog-title">
     <div class="sheet-header">
       <h2 id="source-dialog-title">المصدر والتفاصيل</h2>
@@ -1664,6 +1675,20 @@
             </select>
           </label>
         </div>
+      </section>
+
+      <section class="settings-section" aria-labelledby="long-order-settings-title">
+        <h3 id="long-order-settings-title">ترتيب الأذكار الطويلة</h3>
+        <label class="settings-toggle-control" for="long-order-toggle">
+          <span class="settings-toggle-copy">
+            <strong>تأخير الأذكار الطويلة</strong>
+            <small id="long-order-note">الأذكار التي تُكرَّر ١٠ مرات فأكثر تُقرأ في آخر الورد قبل الذكر الأخير، دون تغيير أرقامها ولا عدّاداتها.</small>
+          </span>
+          <span class="toggle-switch">
+            <input class="toggle-input" id="long-order-toggle" type="checkbox" switch role="switch" aria-describedby="long-order-note">
+            <span class="toggle-track" aria-hidden="true"></span>
+          </span>
+        </label>
       </section>
 
       <section class="settings-section" aria-labelledby="reminder-settings-title">
@@ -2074,6 +2099,9 @@
     const remindersStorageKey = "athkar-reminders-v2";
     const legacyRemindersStorageKey = "athkar-reminders-v1";
     const installOnboardingStorageKey = "athkar-install-onboarding-v1";
+    const longOrderStorageKey = "athkar-long-order-v1";
+    const longOrderPromptStorageKey = "athkar-long-order-prompt-v1";
+    const longDhikrThreshold = 10;
     const prayerCalculationMethods = Object.freeze({
       "mwl": { fajrAngle: 18 },
       "umm-al-qura": { fajrAngle: 18.5 },
@@ -2145,10 +2173,15 @@
     const dialogCopy = document.getElementById("dialog-copy");
     const dialogConfirm = document.getElementById("dialog-confirm");
     const dialogCancel = document.getElementById("dialog-cancel");
+    const longOrderToggle = document.getElementById("long-order-toggle");
+    const longOrderDialog = document.getElementById("long-order-dialog");
+    const longOrderKeep = document.getElementById("long-order-keep");
+    const longOrderAccept = document.getElementById("long-order-accept");
     const motionIsReduced = matchMedia("(prefers-reduced-motion: reduce)");
     const colorScheme = matchMedia("(prefers-color-scheme: dark)");
     const standaloneDisplay = matchMedia("(display-mode: standalone)");
     const currentIndices = { morning: null, evening: null };
+    const decks = { morning: null, evening: null };
     const reminderTimers = { morning: null, evening: null };
     let swipeGesture = null;
     let swipeSettleTimer = null;
@@ -2168,6 +2201,9 @@
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
     hapticsToggle.checked = hapticsEnabled;
+    let longAdhkarLast = false;
+    try { longAdhkarLast = localStorage.getItem(longOrderStorageKey) === "last"; } catch (_) {}
+    longOrderToggle.checked = longAdhkarLast;
     saveState();
     saveReminderPreferences();
 
@@ -2296,6 +2332,7 @@
       state = rollStateToDate(state, today);
       currentIndices.morning = null;
       currentIndices.evening = null;
+      invalidateDecks();
       saveState();
       if (refresh) {
         renderCards();
@@ -2433,8 +2470,42 @@
       if (announce) liveRegion.textContent = label;
     }
 
-    function firstIncompleteIndex(period) {
+    function isLongDhikr(item, period) {
+      return !item.review && targetFor(item, period) >= longDhikrThreshold;
+    }
+
+    function buildDeck(period) {
       const items = collections[period];
+      if (!longAdhkarLast || items.length < 3) return items.slice();
+      const last = items[items.length - 1];
+      const rest = items.slice(0, -1);
+      return [
+        ...rest.filter(item => !isLongDhikr(item, period)),
+        ...rest.filter(item => isLongDhikr(item, period)),
+        last
+      ];
+    }
+
+    function deck(period = activePeriod) {
+      if (!decks[period]) decks[period] = buildDeck(period);
+      return decks[period];
+    }
+
+    function invalidateDecks() {
+      decks.morning = null;
+      decks.evening = null;
+    }
+
+    function serialNumber(item, period = activePeriod) {
+      return collections[period].indexOf(item);
+    }
+
+    function deckPosition(item, period = activePeriod) {
+      return deck(period).indexOf(item);
+    }
+
+    function firstIncompleteIndex(period) {
+      const items = deck(period);
       const index = items.findIndex(item => !item.review && countFor(item, period) < targetFor(item, period));
       return index === -1 ? Math.max(0, items.length - 1) : index;
     }
@@ -2458,7 +2529,7 @@
 
 
     function updateDeckNavigation() {
-      const items = collections[activePeriod];
+      const items = deck(activePeriod);
       const index = currentIndices[activePeriod] ?? 0;
       const item = items[index];
       const completed = item?.review || countFor(item) >= targetFor(item);
@@ -2472,7 +2543,7 @@
 
     function showCard(index, direction = "forward", scrollToCard = false, announce = false) {
       clearTimeout(advanceTimer);
-      const items = collections[activePeriod];
+      const items = deck(activePeriod);
       const nextIndex = Math.max(0, Math.min(index, items.length - 1));
       currentIndices[activePeriod] = nextIndex;
 
@@ -2508,7 +2579,7 @@
     }
 
     function scheduleAdvance(item, index) {
-      if (index >= collections[activePeriod].length - 1) return;
+      if (index >= deck(activePeriod).length - 1) return;
       const period = activePeriod;
       advanceTimer = setTimeout(() => {
         if (activePeriod !== period || currentIndices[period] !== index) return;
@@ -2650,17 +2721,18 @@
     }
 
     function renderCards() {
-      const items = collections[activePeriod];
+      const items = deck(activePeriod);
       if (!Number.isInteger(currentIndices[activePeriod])) {
         currentIndices[activePeriod] = firstIncompleteIndex(activePeriod);
       }
       currentIndices[activePeriod] = Math.min(currentIndices[activePeriod], items.length - 1);
-      list.innerHTML = items.map(cardMarkup).join("");
+      list.innerHTML = items.map(item => cardMarkup(item, serialNumber(item))).join("");
       list.classList.remove("is-entering");
       requestAnimationFrame(() => list.classList.add("is-entering"));
 
-      items.forEach((item, index) => {
+      items.forEach(item => {
         if (item.review) return;
+        const index = serialNumber(item);
         const card = document.getElementById(item.id);
         const tapTarget = card.querySelector(".card-tap-target");
         const resetButton = card.querySelector(".card-reset");
@@ -2696,7 +2768,8 @@
             updateSessionProgress();
             updateDeckNavigation();
             if (completion.newlyCompleted) openCompletionDialog(activePeriod);
-            else if (!wasItemComplete && countFor(item) >= targetFor(item)) scheduleAdvance(item, index);
+            else if (longAdhkarLast) applyLongOrder(true, item);
+            else if (!wasItemComplete && countFor(item) >= targetFor(item)) scheduleAdvance(item, deckPosition(item));
           });
         }
       });
@@ -2841,7 +2914,7 @@
       updateDeckNavigation();
 
       if (completion.newlyCompleted) openCompletionDialog(activePeriod);
-      else if (completesItem) scheduleAdvance(item, index);
+      else if (completesItem) scheduleAdvance(item, deckPosition(item));
     }
 
     function requestItemReset(item, card, index) {
@@ -3441,6 +3514,39 @@
       }, delay);
     }
 
+    function applyLongOrder(enabled, focusItem = deck(activePeriod)[currentIndices[activePeriod] ?? 0]) {
+      longAdhkarLast = enabled;
+      try { localStorage.setItem(longOrderStorageKey, enabled ? "last" : "original"); } catch (_) {}
+      longOrderToggle.checked = enabled;
+      invalidateDecks();
+      const position = focusItem ? deck(activePeriod).indexOf(focusItem) : -1;
+      currentIndices[activePeriod] = position === -1 ? firstIncompleteIndex(activePeriod) : position;
+      const otherPeriod = activePeriod === "morning" ? "evening" : "morning";
+      currentIndices[otherPeriod] = null;
+      renderCards();
+    }
+
+    function hasAnsweredLongOrderPrompt() {
+      try { return localStorage.getItem(longOrderPromptStorageKey) === "answered"; }
+      catch (_) { return true; }
+    }
+
+    function markLongOrderPromptAnswered() {
+      try { localStorage.setItem(longOrderPromptStorageKey, "answered"); } catch (_) {}
+    }
+
+    function scheduleLongOrderPrompt(delay = 700) {
+      if (hasAnsweredLongOrderPrompt()) return;
+      setTimeout(() => {
+        if (hasAnsweredLongOrderPrompt()) return;
+        if (document.querySelector("dialog[open]")) {
+          scheduleLongOrderPrompt(1500);
+          return;
+        }
+        longOrderDialog.showModal();
+      }, delay);
+    }
+
     async function installApp() {
       if (!deferredInstallPrompt) {
         showInstallDialog();
@@ -3609,6 +3715,29 @@
       liveRegion.textContent = hapticsEnabled ? "تم تشغيل الاهتزاز" : "تم إيقاف الاهتزاز";
     });
 
+    longOrderToggle.addEventListener("change", () => {
+      applyLongOrder(longOrderToggle.checked);
+      liveRegion.textContent = longAdhkarLast
+        ? "ستُقرأ الأذكار الطويلة قبل الذكر الأخير"
+        : "عاد ترتيب الأذكار كما هو";
+    });
+
+    longOrderKeep.addEventListener("click", () => {
+      markLongOrderPromptAnswered();
+      longOrderDialog.close();
+      applyLongOrder(false);
+    });
+
+    longOrderAccept.addEventListener("click", () => {
+      markLongOrderPromptAnswered();
+      longOrderDialog.close();
+      applyLongOrder(true);
+    });
+
+    longOrderDialog.addEventListener("cancel", event => {
+      event.preventDefault();
+    });
+
     colorScheme.addEventListener?.("change", () => {
       if (root.dataset.theme === "system") applyTheme("system", false);
     });
@@ -3651,8 +3780,9 @@
         if (reloadingForUpdate) location.reload();
       });
       addEventListener("load", registerServiceWorker, { once: true });
-      addEventListener("load", () => scheduleFirstUseInstallPrompt(), { once: true });
+      addEventListener("load", () => scheduleFirstUseInstallPrompt(2600), { once: true });
     }
+    addEventListener("load", () => scheduleLongOrderPrompt(), { once: true });
 
     let storedTheme = "system";
     try {
