@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v19";
+const CACHE_NAME = "athkar-static-v20";
 const APP_SHELL = [
   "./",
   "./index.html",

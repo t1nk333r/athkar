@@ -443,6 +443,39 @@
       opacity: 0.36;
       cursor: default;
     }
+
+    .reset-options {
+      display: grid;
+      gap: 0.5rem;
+      margin-block-start: 0.9rem;
+    }
+
+    .reset-option {
+      display: grid;
+      gap: 0.12rem;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      background: var(--surface-raised);
+      color: inherit;
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      text-align: start;
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease, transform 100ms ease;
+    }
+
+    .reset-option:active { transform: scale(0.99); }
+    .reset-option strong { font-size: 0.88rem; }
+
+    .reset-option small {
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+
+    .reset-option:hover,
+    .reset-option:focus-visible { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+
     .settings-button svg {
       width: 1.15rem;
       height: 1.15rem;
@@ -1554,8 +1587,8 @@
           <h1>أذكار المسلم</h1>
         </div>
         <div class="header-actions">
-          <button class="session-reset" id="session-reset" type="button" disabled aria-label="إعادة أذكار الصباح">
-            <span aria-hidden="true">↻</span><span class="reset-label">إعادة الكل</span>
+          <button class="session-reset" id="session-reset" type="button" disabled aria-haspopup="dialog" aria-label="خيارات الإعادة">
+            <span aria-hidden="true">↻</span><span class="reset-label">إعادة</span>
           </button>
           <button class="settings-button" id="settings-button" type="button" aria-haspopup="dialog" aria-label="فتح الإعدادات">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -1619,6 +1652,30 @@
     <div class="dialog-actions">
       <button class="dialog-button" id="dialog-cancel" type="button">إلغاء</button>
       <button class="dialog-button danger" id="dialog-confirm" type="button">إعادة</button>
+    </div>
+  </dialog>
+
+  <dialog id="reset-dialog" aria-labelledby="reset-dialog-title" aria-describedby="reset-dialog-copy">
+    <div class="dialog-body">
+      <h2 id="reset-dialog-title">ما الذي تريد إعادته؟</h2>
+      <p id="reset-dialog-copy">اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز.</p>
+      <div class="reset-options">
+        <button class="reset-option" id="reset-day" type="button">
+          <strong>تقدم اليوم</strong>
+          <small>إعادة عدادات اليوم فقط مع بقاء السجل كما هو.</small>
+        </button>
+        <button class="reset-option" id="reset-week" type="button">
+          <strong>هذا الأسبوع</strong>
+          <small>إعادة عدادات اليوم وحذف سجل آخر سبعة أيام.</small>
+        </button>
+        <button class="reset-option" id="reset-everything" type="button">
+          <strong>كل شيء</strong>
+          <small>إعادة العدادات وحذف السجل كاملًا.</small>
+        </button>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="reset-dialog-cancel" type="button">إلغاء</button>
     </div>
   </dialog>
 
@@ -2115,6 +2172,11 @@
     const longOrderStorageKey = "athkar-long-order-v1";
     const longOrderPromptStorageKey = "athkar-long-order-prompt-v1";
     const longDhikrThreshold = 10;
+    const resetDialog = document.getElementById("reset-dialog");
+    const resetDayButton = document.getElementById("reset-day");
+    const resetWeekButton = document.getElementById("reset-week");
+    const resetEverythingButton = document.getElementById("reset-everything");
+    const resetDialogCancel = document.getElementById("reset-dialog-cancel");
     const prayerCalculationMethods = Object.freeze({
       "mwl": { fajrAngle: 18 },
       "umm-al-qura": { fajrAngle: 18.5 },
@@ -2956,7 +3018,6 @@
     function updateSessionProgress() {
       const items = collections[activePeriod].filter(item => !item.review);
       const completed = items.filter(item => countFor(item) >= targetFor(item)).length;
-      const hasProgress = items.some(item => countFor(item) > 0);
       const countersComplete = completed === items.length;
       const manuallyComplete = !countersComplete && periodIsManuallyComplete(activePeriod);
       const isComplete = countersComplete || manuallyComplete;
@@ -2975,7 +3036,7 @@
           ? `${sectionNames[activePeriod]} مكتملة خارج التطبيق`
           : `${sectionNames[activePeriod]}: ${formatNumber(completed)} من ${formatNumber(items.length)} مكتملة`
       );
-      sessionReset.disabled = !hasProgress;
+      sessionReset.disabled = !hasResettableState();
       sessionSummary.classList.toggle("is-complete", isComplete);
       updatePeriodTabs();
       updateManualCompletionControls();
@@ -2988,7 +3049,7 @@
       activePeriod = period;
       body.dataset.period = period;
       sessionTitle.textContent = sectionNames[period];
-      sessionReset.setAttribute("aria-label", `إعادة ${sectionNames[period]}`);
+      sessionReset.setAttribute("aria-label", "خيارات الإعادة");
       panel.setAttribute("aria-labelledby", `${period}-tab`);
       document.title = `${sectionNames[period]} — أذكار المسلم`;
 
@@ -3005,24 +3066,74 @@
       renderCards();
     }
 
-    function requestSessionReset() {
-      const items = collections[activePeriod].filter(item => !item.review);
-      if (!items.some(item => countFor(item) > 0)) return;
-      const periodAtRequest = activePeriod;
+    function hasResettableState() {
+      const anyProgress = ["morning", "evening"].some(period =>
+        collections[period].some(item => !item.review && countFor(item, period) > 0)
+      );
+      const anyManual = ["morning", "evening"].some(period => periodIsManuallyComplete(period));
+      return anyProgress || anyManual || state.history.length > 0;
+    }
+
+    function resetDayProgress(announce = true) {
+      for (const period of ["morning", "evening"]) {
+        state.progress[period] = {};
+        state.completedAt[period] = null;
+        state.manualCompletion[period] = false;
+        currentIndices[period] = 0;
+      }
+      saveState();
+      scheduleReminders();
+      renderCards();
+      if (announce) liveRegion.textContent = "أُعيدت عدادات اليوم";
+    }
+
+    function recentDates(days) {
+      const dates = [];
+      const today = new Date();
+      for (let offset = 0; offset < days; offset += 1) {
+        dates.push(localDateKey(new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset)));
+      }
+      return dates;
+    }
+
+    function dayCountLabel(count) {
+      if (count === 1) return "يوم واحد";
+      if (count === 2) return "يومين";
+      if (count <= 10) return `${formatNumber(count)} أيام`;
+      return `${formatNumber(count)} يومًا`;
+    }
+
+    function resetWeek() {
+      const dates = recentDates(7);
+      const recorded = state.history.filter(entry => dates.includes(entry.date)).length;
       openConfirmation(
-        `إعادة ${sectionNames[periodAtRequest]}؟`,
-        `ستعود جميع عدادات ${sectionNames[periodAtRequest]} إلى الصفر. لا يؤثر ذلك في القسم الآخر.`,
+        "حذف سجل هذا الأسبوع؟",
+        `ستُعاد عدادات اليوم، وسيُحذف ${recorded ? `سجل ${dayCountLabel(recorded)} من آخر أسبوع` : "سجل آخر سبعة أيام"}. لا يمكن التراجع.`,
         () => {
-          state.progress[periodAtRequest] = {};
-          state.targets[periodAtRequest] = {};
-          state.completedAt[periodAtRequest] = null;
-          currentIndices[periodAtRequest] = 0;
-          saveState();
-          scheduleReminders();
-          if (activePeriod === periodAtRequest) renderCards();
-          liveRegion.textContent = `أُعيدت ${sectionNames[periodAtRequest]}`;
+          state.history = state.history.filter(entry => !dates.includes(entry.date));
+          resetDayProgress(false);
+          liveRegion.textContent = "حُذف سجل آخر سبعة أيام";
         }
       );
+    }
+
+    function resetEverything() {
+      const recorded = state.history.length;
+      openConfirmation(
+        "حذف كل شيء؟",
+        `ستُعاد العدادات وسيُحذف السجل كاملًا${recorded ? ` (${dayCountLabel(recorded)})` : ""}. لا يمكن التراجع.`,
+        () => {
+          state.history = [];
+          resetDayProgress(false);
+          liveRegion.textContent = "حُذف السجل كاملًا";
+        }
+      );
+    }
+
+    function openResetDialog() {
+      ensureCurrentDay();
+      if (!hasResettableState()) return;
+      resetDialog.showModal();
     }
 
     function openConfirmation(title, copy, callback) {
@@ -3615,7 +3726,23 @@
     addEventListener("pointercancel", cancelCardSwipe);
     addEventListener("resize", () => requestAnimationFrame(fitVisibleCard));
 
-    sessionReset.addEventListener("click", requestSessionReset);
+    sessionReset.addEventListener("click", openResetDialog);
+    resetDialogCancel.addEventListener("click", () => resetDialog.close());
+    resetDialog.addEventListener("click", event => {
+      if (event.target === resetDialog) resetDialog.close();
+    });
+    resetDayButton.addEventListener("click", () => {
+      resetDialog.close();
+      resetDayProgress();
+    });
+    resetWeekButton.addEventListener("click", () => {
+      resetDialog.close();
+      resetWeek();
+    });
+    resetEverythingButton.addEventListener("click", () => {
+      resetDialog.close();
+      resetEverything();
+    });
     previousCardButton.addEventListener("click", () => {
       showCard((currentIndices[activePeriod] ?? 0) - 1, "back", true, true);
     });
