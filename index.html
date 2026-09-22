@@ -1960,6 +1960,17 @@
       countLabel: `عشر مرات`
     };
 
+    const comprehensiveDua = {
+      quran: true,
+      text: `رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ ﴿٢٠١﴾`,
+      details: [
+        `دعاء جامع من القرآن، كان النبي ﷺ يُكثر منه. (رواه البخاري ومسلم)`,
+        `«البقرة»`,
+        `ليس من الأذكار المقيدة بالصباح والمساء، وإنما دعاء مطلق يُقال في كل وقت، وأُدرج هنا للتذكير به.`
+      ],
+      noteIndex: 2
+    };
+
     const morningAthkar = [
       { ...ayatAlKursi, id: "morning-01" },
       { ...alIkhlas, id: "morning-02" },
@@ -2027,6 +2038,7 @@
         count: 100,
         countLabel: `مائة مرة`
       },
+      { ...comprehensiveDua, id: "morning-26" },
       { ...salatUponProphet, id: "morning-25" }
     ];
 
@@ -2085,6 +2097,7 @@
         count: 3,
         countLabel: `ثلاث مرات`
       },
+      { ...comprehensiveDua, id: "evening-24" },
       { ...salatUponProphet, id: "evening-23" }
     ];
 
