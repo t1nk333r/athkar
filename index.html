@@ -3029,7 +3029,8 @@
 
     function historyDateLabel(date, isToday = false) {
       if (isToday) return "اليوم";
-      return historyDateFormatter.format(new Date(`${date}T12:00:00`));
+      const parsed = new Date(`${date}T12:00:00`);
+      return Number.isNaN(parsed.getTime()) ? String(date) : historyDateFormatter.format(parsed);
     }
 
     function historyStateMarkup(label, complete) {
