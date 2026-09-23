@@ -1920,9 +1920,10 @@
           <span class="settings-toggle-copy">
             <strong>تضمين الموقع المحفوظ</strong>
             <small id="backup-location-note">يُستخدم لحساب مواعيد التذكير فقط.</small>
+            <small id="backup-location-missing" hidden>لم يُحدَّد موقع بعد، فلا يوجد ما يُضمَّن.</small>
           </span>
           <span class="toggle-switch">
-            <input class="toggle-input" id="backup-include-location" type="checkbox" switch role="switch" aria-describedby="backup-location-note">
+            <input class="toggle-input" id="backup-include-location" type="checkbox" switch role="switch" aria-describedby="backup-location-note backup-location-missing">
             <span class="toggle-track" aria-hidden="true"></span>
           </span>
         </label>
@@ -2323,6 +2324,7 @@
     const backupIncludeLocation = document.getElementById("backup-include-location");
     const backupExportButton = document.getElementById("backup-export");
     const backupStatus = document.getElementById("backup-status");
+    const backupLocationMissing = document.getElementById("backup-location-missing");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
@@ -3864,8 +3866,11 @@
       return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? value : null;
     }
 
+    // Date.parse rolls impossible instants over (2026-02-30T…, T24:00) instead of rejecting them; require a round trip.
     function backupInstant(value) {
-      return typeof value === "string" && backupInstantPattern.test(value) && !Number.isNaN(Date.parse(value)) ? value : null;
+      if (typeof value !== "string" || !backupInstantPattern.test(value)) return null;
+      const parsed = new Date(value);
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 19) === value.slice(0, 19) ? value : null;
     }
 
     // Same coercion countForState applies on read; values it would treat as 0 because they are not finite or negative are dropped.
@@ -3875,11 +3880,12 @@
         .filter(([, value]) => Number.isFinite(value) && value >= 0));
     }
 
-    function backupHistory(entries) {
+    function backupHistory(entries, today) {
       const byDate = new Map();
       for (const entry of entries) {
         const date = backupDate(entry.date);
-        if (!date || byDate.has(date)) continue;
+        // A day at or after today cannot be past history (the device clock moved back); today is exported as `today`.
+        if (!date || date >= today || byDate.has(date)) continue;
         byDate.set(date, {
           date,
           morning: Boolean(entry.morning),
@@ -3926,7 +3932,7 @@
             completedAt: { morning: backupInstant(state.completedAt.morning), evening: backupInstant(state.completedAt.evening) },
             manualCompletion: { ...state.manualCompletion }
           },
-          history: backupHistory(state.history)
+          history: backupHistory(state.history, state.date)
         },
         reminders,
         preferences: {
@@ -3966,6 +3972,7 @@
       const hasLocation = Boolean(reminderPreferences.location);
       backupIncludeLocation.disabled = !hasLocation;
       if (!hasLocation) backupIncludeLocation.checked = false;
+      backupLocationMissing.hidden = hasLocation;
     }
 
     async function exportBackup() {

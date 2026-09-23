@@ -301,7 +301,7 @@ Envelope `athkar-backup` format 1, one JSON document:
 
 | Section | Populated by athkar PWA from | Populated by ruqyah PWA from |
 | --- | --- | --- |
-| `meta` | `{format: 1, app: "athkar-pwa", exportedAt}` | `{format: 1, app: "ruqyah-pwa", exportedAt}` |
+| `meta` | `{format: 1, app: "athkar-pwa", exportedAt, timeZone}` | `{format: 1, app: "ruqyah-pwa", exportedAt, timeZone}` |
 | `adhkar.today` | `athkar-progress-v2` → `date`, `progress`, `targets`, `completedAt`, `manualCompletion` | absent |
 | `adhkar.history` | `history[]` (≤7 entries: `date`, `morning`, `evening`, `morningAt`, `eveningAt`) | absent |
 | `ruqyah.today` | absent | `ruqyah-daily-v1` → `date`, `counts` |

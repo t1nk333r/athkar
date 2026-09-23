@@ -15,7 +15,9 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
 - The PWAs' loaders tolerate malformed stored values; the exporter does not pass them on. Dates that are not
   real calendar days and instants that are not ISO-8601 UTC become `null` (or the whole history entry is
   dropped when its own `date` is invalid); adhkar history is de-duplicated by date (first stored entry wins),
-  sorted newest first and capped at 7; ruqyah history is capped to the 365 newest days. So every field below
+  sorted newest first, limited to days before `today.date` and capped at 7; ruqyah history keeps days up to
+  `today.date` (today appears once it is completed), capped to the 365 newest. Instants must round-trip
+  through `Date` (so `2026-02-30T…` or `T24:00` are rejected rather than rolled over). So every field below
   always satisfies the schema.
 - Plaintext. Nothing leaves the device unless the user shares the file.
 

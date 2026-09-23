@@ -33,20 +33,31 @@ function calendarErrors(value, path, errors) {
   return errors;
 }
 
+const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+
 function validate(envelope) {
   const errors = schemaErrors(schema, envelope, "backup");
+  if (!isObject(envelope)) return errors;
   calendarErrors(envelope, "backup", errors);
-  const rules = sections[envelope?.meta?.app];
+  const rules = sections[envelope.meta?.app];
   if (rules) {
     for (const key of rules.required) if (!(key in envelope)) errors.push(`backup: ${envelope.meta.app} must include ${key}`);
     for (const key of rules.forbidden) if (key in envelope) errors.push(`backup: ${envelope.meta.app} must not include ${key}`);
+    const preferences = isObject(envelope.preferences) ? envelope.preferences : {};
     for (const key of ["longOrder", "longOrderPromptAnswered"]) {
-      if ((key in (envelope.preferences ?? {})) !== rules.athkarPreferences) errors.push(`backup.preferences.${key}: ${rules.athkarPreferences ? "missing" : "athkar-only"}`);
+      if ((key in preferences) !== rules.athkarPreferences) errors.push(`backup.preferences.${key}: ${rules.athkarPreferences ? "missing" : "athkar-only"}`);
     }
   }
-  const history = envelope?.adhkar?.history;
-  if (Array.isArray(history) && history.some((entry, i) => i > 0 && !(entry?.date < history[i - 1]?.date))) {
-    errors.push("backup.adhkar.history: not strictly newest-first");
+  // History is strictly before today (adhkar) / not after today (ruqyah, whose history includes today once completed).
+  const adhkarToday = envelope.adhkar?.today?.date;
+  const history = envelope.adhkar?.history;
+  if (Array.isArray(history)) {
+    if (history.some((entry, i) => i > 0 && !(entry?.date < history[i - 1]?.date))) errors.push("backup.adhkar.history: not strictly newest-first");
+    if (typeof adhkarToday === "string" && history.some(entry => !(entry?.date < adhkarToday))) errors.push("backup.adhkar.history: entry on or after today.date");
+  }
+  const ruqyahToday = envelope.ruqyah?.today?.date;
+  if (isObject(envelope.ruqyah?.history) && typeof ruqyahToday === "string" && Object.keys(envelope.ruqyah.history).some(date => date > ruqyahToday)) {
+    errors.push("backup.ruqyah.history: entry after today.date");
   }
   return errors;
 }

@@ -66,6 +66,7 @@ export function schemaErrors(schema, value, path, errors = []) {
     if (schema.pattern && !new RegExp(schema.pattern).test(value)) fail(`${JSON.stringify(value)} does not match ${schema.pattern}`);
   }
   if (type === "integer" || type === "number") {
+    if (!Number.isFinite(value)) fail(`${value} is not finite`);
     if (schema.minimum !== undefined && value < schema.minimum) fail(`${value} < ${schema.minimum}`);
     if (schema.maximum !== undefined && value > schema.maximum) fail(`${value} > ${schema.maximum}`);
   }
