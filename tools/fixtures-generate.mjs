@@ -425,16 +425,25 @@ function rollStateToDateCases() {
   ];
 }
 
-function loadCase(name, timeZone, nowMs, storageEntries) {
+function loadCase(name, timeZone, nowMs, storageEntries, collections) {
   const now = new Date(nowMs).toISOString();
-  const input = { ...sessionDefaults, timeZone, now, storage: storageEntries };
+  const input = { ...sessionDefaults, timeZone, now, storage: storageEntries, ...(collections ? { collections } : {}) };
   prepare(input);
   const loaded = fn.loadState();
   return {
     name,
-    input: { timeZone, now, nowLocal: localIso(timeZone, nowMs), storage: storageEntries },
+    input: {
+      ...(collections ? { collections } : {}),
+      timeZone, now, nowLocal: localIso(timeZone, nowMs), storage: storageEntries
+    },
     expected: { state: plain(loaded) }
   };
+}
+
+function replaceOnce(text, search, replacement) {
+  const parts = text.split(search);
+  if (parts.length !== 2) throw new Error(`expected exactly one ${search} in ${text}`);
+  return parts.join(replacement);
 }
 
 function loadStateCases() {
@@ -447,6 +456,13 @@ function loadStateCases() {
   const storedJson = JSON.stringify(stored);
   const ny = "America/New_York";
   const nyStored = JSON.stringify(baseState("2026-03-07", { manualCompletion: { morning: true, evening: false } }));
+  const riyadh0800 = localMs(z, 2026, 9, 23, 8, 0);
+  const [m1, m2] = realCollections.morning.map(item => item.id);
+  // Item ids that are array keys: "0" and "1" index an array container, "length" reads its length.
+  const arrayKeyCollections = {
+    morning: [{ id: "0", count: 5 }, { id: "1", targetOptions: [1, 10], defaultTarget: 10 }, { id: "length", count: 2 }],
+    evening: [{ id: "evening-01" }]
+  };
   return [
     loadCase("same local date: state kept as-is", z, localMs(z, 2026, 9, 23, 23, 59, 59, 999), { "athkar-progress-v2": storedJson }),
     loadCase("first instant of the next local day rolls over", z, localMs(z, 2026, 9, 24, 0, 0, 0, 0), { "athkar-progress-v2": storedJson }),
@@ -491,7 +507,39 @@ function loadStateCases() {
     }),
     loadCase("DST fall-back day, second 01:30 local: still the same local date", ny, Date.parse("2026-11-01T06:30:00.000Z"), {
       "athkar-progress-v2": JSON.stringify(baseState("2026-11-01"))
-    })
+    }),
+    // JSON.parse edge cases: the native port must parse exactly as the PWA does.
+    loadCase("number literal beyond double range parses as Infinity: that count reads as 0, history kept", z, riyadh0800, {
+      "athkar-progress-v2": replaceOnce(JSON.stringify(baseState("2026-09-22", {
+        progress: { morning: { ...morningAllDone, [m1]: 0 }, evening: {} },
+        history: [historyEntry("2026-09-21", true, false, "2026-09-21T03:00:00.000Z", null)]
+      })), `"${m1}":0,`, `"${m1}":1e400,`)
+    }),
+    loadCase("lone surrogate escapes in strings are accepted; escaped pairs combine", z, riyadh0800, {
+      "athkar-progress-v2": `{"date":"2026-09-23","progress":{"morning":{"${m1}":"\\ud800"},"evening":{}},` +
+        `"targets":{"morning":{},"evening":{}},"completedAt":{"morning":"\\ud83d\\ude00","evening":"\\udc00x"},` +
+        `"manualCompletion":{"morning":false,"evening":false},` +
+        `"history":[{"date":"2026-09-22","morning":true,"evening":false,"morningAt":"\\ud800\\u0041","eveningAt":null}]}`
+    }),
+    loadCase("duplicate keys: the last occurrence wins", z, riyadh0800, {
+      "athkar-progress-v2": `{"date":"2026-09-22","progress":{"morning":{"${m2}":1,"${m2}":3},"evening":{}},` +
+        `"targets":{"morning":{},"evening":{}},"completedAt":{"morning":null,"evening":null},` +
+        `"manualCompletion":{"morning":true,"evening":false},"history":[],` +
+        `"date":"2026-09-23","manualCompletion":{"morning":false,"evening":true}}`
+    }),
+    loadCase("array-shaped progress.morning and targets.morning are kept as arrays", z, riyadh0800, {
+      "athkar-progress-v2": JSON.stringify(baseState("2026-09-23", {
+        progress: { morning: [5, "3"], evening: { [realCollections.evening[0].id]: 1 } },
+        targets: { morning: [100], evening: {} }
+      }))
+    }),
+    loadCase("array containers are read by key like JS: \"0\" is an index, \"length\" the length, other ids undefined", z,
+      localMs(z, 2026, 9, 24, 8, 0), {
+        "athkar-progress-v2": JSON.stringify(baseState("2026-09-23", {
+          progress: { morning: [5, "3"], evening: [1] },
+          targets: { morning: [null, 1], evening: [] }
+        }))
+      }, arrayKeyCollections)
   ];
 }
 

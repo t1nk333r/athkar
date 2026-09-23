@@ -8,10 +8,10 @@ import Foundation
 /// writes new ones), because the PWA copies any stored string through normalisation unchanged.
 public struct SessionState: Codable, Sendable, Equatable {
     public var date: String
-    /// Raw tap counters keyed by item id. Read them through ``count(for:in:)``.
-    public var progress: SessionPeriods<[String: StoredValue]>
-    /// Raw chosen targets keyed by item id. Read them through ``target(for:in:)``.
-    public var targets: SessionPeriods<[String: StoredValue]>
+    /// Raw tap counters keyed by item id, in their stored shape. Read them through ``count(for:in:)``.
+    public var progress: SessionPeriods<ItemValues>
+    /// Raw chosen targets keyed by item id, in their stored shape. Read them through ``target(for:in:)``.
+    public var targets: SessionPeriods<ItemValues>
     public var completedAt: SessionPeriods<String?>
     public var manualCompletion: SessionPeriods<Bool>
     /// Newest first, at most ``historyLimit`` entries after a rollover.
@@ -28,8 +28,8 @@ public struct SessionState: Codable, Sendable, Equatable {
 
     public init(
         date: String,
-        progress: SessionPeriods<[String: StoredValue]>,
-        targets: SessionPeriods<[String: StoredValue]>,
+        progress: SessionPeriods<ItemValues>,
+        targets: SessionPeriods<ItemValues>,
         completedAt: SessionPeriods<String?>,
         manualCompletion: SessionPeriods<Bool>,
         history: [HistoryEntry]
@@ -117,40 +117,41 @@ extension SessionState {
     /// - A `date` that is not `YYYY-MM-DD` becomes `today`.
     /// - `history` keeps the first seven objects with a string `date`; legacy `morningSkipped`/`eveningSkipped`
     ///   count as complete; non-string timestamps become `nil`.
-    /// - `progress`/`targets` maps that are not objects become empty; their values are kept verbatim.
+    /// - `progress`/`targets` containers that are not objects or arrays become `{}`; containers and their
+    ///   values are kept verbatim.
     /// - Legacy `skipped` flags count as `manualCompletion`.
     public static func normalized(_ parsed: StoredValue, today: String) -> SessionState {
         func truthy(_ value: StoredValue?) -> Bool { value?.isTruthy ?? false }
-        func entries(_ section: String, _ period: Period) -> [String: StoredValue] {
-            parsed.member(section)?.member(period.rawValue)?.objectEntries ?? [:]
+        func container(_ section: String, _ period: Period) -> ItemValues {
+            parsed.property(section)?.property(period.rawValue).flatMap(ItemValues.init) ?? [:]
         }
         func pair<Value>(_ read: (Period) -> Value) -> SessionPeriods<Value> {
             SessionPeriods(morning: read(.morning), evening: read(.evening))
         }
 
         var history: [HistoryEntry] = []
-        if case .array(let stored)? = parsed.member("history") {
+        if case .array(let stored)? = parsed.property("history") {
             for entry in stored where history.count < historyLimit {
-                guard let entryDate = entry.member("date")?.stringValue else { continue }
+                guard let entryDate = entry.property("date")?.stringValue else { continue }
                 history.append(HistoryEntry(
                     date: entryDate,
-                    morning: truthy(entry.member("morning")) || truthy(entry.member("morningSkipped")),
-                    evening: truthy(entry.member("evening")) || truthy(entry.member("eveningSkipped")),
-                    morningAt: entry.member("morningAt")?.stringValue,
-                    eveningAt: entry.member("eveningAt")?.stringValue
+                    morning: truthy(entry.property("morning")) || truthy(entry.property("morningSkipped")),
+                    evening: truthy(entry.property("evening")) || truthy(entry.property("eveningSkipped")),
+                    morningAt: entry.property("morningAt")?.stringValue,
+                    eveningAt: entry.property("eveningAt")?.stringValue
                 ))
             }
         }
 
-        let storedDate = parsed.member("date")?.stringValue
+        let storedDate = parsed.property("date")?.stringValue
         return SessionState(
             date: storedDate.flatMap { isLocalDateKey($0) ? $0 : nil } ?? today,
-            progress: pair { entries("progress", $0) },
-            targets: pair { entries("targets", $0) },
-            completedAt: pair { parsed.member("completedAt")?.member($0.rawValue)?.stringValue },
+            progress: pair { container("progress", $0) },
+            targets: pair { container("targets", $0) },
+            completedAt: pair { parsed.property("completedAt")?.property($0.rawValue)?.stringValue },
             manualCompletion: pair {
-                truthy(parsed.member("manualCompletion")?.member($0.rawValue))
-                    || truthy(parsed.member("skipped")?.member($0.rawValue))
+                truthy(parsed.property("manualCompletion")?.property($0.rawValue))
+                    || truthy(parsed.property("skipped")?.property($0.rawValue))
             },
             history: history
         )
@@ -160,8 +161,8 @@ extension SessionState {
     /// raw `localStorage` strings, normalises it, and rolls it to the local date of `now` in `timeZone`.
     /// Unreadable or non-object JSON yields an empty state for today.
     ///
-    /// JSON is parsed with `JSONDecoder`, which differs from `JSON.parse` only on inputs the PWA never
-    /// writes, e.g. duplicate keys keep the first value and numbers beyond `Double` range fail the parse.
+    /// JSON is read by ``StoredValue/init(parsingJSON:)``, which accepts and rejects what `JSON.parse` does
+    /// (see there for the lone-surrogate and nesting-depth exceptions).
     public static func load(
         storage: [String: String],
         now: Date,
@@ -172,8 +173,7 @@ extension SessionState {
         let current = storage[storageKey]
         // `JSON.parse(current || legacy)`: an empty string is falsy; `JSON.parse(null)` is `null`.
         guard let raw = current.flatMap({ $0.isEmpty ? nil : $0 }) ?? storage[legacyStorageKey],
-              raw.unicodeScalars.first != "\u{FEFF}", // `JSON.parse` rejects a byte-order mark.
-              let parsed = try? JSONDecoder().decode(StoredValue.self, from: Data(raw.utf8))
+              let parsed = try? StoredValue(parsingJSON: raw)
         else { return .empty(date: today) }
         switch parsed {
         case .object, .array:

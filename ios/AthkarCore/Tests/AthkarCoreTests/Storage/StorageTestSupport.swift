@@ -15,6 +15,13 @@ enum RepoFile {
     static func data(_ relativePath: String) throws -> Data {
         try Data(contentsOf: root.appendingPathComponent(relativePath))
     }
+
+    /// The shipped content packs, read from `content/`.
+    static var content: ContentPacks {
+        get throws {
+            try ContentPacks(adhkarPack: data("content/adhkar.v1.json"), ruqyahPack: data("content/ruqyah.v1.json"))
+        }
+    }
 }
 
 enum Instant {

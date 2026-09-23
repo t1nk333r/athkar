@@ -85,7 +85,7 @@ One row per (date, period) whose adhkar session is complete. Replaces the PWA's 
 | `local_date` | TEXT | no | PK 1 | Local date. |
 | `period` | TEXT | no | PK 2 | `morning`, `evening`. |
 | `completed_at` | TEXT | yes | | Instant. Null when unknown: a PWA history entry or manual completion without a time. |
-| `completion_origin` | TEXT | no | | `counters` (every counted item reached its target), `manual` (the PWA's `manualCompletion`), `import` (from a backup file, which does not say how). |
+| `completion_origin` | TEXT | no | | `counters` (every counted item reached its target), `manual` (the PWA's `manualCompletion`), `import` (a backup file's history entry, which does not say how). |
 
 ### `adhkar_item_progress`
 
@@ -188,6 +188,46 @@ doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` →
 - Rollover is a pure function of `local_date`. Nothing is deleted at midnight.
 - A ruqyah date is complete if and only if a `ruqyah_days` row exists.
 
+## Session state bridge
+
+The session rules work on the PWA's `athkar-progress-v2` shape (`SessionState`). `AdhkarSessionStore` converts
+between it and the adhkar tables, so the rules and their fixtures stay the contract.
+
+**Load** (`load(date:)`) builds the state for one local date:
+
+- `progress[p]` / `targets[p]`: that date's `adhkar_item_progress` rows with a non-null `count` / `target`, as
+  numbers.
+- `completedAt[p]`: the `adhkar_days` row's `completed_at` (null without a row, or when the row has none).
+- `manualCompletion[p]`: true if and only if the row's `completion_origin` is `manual`.
+- `history`: the 7 newest earlier dates with an `adhkar_days` row, newest first. A period is `true` if and only
+  if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
+
+**Save** (`save(_:)`) makes the rows for `state.date` match the state, in one transaction:
+
+- Item rows are upserted and deleted to match the union of `progress[p]` and `targets[p]`. Unchanged rows keep
+  their `updated_at`.
+- Each period has an `adhkar_days` row if and only if the rules call it complete (`isComplete`). The origin is
+  `manual` when `manualCompletion`. Otherwise it keeps an existing non-manual origin, or is `counters`.
+- `history` is not written. Earlier days' rows were written when those days were live. Removing history (the
+  PWA's week/everything reset) uses `AdhkarRepository.deleteRecords`.
+
+Save followed by load gives back the same state, except for these shapes, which the tables cannot hold. Each is
+reduced to what the rules read from it, so `count(for:)`, `target(for:)`, `isComplete`, and deck order do not
+change:
+
+- A counter that is not a non-negative integer number (a string, boolean, fraction, negative, or non-finite
+  value). It is stored as `floor(Number(value))`, and dropped when that is not a finite number ≥ 0.
+- A target that is not an integer number ≥ 0 after `Number()`. It is stored as that integer, or dropped: a
+  non-integer can never match a target option, so it already means the default.
+- `progress[p]` or `targets[p]` held as an array rather than an object. It has only index keys, which match no
+  content item ID, so it is stored as no entries.
+- A `completedAt[p]` on a period that is not complete (a stale stamp; syncing clears it). It is dropped. A
+  `completedAt[p]` that is not an ISO-8601 UTC instant is stored as null.
+- A history entry with `morning` and `evening` both false (the PWA rolls one over for a day with nothing
+  complete). It is not stored, so it is absent after load.
+- More than one history entry for a date, or history entries not newest-first. Load returns one entry per
+  date, newest first.
+
 ## Backup import (envelope v1)
 
 Import validates the whole file first. It rejects everything `spec/backup/envelope-v1.schema.json` and
@@ -206,9 +246,10 @@ merges the file in one transaction, so a file that fails validation changes noth
 | --- | --- |
 | `adhkar.today.progress[p]`, `targets[p]` | `adhkar_item_progress` (`today.date`, p, item). One row per key in either map. `count` is the progress value floored (null if the item only has a target). `target` is the target value; a non-integer target is dropped, since it can never match an option and so already means the default. |
 | `adhkar.today.manualCompletion[p]` = true | `adhkar_days` (`today.date`, p), `completion_origin = manual`, `completed_at = completedAt[p]` (may be null). |
-| `adhkar.today.completedAt[p]` set, not manual | `adhkar_days` (`today.date`, p), `completion_origin = import`. Trusted-exporter behaviour: the PWA sets `completedAt` only while the period is complete, so the importer does not re-check the counters (it has no content pack). A hand-edited file can therefore mark a day complete. |
-| `adhkar.history[]`, `morning`/`evening` = true | `adhkar_days` (`date`, p), `completion_origin = import`, `completed_at = morningAt`/`eveningAt`. |
-| `ruqyah.today.counts` | `ruqyah_segment_progress` (`today.date`, segment), zeros included. |
+| `adhkar.today`, not manual, counters complete | `adhkar_days` (`today.date`, p), `completion_origin = counters`, `completed_at = completedAt[p]` (may be null). "Counters complete" is `SessionState.countersComplete` (the PWA's `periodCountersComplete`) evaluated on the file's `progress`/`targets` against the installed adhkar pack. |
+| `adhkar.today`, neither | No `adhkar_days` row. A `completedAt[p]` without complete counters or manual completion is dropped. |
+| `adhkar.history[]`, `morning`/`evening` = true | `adhkar_days` (`date`, p), `completion_origin = import`, `completed_at = morningAt`/`eveningAt`. History booleans are trusted: they were judged against the content of their day. |
+| `ruqyah.today.counts` | `ruqyah_segment_progress` (`today.date`, segment), zeros included, for segments in the installed ruqyah pack only, each clamped to `0 … repeat` (the ruqyah PWA's `normalizeCounts`). Unknown segment IDs are dropped. |
 | `ruqyah.history` | `ruqyah_days`, `completion_origin = import`. |
 | `reminders.morning`/`evening.enabled` | `reminder_rules` `adhkar_morning` (`fajr` + 60) / `adhkar_evening` (`asr` + 60). |
 | `reminders.lastShown` | `reminder_state` for those rules (non-null values only). |
@@ -247,8 +288,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `adhkar.history` lists the dates before `today` that have any adhkar row, newest first, capped at 7. A period
   is `true` if and only if its `adhkar_days` row exists.
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
-- `ruqyah.today.counts` are the stored counts as they are. The exporter has no content pack, so it does not
-  clamp to `repeat`; readers clamp (spec/backup/envelope-v1.md).
+- `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
+  already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.
 
 Import followed by export with the file's own `meta` reproduces the file in every section it contained, with
@@ -260,8 +301,11 @@ these exceptions:
 2. **History days with nothing complete.** The PWA writes a history entry for every day it rolled over, even
    with `morning` and `evening` both false. Such an entry carries no worship data, and the native model
    records completion, not app opens. It is not stored and does not come back. The same applies to a
-   `morningAt`/`eveningAt` on a period that is not complete (a stale instant).
+   `morningAt`/`eveningAt` on a period that is not complete (a stale instant), and to a `today.completedAt[p]`
+   when neither the counters nor manual completion make the period complete.
 3. **Shapes the PWAs never write.** A fractional count comes back floored. A fractional target is dropped. An
    instant written with other than three fraction digits comes back with three (truncated to milliseconds).
+4. **Content the pack does not know.** Ruqyah counts above a segment's `repeat` come back clamped, and counts for
+   segment IDs not in the pack do not come back.
 
-The example files in `spec/backup/examples/` contain none of 2 and 3, and round-trip exactly apart from 1.
+The example files in `spec/backup/examples/` contain none of 2, 3 and 4, and round-trip exactly apart from 1.

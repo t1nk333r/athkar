@@ -9,7 +9,7 @@ private let ruqyahFile = "spec/backup/examples/ruqyah-pwa.athkarbackup"
 private func imported(_ paths: String...) throws -> AppDatabase {
     let database = try AppDatabase.inMemory()
     for path in paths {
-        try BackupImporter(database: database).importBackup(try RepoFile.data(path))
+        try BackupImporter(database: database, content: try RepoFile.content).importBackup(try RepoFile.data(path))
     }
     return database
 }
@@ -19,7 +19,7 @@ struct BackupRoundTripTests {
     func exportAfterImportReproducesThePWAFile(path: String) throws {
         let data = try RepoFile.data(path)
         let database = try AppDatabase.inMemory()
-        let envelope = try BackupImporter(database: database).importBackup(data)
+        let envelope = try BackupImporter(database: database, content: try RepoFile.content).importBackup(data)
 
         let exported = try BackupExporter(database: database).export(
             app: envelope.meta.app,
@@ -90,7 +90,7 @@ struct BackupImportTests {
     func reimportIsANoOp(path: String) throws {
         let database = try imported(path)
         let once = try dump(database)
-        try BackupImporter(database: database).importBackup(try RepoFile.data(path))
+        try BackupImporter(database: database, content: try RepoFile.content).importBackup(try RepoFile.data(path))
         #expect(try dump(database) == once)
     }
 
@@ -123,7 +123,7 @@ struct BackupImportTests {
         try database.adhkar.setTarget(3, for: "evening-05", on: "2026-09-23", period: .evening, at: native)
         try database.ruqyah.setCount(0, for: "nas-1-6", on: "2026-09-23", at: native)
 
-        let importer = BackupImporter(database: database)
+        let importer = BackupImporter(database: database, content: try RepoFile.content)
         try importer.importBackup(try RepoFile.data(athkarFile))
         try importer.importBackup(try RepoFile.data(ruqyahFile))
 
@@ -158,7 +158,7 @@ struct BackupImportTests {
     func leadingByteOrderMarkIsIgnored(path: String) throws {
         let data = try RepoFile.data(path)
         let withBOM = try AppDatabase.inMemory()
-        try BackupImporter(database: withBOM).importBackup(Data([0xEF, 0xBB, 0xBF]) + data)
+        try BackupImporter(database: withBOM, content: try RepoFile.content).importBackup(Data([0xEF, 0xBB, 0xBF]) + data)
         #expect(try dump(withBOM) == dump(try imported(path)))
     }
 
@@ -170,7 +170,7 @@ struct BackupImportTests {
                 + "\"morningAt\": null, \"eveningAt\": null}\n    ]")
         #expect(file != original)
         let database = try AppDatabase.inMemory()
-        let envelope = try BackupImporter(database: database).importBackup(Data(file.utf8))
+        let envelope = try BackupImporter(database: database, content: try RepoFile.content).importBackup(Data(file.utf8))
         #expect(envelope.adhkar?.history.map(\.date) == ["2026-09-22", "2026-09-21"])
 
         #expect(try database.adhkar.days(from: "2026-09-21", through: "2026-09-21") == [])
@@ -257,7 +257,7 @@ struct BackupImportTests {
         try database.adhkar.setCount(1, for: "evening-01", on: "2026-09-24", period: .evening)
         let before = try dump(database)
         let error = #expect(throws: BackupError.self, "\(name)") {
-            try BackupImporter(database: database).importBackup(Data(file.utf8))
+            try BackupImporter(database: database, content: try RepoFile.content).importBackup(Data(file.utf8))
         }
         switch (expected, error) {
         case let (.format(format), .unsupportedFormat(actual)?):

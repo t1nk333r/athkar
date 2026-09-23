@@ -33,7 +33,7 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
 | `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | tap counts converted with `Number()`, as `countForState` reads them; entries that come out non-finite or negative are dropped. Not floored and may exceed the target: floor and clamp on read as `countForState` does |
 | `adhkar.today.targets.{morning,evening}` | `{itemId: target}` | chosen target for items with `targetOptions`; values outside the options mean "use `defaultTarget`" |
 | `adhkar.history` | array, newest first, ≤7 | `date`, `morning`, `evening` (booleans: complete by counters or manually), `morningAt`, `eveningAt` (UTC instant or null) |
-| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`). The ruqyah PWA's export is already clamped to `repeat` by `normalizeCounts`; the schema sets no upper bound and a native export writes stored counts as they are. Importers must clamp to the pack's `repeat` on read |
+| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`). The ruqyah PWA's export is already clamped to `repeat` by `normalizeCounts`; the schema sets no upper bound. The native importer clamps each count to its segment's `repeat` in the installed pack and drops unknown segment IDs, as `normalizeCounts` does |
 | `ruqyah.history` | `{date: {completedAt}}`, ≤365 | days on which every segment was completed |
 | `reminders` | object | `athkar-reminders-v2`: `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown.{morning,evening}` (local date or null) |
 | `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). Present **only** if the user switched on "include location" for this export; the switch resets to off every time settings open. The native importer rounds to 2 decimals with `Math.round(x × 100) / 100` semantics (§7.4, spec/schema.md) |
@@ -56,3 +56,8 @@ section it contained.
 The native importer rejects the whole file on exactly what `tools/backup-validate.mjs` rejects, including a count
 or target above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`), which cannot be stored as an exact integer
 (spec/schema.md "Backup import").
+
+It then checks `today` against the installed content packs: an adhkar period is recorded complete only if
+`manualCompletion` is true or the counters complete it by the PWA's `periodCountersComplete` rule (a
+`completedAt` alone is not enough), and ruqyah counts are clamped to `repeat` with unknown segments dropped.
+History entries are trusted as written.

@@ -43,29 +43,36 @@ extension SessionState.StoredValue {
         }
     }
 
-    /// Property access `value[key]` on a parsed JSON value. Only objects have named members.
-    func member(_ key: String) -> Self? {
-        if case .object(let members) = self { members[key] } else { nil }
+    /// JavaScript property access `value[key]` on a parsed JSON value: an object's own member; an array's
+    /// element at a canonical index (`"0"`, `"1"`, … but not `"01"`) or its `length`; otherwise `nil`
+    /// (`undefined`). Inherited members (`toString`, …) are not modelled: every rule reads them as it reads
+    /// `undefined` (`Number()` gives NaN, and none is a string).
+    func property(_ key: String) -> Self? {
+        switch self {
+        case .object(let members): members[key]
+        case .array(let elements): Self.arrayProperty(elements, key)
+        default: nil
+        }
+    }
+
+    static func arrayProperty(_ elements: [Self], _ key: String) -> Self? {
+        if key == "length" { return .number(Double(elements.count)) }
+        guard let index = arrayIndex(key), index < elements.count else { return nil }
+        return elements[index]
+    }
+
+    /// ECMAScript array index: the canonical decimal form of an integer below 2³² − 1.
+    static func arrayIndex(_ key: String) -> Int? {
+        let digits = key.utf8
+        guard let first = digits.first, digits.count <= 10, first != UInt8(ascii: "0") || digits.count == 1,
+              digits.allSatisfy({ (UInt8(ascii: "0")...UInt8(ascii: "9")).contains($0) }),
+              let value = Int(key), value < 4_294_967_295
+        else { return nil }
+        return value
     }
 
     var stringValue: String? {
         if case .string(let text) = self { text } else { nil }
-    }
-
-    /// Entries of a value that passes the PWA's `value && typeof value === "object"` check, as a key → value
-    /// map. Arrays are keyed by index, which is how property lookup by item id sees them.
-    var objectEntries: [String: Self]? {
-        switch self {
-        case .object(let members):
-            return members
-        case .array(let elements):
-            var members: [String: Self] = [:]
-            members.reserveCapacity(elements.count)
-            for (index, element) in elements.enumerated() { members[String(index)] = element }
-            return members
-        default:
-            return nil
-        }
     }
 
     /// `Number(array)` is `Number(array.join(","))`: empty → `""` → 0; two or more elements contain a comma → NaN;
@@ -200,6 +207,239 @@ extension SessionState.StoredValue {
         canonical += exponentNegative ? "e-" : "e"
         canonical += exponent.isEmpty ? "0" : String(decoding: exponent, as: UTF8.self)
         return Double(canonical) ?? .nan
+    }
+}
+
+// MARK: - JSON.parse
+
+extension SessionState.StoredValue {
+    /// Rejection by ``init(parsingJSON:)``, where `JSON.parse` would throw a `SyntaxError`.
+    public struct SyntaxError: Error, Sendable, Equatable, CustomStringConvertible {
+        /// UTF-8 byte offset of the offending input.
+        public let offset: Int
+        public let reason: String
+
+        public var description: String { "JSON syntax error at byte \(offset): \(reason)" }
+    }
+
+    /// Deepest nesting of arrays and objects accepted by ``init(parsingJSON:)``.
+    public static let maximumNestingDepth = 64
+
+    /// Parses `text` as JavaScript's `JSON.parse` does (RFC 8259 grammar; no byte-order mark, comments or
+    /// trailing commas). Numbers beyond the `Double` range become ±infinity (`1e400`), duplicate keys keep
+    /// the last value.
+    ///
+    /// Two differences are unavoidable in Swift:
+    /// - A lone surrogate escape (`"\ud800"`) cannot live in a Swift `String`; it becomes U+FFFD. Escaped
+    ///   surrogate pairs combine as usual.
+    /// - Nesting deeper than ``maximumNestingDepth`` is rejected (`JSON.parse` has no limit). Every operation on
+    ///   a value (parsing, `==`, `Codable`, release) recurses once per level, and `JSONEncoder` overflows a
+    ///   512 KB thread stack at 256 levels in debug builds. `athkar-progress-v2` nests three levels deep.
+    public init(parsingJSON text: String) throws(SyntaxError) {
+        var parser = JSONTextParser(bytes: Array(text.utf8))
+        self = try parser.document()
+    }
+}
+
+private struct JSONTextParser {
+    typealias Value = SessionState.StoredValue
+
+    let bytes: [UInt8]
+    var index = 0
+
+    init(bytes: [UInt8]) {
+        self.bytes = bytes
+    }
+
+    mutating func document() throws(Value.SyntaxError) -> Value {
+        skipWhitespace()
+        let result = try value(depth: 0)
+        skipWhitespace()
+        guard index == bytes.count else { throw failure("unexpected text after the value") }
+        return result
+    }
+
+    private mutating func value(depth: Int) throws(Value.SyntaxError) -> Value {
+        guard index < bytes.count else { throw failure("unexpected end of input") }
+        switch bytes[index] {
+        case UInt8(ascii: "{"): return try object(depth: depth + 1)
+        case UInt8(ascii: "["): return try array(depth: depth + 1)
+        case UInt8(ascii: "\""): return .string(try string())
+        case UInt8(ascii: "t"): try literal("true"); return .bool(true)
+        case UInt8(ascii: "f"): try literal("false"); return .bool(false)
+        case UInt8(ascii: "n"): try literal("null"); return .null
+        case UInt8(ascii: "-"), UInt8(ascii: "0")...UInt8(ascii: "9"): return .number(try number())
+        default: throw failure("unexpected character")
+        }
+    }
+
+    private mutating func object(depth: Int) throws(Value.SyntaxError) -> Value {
+        guard depth <= Value.maximumNestingDepth else { throw failure("nesting too deep") }
+        index += 1
+        var members: [String: Value] = [:]
+        skipWhitespace()
+        if consume(UInt8(ascii: "}")) { return .object(members) }
+        while true {
+            guard index < bytes.count, bytes[index] == UInt8(ascii: "\"") else { throw failure("expected a key") }
+            let key = try string()
+            skipWhitespace()
+            guard consume(UInt8(ascii: ":")) else { throw failure("expected ':'") }
+            skipWhitespace()
+            members[key] = try value(depth: depth)
+            skipWhitespace()
+            if consume(UInt8(ascii: "}")) { return .object(members) }
+            guard consume(UInt8(ascii: ",")) else { throw failure("expected ',' or '}'") }
+            skipWhitespace()
+        }
+    }
+
+    private mutating func array(depth: Int) throws(Value.SyntaxError) -> Value {
+        guard depth <= Value.maximumNestingDepth else { throw failure("nesting too deep") }
+        index += 1
+        var elements: [Value] = []
+        skipWhitespace()
+        if consume(UInt8(ascii: "]")) { return .array(elements) }
+        while true {
+            elements.append(try value(depth: depth))
+            skipWhitespace()
+            if consume(UInt8(ascii: "]")) { return .array(elements) }
+            guard consume(UInt8(ascii: ",")) else { throw failure("expected ',' or ']'") }
+            skipWhitespace()
+        }
+    }
+
+    /// `-? (0 | [1-9][0-9]*) (. [0-9]+)? ([eE] [+-]? [0-9]+)?`, converted with correct rounding.
+    private mutating func number() throws(Value.SyntaxError) -> Double {
+        let start = index
+        _ = consume(UInt8(ascii: "-"))
+        if consume(UInt8(ascii: "0")) {
+            // A leading zero stands alone; any digit after it is rejected by the caller.
+        } else if digits() == 0 {
+            throw failure("expected a digit")
+        }
+        if consume(UInt8(ascii: ".")), digits() == 0 { throw failure("expected a digit after '.'") }
+        if index < bytes.count, bytes[index] | 0x20 == UInt8(ascii: "e") {
+            index += 1
+            if !consume(UInt8(ascii: "+")) { _ = consume(UInt8(ascii: "-")) }
+            if digits() == 0 { throw failure("expected an exponent digit") }
+        }
+        // The literal is valid Swift floating-point syntax; overflow gives ±infinity, as in JavaScript.
+        guard let value = Double(String(decoding: bytes[start..<index], as: UTF8.self)) else {
+            throw failure("unreadable number")
+        }
+        return value
+    }
+
+    private mutating func digits() -> Int {
+        let start = index
+        while index < bytes.count, (UInt8(ascii: "0")...UInt8(ascii: "9")).contains(bytes[index]) { index += 1 }
+        return index - start
+    }
+
+    private mutating func string() throws(Value.SyntaxError) -> String {
+        index += 1
+        var utf8: [UInt8] = []
+        while true {
+            guard index < bytes.count else { throw failure("unterminated string") }
+            let byte = bytes[index]
+            switch byte {
+            case UInt8(ascii: "\""):
+                index += 1
+                return String(decoding: utf8, as: UTF8.self)
+            case UInt8(ascii: "\\"):
+                index += 1
+                try escape(into: &utf8)
+            case 0x00..<0x20:
+                throw failure("control character in string")
+            default:
+                // Input comes from a Swift `String`, so it is valid UTF-8; copy it through.
+                utf8.append(byte)
+                index += 1
+            }
+        }
+    }
+
+    private mutating func escape(into utf8: inout [UInt8]) throws(Value.SyntaxError) {
+        guard index < bytes.count else { throw failure("unterminated escape") }
+        let byte = bytes[index]
+        index += 1
+        let simple: UInt8? = switch byte {
+        case UInt8(ascii: "\""), UInt8(ascii: "\\"), UInt8(ascii: "/"): byte
+        case UInt8(ascii: "b"): 0x08
+        case UInt8(ascii: "f"): 0x0C
+        case UInt8(ascii: "n"): 0x0A
+        case UInt8(ascii: "r"): 0x0D
+        case UInt8(ascii: "t"): 0x09
+        default: nil
+        }
+        if let simple {
+            utf8.append(simple)
+            return
+        }
+        guard byte == UInt8(ascii: "u") else { throw failure("invalid escape") }
+        let unit = try hexCodeUnit()
+        var scalar = Unicode.Scalar(unit)
+        if (0xD800...0xDBFF).contains(unit), let low = lowSurrogateEscape() {
+            scalar = Unicode.Scalar(0x10000 + ((UInt32(unit) - 0xD800) << 10) + (UInt32(low) - 0xDC00))
+        }
+        // A lone surrogate has no `Unicode.Scalar`; U+FFFD stands in for it.
+        utf8.append(contentsOf: Unicode.UTF8.encode(scalar ?? "\u{FFFD}")!)
+    }
+
+    /// Consumes a following `\uDC00`…`\uDFFF` escape, completing a surrogate pair.
+    private mutating func lowSurrogateEscape() -> UInt16? {
+        guard index + 6 <= bytes.count, bytes[index] == UInt8(ascii: "\\"), bytes[index + 1] == UInt8(ascii: "u")
+        else { return nil }
+        let saved = index
+        index += 2
+        if let unit = try? hexCodeUnit(), (0xDC00...0xDFFF).contains(unit) { return unit }
+        index = saved
+        return nil
+    }
+
+    private mutating func hexCodeUnit() throws(Value.SyntaxError) -> UInt16 {
+        guard index + 4 <= bytes.count else { throw failure("incomplete \\u escape") }
+        var unit: UInt16 = 0
+        for byte in bytes[index..<index + 4] {
+            let digit: UInt8
+            switch byte {
+            case UInt8(ascii: "0")...UInt8(ascii: "9"): digit = byte - UInt8(ascii: "0")
+            case UInt8(ascii: "a")...UInt8(ascii: "f"): digit = byte - UInt8(ascii: "a") + 10
+            case UInt8(ascii: "A")...UInt8(ascii: "F"): digit = byte - UInt8(ascii: "A") + 10
+            default: throw failure("invalid \\u escape")
+            }
+            unit = unit << 4 | UInt16(digit)
+        }
+        index += 4
+        return unit
+    }
+
+    private mutating func literal(_ word: StaticString) throws(Value.SyntaxError) {
+        let count = word.utf8CodeUnitCount
+        guard index + count <= bytes.count,
+              bytes[index..<index + count].elementsEqual(UnsafeBufferPointer(start: word.utf8Start, count: count))
+        else { throw failure("invalid literal") }
+        index += count
+    }
+
+    /// JSON whitespace only: space, tab, line feed, carriage return (not U+FEFF).
+    private mutating func skipWhitespace() {
+        while index < bytes.count {
+            switch bytes[index] {
+            case 0x20, 0x09, 0x0A, 0x0D: index += 1
+            default: return
+            }
+        }
+    }
+
+    private mutating func consume(_ byte: UInt8) -> Bool {
+        guard index < bytes.count, bytes[index] == byte else { return false }
+        index += 1
+        return true
+    }
+
+    private func failure(_ reason: String) -> Value.SyntaxError {
+        Value.SyntaxError(offset: index, reason: reason)
     }
 }
 

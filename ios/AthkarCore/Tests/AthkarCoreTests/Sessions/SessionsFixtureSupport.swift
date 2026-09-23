@@ -30,9 +30,11 @@ enum SessionsFixtures {
         return url.appending(path: "spec/sessions/fixtures")
     }()
 
+    /// Parses the file as `JSON.parse` would (the fixtures may contain lone surrogate escapes, which
+    /// `JSONDecoder` rejects).
     static func cases(_ file: String) throws -> [SessionsFixtureCase] {
         let data = try Data(contentsOf: directory.appending(path: file))
-        let root = try JSONDecoder().decode(SessionState.StoredValue.self, from: data)
+        let root = try SessionState.StoredValue(parsingJSON: String(decoding: data, as: UTF8.self))
         guard case .object(let fixture) = root,
               case .object(let defaultInput)? = fixture["defaultInput"],
               case .array(let cases)? = fixture["cases"]
@@ -55,6 +57,12 @@ enum SessionsFixtures {
 
     static func decode<Value: Decodable>(_ type: Value.Type, from value: SessionState.StoredValue) throws -> Value {
         try JSONDecoder().decode(type, from: JSONEncoder().encode(value))
+    }
+
+    /// `JSON.parse(JSON.stringify(value))`, as the generator records every expected state: non-finite
+    /// numbers become `null`.
+    static func plain<Value: Codable>(_ value: Value) throws -> Value {
+        try JSONDecoder().decode(Value.self, from: JSONEncoder().encode(value))
     }
 
     static func timeZone(_ identifier: String) throws -> TimeZone {

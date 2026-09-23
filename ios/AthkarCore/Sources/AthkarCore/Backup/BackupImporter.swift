@@ -9,11 +9,15 @@ import GRDB
 ///   `(local_date)` for ruqyah completion, `(local_date, segment_id)` for ruqyah counts. An existing unit wins
 ///   unless it is empty; imported rows are stamped with `meta.exportedAt`. Re-import is therefore a no-op.
 /// - Settings rows (preferences, calculation profile) follow origin precedence native > athkar-pwa > ruqyah-pwa.
+/// - Today's data is checked against the content: adhkar completion must follow from the counters (or manual
+///   completion), and ruqyah counts are clamped to each segment's `repeat`, unknown segments dropped.
 public struct BackupImporter: Sendable {
     let database: AppDatabase
+    let content: ContentPacks
 
-    public init(database: AppDatabase) {
+    public init(database: AppDatabase, content: ContentPacks) {
         self.database = database
+        self.content = content
     }
 
     /// Decodes, validates, and merges a backup file. Returns the decoded envelope.
@@ -29,8 +33,12 @@ public struct BackupImporter: Sendable {
         let stamp = envelope.meta.exportedAt
         let origin: SettingOrigin = envelope.meta.app == .athkarPWA ? .athkarPWA : .ruqyahPWA
         try database.writer.write { db in
-            if let adhkar = envelope.adhkar { try Self.merge(adhkar, into: db, stamp: stamp) }
-            if let ruqyah = envelope.ruqyah { try Self.merge(ruqyah, into: db, stamp: stamp) }
+            if let adhkar = envelope.adhkar {
+                try Self.merge(adhkar, collections: content.adhkar, into: db, stamp: stamp)
+            }
+            if let ruqyah = envelope.ruqyah {
+                try Self.merge(ruqyah, segments: content.ruqyahSegments, into: db, stamp: stamp)
+            }
             if let reminders = envelope.reminders {
                 try Self.merge(reminders, into: db, origin: origin, stamp: stamp)
             }
@@ -42,8 +50,9 @@ public struct BackupImporter: Sendable {
 
     // MARK: Adhkar
 
-    private static func merge(_ adhkar: BackupEnvelope.Adhkar, into db: Database, stamp: Date) throws {
-        for session in sessions(from: adhkar) {
+    private static func merge(_ adhkar: BackupEnvelope.Adhkar, collections: SessionCollections, into db: Database,
+                              stamp: Date) throws {
+        for session in sessions(from: adhkar, collections: collections) {
             // An imported unit with no rows and no completion has nothing to contribute.
             guard session.completion != nil || !session.progress.isEmpty || !session.targets.isEmpty else { continue }
             let native = try AdhkarRepository.session(in: db, on: session.localDate, period: session.period)
@@ -56,21 +65,27 @@ public struct BackupImporter: Sendable {
     /// `adhkar.today` and `adhkar.history` as stored sessions. History entries carry only completion.
     /// `validate()` guarantees history dates are distinct and before `today.date`.
     ///
-    /// `today.completedAt[p]` without manual completion is taken as complete (origin `import`) without checking
-    /// the counters: the exporter is trusted to write it only while the period is complete (spec/schema.md).
-    static func sessions(from adhkar: BackupEnvelope.Adhkar) -> [AdhkarSession] {
+    /// Today's period is complete only as the PWA would judge it from these values: `manualCompletion` (origin
+    /// `manual`) or the counters per `SessionState.countersComplete` (origin `counters`). `completedAt` is kept
+    /// only then. History booleans are trusted (origin `import`): they were judged against past content.
+    static func sessions(from adhkar: BackupEnvelope.Adhkar, collections: SessionCollections) -> [AdhkarSession] {
         let today = adhkar.today
+        var state = SessionState.empty(date: today.date)
+        for period in Period.allCases {
+            state.progress[period] = .object(today.progress[period].mapValues { .number($0) })
+            state.targets[period] = .object(today.targets[period].mapValues { .number($0) })
+        }
         var sessions = Period.allCases.map { period in
-            let completedAt = today.completedAt[period]
             let origin: CompletionOrigin? = today.manualCompletion[period]
                 ? .manual
-                : completedAt == nil ? nil : .imported
+                : state.countersComplete(period, in: collections) ? .counters : nil
             return AdhkarSession(
                 localDate: today.date, period: period,
                 progress: today.progress[period].mapValues(storedCount),
                 targets: today.targets[period].compactMapValues(storedTarget),
                 completion: origin.map {
-                    AdhkarDay(localDate: today.date, period: period, completedAt: completedAt, completionOrigin: $0)
+                    AdhkarDay(localDate: today.date, period: period, completedAt: today.completedAt[period],
+                              completionOrigin: $0)
                 })
         }
         for entry in adhkar.history {
@@ -97,16 +112,21 @@ public struct BackupImporter: Sendable {
 
     // MARK: Ruqyah
 
-    private static func merge(_ ruqyah: BackupEnvelope.Ruqyah, into db: Database, stamp: Date) throws {
+    /// Clamped to `0…repeat` and restricted to known segments, as the ruqyah PWA's `normalizeCounts` does.
+    private static func merge(_ ruqyah: BackupEnvelope.Ruqyah, segments: [RuqyahSegment], into db: Database,
+                              stamp: Date) throws {
         for (date, entry) in ruqyah.history.sorted(by: { $0.key < $1.key })
         where try !RuqyahDay.exists(db, key: date) {
             try RuqyahDay(localDate: date, completedAt: entry.completedAt, completionOrigin: .imported).insert(db)
         }
         let date = ruqyah.today.date
-        for (segmentId, count) in ruqyah.today.counts.sorted(by: { $0.key < $1.key }) {
-            let key: [String: (any DatabaseValueConvertible)?] = ["local_date": date, "segment_id": segmentId]
+        for segment in segments {
+            guard let imported = ruqyah.today.counts[segment.id] else { continue }
+            let count = max(0, min(imported, segment.repeatCount))
+            let key: [String: (any DatabaseValueConvertible)?] = ["local_date": date, "segment_id": segment.id]
             if let native = try RuqyahSegmentProgress.fetchOne(db, key: key), native.count > 0 { continue }
-            try RuqyahSegmentProgress(localDate: date, segmentId: segmentId, count: count, updatedAt: stamp).upsert(db)
+            try RuqyahSegmentProgress(localDate: date, segmentId: segment.id, count: count, updatedAt: stamp)
+                .upsert(db)
         }
     }
 

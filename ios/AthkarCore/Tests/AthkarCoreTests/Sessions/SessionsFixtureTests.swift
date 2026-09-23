@@ -48,7 +48,8 @@ struct SessionsFixtureTests {
     func rollStateToDate(_ fixture: SessionsFixtureCase) throws {
         let input = try fixture.input(as: RollInput.self)
         let expected = try fixture.expected(as: StateOutput.self)
-        #expect(input.state.rolled(to: input.nextDate, in: input.collections) == expected.state, "\(fixture.name)")
+        let rolled = input.state.rolled(to: input.nextDate, in: input.collections)
+        #expect(try SessionsFixtures.plain(rolled) == expected.state, "\(fixture.name)")
     }
 
     // MARK: load-state.json
@@ -70,7 +71,7 @@ struct SessionsFixtureTests {
             timeZone: try SessionsFixtures.timeZone(input.timeZone),
             collections: input.collections
         )
-        #expect(loaded == expected.state, "\(fixture.name)")
+        #expect(try SessionsFixtures.plain(loaded) == expected.state, "\(fixture.name)")
     }
 
     // MARK: build-deck.json
@@ -155,7 +156,7 @@ struct SessionsFixtureTests {
             Issue.record("\(fixture.name): unknown operation \(input.operation.function)")
         }
         #expect(returned == expected.returned, "\(fixture.name)")
-        #expect(state == expected.state, "\(fixture.name)")
+        #expect(try SessionsFixtures.plain(state) == expected.state, "\(fixture.name)")
     }
 
     // MARK: scoped-reset.json
@@ -192,6 +193,6 @@ struct SessionsFixtureTests {
             Issue.record("\(fixture.name): unknown scope \(input.scope)")
         }
         #expect(window == expected.deletedHistoryDates, "\(fixture.name)")
-        #expect(state == expected.state, "\(fixture.name)")
+        #expect(try SessionsFixtures.plain(state) == expected.state, "\(fixture.name)")
     }
 }
