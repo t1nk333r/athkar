@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "format": 1,
+    "app": "athkar-pwa",
+    "exportedAt": "2026-09-23T17:38:54.517Z",
+    "timeZone": "Asia/Riyadh"
+  },
+  "adhkar": {
+    "today": {
+      "date": "2026-09-23",
+      "progress": {
+        "morning": {
+          "morning-01": 1,
+          "morning-02": 3,
+          "morning-20": 250
+        },
+        "evening": {}
+      },
+      "targets": {
+        "morning": {
+          "morning-20": 10
+        },
+        "evening": {}
+      },
+      "completedAt": {
+        "morning": null,
+        "evening": null
+      },
+      "manualCompletion": {
+        "morning": false,
+        "evening": true
+      }
+    },
+    "history": [
+      {
+        "date": "2026-09-22",
+        "morning": true,
+        "evening": false,
+        "morningAt": "2026-09-22T17:38:40.481Z",
+        "eveningAt": null
+      }
+    ]
+  },
+  "reminders": {
+    "morning": {
+      "enabled": true
+    },
+    "evening": {
+      "enabled": false
+    },
+    "calculationMethod": "umm-al-qura",
+    "asrSchool": "hanafi",
+    "lastShown": {
+      "morning": "2026-09-22",
+      "evening": null
+    },
+    "location": {
+      "latitude": 21.4225,
+      "longitude": 39.8262,
+      "updatedAt": "2026-09-23T17:38:40.481Z"
+    }
+  },
+  "preferences": {
+    "theme": "dark",
+    "textSize": "medium",
+    "lineSpacing": "comfortable",
+    "haptics": false,
+    "longOrder": "last",
+    "longOrderPromptAnswered": true
+  }
+}

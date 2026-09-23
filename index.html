@@ -1913,6 +1913,23 @@
         <p class="settings-note" id="install-status">يمكن تثبيت التطبيق من قائمة المتصفح عند توفر الخيار.</p>
       </section>
 
+      <section class="settings-section" aria-labelledby="backup-settings-title">
+        <h3 id="backup-settings-title">النسخة الاحتياطية</h3>
+        <p class="settings-note" id="backup-note">احفظ تقدّم اليوم وسجل الإكمال والإعدادات في ملف يمكن استيراده في تطبيق الجوال. يُنشأ الملف على جهازك ولا يُرسل إلى أي خادم.</p>
+        <label class="settings-toggle-control" for="backup-include-location">
+          <span class="settings-toggle-copy">
+            <strong>تضمين الموقع المحفوظ</strong>
+            <small id="backup-location-note">يُستخدم لحساب مواعيد التذكير فقط.</small>
+          </span>
+          <span class="toggle-switch">
+            <input class="toggle-input" id="backup-include-location" type="checkbox" switch role="switch" aria-describedby="backup-location-note">
+            <span class="toggle-track" aria-hidden="true"></span>
+          </span>
+        </label>
+        <button class="settings-action" id="backup-export" type="button" aria-describedby="backup-note">تصدير نسخة احتياطية</button>
+        <p class="settings-note" id="backup-status" aria-live="polite"></p>
+      </section>
+
       <section class="settings-section" aria-labelledby="history-title">
         <h3 id="history-title">سجل الإكمال</h3>
         <ol class="history-list" id="history-list"></ol>
@@ -2303,6 +2320,9 @@
     const updateApply = document.getElementById("update-apply");
     const updateDismiss = document.getElementById("update-dismiss");
     const hapticsToggle = document.getElementById("haptics-toggle");
+    const backupIncludeLocation = document.getElementById("backup-include-location");
+    const backupExportButton = document.getElementById("backup-export");
+    const backupStatus = document.getElementById("backup-status");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
@@ -3831,14 +3851,102 @@
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
 
+    function finiteCounts(values) {
+      return Object.fromEntries(Object.entries(values || {})
+        .map(([id, value]) => [id, Number(value)])
+        .filter(([, value]) => Number.isFinite(value) && value >= 0));
+    }
+
+    function buildBackup(includeLocation) {
+      ensureCurrentDay();
+      const reminders = {
+        morning: { enabled: reminderPreferences.morning.enabled },
+        evening: { enabled: reminderPreferences.evening.enabled },
+        calculationMethod: reminderPreferences.calculationMethod,
+        asrSchool: reminderPreferences.asrSchool,
+        lastShown: { ...reminderPreferences.lastShown }
+      };
+      if (includeLocation && reminderPreferences.location) reminders.location = { ...reminderPreferences.location };
+      return {
+        meta: {
+          format: 1,
+          app: "athkar-pwa",
+          exportedAt: new Date().toISOString(),
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        },
+        adhkar: {
+          today: {
+            date: state.date,
+            progress: { morning: finiteCounts(state.progress.morning), evening: finiteCounts(state.progress.evening) },
+            targets: { morning: finiteCounts(state.targets.morning), evening: finiteCounts(state.targets.evening) },
+            completedAt: { ...state.completedAt },
+            manualCompletion: { ...state.manualCompletion }
+          },
+          history: state.history.map(entry => ({ ...entry }))
+        },
+        reminders,
+        preferences: {
+          theme: root.dataset.theme,
+          textSize: root.dataset.textSize,
+          lineSpacing: root.dataset.lineSpacing,
+          haptics: hapticsEnabled,
+          longOrder: longAdhkarLast ? "last" : "original",
+          longOrderPromptAnswered: hasAnsweredLongOrderPrompt()
+        }
+      };
+    }
+
+    async function deliverBackupFile(envelope, baseName) {
+      const name = `${baseName}-${envelope.meta.exportedAt.slice(0, 10)}.athkarbackup`;
+      const file = new File([JSON.stringify(envelope, null, 2)], name, { type: "application/json" });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: name });
+          return "shared";
+        } catch (error) {
+          if (error?.name === "AbortError") return "cancelled";
+        }
+      }
+      const url = URL.createObjectURL(file);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return "downloaded";
+    }
+
+    function updateBackupControls() {
+      const hasLocation = Boolean(reminderPreferences.location);
+      backupIncludeLocation.disabled = !hasLocation;
+      if (!hasLocation) backupIncludeLocation.checked = false;
+    }
+
+    async function exportBackup() {
+      backupExportButton.disabled = true;
+      backupStatus.textContent = "";
+      try {
+        const outcome = await deliverBackupFile(buildBackup(backupIncludeLocation.checked), "athkar-backup");
+        if (outcome !== "cancelled") backupStatus.textContent = "جُهّز ملف النسخة الاحتياطية.";
+      } catch (_) {
+        backupStatus.textContent = "تعذّر تصدير النسخة الاحتياطية. حاول مرة أخرى.";
+      } finally {
+        backupExportButton.disabled = false;
+      }
+    }
+
     settingsButton.addEventListener("click", () => {
       updateHistoryView();
       updateReminderControls();
       updateManualCompletionControls();
       updateInstallUi();
+      updateBackupControls();
       settingsDialog.showModal();
     });
     settingsDialogClose.addEventListener("click", () => settingsDialog.close());
+    backupExportButton.addEventListener("click", exportBackup);
     settingsDialog.addEventListener("click", event => {
       if (event.target === settingsDialog) settingsDialog.close();
     });

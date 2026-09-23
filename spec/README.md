@@ -90,3 +90,7 @@ Expected P1 divergences from `adhan-swift`, to be written up in `spec/prayer-tim
 - Adhan rounds to the nearest minute by default.
 - Above 48° Adhan defaults to `.seventhOfTheNight`. `.twilightAngle` uses the PWA's portion, but Adhan
   measures the night from tonight's sunset to tomorrow's sunrise, not from last night's.
+
+## Backup envelope
+
+`backup/envelope-v1.md` specifies the `.athkarbackup` file both PWAs export (NATIVE_APP_PLAN.md §6.4); `backup/examples/` holds real exports. Validate any export with `node tools/backup-validate.mjs <file>`.

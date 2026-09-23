@@ -46,3 +46,44 @@ export function ruqyahContentJs(pack) {
   const segments = pack.segments.map(({ id, surah, range, repeat, basmala, ayahs }) => ({ id, surah, range, repeat, basmala, ayahs }));
   return `"use strict";\n\nconst RUQYAH_SEGMENTS = ${JSON.stringify(segments, null, 2)};\n`;
 }
+
+/**
+ * Validates `value` against the JSON Schema subset used in this repository: type (single or array, incl. null),
+ * const, enum, minLength, pattern, minimum, maximum, minItems, items, required, properties,
+ * patternProperties, additionalProperties (false or a schema). Returns error strings; empty when valid.
+ */
+export function schemaErrors(schema, value, path, errors = []) {
+  const fail = message => errors.push(`${path}: ${message}`);
+  if ("const" in schema && value !== schema.const) { fail(`expected ${JSON.stringify(schema.const)}`); return errors; }
+  if (schema.enum && !schema.enum.includes(value)) { fail(`${JSON.stringify(value)} not in ${schema.enum.join("|")}`); return errors; }
+  const type = value === null ? "null" : Array.isArray(value) ? "array" : Number.isInteger(value) ? "integer" : typeof value;
+  if (schema.type) {
+    const allowed = [schema.type].flat();
+    if (!allowed.includes(type) && !(type === "integer" && allowed.includes("number"))) { fail(`expected ${allowed.join("|")}, got ${type}`); return errors; }
+  }
+  if (type === "string") {
+    if (schema.minLength && value.length < schema.minLength) fail("empty string");
+    if (schema.pattern && !new RegExp(schema.pattern).test(value)) fail(`${JSON.stringify(value)} does not match ${schema.pattern}`);
+  }
+  if (type === "integer" || type === "number") {
+    if (schema.minimum !== undefined && value < schema.minimum) fail(`${value} < ${schema.minimum}`);
+    if (schema.maximum !== undefined && value > schema.maximum) fail(`${value} > ${schema.maximum}`);
+  }
+  if (type === "array") {
+    if (schema.minItems && value.length < schema.minItems) fail(`fewer than ${schema.minItems} items`);
+    if (schema.maxItems !== undefined && value.length > schema.maxItems) fail(`more than ${schema.maxItems} items`);
+    if (schema.items) value.forEach((v, i) => schemaErrors(schema.items, v, `${path}[${i}]`, errors));
+  }
+  if (type === "object") {
+    for (const key of schema.required ?? []) if (!(key in value)) fail(`missing ${key}`);
+    for (const [key, v] of Object.entries(value)) {
+      const childPath = `${path}.${key}`;
+      if (schema.properties?.[key]) { schemaErrors(schema.properties[key], v, childPath, errors); continue; }
+      const pattern = Object.keys(schema.patternProperties ?? {}).find(p => new RegExp(p).test(key));
+      if (pattern) schemaErrors(schema.patternProperties[pattern], v, childPath, errors);
+      else if (schema.additionalProperties === false) fail(`unexpected property ${key}`);
+      else if (typeof schema.additionalProperties === "object") schemaErrors(schema.additionalProperties, v, childPath, errors);
+    }
+  }
+  return errors;
+}

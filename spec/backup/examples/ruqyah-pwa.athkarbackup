@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "format": 1,
+    "app": "ruqyah-pwa",
+    "exportedAt": "2026-09-23T17:39:19.749Z",
+    "timeZone": "Asia/Riyadh"
+  },
+  "ruqyah": {
+    "today": {
+      "date": "2026-09-23",
+      "counts": {
+        "qaf-1-8": 1,
+        "qaf-9-14": 0,
+        "qaf-15-22": 0,
+        "qaf-23-29": 7,
+        "qaf-30-37": 0,
+        "qaf-38-45": 0,
+        "jinn-1-7": 0,
+        "jinn-8-13": 0,
+        "jinn-14-21": 0,
+        "jinn-22-28": 0,
+        "takwir-1-10": 0,
+        "takwir-11-21": 0,
+        "takwir-22-29": 0,
+        "kafirun-1-6": 0,
+        "nas-1-6": 3
+      }
+    },
+    "history": {
+      "2026-09-21": {
+        "completedAt": "2026-09-21T05:10:00.000Z"
+      },
+      "2026-09-22": {
+        "completedAt": "2026-09-22T04:55:00.000Z"
+      }
+    }
+  },
+  "preferences": {
+    "theme": "light",
+    "textSize": "large",
+    "lineSpacing": "comfortable",
+    "haptics": true
+  }
+}

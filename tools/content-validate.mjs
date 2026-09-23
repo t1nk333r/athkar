@@ -9,37 +9,11 @@
 // Known, reviewed deviations live in content/reference/exceptions.json; each must match the observed diff exactly.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { contentDir, readJSON, sha256 } from "./content-lib.mjs";
+import { contentDir, readJSON, schemaErrors, sha256 } from "./content-lib.mjs";
 
 const errors = [];
 const fail = message => errors.push(message);
-
-// ---- JSON Schema subset (the keywords used in content/schema) ----
-function check(schema, value, path) {
-  if ("const" in schema && value !== schema.const) return fail(`${path}: expected ${JSON.stringify(schema.const)}`);
-  if (schema.enum && !schema.enum.includes(value)) return fail(`${path}: ${JSON.stringify(value)} not in ${schema.enum.join("|")}`);
-  const type = Array.isArray(value) ? "array" : Number.isInteger(value) ? "integer" : typeof value;
-  if (schema.type && schema.type !== type && !(schema.type === "number" && type === "integer")) return fail(`${path}: expected ${schema.type}, got ${type}`);
-  if (type === "string") {
-    if (schema.minLength && value.length < schema.minLength) fail(`${path}: empty string`);
-    if (schema.pattern && !new RegExp(schema.pattern).test(value)) fail(`${path}: ${JSON.stringify(value)} does not match ${schema.pattern}`);
-  }
-  if (type === "integer") {
-    if (schema.minimum !== undefined && value < schema.minimum) fail(`${path}: ${value} < ${schema.minimum}`);
-    if (schema.maximum !== undefined && value > schema.maximum) fail(`${path}: ${value} > ${schema.maximum}`);
-  }
-  if (type === "array") {
-    if (schema.minItems && value.length < schema.minItems) fail(`${path}: fewer than ${schema.minItems} items`);
-    if (schema.items) value.forEach((v, i) => check(schema.items, v, `${path}[${i}]`));
-  }
-  if (type === "object") {
-    for (const key of schema.required ?? []) if (!(key in value)) fail(`${path}: missing ${key}`);
-    for (const [key, v] of Object.entries(value)) {
-      if (schema.properties?.[key]) check(schema.properties[key], v, `${path}.${key}`);
-      else if (schema.additionalProperties === false) fail(`${path}: unexpected property ${key}`);
-    }
-  }
-}
+const check = (schema, value, path) => errors.push(...schemaErrors(schema, value, path));
 
 // ---- Load ----
 const manifest = readJSON(join(contentDir, "manifest.json"));
