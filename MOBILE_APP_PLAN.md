@@ -4,6 +4,8 @@
 
 This document defines the proposed product, domain, architecture, delivery, and release plan for a native iOS and Android edition of Athkar. It is a plan, not a claim that the native app is already implemented.
 
+**Stack decision superseded.** [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) replaces §10 (React Native/Expo) and §19 (delivery phases) with a Swift/SwiftUI iOS-first build and a deferred Kotlin/Compose Android build, and it consolidates رقية القرين and prayer times into the same app. Its §2 classifies every section below as authoritative, superseded, or needing rewrite; where the two disagree, that document wins. The domain, content-governance, privacy, and publisher-identity sections here remain authoritative.
+
 ## 1. Product outcome
 
 Build an Arabic-first, offline-first mobile companion that combines:

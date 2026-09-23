@@ -6,7 +6,8 @@ A mobile-first Arabic PWA for morning and evening adhkar.
 
 ## Planning
 
-- [Native iOS and Android product and engineering plan](MOBILE_APP_PLAN.md)
+- [Native app plan: Swift first, Kotlin later](NATIVE_APP_PLAN.md) — current stack and sequencing decision
+- [Native iOS and Android product and engineering plan](MOBILE_APP_PLAN.md) — domain, content, privacy and release detail; its stack decision is superseded by the plan above
 
 ## TODO
 
