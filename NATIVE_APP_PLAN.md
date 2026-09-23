@@ -317,7 +317,7 @@ Import rules:
 - Merge is by `(local_date, period)` / `(local_date)` / `(local_date, segment_id)`; an existing native row wins over an imported one except when the native row is empty. This makes re-import idempotent.
 - Legacy PWA keys (`athkar-progress-v1`, `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`) are already normalised by the PWAs' own loaders (`loadState`, `loadReminderPreferences`, the inline text-size shim) so the export never needs to understand them.
 - Transport: Web Share API with a file when available, otherwise a download; on iOS the app declares a UTType for `.athkarbackup` so opening the file from Files/Mail/AirDrop launches import. A URL-encoded payload is not used: the location field and history should not transit through browser history.
-- Round-trip fixture: native re-export of an imported PWA file must equal the original in every section it contained (`MOBILE_APP_PLAN.md` §13 step 5).
+- Round-trip fixture: native re-export of an imported PWA file must equal the original in every section it contained (`MOBILE_APP_PLAN.md` §13 step 5), with the exceptions listed in `spec/schema.md` "Export": imported coordinates come back rounded to 2 decimals (§7.4), and adhkar history days on which neither period was complete are not stored (they carry no worship data), so they are absent from a re-export.
 
 ---
 
