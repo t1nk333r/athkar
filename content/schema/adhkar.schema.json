@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "adhkar.schema.json",
+  "title": "Adhkar content pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack",
+    "version",
+    "periods"
+  ],
+  "properties": {
+    "pack": {
+      "const": "adhkar"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "periods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "morning",
+        "evening"
+      ],
+      "properties": {
+        "morning": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "text",
+              "details"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^(morning|evening)-[0-9]{2}$",
+                "description": "Immutable once shipped: progress and targets are keyed by it."
+              },
+              "kind": {
+                "enum": [
+                  "quran",
+                  "dhikr",
+                  "review"
+                ]
+              },
+              "edition": {
+                "enum": [
+                  "simplified-rasm",
+                  "alquran-cloud:quran-uthmani"
+                ],
+                "description": "Required when kind is quran."
+              },
+              "surah": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 114
+              },
+              "ayahFrom": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "ayahTo": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "partial": {
+                "type": "boolean",
+                "description": "Text is a contiguous excerpt of the addressed ayah range."
+              },
+              "prefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "noteIndex": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Index into details marking the footnote-style entry."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "countLabel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "targetOptions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 2
+              },
+              "defaultTarget": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "review": {
+                "type": "boolean"
+              },
+              "reviewTitle": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewCopy": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "evening": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "text",
+              "details"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^(morning|evening)-[0-9]{2}$",
+                "description": "Immutable once shipped: progress and targets are keyed by it."
+              },
+              "kind": {
+                "enum": [
+                  "quran",
+                  "dhikr",
+                  "review"
+                ]
+              },
+              "edition": {
+                "enum": [
+                  "simplified-rasm",
+                  "alquran-cloud:quran-uthmani"
+                ],
+                "description": "Required when kind is quran."
+              },
+              "surah": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 114
+              },
+              "ayahFrom": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "ayahTo": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "partial": {
+                "type": "boolean",
+                "description": "Text is a contiguous excerpt of the addressed ayah range."
+              },
+              "prefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "noteIndex": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Index into details marking the footnote-style entry."
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "countLabel": {
+                "type": "string",
+                "minLength": 1
+              },
+              "targetOptions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "minItems": 2
+              },
+              "defaultTarget": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "review": {
+                "type": "boolean"
+              },
+              "reviewTitle": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reviewCopy": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

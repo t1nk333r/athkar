@@ -1,0 +1,910 @@
+{
+  "about": "Index (into the possibly reordered deck) of the first non-review item below target; last index when none; 0 for an empty deck.",
+  "source": "index.html: firstIncompleteIndex, deck, buildDeck",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "nothing done: index 0",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 0,
+          "itemId": "morning-01"
+        },
+        "evening": {
+          "index": 0,
+          "itemId": "evening-01"
+        }
+      }
+    },
+    {
+      "name": "first three morning items done: index 3",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 3,
+          "itemId": "morning-04"
+        },
+        "evening": {
+          "index": 0,
+          "itemId": "evening-01"
+        }
+      }
+    },
+    {
+      "name": "partially counted item is still incomplete",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 2
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 3,
+          "itemId": "morning-04"
+        },
+        "evening": {
+          "index": 0,
+          "itemId": "evening-01"
+        }
+      }
+    },
+    {
+      "name": "everything done: last index",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {
+              "evening-01": 1,
+              "evening-02": 3,
+              "evening-03": 3,
+              "evening-04": 3,
+              "evening-05": 1,
+              "evening-06": 1,
+              "evening-07": 1,
+              "evening-08": 4,
+              "evening-09": 1,
+              "evening-10": 3,
+              "evening-11": 1,
+              "evening-12": 7,
+              "evening-13": 1,
+              "evening-14": 1,
+              "evening-15": 3,
+              "evening-16": 3,
+              "evening-17": 1,
+              "evening-18": 1,
+              "evening-19": 1,
+              "evening-20": 100,
+              "evening-21": 100,
+              "evening-22": 3,
+              "evening-24": 1,
+              "evening-23": 10
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 25,
+          "itemId": "morning-25"
+        },
+        "evening": {
+          "index": 23,
+          "itemId": "evening-23"
+        }
+      }
+    },
+    {
+      "name": "manual completion does not change the index",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": true
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 0,
+          "itemId": "morning-01"
+        },
+        "evening": {
+          "index": 0,
+          "itemId": "evening-01"
+        }
+      }
+    },
+    {
+      "name": "longAdhkarLast true: index is into the reordered deck",
+      "input": {
+        "longAdhkarLast": true,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1
+            },
+            "evening": {
+              "evening-01": 1,
+              "evening-02": 3,
+              "evening-03": 3,
+              "evening-04": 3,
+              "evening-05": 1,
+              "evening-06": 1,
+              "evening-07": 1,
+              "evening-08": 4,
+              "evening-09": 1,
+              "evening-10": 3,
+              "evening-11": 1,
+              "evening-12": 7,
+              "evening-13": 1,
+              "evening-14": 1,
+              "evening-15": 3,
+              "evening-16": 3,
+              "evening-17": 1,
+              "evening-18": 1,
+              "evening-19": 1
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 19,
+          "itemId": "morning-22"
+        },
+        "evening": {
+          "index": 19,
+          "itemId": "evening-22"
+        }
+      }
+    },
+    {
+      "name": "same progress with longAdhkarLast false: index into the original order",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1
+            },
+            "evening": {
+              "evening-01": 1,
+              "evening-02": 3,
+              "evening-03": 3,
+              "evening-04": 3,
+              "evening-05": 1,
+              "evening-06": 1,
+              "evening-07": 1,
+              "evening-08": 4,
+              "evening-09": 1,
+              "evening-10": 3,
+              "evening-11": 1,
+              "evening-12": 7,
+              "evening-13": 1,
+              "evening-14": 1,
+              "evening-15": 3,
+              "evening-16": 3,
+              "evening-17": 1,
+              "evening-18": 1,
+              "evening-19": 1
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 19,
+          "itemId": "morning-20"
+        },
+        "evening": {
+          "index": 19,
+          "itemId": "evening-20"
+        }
+      }
+    },
+    {
+      "name": "all short items done with longAdhkarLast true: first long item",
+      "input": {
+        "longAdhkarLast": true,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-26": 1
+            },
+            "evening": {
+              "evening-01": 1,
+              "evening-02": 3,
+              "evening-03": 3,
+              "evening-04": 3,
+              "evening-05": 1,
+              "evening-06": 1,
+              "evening-07": 1,
+              "evening-08": 4,
+              "evening-09": 1,
+              "evening-10": 3,
+              "evening-11": 1,
+              "evening-12": 7,
+              "evening-13": 1,
+              "evening-14": 1,
+              "evening-15": 3,
+              "evening-16": 3,
+              "evening-17": 1,
+              "evening-18": 1,
+              "evening-19": 1,
+              "evening-22": 3,
+              "evening-24": 1
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 22,
+          "itemId": "morning-20"
+        },
+        "evening": {
+          "index": 21,
+          "itemId": "evening-20"
+        }
+      }
+    },
+    {
+      "name": "leading review item is skipped",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "collections": {
+          "morning": [
+            {
+              "id": "s-01",
+              "count": 3
+            },
+            {
+              "id": "s-02",
+              "count": 9
+            },
+            {
+              "id": "s-03",
+              "count": 10
+            },
+            {
+              "id": "s-04",
+              "targetOptions": [
+                1,
+                10,
+                100
+              ],
+              "defaultTarget": 100
+            },
+            {
+              "id": "s-05",
+              "review": true,
+              "count": 100
+            },
+            {
+              "id": "s-06"
+            },
+            {
+              "id": "s-07",
+              "count": 11
+            },
+            {
+              "id": "s-08",
+              "count": 100
+            }
+          ],
+          "evening": [
+            {
+              "id": "t-01",
+              "review": true
+            },
+            {
+              "id": "t-02",
+              "count": 50
+            },
+            {
+              "id": "t-03"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 0,
+          "itemId": "s-01"
+        },
+        "evening": {
+          "index": 1,
+          "itemId": "t-02"
+        }
+      }
+    },
+    {
+      "name": "review item in the middle is skipped",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "s-01": 3,
+              "s-02": 9,
+              "s-03": 10,
+              "s-04": 100
+            },
+            "evening": {
+              "t-02": 50
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "collections": {
+          "morning": [
+            {
+              "id": "s-01",
+              "count": 3
+            },
+            {
+              "id": "s-02",
+              "count": 9
+            },
+            {
+              "id": "s-03",
+              "count": 10
+            },
+            {
+              "id": "s-04",
+              "targetOptions": [
+                1,
+                10,
+                100
+              ],
+              "defaultTarget": 100
+            },
+            {
+              "id": "s-05",
+              "review": true,
+              "count": 100
+            },
+            {
+              "id": "s-06"
+            },
+            {
+              "id": "s-07",
+              "count": 11
+            },
+            {
+              "id": "s-08",
+              "count": 100
+            }
+          ],
+          "evening": [
+            {
+              "id": "t-01",
+              "review": true
+            },
+            {
+              "id": "t-02",
+              "count": 50
+            },
+            {
+              "id": "t-03"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 5,
+          "itemId": "s-06"
+        },
+        "evening": {
+          "index": 2,
+          "itemId": "t-03"
+        }
+      }
+    },
+    {
+      "name": "two-item deck and empty deck: empty yields index 0 with no item",
+      "input": {
+        "longAdhkarLast": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "collections": {
+          "morning": [
+            {
+              "id": "u-01",
+              "count": 100
+            },
+            {
+              "id": "u-02"
+            }
+          ],
+          "evening": []
+        }
+      },
+      "expected": {
+        "morning": {
+          "index": 0,
+          "itemId": "u-01"
+        },
+        "evening": {
+          "index": 0,
+          "itemId": null
+        }
+      }
+    }
+  ]
+}

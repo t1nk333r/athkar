@@ -1,0 +1,2485 @@
+{
+  "about": "Adhkar reminder timing. nextReminderTime: today's time if in the future and not shown today; now+300 ms if ≤15 min past and not shown; else tomorrow's. scheduled: scheduleReminders outcome (skipped when disabled, permission not granted, period complete, or no time).",
+  "source": "index.html: nextReminderTime, scheduleReminders, prayerTimesForDate, periodIsComplete",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "before both: fire today at fajr+60 and asr+60",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 6948260,
+            "fireAt": "2026-09-23T02:55:48.260Z"
+          },
+          "evening": {
+            "delayMs": 45471465,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "morning already shown today: next morning is tomorrow's",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": "2026-09-23",
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 93365866,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 45471465,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "lastShown yesterday does not suppress today",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": "2026-09-22",
+            "evening": "2026-09-22"
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 6948260,
+            "fireAt": "2026-09-23T02:55:48.260Z"
+          },
+          "evening": {
+            "delayMs": 45471465,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "1 ms before the morning time: exact time today",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T02:55:48.259Z",
+        "nowLocal": "2026-09-23T05:55:48.259+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 1,
+            "fireAt": "2026-09-23T02:55:48.260Z"
+          },
+          "evening": {
+            "delayMs": 38523206,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "exactly at the morning time (not in the future): catch-up now + 300 ms",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T02:55:48.260Z",
+        "nowLocal": "2026-09-23T05:55:48.260+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.560Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-09-23T02:55:48.560Z"
+          },
+          "evening": {
+            "delayMs": 38523205,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "10 minutes past, not shown: catch-up now + 300 ms",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T03:05:48.260Z",
+        "nowLocal": "2026-09-23T06:05:48.260+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T03:05:48.560Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-09-23T03:05:48.560Z"
+          },
+          "evening": {
+            "delayMs": 37923205,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "exactly 15 minutes past: still catch-up (inclusive)",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T03:10:48.260Z",
+        "nowLocal": "2026-09-23T06:10:48.260+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T03:10:48.560Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-09-23T03:10:48.560Z"
+          },
+          "evening": {
+            "delayMs": 37623205,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "15 minutes + 1 ms past: tomorrow's",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T03:10:48.261Z",
+        "nowLocal": "2026-09-23T06:10:48.261+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 85517605,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 37623204,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "10 minutes past but already shown today: tomorrow's",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T03:05:48.260Z",
+        "nowLocal": "2026-09-23T06:05:48.260+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": "2026-09-23",
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 85817606,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 37923205,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "evening within catch-up window",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T13:42:51.465Z",
+        "nowLocal": "2026-09-23T16:42:51.465+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-23T13:42:51.765Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 47594401,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 300,
+            "fireAt": "2026-09-23T13:42:51.765Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "late night: both tomorrow's",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T20:30:00.000Z",
+        "nowLocal": "2026-09-23T23:30:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-24T13:37:24.038Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 23165866,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 61644038,
+            "fireAt": "2026-09-24T13:37:24.038Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "just after local midnight with yesterday's lastShown: today's",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T21:00:30.000Z",
+        "nowLocal": "2026-09-24T00:00:30.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": "2026-09-23",
+            "evening": "2026-09-23"
+          }
+        },
+        "state": {
+          "date": "2026-09-24",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-24T01:56:05.866Z",
+          "asr": "2026-09-24T12:37:24.038Z",
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-24T13:37:24.038Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-24T02:56:05.866Z",
+          "evening": "2026-09-24T13:37:24.038Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 21335866,
+            "fireAt": "2026-09-24T02:56:05.866Z"
+          },
+          "evening": {
+            "delayMs": 59814038,
+            "fireAt": "2026-09-24T13:37:24.038Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "morning complete by counters: nothing scheduled for morning",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": {
+            "delayMs": 45471465,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "evening complete by manual completion: nothing scheduled for evening",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 6948260,
+            "fireAt": "2026-09-23T02:55:48.260Z"
+          },
+          "evening": null
+        }
+      }
+    },
+    {
+      "name": "morning disabled: only evening scheduled",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": false
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": {
+            "delayMs": 45471465,
+            "fireAt": "2026-09-23T13:37:51.465Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "notification permission not granted: nothing scheduled",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "default",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:55:48.260Z",
+          "asr": "2026-09-23T12:37:51.465Z",
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:55:48.260Z",
+          "evening": "2026-09-23T13:37:51.465Z"
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": null
+        }
+      }
+    },
+    {
+      "name": "no location: no times",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": null,
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": null,
+        "nextReminderTime": {
+          "morning": null,
+          "evening": null
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": null
+        }
+      }
+    },
+    {
+      "name": "method umm-al-qura, hanafi Asr",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T01:00:00.000Z",
+        "nowLocal": "2026-09-23T04:00:00.000+03:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "umm-al-qura",
+          "asrSchool": "hanafi",
+          "location": {
+            "latitude": 21.42,
+            "longitude": 39.83,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-09-23T01:53:38.313Z",
+          "asr": "2026-09-23T13:35:04.010Z",
+          "morning": "2026-09-23T02:53:38.313Z",
+          "evening": "2026-09-23T14:35:04.010Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-09-23T02:53:38.313Z",
+          "evening": "2026-09-23T14:35:04.010Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 6818313,
+            "fireAt": "2026-09-23T02:53:38.313Z"
+          },
+          "evening": {
+            "delayMs": 48904010,
+            "fireAt": "2026-09-23T14:35:04.010Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "polar day (Tromsø, June): no sunrise → no times",
+      "input": {
+        "timeZone": "Europe/Oslo",
+        "now": "2026-06-21T02:00:00.000Z",
+        "nowLocal": "2026-06-21T04:00:00.000+02:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 69.65,
+            "longitude": 18.96,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-06-21",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": null,
+        "nextReminderTime": {
+          "morning": null,
+          "evening": null
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": null
+        }
+      }
+    },
+    {
+      "name": "polar night (Tromsø, December): no sunrise → no times",
+      "input": {
+        "timeZone": "Europe/Oslo",
+        "now": "2026-12-21T03:00:00.000Z",
+        "nowLocal": "2026-12-21T04:00:00.000+01:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 69.65,
+            "longitude": 18.96,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-12-21",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": null,
+        "nextReminderTime": {
+          "morning": null,
+          "evening": null
+        },
+        "scheduled": {
+          "morning": null,
+          "evening": null
+        }
+      }
+    },
+    {
+      "name": "high latitude summer (Oslo, June): Fajr from night-fraction clamp",
+      "input": {
+        "timeZone": "Europe/Oslo",
+        "now": "2026-06-20T23:00:00.000Z",
+        "nowLocal": "2026-06-21T01:00:00.000+02:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 59.91,
+            "longitude": 10.75,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-06-21",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-06-21T00:20:45.459Z",
+          "asr": "2026-06-21T16:00:25.251Z",
+          "morning": "2026-06-21T01:20:45.459Z",
+          "evening": "2026-06-21T17:00:25.251Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-06-21T01:20:45.459Z",
+          "evening": "2026-06-21T17:00:25.251Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 8445459,
+            "fireAt": "2026-06-21T01:20:45.459Z"
+          },
+          "evening": {
+            "delayMs": 64825251,
+            "fireAt": "2026-06-21T17:00:25.251Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST US spring forward (next day 23h): evening before, both reminders are tomorrow's (America/New_York)",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T03:00:00.000Z",
+        "nowLocal": "2026-03-07T22:00:00.000-05:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 40.71,
+            "longitude": -74.01,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-03-07",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-03-07T09:49:13.507Z",
+          "asr": "2026-03-07T20:21:05.960Z",
+          "morning": "2026-03-07T10:49:13.507Z",
+          "evening": "2026-03-07T21:21:05.960Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-03-08T10:47:36.090Z",
+          "evening": "2026-03-08T21:21:46.098Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 28056090,
+            "fireAt": "2026-03-08T10:47:36.090Z"
+          },
+          "evening": {
+            "delayMs": 66106098,
+            "fireAt": "2026-03-08T21:21:46.098Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST US spring forward (next day 23h): transition day, 5 minutes past the morning time → catch-up (America/New_York)",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T10:52:36.090Z",
+        "nowLocal": "2026-03-08T06:52:36.090-04:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 40.71,
+            "longitude": -74.01,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-03-08",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-03-08T09:47:36.090Z",
+          "asr": "2026-03-08T20:21:46.098Z",
+          "morning": "2026-03-08T10:47:36.090Z",
+          "evening": "2026-03-08T21:21:46.098Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-03-08T10:52:36.390Z",
+          "evening": "2026-03-08T21:21:46.098Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-03-08T10:52:36.390Z"
+          },
+          "evening": {
+            "delayMs": 37750008,
+            "fireAt": "2026-03-08T21:21:46.098Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST US fall back (next day 25h): evening before, both reminders are tomorrow's (America/New_York)",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T02:00:00.000Z",
+        "nowLocal": "2026-10-31T22:00:00.000-04:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 40.71,
+            "longitude": -74.01,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-10-31",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-10-31T09:53:00.192Z",
+          "asr": "2026-10-31T19:29:34.489Z",
+          "morning": "2026-10-31T10:53:00.192Z",
+          "evening": "2026-10-31T20:29:34.489Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-11-01T10:54:01.895Z",
+          "evening": "2026-11-01T20:28:36.382Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 32041895,
+            "fireAt": "2026-11-01T10:54:01.895Z"
+          },
+          "evening": {
+            "delayMs": 66516382,
+            "fireAt": "2026-11-01T20:28:36.382Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST US fall back (next day 25h): transition day, 5 minutes past the morning time → catch-up (America/New_York)",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T10:59:01.895Z",
+        "nowLocal": "2026-11-01T05:59:01.895-05:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 40.71,
+            "longitude": -74.01,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-11-01",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-11-01T09:54:01.895Z",
+          "asr": "2026-11-01T19:28:36.382Z",
+          "morning": "2026-11-01T10:54:01.895Z",
+          "evening": "2026-11-01T20:28:36.382Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-11-01T10:59:02.195Z",
+          "evening": "2026-11-01T20:28:36.382Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-11-01T10:59:02.195Z"
+          },
+          "evening": {
+            "delayMs": 34174487,
+            "fireAt": "2026-11-01T20:28:36.382Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST EU spring forward: evening before, both reminders are tomorrow's (Europe/London)",
+      "input": {
+        "timeZone": "Europe/London",
+        "now": "2026-03-28T22:00:00.000Z",
+        "nowLocal": "2026-03-28T22:00:00.000+00:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 51.51,
+            "longitude": -0.13,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-03-28",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-03-28T03:47:48.663Z",
+          "asr": "2026-03-28T15:33:17.842Z",
+          "morning": "2026-03-28T04:47:48.663Z",
+          "evening": "2026-03-28T16:33:17.842Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-03-29T04:45:03.711Z",
+          "evening": "2026-03-29T16:34:13.930Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 24303711,
+            "fireAt": "2026-03-29T04:45:03.711Z"
+          },
+          "evening": {
+            "delayMs": 66853930,
+            "fireAt": "2026-03-29T16:34:13.930Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST EU spring forward: transition day, 5 minutes past the morning time → catch-up (Europe/London)",
+      "input": {
+        "timeZone": "Europe/London",
+        "now": "2026-03-29T04:50:03.711Z",
+        "nowLocal": "2026-03-29T05:50:03.711+01:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 51.51,
+            "longitude": -0.13,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-03-29",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-03-29T03:45:03.711Z",
+          "asr": "2026-03-29T15:34:13.930Z",
+          "morning": "2026-03-29T04:45:03.711Z",
+          "evening": "2026-03-29T16:34:13.930Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-03-29T04:50:04.011Z",
+          "evening": "2026-03-29T16:34:13.930Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-03-29T04:50:04.011Z"
+          },
+          "evening": {
+            "delayMs": 42250219,
+            "fireAt": "2026-03-29T16:34:13.930Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST EU fall back: evening before, both reminders are tomorrow's (Europe/London)",
+      "input": {
+        "timeZone": "Europe/London",
+        "now": "2026-10-24T21:00:00.000Z",
+        "nowLocal": "2026-10-24T22:00:00.000+01:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 51.51,
+            "longitude": -0.13,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-10-24",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-10-24T04:48:18.712Z",
+          "asr": "2026-10-24T14:18:08.490Z",
+          "morning": "2026-10-24T05:48:18.712Z",
+          "evening": "2026-10-24T15:18:08.490Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-10-25T05:49:54.348Z",
+          "evening": "2026-10-25T15:16:34.852Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 31794348,
+            "fireAt": "2026-10-25T05:49:54.348Z"
+          },
+          "evening": {
+            "delayMs": 65794852,
+            "fireAt": "2026-10-25T15:16:34.852Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST EU fall back: transition day, 5 minutes past the morning time → catch-up (Europe/London)",
+      "input": {
+        "timeZone": "Europe/London",
+        "now": "2026-10-25T05:54:54.348Z",
+        "nowLocal": "2026-10-25T05:54:54.348+00:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": 51.51,
+            "longitude": -0.13,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-10-25",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-10-25T04:49:54.348Z",
+          "asr": "2026-10-25T14:16:34.852Z",
+          "morning": "2026-10-25T05:49:54.348Z",
+          "evening": "2026-10-25T15:16:34.852Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-10-25T05:54:54.648Z",
+          "evening": "2026-10-25T15:16:34.852Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-10-25T05:54:54.648Z"
+          },
+          "evening": {
+            "delayMs": 33700504,
+            "fireAt": "2026-10-25T15:16:34.852Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST Australia fall back (southern autumn): evening before, both reminders are tomorrow's (Australia/Sydney)",
+      "input": {
+        "timeZone": "Australia/Sydney",
+        "now": "2026-04-04T11:00:00.000Z",
+        "nowLocal": "2026-04-04T22:00:00.000+11:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": -33.87,
+            "longitude": 151.21,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-04-04",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-04-03T18:46:34.497Z",
+          "asr": "2026-04-04T05:16:40.916Z",
+          "morning": "2026-04-03T19:46:34.497Z",
+          "evening": "2026-04-04T06:16:40.916Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-04-04T19:47:18.625Z",
+          "evening": "2026-04-05T06:15:44.593Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 31638625,
+            "fireAt": "2026-04-04T19:47:18.625Z"
+          },
+          "evening": {
+            "delayMs": 69344593,
+            "fireAt": "2026-04-05T06:15:44.593Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST Australia fall back (southern autumn): transition day, 5 minutes past the morning time → catch-up (Australia/Sydney)",
+      "input": {
+        "timeZone": "Australia/Sydney",
+        "now": "2026-04-04T19:52:18.625Z",
+        "nowLocal": "2026-04-05T05:52:18.625+10:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": -33.87,
+            "longitude": 151.21,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-04-05",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-04-04T18:47:18.625Z",
+          "asr": "2026-04-05T05:15:44.593Z",
+          "morning": "2026-04-04T19:47:18.625Z",
+          "evening": "2026-04-05T06:15:44.593Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-04-04T19:52:18.925Z",
+          "evening": "2026-04-05T06:15:44.593Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-04-04T19:52:18.925Z"
+          },
+          "evening": {
+            "delayMs": 37405968,
+            "fireAt": "2026-04-05T06:15:44.593Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST Australia spring forward (southern spring): evening before, both reminders are tomorrow's (Australia/Sydney)",
+      "input": {
+        "timeZone": "Australia/Sydney",
+        "now": "2026-10-03T12:00:00.000Z",
+        "nowLocal": "2026-10-03T22:00:00.000+10:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": -33.87,
+            "longitude": 151.21,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-10-03",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-10-02T18:05:15.360Z",
+          "asr": "2026-10-03T05:16:37.791Z",
+          "morning": "2026-10-02T19:05:15.360Z",
+          "evening": "2026-10-03T06:16:37.791Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-10-03T19:03:44.894Z",
+          "evening": "2026-10-04T06:16:46.617Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 25424894,
+            "fireAt": "2026-10-03T19:03:44.894Z"
+          },
+          "evening": {
+            "delayMs": 65806617,
+            "fireAt": "2026-10-04T06:16:46.617Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "DST Australia spring forward (southern spring): transition day, 5 minutes past the morning time → catch-up (Australia/Sydney)",
+      "input": {
+        "timeZone": "Australia/Sydney",
+        "now": "2026-10-03T19:08:44.894Z",
+        "nowLocal": "2026-10-04T06:08:44.894+11:00",
+        "notificationPermission": "granted",
+        "preferences": {
+          "morning": {
+            "enabled": true
+          },
+          "evening": {
+            "enabled": true
+          },
+          "calculationMethod": "mwl",
+          "asrSchool": "standard",
+          "location": {
+            "latitude": -33.87,
+            "longitude": 151.21,
+            "updatedAt": "2026-01-01T00:00:00.000Z"
+          },
+          "lastShown": {
+            "morning": null,
+            "evening": null
+          }
+        },
+        "state": {
+          "date": "2026-10-04",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "todaySchedule": {
+          "fajr": "2026-10-03T18:03:44.894Z",
+          "asr": "2026-10-04T05:16:46.617Z",
+          "morning": "2026-10-03T19:03:44.894Z",
+          "evening": "2026-10-04T06:16:46.617Z"
+        },
+        "nextReminderTime": {
+          "morning": "2026-10-03T19:08:45.194Z",
+          "evening": "2026-10-04T06:16:46.617Z"
+        },
+        "scheduled": {
+          "morning": {
+            "delayMs": 300,
+            "fireAt": "2026-10-03T19:08:45.194Z"
+          },
+          "evening": {
+            "delayMs": 40081723,
+            "fireAt": "2026-10-04T06:16:46.617Z"
+          }
+        }
+      }
+    }
+  ]
+}

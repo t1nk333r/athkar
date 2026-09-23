@@ -1,0 +1,904 @@
+{
+  "about": "Scoped reset outcomes (confirmation accepted). day: resetDayProgress; week: resetWeek; everything: resetEverything.",
+  "source": "index.html: resetDayProgress, resetWeek, recentDates, resetEverything, hasResettableState",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "day: counters, completedAt and manual flags cleared; targets and history kept",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T17:00:00.000Z",
+        "nowLocal": "2026-09-23T20:00:00.000+03:00",
+        "scope": "day",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {
+              "evening-20": 40
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": "2026-09-23T03:15:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-20",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-12",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-10",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": true,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-20",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-12",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-10",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "week: history entries from the last 7 local dates (today inclusive) removed, then day reset",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T17:00:00.000Z",
+        "nowLocal": "2026-09-23T20:00:00.000+03:00",
+        "scope": "week",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {
+              "evening-20": 40
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": "2026-09-23T03:15:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-20",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-12",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-10",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": true,
+        "deletedHistoryDates": [
+          "2026-09-23",
+          "2026-09-22",
+          "2026-09-21",
+          "2026-09-20",
+          "2026-09-19",
+          "2026-09-18",
+          "2026-09-17"
+        ],
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-12",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-10",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "everything: all history removed, then day reset",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T17:00:00.000Z",
+        "nowLocal": "2026-09-23T20:00:00.000+03:00",
+        "scope": "everything",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {
+              "evening-20": 40
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": "2026-09-23T03:15:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-20",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-12",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-10",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": true,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {
+              "evening-20": 100
+            }
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "nothing to reset: hasResettableState false",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T17:00:00.000Z",
+        "nowLocal": "2026-09-23T20:00:00.000+03:00",
+        "scope": "day",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": false,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "history alone makes state resettable",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T17:00:00.000Z",
+        "nowLocal": "2026-09-23T20:00:00.000+03:00",
+        "scope": "everything",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-01",
+              "morning": false,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": true,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "week window spans a DST change (America/New_York): 7 local dates, boundary entry kept",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-03-10T16:00:00.000Z",
+        "nowLocal": "2026-03-10T12:00:00.000-04:00",
+        "scope": "week",
+        "state": {
+          "date": "2026-03-10",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-03-09",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-03-08",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-03-04",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-03-03",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      },
+      "expected": {
+        "hasResettableStateBefore": true,
+        "deletedHistoryDates": [
+          "2026-03-10",
+          "2026-03-09",
+          "2026-03-08",
+          "2026-03-07",
+          "2026-03-06",
+          "2026-03-05",
+          "2026-03-04"
+        ],
+        "state": {
+          "date": "2026-03-10",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-03-03",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

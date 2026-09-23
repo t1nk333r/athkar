@@ -1,0 +1,1143 @@
+{
+  "about": "completedAt/manualCompletion bookkeeping after a counter change (syncCompletionState) and after the manual toggle (setManualCompletion). `returned` is syncCompletionState's return value (null for setManualCompletion).",
+  "source": "index.html: syncCompletionState, setManualCompletion",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "sync: counters reach target → completedAt stamped with now, newlyCompleted",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": true,
+          "newlyCompleted": true
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T04:30:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "sync: counters complete while manually complete → manual flag cleared, not newly completed",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": true,
+          "newlyCompleted": false
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "sync: already complete with completedAt → timestamp kept, not newly completed",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": true,
+          "newlyCompleted": false
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "sync: counter reset below target clears completedAt",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": false,
+          "newlyCompleted": false
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "sync: incomplete counters but manual completion keeps completedAt",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": true,
+          "newlyCompleted": false
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "sync: review items ignored when deciding completion",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "s-01": 3,
+              "s-02": 9,
+              "s-03": 10,
+              "s-04": 100,
+              "s-06": 1,
+              "s-07": 11,
+              "s-08": 100
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "syncCompletionState",
+          "period": "morning"
+        },
+        "collections": {
+          "morning": [
+            {
+              "id": "s-01",
+              "count": 3
+            },
+            {
+              "id": "s-02",
+              "count": 9
+            },
+            {
+              "id": "s-03",
+              "count": 10
+            },
+            {
+              "id": "s-04",
+              "targetOptions": [
+                1,
+                10,
+                100
+              ],
+              "defaultTarget": 100
+            },
+            {
+              "id": "s-05",
+              "review": true,
+              "count": 100
+            },
+            {
+              "id": "s-06"
+            },
+            {
+              "id": "s-07",
+              "count": 11
+            },
+            {
+              "id": "s-08",
+              "count": 100
+            }
+          ],
+          "evening": [
+            {
+              "id": "t-01",
+              "review": true
+            },
+            {
+              "id": "t-02",
+              "count": 50
+            },
+            {
+              "id": "t-03"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "returned": {
+          "complete": true,
+          "newlyCompleted": true
+        },
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "s-01": 3,
+              "s-02": 9,
+              "s-03": 10,
+              "s-04": 100,
+              "s-06": 1,
+              "s-07": 11,
+              "s-08": 100
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T04:30:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "manual on: sets flag and stamps completedAt with now",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "setManualCompletion",
+          "period": "morning",
+          "completed": true
+        }
+      },
+      "expected": {
+        "returned": null,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T04:30:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "manual on: existing completedAt is kept",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "setManualCompletion",
+          "period": "morning",
+          "completed": true
+        }
+      },
+      "expected": {
+        "returned": null,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "manual off: clears flag and completedAt",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "setManualCompletion",
+          "period": "morning",
+          "completed": false
+        }
+      },
+      "expected": {
+        "returned": null,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "manual toggle is ignored when counters are already complete",
+      "input": {
+        "now": "2026-09-23T04:30:00.000Z",
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        },
+        "operation": {
+          "function": "setManualCompletion",
+          "period": "morning",
+          "completed": false
+        }
+      },
+      "expected": {
+        "returned": null,
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T02:00:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    }
+  ]
+}

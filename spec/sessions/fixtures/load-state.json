@@ -1,0 +1,846 @@
+{
+  "about": "Startup/midnight path: read localStorage, normalize, roll to today's local date if needed. storage maps localStorage keys to raw strings.",
+  "source": "index.html: loadState, normalizeState, rollStateToDate, localDateKey",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "same local date: state kept as-is",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T20:59:59.999Z",
+        "nowLocal": "2026-09-23T23:59:59.999+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-09-23T03:15:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-09-22\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-22T03:00:00.000Z\",\"eveningAt\":null}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1,
+              "morning-02": 3,
+              "morning-03": 3,
+              "morning-04": 3,
+              "morning-05": 1,
+              "morning-06": 1,
+              "morning-07": 1,
+              "morning-08": 4,
+              "morning-09": 1,
+              "morning-10": 3,
+              "morning-11": 1,
+              "morning-12": 7,
+              "morning-13": 1,
+              "morning-14": 1,
+              "morning-15": 3,
+              "morning-16": 3,
+              "morning-17": 1,
+              "morning-18": 1,
+              "morning-19": 1,
+              "morning-20": 100,
+              "morning-21": 100,
+              "morning-22": 3,
+              "morning-23": 1,
+              "morning-24": 100,
+              "morning-26": 1,
+              "morning-25": 10
+            },
+            "evening": {
+              "evening-01": 1
+            }
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": "2026-09-23T03:15:00.000Z",
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": false,
+              "morningAt": "2026-09-22T03:00:00.000Z",
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "first instant of the next local day rolls over",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T21:00:00.000Z",
+        "nowLocal": "2026-09-24T00:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-09-23T03:15:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-09-22\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-22T03:00:00.000Z\",\"eveningAt\":null}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-24",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-23",
+              "morning": true,
+              "evening": false,
+              "morningAt": "2026-09-23T03:15:00.000Z",
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": false,
+              "morningAt": "2026-09-22T03:00:00.000Z",
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "UTC date differs but local date is the same: no rollover",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T22:30:00.000Z",
+        "nowLocal": "2026-09-24T01:30:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-24\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-24",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "several days later: single history entry for the stored day",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-27T06:00:00.000Z",
+        "nowLocal": "2026-09-27T09:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-09-23T03:15:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-09-22\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-22T03:00:00.000Z\",\"eveningAt\":null}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-27",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-23",
+              "morning": true,
+              "evening": false,
+              "morningAt": "2026-09-23T03:15:00.000Z",
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": false,
+              "morningAt": "2026-09-22T03:00:00.000Z",
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "nothing stored: empty state for today",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {}
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "malformed JSON: empty state for today",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{not json"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "non-object JSON (number) → empty state",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "42"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "legacy v1 key is read when v2 is absent; skipped maps to manualCompletion",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v1": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{\"morning-01\":1}},\"skipped\":{\"morning\":false,\"evening\":true},\"history\":[{\"date\":\"2026-09-22\",\"morningSkipped\":true,\"evening\":false}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {
+              "morning-01": 1
+            },
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": [
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "v2 wins over legacy v1 when both are present",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":true},\"history\":[]}",
+          "athkar-progress-v1": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":true,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": true
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "normalization: invalid date falls back to today (no roll); bad fields and history garbage sanitized",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"23/09/2026\",\"progress\":{\"morning\":\"oops\",\"evening\":null},\"targets\":[],\"completedAt\":{\"morning\":123,\"evening\":\"2026-09-22T14:00:00.000Z\"},\"manualCompletion\":{\"morning\":1,\"evening\":0},\"history\":[null,{\"date\":5},{\"date\":\"2026-09-21\",\"morning\":1,\"morningAt\":7,\"eveningAt\":\"x\"},{\"date\":\"2026-09-20\",\"evening\":true},{\"date\":\"2026-09-19\",\"evening\":true},{\"date\":\"2026-09-18\",\"evening\":true},{\"date\":\"2026-09-17\",\"evening\":true},{\"date\":\"2026-09-16\",\"evening\":true},{\"date\":\"2026-09-15\",\"evening\":true},{\"date\":\"2026-09-14\",\"evening\":true},{\"date\":\"2026-09-13\",\"evening\":true}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": "2026-09-22T14:00:00.000Z"
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-21",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": "x"
+            },
+            {
+              "date": "2026-09-20",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-19",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-17",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-15",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "normalization trims stored history to 7 before rolling adds today's predecessor",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-24T05:00:00.000Z",
+        "nowLocal": "2026-09-24T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-09-22\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-21\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-20\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-19\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-18\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-17\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-16\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-15\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-14\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null}]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-24",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-09-23",
+              "morning": false,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-22",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-21",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-20",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-19",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-18",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-17",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "DST spring-forward night (America/New_York): rolls at local midnight",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T05:00:00.001Z",
+        "nowLocal": "2026-03-08T00:00:00.001-05:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-03-07\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":true,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-03-08",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": [
+            {
+              "date": "2026-03-07",
+              "morning": true,
+              "evening": false,
+              "morningAt": null,
+              "eveningAt": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "DST spring-forward day, 03:00 local (just after the gap): same day, no second roll",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T07:00:00.000Z",
+        "nowLocal": "2026-03-08T03:00:00.000-04:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-03-08\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-03-08",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "DST fall-back day, second 01:30 local: still the same local date",
+      "input": {
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T06:30:00.000Z",
+        "nowLocal": "2026-11-01T01:30:00.000-05:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-11-01\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-11-01",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    }
+  ]
+}

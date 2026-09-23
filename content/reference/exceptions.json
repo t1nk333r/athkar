@@ -1,0 +1,31 @@
+{
+  "exceptions": [
+    {
+      "items": [
+        "morning-01",
+        "evening-01"
+      ],
+      "source": "alquran-cloud.quran-simple",
+      "diff": [
+        "+يَئُودُهُ",
+        "-يَؤُودُهُ",
+        "+ۚ"
+      ],
+      "reviewRecord": "R1",
+      "note": "Shipped PWA text writes يَؤُودُهُ (hamza on waw) where the reference has يَئُودُهُ (hamza on ya), and omits the ۚ pause mark before وَهُوَ. Text not changed in Slice 0; needs the named reviewer's decision."
+    },
+    {
+      "items": [
+        "morning-01",
+        "evening-01"
+      ],
+      "source": "quran-com.v4.imlaei",
+      "diff": [
+        "+يئوده",
+        "-يؤوده"
+      ],
+      "reviewRecord": "R1",
+      "note": "Same hamza-seat difference as above, seen at letter level."
+    }
+  ]
+}

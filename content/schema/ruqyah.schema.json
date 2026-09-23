@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ruqyah.schema.json",
+  "title": "Ruqyah content pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack",
+    "version",
+    "edition",
+    "segments"
+  ],
+  "properties": {
+    "pack": {
+      "const": "ruqyah"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "edition": {
+      "const": "alquran-cloud:quran-uthmani"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "surah",
+          "surahNumber",
+          "range",
+          "repeat",
+          "basmala",
+          "ayahs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z]+-[0-9]+-[0-9]+$",
+            "description": "Immutable once shipped: ruqyah-daily-v1 counts are keyed by it."
+          },
+          "surah": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surahNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 114
+          },
+          "range": {
+            "type": "string",
+            "minLength": 1
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "basmala": {
+            "type": "boolean"
+          },
+          "ayahs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "number",
+                "text"
+              ],
+              "properties": {
+                "number": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

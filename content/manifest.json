@@ -1,0 +1,16 @@
+{
+  "packs": {
+    "adhkar": {
+      "file": "adhkar.v1.json",
+      "version": "1.0.0",
+      "sha256": "d5f1e0e814b701fb6cb20bf7b8dd4493552df99c5f501b7d8a6d6eb358909e60",
+      "reviewRecord": "R1"
+    },
+    "ruqyah": {
+      "file": "ruqyah.v1.json",
+      "version": "1.0.0",
+      "sha256": "a7a3dc2172268088aa3295a9fc2f23973fcb0a14b39891c07e2fd5018274bfcf",
+      "reviewRecord": "R2"
+    }
+  }
+}
