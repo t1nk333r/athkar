@@ -12,8 +12,8 @@ primary key below matches what migration `v1` creates. Update this file in the s
   zone at the time of the event. A `CHECK (… GLOB …)` enforces the shape. Writers only store real calendar
   days.
 - **Instants** are `TEXT` in the form `YYYY-MM-DDTHH:MM:SS.sssZ`: UTC with exactly three fraction digits, as JS
-  `Date.prototype.toISOString()` writes them. The backup envelope uses the same form. A `CHECK (… GLOB …)`
-  enforces the shape. Text order is time order.
+  `Date.prototype.toISOString()` writes them. Sub-millisecond precision is truncated, not rounded, as in JS. The
+  backup envelope uses the same form. A `CHECK (… GLOB …)` enforces the shape. Text order is time order.
 - **Booleans** are `INTEGER` 0 or 1.
 - **Enumerations** are `TEXT`. The allowed values are listed in the notes and enforced by `CHECK`.
 - **JSON** values are `TEXT` holding one JSON value (object, array, string, number or boolean).
@@ -133,7 +133,7 @@ One row per local date on which every ruqyah segment was completed (`ruqyah-dail
 | `kind` | TEXT | no | | `adhkar_morning`, `adhkar_evening`, `prayer`, `personal`. |
 | `prayer_key` | TEXT | yes | | `fajr`, `dhuhr`, `asr`, `maghrib`, `isha`. Set for prayer-relative rules. |
 | `offset_minutes` | INTEGER | yes | | Minutes after (negative: before) the prayer. Set if and only if `prayer_key` is set. |
-| `local_time` | TEXT | yes | | `HH:MM`, for fixed-time rules. Set if and only if `prayer_key` is null. |
+| `local_time` | TEXT | yes | | `HH:MM`, 00:00 … 23:59, for fixed-time rules. Set if and only if `prayer_key` is null. |
 | `weekday_mask` | INTEGER | no | | 0 … 127. Bit *n* is weekday *n* + 1 in `Calendar` numbering (bit 0 Sunday … bit 6 Saturday). 127 means every day. |
 | `enabled` | INTEGER | no | | Boolean. |
 | `updated_at` | TEXT | no | | Instant. |
@@ -144,6 +144,7 @@ Checks:
   period.
 - `(prayer_key IS NULL) = (offset_minutes IS NULL)`.
 - `(prayer_key IS NULL) <> (local_time IS NULL)`.
+- `local_time GLOB '[01][0-9]:[0-5][0-9]' OR local_time GLOB '2[0-3]:[0-5][0-9]'`.
 
 The adhkar rules default to `fajr` + 60 and `asr` + 60, which reproduces the PWA's fixed offsets.
 
@@ -168,7 +169,8 @@ The adhkar rules default to `fajr` + 60 and `asr` + 60, which reproduces the PWA
 | `source` | TEXT | no | | `device` (one-shot location), `manual`, `import`. |
 | `updated_at` | TEXT | yes | | Instant the coordinates were obtained. Null if unknown (a PWA location without `updatedAt`). |
 
-Rounding half away from zero: `round(x × 100) / 100`.
+Rounding is JavaScript/Kotlin `Math.round(x × 100) / 100`, computed as `floor(x × 100 + 0.5) / 100` in IEEE
+doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` → `33.87`.
 
 ## Future tables (not in v1)
 
@@ -188,9 +190,15 @@ Rounding half away from zero: `round(x × 100) / 100`.
 
 ## Backup import (envelope v1)
 
-Import validates the whole file first (spec/backup/envelope-v1.md). It then merges it in one transaction, so a
-file that fails validation changes nothing. Imported rows get `updated_at = meta.exportedAt`, which makes
-import deterministic.
+Import validates the whole file first. It rejects everything `spec/backup/envelope-v1.schema.json` and
+`tools/backup-validate.mjs` reject: unknown keys at any depth, sections not allowed for `meta.app` (athkar-pwa:
+`adhkar`, `reminders`, `preferences` required, no `ruqyah`; ruqyah-pwa: `ruqyah`, `preferences` required, no
+`adhkar` or `reminders`), `longOrder`/`longOrderPromptAnswered` present in a ruqyah file or missing from an
+athkar file, dates that are not calendar days, instants that are not real UTC times, adhkar history that is not
+strictly newest-first or has an entry on or after `adhkar.today.date`, ruqyah history after `ruqyah.today.date`,
+and counts or targets that are negative, non-finite, or above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`). It then
+merges the file in one transaction, so a file that fails validation changes nothing. Imported rows get
+`updated_at = meta.exportedAt`, which makes import deterministic.
 
 ### Mapping
 
@@ -198,7 +206,7 @@ import deterministic.
 | --- | --- |
 | `adhkar.today.progress[p]`, `targets[p]` | `adhkar_item_progress` (`today.date`, p, item). One row per key in either map. `count` is the progress value floored (null if the item only has a target). `target` is the target value; a non-integer target is dropped, since it can never match an option and so already means the default. |
 | `adhkar.today.manualCompletion[p]` = true | `adhkar_days` (`today.date`, p), `completion_origin = manual`, `completed_at = completedAt[p]` (may be null). |
-| `adhkar.today.completedAt[p]` set, not manual | `adhkar_days` (`today.date`, p), `completion_origin = import`. The PWA sets `completedAt` only while the period is complete. |
+| `adhkar.today.completedAt[p]` set, not manual | `adhkar_days` (`today.date`, p), `completion_origin = import`. Trusted-exporter behaviour: the PWA sets `completedAt` only while the period is complete, so the importer does not re-check the counters (it has no content pack). A hand-edited file can therefore mark a day complete. |
 | `adhkar.history[]`, `morning`/`evening` = true | `adhkar_days` (`date`, p), `completion_origin = import`, `completed_at = morningAt`/`eveningAt`. |
 | `ruqyah.today.counts` | `ruqyah_segment_progress` (`today.date`, segment), zeros included. |
 | `ruqyah.history` | `ruqyah_days`, `completion_origin = import`. |
@@ -239,6 +247,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `adhkar.history` lists the dates before `today` that have any adhkar row, newest first, capped at 7. A period
   is `true` if and only if its `adhkar_days` row exists.
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
+- `ruqyah.today.counts` are the stored counts as they are. The exporter has no content pack, so it does not
+  clamp to `repeat`; readers clamp (spec/backup/envelope-v1.md).
 - A setting with no row exports its default.
 
 Import followed by export with the file's own `meta` reproduces the file in every section it contained, with
@@ -252,6 +262,6 @@ these exceptions:
    records completion, not app opens. It is not stored and does not come back. The same applies to a
    `morningAt`/`eveningAt` on a period that is not complete (a stale instant).
 3. **Shapes the PWAs never write.** A fractional count comes back floored. A fractional target is dropped. An
-   instant written with other than three fraction digits comes back with three.
+   instant written with other than three fraction digits comes back with three (truncated to milliseconds).
 
 The example files in `spec/backup/examples/` contain none of 2 and 3, and round-trip exactly apart from 1.

@@ -54,6 +54,10 @@ public struct BackupImporter: Sendable {
     }
 
     /// `adhkar.today` and `adhkar.history` as stored sessions. History entries carry only completion.
+    /// `validate()` guarantees history dates are distinct and before `today.date`.
+    ///
+    /// `today.completedAt[p]` without manual completion is taken as complete (origin `import`) without checking
+    /// the counters: the exporter is trusted to write it only while the period is complete (spec/schema.md).
     static func sessions(from adhkar: BackupEnvelope.Adhkar) -> [AdhkarSession] {
         let today = adhkar.today
         var sessions = Period.allCases.map { period in
@@ -69,8 +73,7 @@ public struct BackupImporter: Sendable {
                     AdhkarDay(localDate: today.date, period: period, completedAt: completedAt, completionOrigin: $0)
                 })
         }
-        var seen: Set<String> = [today.date]
-        for entry in adhkar.history where seen.insert(entry.date).inserted {
+        for entry in adhkar.history {
             for (period, complete, completedAt) in [(Period.morning, entry.morning, entry.morningAt),
                                                     (Period.evening, entry.evening, entry.eveningAt)] where complete {
                 sessions.append(AdhkarSession(
@@ -82,9 +85,9 @@ public struct BackupImporter: Sendable {
         return sessions
     }
 
-    /// Floored, as `countForState` reads it. The PWAs only ever store integers.
+    /// Floored, as `countForState` reads it. `validate()` bounds values to 2^53 - 1, so this is exact.
     private static func storedCount(_ value: Double) -> Int {
-        Int(exactly: value.rounded(.down)) ?? Int.max
+        Int(value.rounded(.down))
     }
 
     /// Non-integer targets can never equal a target option, so like the PWA they mean "default": dropped.

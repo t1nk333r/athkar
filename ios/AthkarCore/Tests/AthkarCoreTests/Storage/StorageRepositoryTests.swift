@@ -60,15 +60,16 @@ struct StorageRepositoryTests {
         #expect(try adhkar.days(from: "2026-09-01", through: "2026-09-30").map(\.localDate) == ["2026-09-22"])
     }
 
-    @Test func adhkarDaysAndDeleteRecordsHonourTheDateRange() throws {
+    @Test func adhkarDaysAreMorningFirstAndDeleteRecordsHonourTheDateRange() throws {
         let adhkar = database.adhkar
+        // Evening written first on purpose: the order must come from the period, not insertion or the alphabet.
         for date in ["2026-09-20", "2026-09-21", "2026-09-22"] {
             try adhkar.markComplete(on: date, period: .evening, origin: .counters, completedAt: t0)
             try adhkar.markComplete(on: date, period: .morning, origin: .counters, completedAt: t0)
             try adhkar.setCount(1, for: "morning-01", on: date, period: .morning, at: t0)
         }
         #expect(try adhkar.days(from: "2026-09-21", through: "2026-09-22").map { "\($0.localDate) \($0.period)" }
-                == ["2026-09-21 evening", "2026-09-21 morning", "2026-09-22 evening", "2026-09-22 morning"])
+                == ["2026-09-21 morning", "2026-09-21 evening", "2026-09-22 morning", "2026-09-22 evening"])
 
         try adhkar.deleteRecords(from: "2026-09-21", through: "2026-09-22")
         #expect(try adhkar.days(from: "2026-09-01", through: "2026-09-30").map(\.localDate)
@@ -144,6 +145,16 @@ struct StorageRepositoryTests {
         #expect(try database.reader.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM location_profiles") } == 1)
         try location.delete()
         #expect(try location.profile() == nil)
+    }
+
+    /// Expected values are what `node -e 'Math.round(x * 100) / 100'` prints: halves go toward +∞, so the sign
+    /// matters (Swift's `.rounded()` would give -33.87 and -12.35).
+    @Test(arguments: [(-33.865, -33.86), (33.865, 33.87), (-12.345, -12.34), (12.345, 12.35),
+                      (21.4225, 21.42), (39.8262, 39.83)])
+    func locationRoundingMatchesJavaScriptMathRound(input: Double, expected: Double) {
+        let profile = LocationProfile(latitude: input, longitude: input, source: .manual, updatedAt: nil)
+        #expect(profile.latitude == expected)
+        #expect(profile.longitude == expected)
     }
 
     @Test func contentInstallRecordsTheCurrentVersionPerPack() throws {

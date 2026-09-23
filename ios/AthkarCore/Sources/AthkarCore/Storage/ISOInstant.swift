@@ -5,19 +5,12 @@ import Foundation
 /// This is the one textual instant format in the database and in the backup envelope (spec/schema.md).
 /// Parsing accepts the envelope pattern `YYYY-MM-DDTHH:MM:SS(.fraction)?Z` and rejects values that are not
 /// real UTC wall-clock times (`2026-02-30T…`, `T24:00`), as the PWA exporter's `backupInstant` does.
-/// Fractions beyond milliseconds are truncated; formatting always writes exactly three fraction digits.
+/// Fractions beyond milliseconds are truncated on parse. Formatting is `SessionCalendar.isoString`, the single
+/// `toISOString()` implementation: it truncates to whole milliseconds like JavaScript and always writes three
+/// fraction digits.
 enum ISOInstant {
     static func format(_ date: Date) -> String {
-        let milliseconds = Int64((date.timeIntervalSince1970 * 1000).rounded())
-        let (seconds, millisecond) = floorDivide(milliseconds, 1000)
-        let (days, secondOfDay) = floorDivide(seconds, 86_400)
-        let (year, month, day) = LocalDate.civil(fromDays: days)
-        let hour = secondOfDay / 3600
-        let minute = secondOfDay % 3600 / 60
-        let second = secondOfDay % 60
-        return LocalDate.format(year: year, month: month, day: day)
-            + "T" + pad(hour, 2) + ":" + pad(minute, 2) + ":" + pad(second, 2)
-            + "." + pad(millisecond, 3) + "Z"
+        SessionCalendar.isoString(date)
     }
 
     static func parse(_ text: String) -> Date? {
@@ -43,16 +36,6 @@ enum ISOInstant {
         let seconds = days * 86_400 + hour * 3600 + minute * 60 + second
         return Date(timeIntervalSince1970: Double(seconds * 1000 + millisecond) / 1000)
     }
-
-    private static func floorDivide(_ value: Int64, _ divisor: Int64) -> (Int64, Int64) {
-        let remainder = value % divisor
-        return remainder < 0 ? (value / divisor - 1, remainder + divisor) : (value / divisor, remainder)
-    }
-
-    fileprivate static func pad(_ value: Int64, _ width: Int) -> String {
-        let digits = String(value)
-        return String(repeating: "0", count: max(0, width - digits.count)) + digits
-    }
 }
 
 /// Local civil dates as `YYYY-MM-DD` strings (the PWAs' `localDateKey`), validated as real calendar days.
@@ -74,11 +57,7 @@ enum LocalDate {
         return daysFromCivil(year: year, month: month, day: day)
     }
 
-    static func format(year: Int64, month: Int64, day: Int64) -> String {
-        ISOInstant.pad(year, 4) + "-" + ISOInstant.pad(month, 2) + "-" + ISOInstant.pad(day, 2)
-    }
-
-    // Howard Hinnant's days_from_civil / civil_from_days.
+    // Howard Hinnant's days_from_civil.
     static func daysFromCivil(year: Int64, month: Int64, day: Int64) -> Int64 {
         let y = month <= 2 ? year - 1 : year
         let era = (y >= 0 ? y : y - 399) / 400
@@ -86,18 +65,6 @@ enum LocalDate {
         let dayOfYear = (153 * (month > 2 ? month - 3 : month + 9) + 2) / 5 + day - 1
         let dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear
         return era * 146_097 + dayOfEra - 719_468
-    }
-
-    static func civil(fromDays days: Int64) -> (year: Int64, month: Int64, day: Int64) {
-        let z = days + 719_468
-        let era = (z >= 0 ? z : z - 146_096) / 146_097
-        let dayOfEra = z - era * 146_097
-        let yearOfEra = (dayOfEra - dayOfEra / 1460 + dayOfEra / 36524 - dayOfEra / 146_096) / 365
-        let dayOfYear = dayOfEra - (365 * yearOfEra + yearOfEra / 4 - yearOfEra / 100)
-        let mp = (5 * dayOfYear + 2) / 153
-        let day = dayOfYear - (153 * mp + 2) / 5 + 1
-        let month = mp < 10 ? mp + 3 : mp - 9
-        return (yearOfEra + era * 400 + (month <= 2 ? 1 : 0), month, day)
     }
 
     private static func daysInMonth(year: Int64, month: Int64) -> Int64 {

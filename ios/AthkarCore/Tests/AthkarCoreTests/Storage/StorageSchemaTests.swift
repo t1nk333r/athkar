@@ -103,4 +103,21 @@ struct StorageSchemaTests {
             }
         }
     }
+
+    @Test func localTimeMustBeAWallClockTime() throws {
+        let database = try AppDatabase.inMemory()
+        func insert(_ time: String) throws {
+            try database.writer.write {
+                try $0.execute(sql: """
+                    INSERT INTO reminder_rules VALUES (?, 'personal', NULL, NULL, ?, 127, 1, '2026-09-23T10:00:00.000Z')
+                    """, arguments: [time, time])
+            }
+        }
+        for time in ["00:00", "09:30", "19:59", "23:59"] {
+            #expect(throws: Never.self, "\(time)") { try insert(time) }
+        }
+        for time in ["24:00", "29:59", "23:60", "30:00", "9:30", "09:30:00"] {
+            #expect(throws: DatabaseError.self, "\(time)") { try insert(time) }
+        }
+    }
 }

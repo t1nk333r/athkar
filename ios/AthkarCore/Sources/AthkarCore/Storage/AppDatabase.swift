@@ -102,7 +102,7 @@ private enum Schema {
             kind TEXT NOT NULL CHECK (kind IN ('adhkar_morning', 'adhkar_evening', 'prayer', 'personal')),
             prayer_key TEXT CHECK (prayer_key IN ('fajr', 'dhuhr', 'asr', 'maghrib', 'isha')),
             offset_minutes INTEGER,
-            local_time TEXT CHECK (local_time GLOB '[0-2][0-9]:[0-5][0-9]'),
+            local_time TEXT CHECK (local_time GLOB '[01][0-9]:[0-5][0-9]' OR local_time GLOB '2[0-3]:[0-5][0-9]'),
             weekday_mask INTEGER NOT NULL CHECK (weekday_mask BETWEEN 0 AND 127),
             enabled INTEGER NOT NULL CHECK (enabled IN (0, 1)),
             updated_at TEXT NOT NULL CHECK (updated_at \(instant)),

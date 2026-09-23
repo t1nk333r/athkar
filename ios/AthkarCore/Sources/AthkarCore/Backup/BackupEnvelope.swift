@@ -292,6 +292,8 @@ extension BackupEnvelope {
         } catch {
             throw BackupError.malformed(Self.describe(error))
         }
+        // `Codable` ignores keys it does not know; the schema forbids them (`additionalProperties: false`).
+        try KeyShape.envelope.check(try JSONSerialization.jsonObject(with: json), path: "")
         try envelope.validate()
         return envelope
     }
@@ -307,39 +309,70 @@ extension BackupEnvelope {
         return try encoder.encode(self)
     }
 
-    /// The schema rules `Codable` cannot express: date and number ranges, list sizes.
+    /// The rules of envelope-v1.schema.json and tools/backup-validate.mjs that the types cannot express:
+    /// sections per app, calendar dates, number ranges, list sizes, history order relative to `today`.
     func validate() throws {
         func invalid(_ path: String, _ reason: String) -> BackupError { .invalid(path: path, reason: reason) }
         func checkDate(_ value: String, _ path: String) throws {
             guard LocalDate.isValid(value) else { throw invalid(path, "\(value) is not a YYYY-MM-DD calendar date") }
         }
+        /// JSON numbers the PWAs can write exactly: finite, non-negative, at most `Number.MAX_SAFE_INTEGER`.
+        func checkCount(_ value: Double, _ path: String) throws {
+            guard value.isFinite, value >= 0, value <= Self.maxSafeInteger else {
+                throw invalid(path, "\(value) is not a count between 0 and 2^53 - 1")
+            }
+        }
 
         guard !meta.timeZone.isEmpty else { throw invalid("meta.timeZone", "empty") }
 
+        let isAthkar = meta.app == .athkarPWA
+        let sections: [(String, Bool)] = [("adhkar", adhkar != nil), ("ruqyah", ruqyah != nil),
+                                          ("reminders", reminders != nil), ("preferences", preferences != nil)]
+        let required: Set = isAthkar ? ["adhkar", "reminders", "preferences"] : ["ruqyah", "preferences"]
+        for (name, present) in sections where present != required.contains(name) {
+            throw invalid(name, present ? "not allowed for \(meta.app.rawValue)" : "missing")
+        }
+        if let preferences {
+            for (name, present) in [("longOrder", preferences.longOrder != nil),
+                                    ("longOrderPromptAnswered", preferences.longOrderPromptAnswered != nil)]
+            where present != isAthkar {
+                throw invalid("preferences.\(name)", present ? "athkar-pwa only" : "missing")
+            }
+        }
+
         if let adhkar {
-            try checkDate(adhkar.today.date, "adhkar.today.date")
+            let today = adhkar.today.date
+            try checkDate(today, "adhkar.today.date")
             for period in Period.allCases {
                 for (name, values) in [("progress", adhkar.today.progress[period]),
                                        ("targets", adhkar.today.targets[period])] {
-                    for (itemId, value) in values where !(value >= 0) {
-                        throw invalid("adhkar.today.\(name).\(period.rawValue).\(itemId)", "\(value) is negative")
+                    for (itemId, value) in values {
+                        try checkCount(value, "adhkar.today.\(name).\(period.rawValue).\(itemId)")
                     }
                 }
             }
             guard adhkar.history.count <= 7 else { throw invalid("adhkar.history", "more than 7 entries") }
+            var newer = today
             for (index, entry) in adhkar.history.enumerated() {
                 try checkDate(entry.date, "adhkar.history[\(index)].date")
+                guard entry.date < newer else {
+                    throw invalid("adhkar.history[\(index)].date",
+                                  "\(entry.date) is not before \(index == 0 ? "today.date" : "the previous entry")")
+                }
+                newer = entry.date
             }
         }
 
         if let ruqyah {
-            try checkDate(ruqyah.today.date, "ruqyah.today.date")
-            for (segmentId, count) in ruqyah.today.counts where count < 0 {
-                throw invalid("ruqyah.today.counts.\(segmentId)", "\(count) is negative")
+            let today = ruqyah.today.date
+            try checkDate(today, "ruqyah.today.date")
+            for (segmentId, count) in ruqyah.today.counts {
+                try checkCount(Double(count), "ruqyah.today.counts.\(segmentId)")
             }
             guard ruqyah.history.count <= 365 else { throw invalid("ruqyah.history", "more than 365 entries") }
-            for date in ruqyah.history.keys {
+            for date in ruqyah.history.keys.sorted() {
                 try checkDate(date, "ruqyah.history.\(date)")
+                guard date <= today else { throw invalid("ruqyah.history.\(date)", "after today.date") }
             }
         }
 
@@ -360,6 +393,9 @@ extension BackupEnvelope {
         }
     }
 
+    /// `Number.MAX_SAFE_INTEGER`.
+    static let maxSafeInteger: Double = 9_007_199_254_740_991
+
     private static func describe(_ error: any Error) -> String {
         guard let error = error as? DecodingError else { return String(describing: error) }
         let (context, summary): (DecodingError.Context, String) = switch error {
@@ -371,5 +407,72 @@ extension BackupEnvelope {
         }
         let path = context.codingPath.map { $0.intValue.map { "[\($0)]" } ?? $0.stringValue }.joined(separator: ".")
         return path.isEmpty ? summary : "\(path): \(summary)"
+    }
+}
+
+/// The object keys envelope-v1.schema.json allows, for rejecting unknown ones at any depth. Types and required
+/// keys are checked by `Codable`; this only looks at key names.
+private indirect enum KeyShape: Sendable {
+    /// A scalar or `null`.
+    case value
+    /// An object with exactly these optional keys.
+    case object([String: KeyShape])
+    /// An object with arbitrary keys (item IDs, dates) whose values have one shape.
+    case map(KeyShape)
+    case list(KeyShape)
+
+    static let envelope: KeyShape = {
+        let perPeriod = KeyShape.object(["morning": .value, "evening": .value])
+        let countsPerPeriod = KeyShape.object(["morning": .map(.value), "evening": .map(.value)])
+        let toggle = KeyShape.object(["enabled": .value])
+        return .object([
+            "meta": .object(["format": .value, "app": .value, "exportedAt": .value, "timeZone": .value]),
+            "adhkar": .object([
+                "today": .object([
+                    "date": .value, "progress": countsPerPeriod, "targets": countsPerPeriod,
+                    "completedAt": perPeriod, "manualCompletion": perPeriod,
+                ]),
+                "history": .list(.object([
+                    "date": .value, "morning": .value, "evening": .value, "morningAt": .value, "eveningAt": .value,
+                ])),
+            ]),
+            "ruqyah": .object([
+                "today": .object(["date": .value, "counts": .map(.value)]),
+                "history": .map(.object(["completedAt": .value])),
+            ]),
+            "reminders": .object([
+                "morning": toggle, "evening": toggle, "calculationMethod": .value, "asrSchool": .value,
+                "lastShown": perPeriod,
+                "location": .object(["latitude": .value, "longitude": .value, "updatedAt": .value]),
+            ]),
+            "preferences": .object([
+                "theme": .value, "textSize": .value, "lineSpacing": .value, "haptics": .value,
+                "longOrder": .value, "longOrderPromptAnswered": .value,
+            ]),
+        ])
+    }()
+
+    /// Throws `.invalid` for the first key `json` has that the shape does not allow. `json` has already
+    /// decoded as a `BackupEnvelope`, so container types match the shape.
+    func check(_ json: Any, path: String) throws {
+        func child(_ key: String) -> String { path.isEmpty ? key : "\(path).\(key)" }
+        switch self {
+        case .value:
+            return
+        case let .object(keys):
+            guard let object = json as? [String: Any] else { return }
+            for key in object.keys.sorted() {
+                guard let shape = keys[key] else {
+                    throw BackupError.invalid(path: child(key), reason: "unknown key")
+                }
+                try shape.check(object[key]!, path: child(key))
+            }
+        case let .map(shape):
+            guard let object = json as? [String: Any] else { return }
+            for key in object.keys.sorted() { try shape.check(object[key]!, path: child(key)) }
+        case let .list(shape):
+            guard let list = json as? [Any] else { return }
+            for (index, element) in list.enumerated() { try shape.check(element, path: "\(path)[\(index)]") }
+        }
     }
 }

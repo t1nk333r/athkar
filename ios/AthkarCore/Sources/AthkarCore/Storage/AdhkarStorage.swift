@@ -90,12 +90,12 @@ public struct AdhkarRepository: Sendable {
         try writer.read { try Self.session(in: $0, on: localDate, period: period) }
     }
 
-    /// Completed (date, period) rows with `from <= local_date <= through`, oldest first.
+    /// Completed (date, period) rows with `from <= local_date <= through`, oldest date first, morning before evening.
     public func days(from: String, through: String) throws -> [AdhkarDay] {
         try writer.read { db in
             try AdhkarDay
                 .filter(Column("local_date") >= from && Column("local_date") <= through)
-                .order(Column("local_date"), Column("period"))
+                .order(Column("local_date"), SQL("CASE period WHEN 'morning' THEN 0 ELSE 1 END").sqlExpression)
                 .fetchAll(db)
         }
     }

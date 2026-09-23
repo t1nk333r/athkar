@@ -33,10 +33,10 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
 | `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | tap counts converted with `Number()`, as `countForState` reads them; entries that come out non-finite or negative are dropped. Not floored and may exceed the target: floor and clamp on read as `countForState` does |
 | `adhkar.today.targets.{morning,evening}` | `{itemId: target}` | chosen target for items with `targetOptions`; values outside the options mean "use `defaultTarget`" |
 | `adhkar.history` | array, newest first, ≤7 | `date`, `morning`, `evening` (booleans: complete by counters or manually), `morningAt`, `eveningAt` (UTC instant or null) |
-| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`, already clamped to `repeat` by `normalizeCounts`) |
+| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`). The ruqyah PWA's export is already clamped to `repeat` by `normalizeCounts`; the schema sets no upper bound and a native export writes stored counts as they are. Importers must clamp to the pack's `repeat` on read |
 | `ruqyah.history` | `{date: {completedAt}}`, ≤365 | days on which every segment was completed |
 | `reminders` | object | `athkar-reminders-v2`: `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown.{morning,evening}` (local date or null) |
-| `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). Present **only** if the user switched on "include location" for this export; the switch resets to off every time settings open. The native importer rounds to 2 decimals (§7.4) |
+| `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). Present **only** if the user switched on "include location" for this export; the switch resets to off every time settings open. The native importer rounds to 2 decimals with `Math.round(x × 100) / 100` semantics (§7.4, spec/schema.md) |
 | `preferences.theme` | `system` \| `light` \| `dark` | `athkar-theme` / `ruqyah-theme`, effective value |
 | `preferences.textSize` | `small` \| `medium` \| `large` | `athkar-reading-text-size` / `ruqyah-text-size`, effective value |
 | `preferences.lineSpacing` | `compact` \| `comfortable` \| `wide` | `athkar-line-spacing` / `ruqyah-line-spacing`, effective value |
@@ -52,3 +52,7 @@ Restated from §6.4: each file merges into its own tables; preferences from the 
 file; merge keys are `(local_date, period)`, `(local_date)`, `(local_date, segment_id)`; an existing non-empty
 native row wins, so re-import is idempotent; a native re-export of an imported file must equal it in every
 section it contained.
+
+The native importer rejects the whole file on exactly what `tools/backup-validate.mjs` rejects, including a count
+or target above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`), which cannot be stored as an exact integer
+(spec/schema.md "Backup import").

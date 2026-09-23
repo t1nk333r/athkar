@@ -266,7 +266,7 @@ Pack schema additions over today's fields: `kind` (`quran` | `dhikr` | `review`)
 
 Rejected: SwiftData/Core Data. Reasons: schema is opaque to a non-Apple port, migration behaviour is harder to test against seeded previous-version databases (`MOBILE_APP_PLAN.md` §17 requires that), and SwiftData raises the minimum OS. A plain SQL schema is itself the shared artefact Android will implement with Room or SQLDelight.
 
-Settings that are not worship data (theme, text size, line spacing, haptics, long-order, reduced motion) live in `UserDefaults`, mirrored into the backup envelope. Worship data and reminder rules live only in SQLite.
+Settings that are not worship data (theme, text size, line spacing, haptics, long-order, reduced motion) live in the SQLite `settings` table (`spec/schema.md`), mirrored into the backup envelope; the app may mirror them into `UserDefaults` for fast launch-time reads, but SQLite is the source of truth (import precedence between the two PWA files is recorded there). Worship data and reminder rules live only in SQLite.
 
 ### 6.2 Tables
 

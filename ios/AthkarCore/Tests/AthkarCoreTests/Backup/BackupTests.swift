@@ -32,7 +32,7 @@ struct BackupRoundTripTests {
         // spec/schema.md "Export" exception 1: stored coordinates are rounded to two decimals (§7.4).
         for axis in ["latitude", "longitude"] {
             if case let .number(value)? = expected["reminders"]?["location"]?[axis] {
-                expected["reminders"]?["location"]?[axis] = .number((value * 100).rounded() / 100)
+                expected["reminders"]?["location"]?[axis] = .number((value * 100 + 0.5).rounded(.down) / 100)
             }
         }
         #expect(try JSONValue(data: exported.encoded()) == expected)
@@ -162,30 +162,113 @@ struct BackupImportTests {
         #expect(try dump(withBOM) == dump(try imported(path)))
     }
 
-    @Test func rejectedFilesChangeNothing() throws {
-        let text = String(decoding: try RepoFile.data(ruqyahFile), as: UTF8.self)
-        let cases: [(String, BackupError?)] = [
-            (text.replacingOccurrences(of: #""format": 1"#, with: #""format": 2"#), .unsupportedFormat(2)),
-            (text.replacingOccurrences(of: #""2026-09-21": {"#, with: #""2026-02-30": {"#),
-             .invalid(path: "ruqyah.history.2026-02-30", reason: "2026-02-30 is not a YYYY-MM-DD calendar date")),
-            (text.replacingOccurrences(of: "2026-09-21T05:10:00.000Z", with: "2026-09-21T24:10:00.000Z"), nil),
-            (text.replacingOccurrences(of: #""app": "ruqyah-pwa""#, with: #""app": "other""#), nil),
-            (String(text.dropLast(4)), nil),
-        ]
-        for (index, (file, expected)) in cases.enumerated() {
-            #expect(file != text, "case \(index) did not change the file")
-            let database = try AppDatabase.inMemory()
-            let empty = try dump(database)
-            let error = #expect(throws: BackupError.self, "case \(index)") {
-                try BackupImporter(database: database).importBackup(Data(file.utf8))
-            }
-            if let expected {
-                #expect(error == expected)
-            } else if let error, case .malformed = error {
-            } else {
-                Issue.record("case \(index): expected .malformed, got \(String(describing: error))")
-            }
-            #expect(try dump(database) == empty)
+    @Test func bothFalseHistoryEntryIsNotStoredAndNotReExported() throws {
+        let original = String(decoding: try RepoFile.data(athkarFile), as: UTF8.self)
+        let file = original.replacingOccurrences(
+            of: "\"eveningAt\": null\n      }\n    ]",
+            with: "\"eveningAt\": null\n      },\n      {\"date\": \"2026-09-21\", \"morning\": false, \"evening\": false, "
+                + "\"morningAt\": null, \"eveningAt\": null}\n    ]")
+        #expect(file != original)
+        let database = try AppDatabase.inMemory()
+        let envelope = try BackupImporter(database: database).importBackup(Data(file.utf8))
+        #expect(envelope.adhkar?.history.map(\.date) == ["2026-09-22", "2026-09-21"])
+
+        #expect(try database.adhkar.days(from: "2026-09-21", through: "2026-09-21") == [])
+        #expect(try dump(database) == dump(try imported(athkarFile)))
+        let exported = try BackupExporter(database: database).export(
+            app: .athkarPWA, today: "2026-09-23", timeZone: "Asia/Riyadh", exportedAt: envelope.meta.exportedAt)
+        #expect(exported.adhkar?.history.map(\.date) == ["2026-09-22"])
+    }
+
+    enum Rejection: Sendable {
+        case format(Int)
+        case invalid(String)
+        case malformed
+    }
+
+    /// Each case edits one example file so that tools/backup-validate.mjs rejects it.
+    static let rejections: [(name: String, file: String, edits: [(String, String)], expected: Rejection)] = [
+        ("future format", ruqyahFile, [(#""format": 1"#, #""format": 2"#)], .format(2)),
+        ("not a calendar date", ruqyahFile, [(#""2026-09-21": {"#, #""2026-02-30": {"#)],
+         .invalid("ruqyah.history.2026-02-30")),
+        ("not a real instant", ruqyahFile, [("2026-09-21T05:10:00.000Z", "2026-09-21T24:10:00.000Z")], .malformed),
+        ("unknown app", ruqyahFile, [(#""app": "ruqyah-pwa""#, #""app": "other""#)], .malformed),
+        ("truncated JSON", ruqyahFile, [("}\n}", "}")], .malformed),
+        ("non-finite count", athkarFile, [(#""morning-20": 250"#, #""morning-20": 1e400"#)], .malformed),
+        // additionalProperties: false, at every depth.
+        ("unknown top-level key", ruqyahFile, [(#""meta": {"#, #""extra": 1, "meta": {"#)], .invalid("extra")),
+        ("unknown meta key", athkarFile, [(#""format": 1,"#, #""format": 1, "device": "x","#)],
+         .invalid("meta.device")),
+        ("unknown preferences key", athkarFile, [(#""haptics": false,"#, #""haptics": false, "font": "x","#)],
+         .invalid("preferences.font")),
+        ("unknown history entry key", athkarFile, [(#""eveningAt": null"#, #""eveningAt": null, "note": "x""#)],
+         .invalid("adhkar.history[0].note")),
+        ("unknown location key", athkarFile, [(#""longitude": 39.8262,"#, #""longitude": 39.8262, "accuracy": 5,"#)],
+         .invalid("reminders.location.accuracy")),
+        ("unknown ruqyah history key", ruqyahFile,
+         [(#""completedAt": "2026-09-21T05:10:00.000Z""#, #""completedAt": "2026-09-21T05:10:00.000Z", "by": 1"#)],
+         .invalid("ruqyah.history.2026-09-21.by")),
+        // Sections per meta.app.
+        ("ruqyah section in athkar file", athkarFile,
+         [(#""reminders": {"#, #""ruqyah": {"today": {"date": "2026-09-23", "counts": {}}, "history": {}}, "reminders": {"#)],
+         .invalid("ruqyah")),
+        ("reminders in ruqyah file", ruqyahFile,
+         [(#""preferences": {"#, #""reminders": {"morning": {"enabled": false}, "evening": {"enabled": false}, "#
+           + #""calculationMethod": "mwl", "asrSchool": "standard", "lastShown": {"morning": null, "evening": null}}, "#
+           + #""preferences": {"#)],
+         .invalid("reminders")),
+        ("adhkar in ruqyah file", athkarFile, [(#""app": "athkar-pwa""#, #""app": "ruqyah-pwa""#)], .invalid("adhkar")),
+        ("athkar file without adhkar", ruqyahFile, [(#""app": "ruqyah-pwa""#, #""app": "athkar-pwa""#)],
+         .invalid("adhkar")),
+        ("longOrder in ruqyah file", ruqyahFile, [(#""haptics": true"#, #""haptics": true, "longOrder": "last""#)],
+         .invalid("preferences.longOrder")),
+        ("athkar file without longOrderPromptAnswered", athkarFile,
+         [("\"longOrder\": \"last\",\n    \"longOrderPromptAnswered\": true", #""longOrder": "last""#)],
+         .invalid("preferences.longOrderPromptAnswered")),
+        // History relative to today.
+        ("adhkar history on today", athkarFile, [(#""date": "2026-09-22""#, #""date": "2026-09-23""#)],
+         .invalid("adhkar.history[0].date")),
+        ("adhkar history after today", athkarFile, [(#""date": "2026-09-22""#, #""date": "2026-09-30""#)],
+         .invalid("adhkar.history[0].date")),
+        ("adhkar history not newest first", athkarFile,
+         [(#""history": ["#, #""history": [{"date": "2026-09-20", "morning": true, "evening": true, "#
+           + #""morningAt": null, "eveningAt": null},"#)],
+         .invalid("adhkar.history[1].date")),
+        ("ruqyah history after today", ruqyahFile, [(#""2026-09-22": {"#, #""2026-09-24": {"#)],
+         .invalid("ruqyah.history.2026-09-24")),
+        // Counts and targets beyond Number.MAX_SAFE_INTEGER.
+        ("huge progress", athkarFile, [(#""morning-20": 250"#, #""morning-20": 9007199254740993"#)],
+         .invalid("adhkar.today.progress.morning.morning-20")),
+        ("huge target", athkarFile, [(#""morning-20": 10"#, #""morning-20": 1e300"#)],
+         .invalid("adhkar.today.targets.morning.morning-20")),
+        ("huge ruqyah count", ruqyahFile, [(#""nas-1-6": 3"#, #""nas-1-6": 9007199254740993"#)],
+         .invalid("ruqyah.today.counts.nas-1-6")),
+    ]
+
+    @Test(arguments: rejections.indices)
+    func rejectedFileChangesNothing(index: Int) throws {
+        let (name, path, edits, expected) = Self.rejections[index]
+        let original = String(decoding: try RepoFile.data(path), as: UTF8.self)
+        let file = edits.reduce(original) { $0.replacingOccurrences(of: $1.0, with: $1.1) }
+        #expect(file != original, "\(name): edit did not apply")
+
+        // A database holding the other file's data and native rows must come out byte-identical.
+        let database = try imported(path == athkarFile ? ruqyahFile : athkarFile)
+        try database.adhkar.setCount(1, for: "evening-01", on: "2026-09-24", period: .evening)
+        let before = try dump(database)
+        let error = #expect(throws: BackupError.self, "\(name)") {
+            try BackupImporter(database: database).importBackup(Data(file.utf8))
         }
+        switch (expected, error) {
+        case let (.format(format), .unsupportedFormat(actual)?):
+            #expect(actual == format, "\(name)")
+        case let (.invalid(expectedPath), .invalid(actualPath, _)?):
+            #expect(actualPath == expectedPath, "\(name)")
+        case (.malformed, .malformed?):
+            break
+        default:
+            Issue.record("\(name): expected \(expected), got \(String(describing: error))")
+        }
+        #expect(try dump(database) == before, "\(name)")
     }
 }

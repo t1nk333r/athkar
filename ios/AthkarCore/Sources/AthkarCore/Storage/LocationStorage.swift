@@ -31,9 +31,10 @@ public struct LocationProfile: Equatable, Sendable, StoredRecord {
         self.updatedAt = updatedAt
     }
 
-    /// Two decimals, half away from zero.
+    /// Two decimals as JavaScript/Kotlin `Math.round(x * 100) / 100` computes it: `floor(x * 100 + 0.5) / 100`,
+    /// so exact halves go toward +∞ (`-33.865` → `-33.86`, `33.865` → `33.87`).
     static func rounded(_ coordinate: Double) -> Double {
-        (coordinate * 100).rounded() / 100
+        (coordinate * 100 + 0.5).rounded(.down) / 100
     }
 }
 
