@@ -3549,6 +3549,7 @@
       const succeeded = await prayerLocationRequest;
       prayerLocationRequest = null;
       updateReminderControls();
+      updateBackupControls();
       scheduleReminders();
       return succeeded;
     }
@@ -3851,10 +3852,42 @@
       showCard((currentIndices[activePeriod] ?? 0) + 1, "forward", true, true);
     });
 
+    const backupDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+    const backupInstantPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+    // The loaders tolerate malformed stored values; the envelope must not carry them (spec/backup/envelope-v1.md).
+    function backupDate(value) {
+      if (typeof value !== "string" || !backupDatePattern.test(value)) return null;
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? value : null;
+    }
+
+    function backupInstant(value) {
+      return typeof value === "string" && backupInstantPattern.test(value) && !Number.isNaN(Date.parse(value)) ? value : null;
+    }
+
+    // Same coercion countForState applies on read; values it would treat as 0 because they are not finite or negative are dropped.
     function finiteCounts(values) {
       return Object.fromEntries(Object.entries(values || {})
         .map(([id, value]) => [id, Number(value)])
         .filter(([, value]) => Number.isFinite(value) && value >= 0));
+    }
+
+    function backupHistory(entries) {
+      const byDate = new Map();
+      for (const entry of entries) {
+        const date = backupDate(entry.date);
+        if (!date || byDate.has(date)) continue;
+        byDate.set(date, {
+          date,
+          morning: Boolean(entry.morning),
+          evening: Boolean(entry.evening),
+          morningAt: backupInstant(entry.morningAt),
+          eveningAt: backupInstant(entry.eveningAt)
+        });
+      }
+      return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
     }
 
     function buildBackup(includeLocation) {
@@ -3864,9 +3897,19 @@
         evening: { enabled: reminderPreferences.evening.enabled },
         calculationMethod: reminderPreferences.calculationMethod,
         asrSchool: reminderPreferences.asrSchool,
-        lastShown: { ...reminderPreferences.lastShown }
+        lastShown: {
+          morning: backupDate(reminderPreferences.lastShown.morning),
+          evening: backupDate(reminderPreferences.lastShown.evening)
+        }
       };
-      if (includeLocation && reminderPreferences.location) reminders.location = { ...reminderPreferences.location };
+      const location = reminderPreferences.location;
+      if (includeLocation && location) {
+        reminders.location = {
+          latitude: Number(location.latitude.toFixed(4)),
+          longitude: Number(location.longitude.toFixed(4)),
+          updatedAt: backupInstant(location.updatedAt)
+        };
+      }
       return {
         meta: {
           format: 1,
@@ -3879,10 +3922,10 @@
             date: state.date,
             progress: { morning: finiteCounts(state.progress.morning), evening: finiteCounts(state.progress.evening) },
             targets: { morning: finiteCounts(state.targets.morning), evening: finiteCounts(state.targets.evening) },
-            completedAt: { ...state.completedAt },
+            completedAt: { morning: backupInstant(state.completedAt.morning), evening: backupInstant(state.completedAt.evening) },
             manualCompletion: { ...state.manualCompletion }
           },
-          history: state.history.map(entry => ({ ...entry }))
+          history: backupHistory(state.history)
         },
         reminders,
         preferences: {
@@ -3897,7 +3940,7 @@
     }
 
     async function deliverBackupFile(envelope, baseName) {
-      const name = `${baseName}-${envelope.meta.exportedAt.slice(0, 10)}.athkarbackup`;
+      const name = `${baseName}-${localDateKey()}.athkarbackup`;
       const file = new File([JSON.stringify(envelope, null, 2)], name, { type: "application/json" });
       if (navigator.canShare?.({ files: [file] })) {
         try {
@@ -3938,11 +3981,12 @@
     }
 
     settingsButton.addEventListener("click", () => {
+      backupIncludeLocation.checked = false;
+      updateBackupControls();
       updateHistoryView();
       updateReminderControls();
       updateManualCompletionControls();
       updateInstallUi();
-      updateBackupControls();
       settingsDialog.showModal();
     });
     settingsDialogClose.addEventListener("click", () => settingsDialog.close());

@@ -49,8 +49,8 @@ export function ruqyahContentJs(pack) {
 
 /**
  * Validates `value` against the JSON Schema subset used in this repository: type (single or array, incl. null),
- * const, enum, minLength, pattern, minimum, maximum, minItems, items, required, properties,
- * patternProperties, additionalProperties (false or a schema). Returns error strings; empty when valid.
+ * const, enum, minLength, pattern, minimum, maximum, minItems, maxItems, items, required, maxProperties,
+ * properties, patternProperties, additionalProperties (false or a schema). Returns error strings; empty when valid.
  */
 export function schemaErrors(schema, value, path, errors = []) {
   const fail = message => errors.push(`${path}: ${message}`);
@@ -76,6 +76,7 @@ export function schemaErrors(schema, value, path, errors = []) {
   }
   if (type === "object") {
     for (const key of schema.required ?? []) if (!(key in value)) fail(`missing ${key}`);
+    if (schema.maxProperties !== undefined && Object.keys(value).length > schema.maxProperties) fail(`more than ${schema.maxProperties} properties`);
     for (const [key, v] of Object.entries(value)) {
       const childPath = `${path}.${key}`;
       if (schema.properties?.[key]) { schemaErrors(schema.properties[key], v, childPath, errors); continue; }

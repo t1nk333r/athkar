@@ -4,13 +4,19 @@ The file both PWAs export so the native app can import a user's history (NATIVE_
 Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). Validate a file with
 `node tools/backup-validate.mjs <file>`. [`examples/`](examples/) holds real exports from each PWA.
 
-- One UTF-8 JSON document, file extension `.athkarbackup`, MIME `application/json`.
+- One UTF-8 JSON document, file extension `.athkarbackup`, MIME `application/json`. The file name carries the
+  device's local date. Importers strip a leading BOM (files passed through Mail or Notes can gain one).
 - Each PWA exports only its own sections. The athkar PWA writes `meta`, `adhkar`, `reminders`,
   `preferences`; the ruqyah PWA writes `meta`, `ruqyah`, `preferences`. An importer must accept either file,
   alone or both, in either order.
 - The export is taken after the PWA's own loader has normalised legacy keys (`athkar-progress-v1`,
   `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`) and rolled the day, so it never contains
   legacy shapes and `today.date` is the device's local date at export time.
+- The PWAs' loaders tolerate malformed stored values; the exporter does not pass them on. Dates that are not
+  real calendar days and instants that are not ISO-8601 UTC become `null` (or the whole history entry is
+  dropped when its own `date` is invalid); adhkar history is de-duplicated by date (first stored entry wins),
+  sorted newest first and capped at 7; ruqyah history is capped to the 365 newest days. So every field below
+  always satisfies the schema.
 - Plaintext. Nothing leaves the device unless the user shares the file.
 
 ## Sections
@@ -22,13 +28,13 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
 | `meta.exportedAt` | UTC instant | `new Date().toISOString()` |
 | `meta.timeZone` | IANA zone | `Intl.DateTimeFormat().resolvedOptions().timeZone`; the zone every `date` field is local to |
 | `adhkar.today` | object | `athkar-progress-v2`: `date`, `progress`, `targets`, `completedAt`, `manualCompletion` |
-| `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | raw tap counts; non-numeric or negative values dropped. Counts may exceed the target; clamp on read as `countForState` does |
+| `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | tap counts converted with `Number()`, as `countForState` reads them; entries that come out non-finite or negative are dropped. Not floored and may exceed the target: floor and clamp on read as `countForState` does |
 | `adhkar.today.targets.{morning,evening}` | `{itemId: target}` | chosen target for items with `targetOptions`; values outside the options mean "use `defaultTarget`" |
 | `adhkar.history` | array, newest first, ≤7 | `date`, `morning`, `evening` (booleans: complete by counters or manually), `morningAt`, `eveningAt` (UTC instant or null) |
-| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: count}`, already clamped to `repeat`) |
+| `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`, already clamped to `repeat` by `normalizeCounts`) |
 | `ruqyah.history` | `{date: {completedAt}}`, ≤365 | days on which every segment was completed |
 | `reminders` | object | `athkar-reminders-v2`: `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown.{morning,evening}` (local date or null) |
-| `reminders.location` | object, optional | `latitude`, `longitude` (4 decimals as stored by the PWA), `updatedAt`. Present **only** if the user ticked "include location" at export; the native importer rounds to 2 decimals (§7.4) |
+| `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). Present **only** if the user switched on "include location" for this export; the switch resets to off every time settings open. The native importer rounds to 2 decimals (§7.4) |
 | `preferences.theme` | `system` \| `light` \| `dark` | `athkar-theme` / `ruqyah-theme`, effective value |
 | `preferences.textSize` | `small` \| `medium` \| `large` | `athkar-reading-text-size` / `ruqyah-text-size`, effective value |
 | `preferences.lineSpacing` | `compact` \| `comfortable` \| `wide` | `athkar-line-spacing` / `ruqyah-line-spacing`, effective value |
