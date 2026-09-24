@@ -53,11 +53,25 @@ public struct AdhkarSessionStore: Sendable {
     /// `isComplete(period)`; origin `manual` when `manualCompletion`, else the existing non-manual origin or
     /// `counters`; `completed_at` is `completedAt` when it is an ISO-8601 UTC instant, else null.
     public func save(_ state: SessionState, at now: Date = Date()) throws {
+        try database.writer.write { db in try write(state, in: db, now: now) }
+    }
+
+    /// The PWA's `resetWeek` / `resetEverything`: deletes every adhkar record (counts, targets, completions) that
+    /// `removal` covers, then writes `state` (already reset by ``SessionState/resetWeek(now:timeZone:)`` or
+    /// ``SessionState/resetEverything()``) as ``save(_:at:)`` does, in one transaction. A crash therefore never
+    /// leaves history deleted while today's counters survive, or the reverse.
+    public func save(_ state: SessionState, removing removal: HistoryRemoval, at now: Date = Date()) throws {
         try database.writer.write { db in
-            for period in Period.allCases {
-                try saveItems(of: state, period: period, in: db, now: now)
-                try saveCompletion(of: state, period: period, in: db)
-            }
+            try AdhkarItemProgress.filter(removal.covers()).deleteAll(db)
+            try AdhkarDay.filter(removal.covers()).deleteAll(db)
+            try write(state, in: db, now: now)
+        }
+    }
+
+    private func write(_ state: SessionState, in db: Database, now: Date) throws {
+        for period in Period.allCases {
+            try saveItems(of: state, period: period, in: db, now: now)
+            try saveCompletion(of: state, period: period, in: db)
         }
     }
 

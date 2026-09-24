@@ -42,10 +42,42 @@ public struct RuqyahRepository: Sendable {
         try writer.read { try Self.counts(in: $0, on: localDate) }
     }
 
-    public func setCount(_ count: Int, for segmentId: String, on localDate: String, at now: Date = Date()) throws {
+    /// Stores one segment's count. With `completingDayAt`, also records `localDate` as complete unless it already
+    /// is (the ruqyah PWA's `recordToday` keeps the first completion time), in the same transaction.
+    public func setCount(_ count: Int, for segmentId: String, on localDate: String,
+                         completingDayAt completedAt: Date? = nil, at now: Date = Date()) throws {
         try writer.write { db in
             try RuqyahSegmentProgress(localDate: localDate, segmentId: segmentId, count: count, updatedAt: now)
                 .upsert(db)
+            if let completedAt, try RuqyahDay.fetchOne(db, key: localDate) == nil {
+                try RuqyahDay(localDate: localDate, completedAt: completedAt, completionOrigin: .counters).insert(db)
+            }
+        }
+    }
+
+    /// The completed day `localDate`, or `nil` when it is not complete.
+    public func day(on localDate: String) throws -> RuqyahDay? {
+        try writer.read { try RuqyahDay.fetchOne($0, key: localDate) }
+    }
+
+    /// How many completed days `removal` covers.
+    public func dayCount(_ removal: HistoryRemoval) throws -> Int {
+        try writer.read { try RuqyahDay.filter(removal.covers()).fetchCount($0) }
+    }
+
+    /// The ruqyah PWA's scoped reset in one transaction: every stored segment count of `localDate` becomes 0
+    /// (`resetDayProgress`), and the completed days `removal` covers are deleted (`resetWeek`,
+    /// `resetEverything`). Without a removal, a completed `localDate` stays complete: resetting the day keeps
+    /// its history, as in the PWA.
+    public func resetCounts(on localDate: String, removing removal: HistoryRemoval? = nil,
+                            at now: Date = Date()) throws {
+        try writer.write { db in
+            try db.execute(sql: """
+                UPDATE ruqyah_segment_progress SET count = 0, updated_at = ? WHERE local_date = ? AND count <> 0
+                """, arguments: [ISOInstant.format(now), localDate])
+            if let removal {
+                try RuqyahDay.filter(removal.covers()).deleteAll(db)
+            }
         }
     }
 

@@ -211,8 +211,7 @@ between it and the adhkar tables, so the rules and their fixtures stay the contr
   their `updated_at`.
 - Each period has an `adhkar_days` row if and only if the rules call it complete (`isComplete`). The origin is
   `manual` when `manualCompletion`. Otherwise it keeps an existing non-manual origin, or is `counters`.
-- `history` is not written. Earlier days' rows were written when those days were live. Removing history (the
-  PWA's week/everything reset) uses `AdhkarRepository.deleteRecords`.
+- `history` is not written. Earlier days' rows were written when those days were live.
 
 Save followed by load gives back the same state, except for these shapes, which the tables cannot hold. Each is
 reduced to what the rules read from it, so `count(for:)`, `target(for:)`, `isComplete`, and deck order do not
@@ -230,6 +229,41 @@ change:
   complete). It is not stored, so it is absent after load.
 - More than one history entry for a date, or history entries not newest-first. Load returns one entry per
   date, newest first.
+
+**Scoped reset** (`save(_:removing:)`) is the PWA's `resetWeek` / `resetEverything`. The caller first resets the
+state with `SessionState.resetWeek(now:timeZone:)` or `resetEverything()`. Then, in one transaction, the store
+deletes every `adhkar_item_progress` and `adhkar_days` row that the `HistoryRemoval` covers, and saves the state
+as `save(_:)` does:
+
+- `.week(endingAt: now, in: zone)` covers `recentDates(7)`: today and the six local dates before it.
+  `.all` covers every date.
+- Both periods are reset together, as in the PWA. Earlier days lose all their rows in scope, including counts and
+  chosen targets. Today keeps only its chosen targets, which `resetDay` does not clear.
+- Because deleting and re-saving happen in one transaction, history is never deleted while today's counters
+  survive, or the other way round.
+- The day reset (`resetDay`) is a plain `save(_:)`. It deletes no history.
+- The confirmation copy counts recorded days with `AdhkarRepository.completedDayCount(removal, before: today)`.
+  That is the number of distinct earlier dates in scope with an `adhkar_days` row. Native history is unbounded,
+  so for «كل شيء» this can be more than the PWA's 7.
+
+`AdhkarRepository.deleteRecords(from:through:)` remains as a repository operation. The app's resets do not use
+it.
+
+### Ruqyah counters and reset
+
+The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repeat` on read) and today's
+`ruqyah_days` row.
+
+- **Counting.** `setCount(_:for:on:completingDayAt:)` upserts the segment row. When that reading completes
+  every segment, it also inserts today's `ruqyah_days` row with `completion_origin = counters`, in the same
+  transaction. An existing row is never replaced, so the first completion time is kept (the PWA's
+  `recordToday`). Resetting one segment writes `count = 0`.
+- **Scoped reset.** `resetCounts(on:removing:)` runs in one transaction:
+  - It sets every non-zero count of that date to 0 (`resetDayProgress`). The rows are kept.
+  - With `.week(...)` or `.all`, it also deletes the `ruqyah_days` rows in scope, today included.
+  - With no removal (تقدم اليوم, or «بدء رقية جديدة» in the completion dialog), today's `ruqyah_days` row
+    stays. Today remains recorded complete.
+- **Confirmation copy.** It counts `dayCount(removal)`, today included, as in the PWA.
 
 ## Backup import (envelope v1)
 

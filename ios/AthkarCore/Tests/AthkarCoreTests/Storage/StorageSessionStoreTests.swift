@@ -94,6 +94,41 @@ struct StorageSessionStoreTests {
         #expect(try store.load(date: "2026-09-23").history == [])
     }
 
+    /// The PWA's week and everything resets through the database: history in scope disappears with all its rows;
+    /// today keeps only its chosen targets.
+    @Test func scopedResetRemovesHistoryAndResetsToday() throws {
+        let adhkar = database.adhkar
+        let t0 = Instant.at("2026-09-23T04:00:00.000Z")
+        for date in ["2026-09-10", "2026-09-18", "2026-09-22"] {
+            try adhkar.markComplete(on: date, period: .morning, origin: .counters, completedAt: t0)
+            try adhkar.setTarget(10, for: "morning-20", on: date, period: .morning, at: t0)
+        }
+        var state = try store.load(date: "2026-09-23")
+        state.progress.morning["morning-01"] = .number(1)
+        state.targets.evening["evening-20"] = .number(1)
+        state.setManualCompletion(.evening, completed: true, in: collections, now: t0)
+        try store.save(state, at: t0)
+        #expect(try store.load(date: "2026-09-23").history.map(\.date) == ["2026-09-22", "2026-09-18", "2026-09-10"])
+
+        let now = Instant.at("2026-09-23T12:00:00.000Z")
+        let window = state.resetWeek(now: now, timeZone: .gmt)
+        #expect(HistoryRemoval.week(endingAt: now, in: .gmt) == .dates(from: window.last!, through: window.first!))
+        try store.save(state, removing: .week(endingAt: now, in: .gmt), at: now)
+        let afterWeek = try store.load(date: "2026-09-23")
+        #expect(afterWeek == state)
+        #expect(afterWeek.history.map(\.date) == ["2026-09-10"])
+        #expect(afterWeek.targets.evening == ["evening-20": .number(1)] && afterWeek.progress.morning == [:])
+        #expect(try adhkar.session(on: "2026-09-18", period: .morning) == AdhkarSession(localDate: "2026-09-18",
+                                                                                       period: .morning))
+        #expect(try adhkar.session(on: "2026-09-10", period: .morning).targets == ["morning-20": 10])
+
+        state.resetEverything()
+        try store.save(state, removing: .all, at: now)
+        #expect(try store.load(date: "2026-09-23") == state)
+        #expect(try adhkar.days(from: "0000-01-01", through: "9999-12-31") == [])
+        #expect(try adhkar.session(on: "2026-09-10", period: .morning).targets == [:])
+    }
+
     @Test func historyIsTheSevenNewestEarlierCompletedDays() throws {
         for day in 10...20 {
             try database.adhkar.markComplete(on: "2026-09-\(day)", period: .evening, origin: .imported,

@@ -22,6 +22,10 @@
 	<string>1</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>kfgqpc-uthman-taha-naskh.ttf</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

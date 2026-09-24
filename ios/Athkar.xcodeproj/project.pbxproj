@@ -8,10 +8,32 @@
 
 /* Begin PBXBuildFile section */
 		03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */; };
+		1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC80EB016E62A55F7388473 /* DeckCardView.swift */; };
 		2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAF5DB1A7749351672C27D /* LaunchTests.swift */; };
+		31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = C91EA781FB90F2751708543C /* adhkar.v1.json */; };
+		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
+		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
+		631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4723AB110276E031039F64 /* DeckModel.swift */; };
+		6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */; };
+		647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11171CCC784D1B7FD1830ACE /* BundledContent.swift */; };
+		64B683DDF039D486630601E7 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B85A291084AF937C35C88A /* Haptics.swift */; };
+		7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12427B8BADEDCAF23C15E22C /* DeckUITests.swift */; };
+		83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = CE857DADF37638C3F15FE817 /* ruqyah.v1.json */; };
+		86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */; };
+		932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */; };
 		A06DC5D44DC79BA41CF265A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEDDB713CE939FA556214E4E /* Assets.xcassets */; };
+		AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */; };
+		B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */; };
+		BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69E443B335C7F687972315F /* AdhkarDeckModel.swift */; };
+		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
+		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
+		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
+		D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042329F8B233CEB3D355A537 /* UITestSupport.swift */; };
+		D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */; };
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
+		F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4280DECA9C457370A36B4B3 /* HomeView.swift */; };
+		F96134CFA1F9A4AF648287CC /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CADA9419CAC70B90CD19CFD /* manifest.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,14 +47,36 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		042329F8B233CEB3D355A537 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArabicFormat.swift; sourceTree = "<group>"; };
+		11171CCC784D1B7FD1830ACE /* BundledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledContent.swift; sourceTree = "<group>"; };
+		12427B8BADEDCAF23C15E22C /* DeckUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckUITests.swift; sourceTree = "<group>"; };
+		17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingMetrics.swift; sourceTree = "<group>"; };
+		204F141E2D9C1C962271896B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		27D2779D803C0DEA8171968D /* AthkarCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AthkarCore; path = AthkarCore; sourceTree = SOURCE_ROOT; };
+		3CADA9419CAC70B90CD19CFD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../content/manifest.json; sourceTree = "<group>"; };
 		3E509373D577090EF775F065 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-uthman-taha-naskh.ttf"; path = "../fonts/kfgqpc-uthman-taha-naskh.ttf"; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
+		58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDialogs.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A69E443B335C7F687972315F /* AdhkarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdhkarDeckModel.swift; sourceTree = "<group>"; };
+		A9B85A291084AF937C35C88A /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
+		B714704C81ED5A22715203DD /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
+		B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoFitUITests.swift; sourceTree = "<group>"; };
+		BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		C91EA781FB90F2751708543C /* adhkar.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = adhkar.v1.json; path = ../content/adhkar.v1.json; sourceTree = "<group>"; };
+		CC4723AB110276E031039F64 /* DeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckModel.swift; sourceTree = "<group>"; };
 		CDFAF5DB1A7749351672C27D /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
+		CE857DADF37638C3F15FE817 /* ruqyah.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = ruqyah.v1.json; path = ../content/ruqyah.v1.json; sourceTree = "<group>"; };
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuqyahDeckModel.swift; sourceTree = "<group>"; };
+		EBC80EB016E62A55F7388473 /* DeckCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCardView.swift; sourceTree = "<group>"; };
+		F4280DECA9C457370A36B4B3 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		F929F51376FB4D006FBF1BD2 /* Athkar.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Athkar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +91,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B6738EC7BA2292971E87FB5 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				A9B85A291084AF937C35C88A /* Haptics.swift */,
+			);
+			path = Platform;
+			sourceTree = "<group>";
+		};
 		39A4C9B349AE0CF4DA390704 /* Athkar */ = {
 			isa = PBXGroup;
 			children = (
@@ -54,8 +106,24 @@
 				4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */,
 				778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */,
 				3E509373D577090EF775F065 /* Info.plist */,
+				B31AD3EADEB50817825D54B4 /* App */,
+				698EEA3E3F84F0119408EB40 /* Content */,
+				58472DE5A94A96201A7D36B4 /* Deck */,
+				8B1F748FE0CF29EBBC198B92 /* Design */,
+				0B6738EC7BA2292971E87FB5 /* Platform */,
+				4A19A294B20B9DCEC455FD7F /* Screens */,
 			);
 			path = Athkar;
+			sourceTree = "<group>";
+		};
+		4A19A294B20B9DCEC455FD7F /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */,
+				F4280DECA9C457370A36B4B3 /* HomeView.swift */,
+				FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */,
+			);
+			path = Screens;
 			sourceTree = "<group>";
 		};
 		526A3F1070A709238B2FA209 = {
@@ -64,8 +132,50 @@
 				39A4C9B349AE0CF4DA390704 /* Athkar */,
 				C3F44EC7B0E83798DB90A34E /* AthkarUITests */,
 				8BFC91173D6036662E7FE2FC /* Packages */,
+				57A5B2411EE3787C36B17DEF /* Resources */,
 				BC5A628FB3B3EAB729CE859F /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		57A5B2411EE3787C36B17DEF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				C91EA781FB90F2751708543C /* adhkar.v1.json */,
+				3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */,
+				3CADA9419CAC70B90CD19CFD /* manifest.json */,
+				CE857DADF37638C3F15FE817 /* ruqyah.v1.json */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		58472DE5A94A96201A7D36B4 /* Deck */ = {
+			isa = PBXGroup;
+			children = (
+				A69E443B335C7F687972315F /* AdhkarDeckModel.swift */,
+				EBC80EB016E62A55F7388473 /* DeckCardView.swift */,
+				CC4723AB110276E031039F64 /* DeckModel.swift */,
+				B714704C81ED5A22715203DD /* DeckView.swift */,
+				E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */,
+			);
+			path = Deck;
+			sourceTree = "<group>";
+		};
+		698EEA3E3F84F0119408EB40 /* Content */ = {
+			isa = PBXGroup;
+			children = (
+				11171CCC784D1B7FD1830ACE /* BundledContent.swift */,
+			);
+			path = Content;
+			sourceTree = "<group>";
+		};
+		8B1F748FE0CF29EBBC198B92 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */,
+				BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */,
+				17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */,
+			);
+			path = Design;
 			sourceTree = "<group>";
 		};
 		8BFC91173D6036662E7FE2FC /* Packages */ = {
@@ -74,6 +184,14 @@
 				27D2779D803C0DEA8171968D /* AthkarCore */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		B31AD3EADEB50817825D54B4 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				204F141E2D9C1C962271896B /* AppModel.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		BC5A628FB3B3EAB729CE859F /* Products */ = {
@@ -88,7 +206,11 @@
 		C3F44EC7B0E83798DB90A34E /* AthkarUITests */ = {
 			isa = PBXGroup;
 			children = (
+				B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */,
+				12427B8BADEDCAF23C15E22C /* DeckUITests.swift */,
 				CDFAF5DB1A7749351672C27D /* LaunchTests.swift */,
+				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
+				042329F8B233CEB3D355A537 /* UITestSupport.swift */,
 			);
 			path = AthkarUITests;
 			sourceTree = "<group>";
@@ -183,6 +305,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				A06DC5D44DC79BA41CF265A5 /* Assets.xcassets in Resources */,
+				31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */,
+				B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */,
+				F96134CFA1F9A4AF648287CC /* manifest.json in Resources */,
+				83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -193,8 +319,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */,
+				5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */,
+				331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */,
 				E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */,
+				647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */,
+				1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */,
+				6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */,
+				631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */,
+				C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */,
 				03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */,
+				64B683DDF039D486630601E7 /* Haptics.swift in Sources */,
+				F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */,
+				86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */,
+				BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */,
+				D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */,
+				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -202,7 +342,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */,
+				7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */,
 				2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */,
+				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
+				D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

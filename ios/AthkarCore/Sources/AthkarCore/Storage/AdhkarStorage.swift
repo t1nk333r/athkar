@@ -170,6 +170,18 @@ public struct AdhkarRepository: Sendable {
         }
     }
 
+    /// Local dates before `date` that `removal` covers and on which at least one period is complete: the number of
+    /// history days the PWA's `resetWeek` / `resetEverything` confirmation names.
+    public func completedDayCount(_ removal: HistoryRemoval, before date: String) throws -> Int {
+        try writer.read { db in
+            try AdhkarDay
+                .filter(removal.covers() && Column("local_date") < date)
+                .select(Column("local_date"))
+                .distinct()
+                .fetchCount(db)
+        }
+    }
+
     static func session(in db: Database, on localDate: String, period: Period) throws -> AdhkarSession {
         var session = AdhkarSession(localDate: localDate, period: period)
         let rows = try AdhkarItemProgress

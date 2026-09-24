@@ -91,3 +91,7 @@ The adapter configuration, the P1 results and the written explanation for every 
 ## Backup envelope
 
 `backup/envelope-v1.md` specifies the `.athkarbackup` file both PWAs export (NATIVE_APP_PLAN.md §6.4); `backup/examples/` holds real exports. Validate any export with `node tools/backup-validate.mjs <file>`.
+
+## Deck definition
+
+`sessions/deck-definition.md` describes the adhkar and ruqyah decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2).

@@ -93,6 +93,52 @@ struct StorageRepositoryTests {
         #expect(try ruqyah.days(from: "2026-09-01", through: "2026-09-30") == [])
     }
 
+    /// The ruqyah PWA's `recordToday`: the first completion time of a day is kept.
+    @Test func ruqyahCompletingReadingRecordsTheDayOnce() throws {
+        let ruqyah = database.ruqyah
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-23", completingDayAt: t0, at: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-23", completingDayAt: t1, at: t1)
+        #expect(try ruqyah.day(on: "2026-09-23")?.completedAt == t0)
+        #expect(try ruqyah.day(on: "2026-09-22") == nil)
+    }
+
+    /// Day reset keeps today's completion (the PWA's "بدء رقية جديدة" and تقدم اليوم); week and everything remove
+    /// completed days in their scope, today included.
+    @Test func ruqyahScopedResets() throws {
+        let ruqyah = database.ruqyah
+        for day in ["2026-09-10", "2026-09-17", "2026-09-22", "2026-09-23"] {
+            try ruqyah.markComplete(on: day, completedAt: t0)
+        }
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-23", at: t0)
+        try ruqyah.setCount(1, for: "qaf-1-8", on: "2026-09-22", at: t0)
+
+        try ruqyah.resetCounts(on: "2026-09-23", at: t1)
+        #expect(try ruqyah.counts(on: "2026-09-23") == ["nas-1-6": 0])
+        #expect(try ruqyah.counts(on: "2026-09-22") == ["qaf-1-8": 1])
+        #expect(try ruqyah.dayCount(.all) == 4)
+
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        #expect(week == .dates(from: "2026-09-17", through: "2026-09-23"))
+        #expect(try ruqyah.dayCount(week) == 3)
+        try ruqyah.resetCounts(on: "2026-09-23", removing: week, at: t1)
+        #expect(try ruqyah.days(from: "2026-09-01", through: "2026-09-30").map(\.localDate) == ["2026-09-10"])
+
+        try ruqyah.resetCounts(on: "2026-09-23", removing: .all, at: t1)
+        #expect(try ruqyah.dayCount(.all) == 0)
+    }
+
+    @Test func adhkarCompletedDayCountIsDistinctEarlierDates() throws {
+        let adhkar = database.adhkar
+        for date in ["2026-09-15", "2026-09-20", "2026-09-22", "2026-09-23"] {
+            try adhkar.markComplete(on: date, period: .morning, origin: .counters, completedAt: t0)
+            try adhkar.markComplete(on: date, period: .evening, origin: .manual, completedAt: nil)
+        }
+        try adhkar.setCount(1, for: "morning-01", on: "2026-09-21", period: .morning, at: t0)
+        #expect(try adhkar.completedDayCount(.all, before: "2026-09-23") == 3)
+        #expect(try adhkar.completedDayCount(.dates(from: "2026-09-17", through: "2026-09-23"),
+                                             before: "2026-09-23") == 2)
+    }
+
     @Test func reminderRulesAndShownState() throws {
         let reminders = database.reminders
         let morning = ReminderRule.adhkar(.morning, enabled: true, updatedAt: t0)
