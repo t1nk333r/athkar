@@ -28,6 +28,8 @@ targets:
       properties:
         CFBundleDevelopmentRegion: ar
         CFBundleDisplayName: بكرة وأصيلا
+        # One-shot, when-in-use, prayer times only (NATIVE_APP_PLAN.md §7.4, §8.5).
+        NSLocationWhenInUseUsageDescription: يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
   AthkarUITests:

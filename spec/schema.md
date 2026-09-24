@@ -41,8 +41,8 @@ primary key below matches what migration `v1` creates. Update this file in the s
 
 ### `settings`
 
-Key/value settings. Holds appearance and deck preferences (mirrored in the backup envelope), the calculation
-profile, and later the Hijri offset.
+Key/value settings. Holds appearance and deck preferences (mirrored in the backup envelope) and the calculation
+profile (`CalculationSettings`, spec/prayer-times/README.md).
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -59,8 +59,11 @@ profile, and later the Hijri offset.
 | `haptics` | boolean | `true` | `athkar-haptics` / `ruqyah-haptics` ≠ `"off"` |
 | `long_order` | `"last"` \| `"original"` | `"original"` | `athkar-long-order-v1` |
 | `long_order_prompt_answered` | boolean | `false` | `athkar-long-order-prompt-v1` |
-| `calculation_method` | `"mwl"` \| `"umm-al-qura"` \| `"egyptian"` \| `"karachi"` \| `"north-america"` | `"mwl"` | `athkar-reminders-v2.calculationMethod` |
+| `calculation_method` | `"mwl"` \| `"umm-al-qura"` \| `"egyptian"` \| `"karachi"` \| `"north-america"` (the PWA's five), or a native-only adhan-swift preset: `"dubai"` \| `"moonsighting-committee"` \| `"kuwait"` \| `"qatar"` \| `"singapore"` \| `"tehran"` \| `"turkey"` | `"mwl"` | `athkar-reminders-v2.calculationMethod` |
 | `asr_school` | `"standard"` \| `"hanafi"` | `"standard"` | `athkar-reminders-v2.asrSchool` |
+| `high_latitude_rule` | `"twilight-angle"` \| `"middle-of-the-night"` \| `"seventh-of-the-night"` | `"twilight-angle"` | none (the PWA's fixed clamp is the twilight-angle rule) |
+| `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |
+| `hijri_offset` | integer days | `0` | none |
 
 Defaults are applied on read and never written. A row exists only once the user (or an import) sets a
 value, so an import at onboarding is not shadowed by rows the app invented.
@@ -291,6 +294,9 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
   already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.
+- A native-only `calculation_method` (not one of the PWA's five) exports as `"mwl"`, which is what the PWA's
+  loader reads an unknown method as; envelope v1 allows only the five, and import rejects any other value.
+  `high_latitude_rule`, `prayer_adjustments` and `hijri_offset` have no place in envelope v1 and are not exported.
 
 Import followed by export with the file's own `meta` reproduces the file in every section it contained, with
 these exceptions:

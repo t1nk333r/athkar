@@ -18,20 +18,6 @@ public enum LongOrder: String, Codable, Sendable, CaseIterable {
     case last, original
 }
 
-/// The PWA's `prayerCalculationMethods` keys.
-public enum CalculationMethod: String, Codable, Sendable, CaseIterable {
-    case mwl
-    case ummAlQura = "umm-al-qura"
-    case egyptian
-    case karachi
-    case northAmerica = "north-america"
-}
-
-/// The PWA's `asrShadowFactors` keys.
-public enum AsrSchool: String, Codable, Sendable, CaseIterable {
-    case standard, hanafi
-}
-
 /// A typed `settings` key. `defaultValue` is what readers get when no row exists; it is never written.
 public struct SettingKey<Value: Codable & Sendable>: Sendable {
     public let name: String
@@ -66,6 +52,19 @@ extension SettingKey where Value == CalculationMethod {
 
 extension SettingKey where Value == AsrSchool {
     public static var asrSchool: Self { Self(name: "asr_school", defaultValue: .standard) }
+}
+
+extension SettingKey where Value == HighLatitudeRule {
+    /// The PWA's fixed Fajr clamp, and the closest rule to it in P1 (spec/prayer-times/README.md).
+    public static var highLatitudeRule: Self { Self(name: "high_latitude_rule", defaultValue: .twilightAngle) }
+}
+
+extension SettingKey where Value == PrayerAdjustments {
+    public static var prayerAdjustments: Self { Self(name: "prayer_adjustments", defaultValue: PrayerAdjustments()) }
+}
+
+extension SettingKey where Value == Int {
+    public static var hijriOffset: Self { Self(name: "hijri_offset", defaultValue: 0) }
 }
 
 extension SettingKey where Value == Bool {
@@ -131,7 +130,7 @@ public struct SettingsRepository: Sendable {
         try Setting(key: key.name, valueJson: try json(value), origin: origin, updatedAt: updatedAt).upsert(db)
     }
 
-    private static func json<Value: Encodable>(_ value: Value) throws -> String {
+    static func json<Value: Encodable>(_ value: Value) throws -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return String(decoding: try encoder.encode(value), as: UTF8.self)

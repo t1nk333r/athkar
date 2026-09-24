@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */; };
 		2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAF5DB1A7749351672C27D /* LaunchTests.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
 		A06DC5D44DC79BA41CF265A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEDDB713CE939FA556214E4E /* Assets.xcassets */; };
@@ -27,6 +28,7 @@
 		27D2779D803C0DEA8171968D /* AthkarCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AthkarCore; path = AthkarCore; sourceTree = SOURCE_ROOT; };
 		3E509373D577090EF775F065 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
+		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CDFAF5DB1A7749351672C27D /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 			children = (
 				DEDDB713CE939FA556214E4E /* Assets.xcassets */,
 				4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */,
+				778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */,
 				3E509373D577090EF775F065 /* Info.plist */,
 			);
 			path = Athkar;
@@ -191,6 +194,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */,
+				03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

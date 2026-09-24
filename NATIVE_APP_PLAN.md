@@ -340,7 +340,7 @@ The PWA's `solarDay`/`prayerTimesForDate` are **not** ported. They remain the pa
 | P3 Edge cases | Equator, 60°N+ in June, southern hemisphere, DST transitions in both directions, dateline | Documented per case | Nil result, negative night, or Fajr after sunrise. |
 | P4 Cross-platform | Android later runs the identical vector file | 0 seconds difference between platforms for the same Adhan version; 1 minute across Adhan versions | Any difference not explained by a library version bump. |
 
-Findings from P1 must be written into `spec/prayer-times/README.md`: which method parameters Adhan uses for Isha (the PWA never computed Isha) and which high-latitude rule was chosen as the default (the PWA's clamp is closest to Adhan's angle-based rule `[INFERENCE]`; confirm during Slice 3).
+Findings from P1 must be written into `spec/prayer-times/README.md`: which method parameters Adhan uses for Isha (the PWA never computed Isha) and which high-latitude rule was chosen as the default (confirmed in Slice 3: Adhan's `.twilightAngle` is the closest rule and is the default; see `spec/prayer-times/README.md`).
 
 ### 7.3 Feature surface (1.0)
 

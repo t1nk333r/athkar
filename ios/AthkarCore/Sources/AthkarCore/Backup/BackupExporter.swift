@@ -80,10 +80,12 @@ public struct BackupExporter: Sendable {
             try ReminderState.fetchOne(db, key: ReminderRule.adhkarId(period))?.lastShownLocalDate
         }
         let location = includeLocation ? try LocationProfile.fetchOne(db) : nil
+        // A method the PWA does not offer exports as `mwl`, which is what the PWA's loader reads it as.
+        let method = try setting(.calculationMethod, in: db)
         return BackupEnvelope.Reminders(
             morning: try enabled(.morning),
             evening: try enabled(.evening),
-            calculationMethod: try setting(.calculationMethod, in: db),
+            calculationMethod: method.isPWAMethod ? method : .mwl,
             asrSchool: try setting(.asrSchool, in: db),
             lastShown: .init(morning: try lastShown(.morning), evening: try lastShown(.evening)),
             location: location.map {

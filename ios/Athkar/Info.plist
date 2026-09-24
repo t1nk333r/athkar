@@ -20,6 +20,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

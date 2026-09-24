@@ -310,7 +310,8 @@ extension BackupEnvelope {
     }
 
     /// The rules of envelope-v1.schema.json and tools/backup-validate.mjs that the types cannot express:
-    /// sections per app, calendar dates, number ranges, list sizes, history order relative to `today`.
+    /// sections per app, calendar dates, number ranges, list sizes, history order relative to `today`, and the
+    /// PWA's five calculation methods (`CalculationMethod` also has the native-only presets).
     func validate() throws {
         func invalid(_ path: String, _ reason: String) -> BackupError { .invalid(path: path, reason: reason) }
         func checkDate(_ value: String, _ path: String) throws {
@@ -377,6 +378,9 @@ extension BackupEnvelope {
         }
 
         if let reminders {
+            guard reminders.calculationMethod.isPWAMethod else {
+                throw invalid("reminders.calculationMethod", "\(reminders.calculationMethod.rawValue) is not a PWA method")
+            }
             for period in Period.allCases {
                 if let date = reminders.lastShown[period] {
                     try checkDate(date, "reminders.lastShown.\(period.rawValue)")

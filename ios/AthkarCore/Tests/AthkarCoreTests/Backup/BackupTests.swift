@@ -54,6 +54,14 @@ struct BackupRoundTripTests {
         #expect(envelope.reminders?.location == nil)
         #expect(envelope.ruqyah == nil)
     }
+
+    @Test func nativeOnlyCalculationMethodExportsAsThePWADefault() throws {
+        let database = try imported(athkarFile)
+        try database.settings.set(.moonsightingCommittee, for: .calculationMethod)
+        let envelope = try BackupExporter(database: database).export(
+            app: .athkarPWA, today: "2026-09-23", timeZone: "Asia/Riyadh")
+        #expect(envelope.reminders?.calculationMethod == .mwl)
+    }
 }
 
 struct BackupImportTests {
@@ -225,6 +233,10 @@ struct BackupImportTests {
         ("athkar file without longOrderPromptAnswered", athkarFile,
          [("\"longOrder\": \"last\",\n    \"longOrderPromptAnswered\": true", #""longOrder": "last""#)],
          .invalid("preferences.longOrderPromptAnswered")),
+        // Envelope v1 carries only the PWA's five methods; the Adhan-only presets are native settings.
+        ("native-only calculation method", athkarFile,
+         [(#""calculationMethod": "umm-al-qura""#, #""calculationMethod": "dubai""#)],
+         .invalid("reminders.calculationMethod")),
         // History relative to today.
         ("adhkar history on today", athkarFile, [(#""date": "2026-09-22""#, #""date": "2026-09-23""#)],
          .invalid("adhkar.history[0].date")),

@@ -133,6 +133,25 @@ struct StorageRepositoryTests {
         #expect(try settings.value(for: .haptics) == true)
     }
 
+    /// Only changed fields gain a row, so an untouched `calculation_method`/`asr_school` still takes a later PWA import.
+    @Test func calculationSettingsWriteOnlyTheKeysThatChange() throws {
+        let settings = database.settings
+        var chosen = try settings.calculationSettings()
+        #expect(chosen == CalculationSettings())
+        chosen.highLatitudeRule = .seventhOfTheNight
+        chosen.adjustments.isha = 5
+        try settings.setCalculationSettings(chosen, at: t0)
+
+        #expect(try settings.calculationSettings() == chosen)
+        let rows = try database.reader.read { db in
+            try Row.fetchAll(db, sql: "SELECT key, value_json FROM settings ORDER BY key").map {
+                [$0["key"] as String, $0["value_json"] as String]
+            }
+        }
+        #expect(rows == [["high_latitude_rule", #""seventh-of-the-night""#],
+                         ["prayer_adjustments", #"{"asr":0,"dhuhr":0,"fajr":0,"isha":5,"maghrib":0,"sunrise":0}"#]])
+    }
+
     @Test func locationIsASingleProfileRoundedToTwoDecimals() throws {
         let location = database.location
         try location.save(LocationProfile(latitude: 21.4225, longitude: -39.8262, source: .device, updatedAt: t0))

@@ -85,11 +85,8 @@ The file header contains:
 - **`computed: false`** means `prayerTimesForDate` returned `null`, which happens for Tromsø at both
   solstices. In that case `fajr` and `asr` are `null`.
 
-Expected P1 divergences from `adhan-swift`, to be written up in `spec/prayer-times/README.md` during Slice 3:
-
-- Adhan rounds to the nearest minute by default.
-- Above 48° Adhan defaults to `.seventhOfTheNight`. `.twilightAngle` uses the PWA's portion, but Adhan
-  measures the night from tonight's sunset to tomorrow's sunrise, not from last night's.
+The adapter configuration, the P1 results and the written explanation for every vector outside tolerance are in
+[`prayer-times/README.md`](prayer-times/README.md).
 
 ## Backup envelope
 

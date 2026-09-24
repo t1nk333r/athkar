@@ -32,8 +32,9 @@ public struct LocationProfile: Equatable, Sendable, StoredRecord {
     }
 
     /// Two decimals as JavaScript/Kotlin `Math.round(x * 100) / 100` computes it: `floor(x * 100 + 0.5) / 100`,
-    /// so exact halves go toward +∞ (`-33.865` → `-33.86`, `33.865` → `33.87`).
-    static func rounded(_ coordinate: Double) -> Double {
+    /// so exact halves go toward +∞ (`-33.865` → `-33.86`, `33.865` → `33.87`). The app's location adapter rounds
+    /// fixes with this too, so coordinates are never held more precisely than they are stored.
+    public static func rounded(_ coordinate: Double) -> Double {
         (coordinate * 100 + 0.5).rounded(.down) / 100
     }
 }
