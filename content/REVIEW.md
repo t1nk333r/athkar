@@ -9,3 +9,4 @@ sequence id, not a date. The **Reviewer** column must name a person for any vers
 | --- | --- | --- | --- | --- | --- |
 | R1 | adhkar | 1.0.0 |  | Baseline: morning-01…morning-26, evening-01…evening-24 extracted verbatim from index.html; no text change | Shipped PWA text; ayat al-kursi deviations recorded in reference/exceptions.json pending review |
 | R2 | ruqyah | 1.0.0 |  | Baseline: all 15 segments extracted verbatim from ruqyah-al-qareen content.js; no text change | Shipped PWA text; matches both references |
+| R3 | adhkar | 1.0.1 | t1nk333r | morning-25, evening-23: detail citation «(سورة الأحزاب/56)» → «(سورة الأحزاب/٥٦)» (Arabic-Indic digits, matching every other number on screen); no Quran text or order change | Approved |

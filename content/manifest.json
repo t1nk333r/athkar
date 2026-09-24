@@ -2,9 +2,9 @@
   "packs": {
     "adhkar": {
       "file": "adhkar.v1.json",
-      "version": "1.0.0",
-      "sha256": "d5f1e0e814b701fb6cb20bf7b8dd4493552df99c5f501b7d8a6d6eb358909e60",
-      "reviewRecord": "R1"
+      "version": "1.0.1",
+      "sha256": "becbe67effba87898692f24e8d9ff299aaf4cebd300b6662be1ef4de121f8148",
+      "reviewRecord": "R3"
     },
     "ruqyah": {
       "file": "ruqyah.v1.json",
