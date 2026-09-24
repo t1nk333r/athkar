@@ -339,6 +339,18 @@ Line heights (multiples of the font size), by the `line_spacing` setting:
 - Acceptance: all 15 ruqyah pages fit without scrolling at the three text sizes on a 375 × 667 pt screen
   (iOS `AutoFitUITests`).
 
+**Overflow hint** (native addition; the PWAs show nothing because iOS Safari hides scroll bars). A card that
+scrolls flashes its scroll indicator when it appears. While more than 1 pt of its content lies below the visible
+area, it also shows:
+
+- a fade over the bottom edge, 36 pt, from transparent to the card's background colour;
+- a small capsule «المزيد» with a down chevron, `deck.more`. Tapping it scrolls to the end, animated unless
+  Reduce Motion is on. It is spoken with the hint «يعرض بقية البطاقة».
+
+Both disappear once the end of the content is in view, fading over 0.2 s (no animation with Reduce Motion), and
+come back if the reader scrolls up again. A card that fits never shows them. The iOS test
+`DeckRegressionUITests.testOverflowingCardShowsMoreUntilScrolledToTheEnd` covers this.
+
 ## 11. Arabic copy keys
 
 These keys seed `content/ui-copy.json`, which does not exist yet (NATIVE_APP_PLAN.md §4.1). The strings are the
@@ -360,6 +372,7 @@ PWAs' wording, verbatim. `{n}`, `{x}`, `{y}` are Arabic-Indic numbers.
 | `card.review` | بحاجة إلى مراجعة |
 | `card.reset.confirm.adhkar.title` / `.message` | إعادة عداد الذكر {n}؟ / سيعود العداد من {x} إلى الصفر. |
 | `card.reset.confirm.ruqyah.title` / `.message` | إعادة العداد؟ / سيعود عداد {surah} {range} إلى الصفر. |
+| `deck.more` / `deck.more.hint` | المزيد / يعرض بقية البطاقة |
 | `summary.adhkar.progress` / `.done` / `.manual` | {x} من {y} ذكرًا / اكتملت {section} اليوم / اكتملت {section} خارج التطبيق |
 | `summary.ruqyah.progress` / `.pending` / `.done` | {x} من {y} تكرارًا / رقية اليوم لم تكتمل بعد. / تمت رقية اليوم في {time}. |
 | `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / وقت الإكمال: {time} |

@@ -134,6 +134,8 @@ final class AppModel {
     }
 
     private static func today() -> String {
-        SessionCalendar.localDate(of: Date(), in: .current)
+        let now = Date()
+        let shifted = Calendar.current.date(byAdding: .day, value: TestHooks.dayOffset, to: now) ?? now
+        return SessionCalendar.localDate(of: shifted, in: .current)
     }
 }

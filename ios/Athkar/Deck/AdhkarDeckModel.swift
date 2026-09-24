@@ -261,7 +261,9 @@ final class AdhkarSessionModel {
 
     /// `cardMarkup`, `updateCard` and `progressLabel` for one item.
     private func card(_ item: SessionItem, _ period: Period) -> DeckCard {
-        let content = contents[item.id]!
+        guard let content = contents[item.id] else {
+            preconditionFailure("adhkar item \(item.id) has no card content (BundledContent.validate checks this)")
+        }
         let number = numbers[item.id] ?? 0
         let n = ArabicFormat.number(number)
         let target = state.target(for: item, in: period)

@@ -22,9 +22,10 @@ class DeckTestCase: XCTestCase {
 
     /// Launches the app, from an empty database unless `reset` is false, and answers the one-time long-order
     /// question when `answer` is given (it is asked 0.7 s after the first launch).
-    func launch(reset: Bool = true, answer: String? = keepOrder) {
+    func launch(reset: Bool = true, answer: String? = keepOrder, environment: [String: String] = [:]) {
         app = XCUIApplication()
         app.launchArguments = reset ? ["--reset-data"] : []
+        app.launchEnvironment = environment
         app.launch()
         XCTAssertTrue(app.staticTexts["title"].waitForExistence(timeout: 10))
         if let answer {

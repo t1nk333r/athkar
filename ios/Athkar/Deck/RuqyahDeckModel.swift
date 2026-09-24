@@ -47,7 +47,7 @@ final class RuqyahDeckModel: DeckModel {
         let total = totalRepeats
         let copy = "\(ArabicFormat.number(done)) من \(ArabicFormat.number(total)) تكرارًا"
         return DeckSummary(
-            copy: copy, value: done, total: total, isComplete: completedAt != nil || done >= total,
+            copy: copy, value: done, total: total, isComplete: isComplete,
             accessibilityLabel: "تقدم رقية اليوم: \(copy)",
             status: completedAt.map { "تمت رقية اليوم في \(ArabicFormat.time($0))." } ?? "رقية اليوم لم تكتمل بعد.")
     }

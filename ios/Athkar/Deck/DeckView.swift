@@ -221,7 +221,7 @@ struct DeckView<Model: DeckModel>: View {
         guard index < model.cards.count - 1 else { return }
         advanceTask?.cancel()
         advanceTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 20 : 320))
+            try? await Task.sleep(for: .milliseconds(TestHooks.advanceDelayMs ?? (reduceMotion ? 20 : 320)))
             guard !Task.isCancelled, model.currentIndex == index, model.cards[safe: index]?.isComplete == true
             else { return }
             show(index + 1, .forward, announce: true)

@@ -7,7 +7,7 @@ struct DeckCardView: View {
     let card: DeckCard
     let onTap: () -> Void
     let onReset: () -> Void
-    let onTarget: (Int) -> Void
+    let onTarget: @MainActor (Int) -> Void
     let onSource: () -> Void
 
     @Environment(\.palette) private var palette
@@ -48,6 +48,7 @@ struct DeckCardView: View {
                 footer
             }
             .padding(padding)
+            .environment(\.cardFill, fill)
         }
         .background(background)
         .overlay {
@@ -65,9 +66,13 @@ struct DeckCardView: View {
         return isDhikr ? min(max(18.4, vw), 28) : min(max(16.8, vw), 25.6)
     }
 
+    private var fill: Color {
+        card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surface
+    }
+
     private var background: some View {
         shape
-            .fill(card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surface)
+            .fill(fill)
             .overlay {
                 shape.strokeBorder(card.isComplete ? palette.completed.mixed(0.48, with: palette.border) : palette.border)
             }
@@ -223,15 +228,97 @@ private struct FittedBody<Candidate: View>: View {
             ForEach(0..<steps, id: \.self) { step in
                 candidate(step)
             }
-            ScrollView {
+            OverflowScroll(onTap: onTap) {
                 candidate(steps - 1)
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: onTap)
             }
-            .accessibilityIdentifier("deck.card.overflow")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
     }
+}
+
+/// The scrolling fallback. While part of the content is still below the visible area it shows a fade over the
+/// bottom edge and «المزيد» (which scrolls to the end); both go once the end is in view. The scroll indicator
+/// flashes when the card appears, so a scrollable card never looks complete when it is not.
+private struct OverflowScroll<Content: View>: View {
+    let onTap: () -> Void
+    @ViewBuilder let content: Content
+
+    @Environment(\.palette) private var palette
+    @Environment(\.cardFill) private var fill
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var viewportHeight: CGFloat = 0
+    @State private var contentBottom: CGFloat = 0
+
+    /// More than a point of content lies below the visible area.
+    private var hasMoreBelow: Bool { viewportHeight > 0 && contentBottom - viewportHeight > 1 }
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    content
+                    Color.clear.frame(height: 0).id(overflowSpace)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onTap)
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named(overflowSpace)).maxY } action: {
+                    contentBottom = $0
+                }
+            }
+            .coordinateSpace(.named(overflowSpace))
+            .accessibilityIdentifier("deck.card.overflow")
+            .scrollIndicatorsFlash(onAppear: true)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { viewportHeight = $0 }
+            .overlay(alignment: .bottom) {
+                if hasMoreBelow {
+                    more(proxy)
+                        .transition(.opacity)
+                }
+            }
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: hasMoreBelow)
+        }
+    }
+
+    private func more(_ proxy: ScrollViewProxy) -> some View {
+        VStack(spacing: 0) {
+            LinearGradient(colors: [fill.opacity(0), fill], startPoint: .top, endPoint: .bottom)
+                .frame(height: 36)
+                .allowsHitTesting(false)
+            Button {
+                if reduceMotion {
+                    proxy.scrollTo(overflowSpace, anchor: .bottom)
+                } else {
+                    withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo(overflowSpace, anchor: .bottom) }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text("المزيد")
+                    Image(systemName: "chevron.down").imageScale(.small)
+                }
+                .font(.caption.weight(.heavy))
+                .foregroundStyle(palette.accentStrong)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(palette.accentSoft))
+                .overlay(Capsule().strokeBorder(palette.accent.mixed(0.45, with: palette.border)))
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 4)
+            .background(fill)
+            .accessibilityHint("يعرض بقية البطاقة")
+            .accessibilityIdentifier("deck.card.more")
+        }
+    }
+}
+
+/// Coordinate space and scroll anchor of the overflow scroll view.
+private let overflowSpace = "deck.card.overflow"
+
+private extension EnvironmentValues {
+    /// The card's background colour, which the overflow fade blends into.
+    @Entry var cardFill: Color = .clear
 }
 
 // MARK: - Adhkar card body (`.card-content`)
@@ -295,6 +382,7 @@ private struct DhikrCardBody: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .fixedSize(horizontal: false, vertical: true)
                             .allowsHitTesting(false)
+                            .accessibilityIdentifier("deck.card.detail")
                     }
                     if item.hasExtendedDetails {
                         Button(action: onSource) {

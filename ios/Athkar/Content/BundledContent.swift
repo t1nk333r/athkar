@@ -59,11 +59,27 @@ struct BundledContent: Sendable {
         let ruqyahData = try resource(try manifest.file(of: "ruqyah"), in: bundle)
         let adhkar = try JSONDecoder().decode(AdhkarPack.self, from: adhkarData)
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
-        return BundledContent(
+        let content = BundledContent(
             packs: try ContentPacks(adhkarPack: adhkarData, ruqyahPack: ruqyahData),
             adhkar: SessionPeriods(morning: adhkar.periods.morning, evening: adhkar.periods.evening),
             ruqyah: ruqyah.segments,
             manifest: manifest)
+        try content.validate()
+        return content
+    }
+
+    /// Every item and segment the rules deal in has its card content, in the same order, so a card can always be
+    /// drawn. Fails at launch, naming the item, rather than at first render.
+    func validate() throws {
+        for period in Period.allCases {
+            let texts = Dictionary(adhkar[period].map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            if let missing = packs.adhkar[period].first(where: { texts[$0.id] == nil }) {
+                throw BundledContentError.missingContent(id: missing.id)
+            }
+        }
+        for (index, segment) in packs.ruqyahSegments.enumerated() where ruqyah[safe: index]?.id != segment.id {
+            throw BundledContentError.missingContent(id: segment.id)
+        }
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. The checksum
@@ -118,5 +134,16 @@ struct ContentManifest: Decodable, Sendable {
     func file(of packId: String) throws -> String {
         guard let pack = packs[packId] else { throw CocoaError(.fileReadCorruptFile) }
         return pack.file
+    }
+}
+
+enum BundledContentError: Error, CustomStringConvertible {
+    /// A pack lists an item or segment with no card content.
+    case missingContent(id: String)
+
+    var description: String {
+        switch self {
+        case let .missingContent(id): "Bundled content has no card for \(id)"
+        }
     }
 }

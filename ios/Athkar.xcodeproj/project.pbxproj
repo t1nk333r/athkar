@@ -12,6 +12,7 @@
 		2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAF5DB1A7749351672C27D /* LaunchTests.swift */; };
 		31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = C91EA781FB90F2751708543C /* adhkar.v1.json */; };
 		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
+		4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */; };
 		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
 		631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4723AB110276E031039F64 /* DeckModel.swift */; };
@@ -34,6 +35,7 @@
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
 		F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4280DECA9C457370A36B4B3 /* HomeView.swift */; };
 		F96134CFA1F9A4AF648287CC /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CADA9419CAC70B90CD19CFD /* manifest.json */; };
+		FCA6B5C02D47830635FFFFE5 /* TestHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD75292C037557D011FF2D90 /* TestHooks.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +59,7 @@
 		3CADA9419CAC70B90CD19CFD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../content/manifest.json; sourceTree = "<group>"; };
 		3E509373D577090EF775F065 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-uthman-taha-naskh.ttf"; path = "../fonts/kfgqpc-uthman-taha-naskh.ttf"; sourceTree = "<group>"; };
+		407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRegressionUITests.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
 		58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDialogs.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
@@ -69,6 +72,7 @@
 		BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		C91EA781FB90F2751708543C /* adhkar.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = adhkar.v1.json; path = ../content/adhkar.v1.json; sourceTree = "<group>"; };
 		CC4723AB110276E031039F64 /* DeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckModel.swift; sourceTree = "<group>"; };
+		CD75292C037557D011FF2D90 /* TestHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHooks.swift; sourceTree = "<group>"; };
 		CDFAF5DB1A7749351672C27D /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
 		CE857DADF37638C3F15FE817 /* ruqyah.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = ruqyah.v1.json; path = ../content/ruqyah.v1.json; sourceTree = "<group>"; };
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -190,6 +194,7 @@
 			isa = PBXGroup;
 			children = (
 				204F141E2D9C1C962271896B /* AppModel.swift */,
+				CD75292C037557D011FF2D90 /* TestHooks.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -207,6 +212,7 @@
 			isa = PBXGroup;
 			children = (
 				B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */,
+				407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */,
 				12427B8BADEDCAF23C15E22C /* DeckUITests.swift */,
 				CDFAF5DB1A7749351672C27D /* LaunchTests.swift */,
 				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
@@ -335,6 +341,7 @@
 				BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */,
 				D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
+				FCA6B5C02D47830635FFFFE5 /* TestHooks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,6 +350,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */,
+				4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */,
 				7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */,
 				2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */,
 				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
