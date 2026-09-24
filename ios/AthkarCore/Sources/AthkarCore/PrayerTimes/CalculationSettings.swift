@@ -62,8 +62,10 @@ public struct PrayerAdjustments: Codable, Equatable, Sendable {
     }
 }
 
-/// The calculation profile (§7.3). Each field is its own `settings` key (spec/schema.md), so a PWA import that
-/// carries only `calculation_method` and `asr_school` leaves the others alone.
+/// The calculation profile (§7.3). Each field is its own `settings` key (spec/schema.md): read the profile with
+/// `SettingsRepository.calculationSettings()`, and write the field the user chose with `set(_:for:)` on its key. That
+/// records an explicit choice even when it equals the default, so a later PWA import cannot override it, while
+/// fields the user never touched keep no row and still take an import.
 public struct CalculationSettings: Codable, Equatable, Sendable {
     public var method: CalculationMethod
     public var asrSchool: AsrSchool
@@ -97,22 +99,6 @@ extension SettingsRepository {
                                        highLatitudeRule: try value(.highLatitudeRule),
                                        adjustments: try value(.prayerAdjustments),
                                        hijriOffset: try value(.hijriOffset))
-        }
-    }
-
-    /// Writes, in one transaction, only the fields that differ from what `calculationSettings()` returns, so an
-    /// untouched field never gains a `native` row that would shadow a later import.
-    public func setCalculationSettings(_ settings: CalculationSettings, at now: Date = Date()) throws {
-        try writer.write { db in
-            func write<Value: Equatable>(_ value: Value, for key: SettingKey<Value>) throws {
-                guard value != (try Self.value(in: db, for: key) ?? key.defaultValue) else { return }
-                try Setting(key: key.name, valueJson: try Self.json(value), origin: .native, updatedAt: now).upsert(db)
-            }
-            try write(settings.method, for: .calculationMethod)
-            try write(settings.asrSchool, for: .asrSchool)
-            try write(settings.highLatitudeRule, for: .highLatitudeRule)
-            try write(settings.adjustments, for: .prayerAdjustments)
-            try write(settings.hijriOffset, for: .hijriOffset)
         }
     }
 }

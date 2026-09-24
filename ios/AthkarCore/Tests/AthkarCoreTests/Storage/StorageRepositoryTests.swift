@@ -133,16 +133,16 @@ struct StorageRepositoryTests {
         #expect(try settings.value(for: .haptics) == true)
     }
 
-    /// Only changed fields gain a row, so an untouched `calculation_method`/`asr_school` still takes a later PWA import.
-    @Test func calculationSettingsWriteOnlyTheKeysThatChange() throws {
+    /// Reading the profile invents no rows; each chosen field lands in its own key.
+    @Test func calculationSettingsReadEachKeyAndInventNothing() throws {
         let settings = database.settings
-        var chosen = try settings.calculationSettings()
-        #expect(chosen == CalculationSettings())
-        chosen.highLatitudeRule = .seventhOfTheNight
-        chosen.adjustments.isha = 5
-        try settings.setCalculationSettings(chosen, at: t0)
+        #expect(try settings.calculationSettings() == CalculationSettings())
+        #expect(try database.reader.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM settings") } == 0)
 
-        #expect(try settings.calculationSettings() == chosen)
+        try settings.set(.seventhOfTheNight, for: .highLatitudeRule, at: t0)
+        try settings.set(PrayerAdjustments(isha: 5), for: .prayerAdjustments, at: t0)
+        #expect(try settings.calculationSettings()
+                == CalculationSettings(highLatitudeRule: .seventhOfTheNight, adjustments: PrayerAdjustments(isha: 5)))
         let rows = try database.reader.read { db in
             try Row.fetchAll(db, sql: "SELECT key, value_json FROM settings ORDER BY key").map {
                 [$0["key"] as String, $0["value_json"] as String]

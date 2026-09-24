@@ -162,6 +162,17 @@ struct BackupImportTests {
         #expect(try database.location.profile()?.source == .device)
     }
 
+    /// Choosing the default in the app is still a choice: the import's `umm-al-qura` must not replace it. The Asr
+    /// school the user never touched takes the file's `hanafi`.
+    @Test func explicitNativeChoiceOfTheDefaultMethodOutranksAnImport() throws {
+        let database = try AppDatabase.inMemory()
+        try database.settings.set(.mwl, for: .calculationMethod)
+        try BackupImporter(database: database, content: try RepoFile.content).importBackup(try RepoFile.data(athkarFile))
+        let settings = try database.settings.calculationSettings()
+        #expect(settings.method == .mwl)
+        #expect(settings.asrSchool == .hanafi)
+    }
+
     @Test(arguments: [athkarFile, ruqyahFile])
     func leadingByteOrderMarkIsIgnored(path: String) throws {
         let data = try RepoFile.data(path)

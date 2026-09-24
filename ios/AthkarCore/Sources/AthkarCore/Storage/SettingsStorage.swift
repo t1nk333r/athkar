@@ -130,7 +130,7 @@ public struct SettingsRepository: Sendable {
         try Setting(key: key.name, valueJson: try json(value), origin: origin, updatedAt: updatedAt).upsert(db)
     }
 
-    static func json<Value: Encodable>(_ value: Value) throws -> String {
+    private static func json<Value: Encodable>(_ value: Value) throws -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return String(decoding: try encoder.encode(value), as: UTF8.self)

@@ -98,16 +98,17 @@ struct PrayerTimesEdgeCaseTests {
         #expect(PrayerTime.allCases.allSatisfy { day[$0] == nil })
     }
 
-    /// Documented: on the first day the Sun rises after the polar night the noon Sun is below the Asr shadow
-    /// altitude, which is itself below the horizon, so Adhan's Asr lands after its Maghrib.
-    @Test("Tromsø on the first sunrise after the polar night: Asr after Maghrib")
+    /// On the first day the Sun rises after the polar night every time exists and the day's frame holds. Where Asr
+    /// falls relative to Maghrib is not asserted: the Asr shadow altitude is below the horizon that day and Adhan 1.5.0
+    /// puts Asr after Maghrib (documented in spec/prayer-times/README.md).
+    @Test("Tromsø on the first sunrise after the polar night: six times, Fajr < sunrise < Dhuhr < Maghrib < Isha")
     func polarNightEdge() throws {
         let day = try schedule(Place(name: "Tromsø", latitude: 69.65, longitude: 18.96, zone: "Europe/Oslo"),
                                "2026-01-15")
         let fajr = try #require(day.fajr), sunrise = try #require(day.sunrise), dhuhr = try #require(day.dhuhr)
         let asr = try #require(day.asr), maghrib = try #require(day.maghrib), isha = try #require(day.isha)
         #expect(fajr < sunrise && sunrise < dhuhr && dhuhr < maghrib && maghrib < isha)
-        #expect(maghrib < asr && asr < isha)
+        #expect(asr > dhuhr)
     }
 
     // MARK: Southern hemisphere

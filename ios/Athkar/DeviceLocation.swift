@@ -10,6 +10,8 @@ enum DeviceLocationError: Error, Equatable {
     case busy
     /// The device could not get a fix.
     case unavailable
+    /// The calling task was cancelled (for example, its view went away while the system prompt was up).
+    case cancelled
 }
 
 /// One-shot device location for prayer times (NATIVE_APP_PLAN.md §7.4). Asked for only when the user taps
@@ -17,10 +19,15 @@ enum DeviceLocationError: Error, Equatable {
 /// An approximate (reduced accuracy) fix is used as it is: prayer times move by seconds per kilometre, so the app
 /// never asks for temporary full accuracy. The fix is rounded to two decimals with the storage rounding before it
 /// leaves this type.
+///
+/// Both waits end when the calling task is cancelled, which frees the type for the next call. The permission prompt
+/// has no timeout of its own: the system keeps it up until the user answers, and a caller that stops waiting cancels
+/// its task. A late answer only updates the authorization status the next call reads.
 @MainActor
 final class DeviceLocation: NSObject {
     private let manager = CLLocationManager()
-    private var authorizationRequest: CheckedContinuation<CLAuthorizationStatus, Never>?
+    /// Resumed with the decision, or `nil` when the wait is cancelled.
+    private var authorizationRequest: CheckedContinuation<CLAuthorizationStatus?, Never>?
     private var locationRequest: CheckedContinuation<CLLocation, any Error>?
 
     override init() {
@@ -36,10 +43,17 @@ final class DeviceLocation: NSObject {
 
         var status = manager.authorizationStatus
         if status == .notDetermined {
-            status = await withCheckedContinuation { continuation in
-                authorizationRequest = continuation
-                manager.requestWhenInUseAuthorization()
+            let decision = await withTaskCancellationHandler {
+                await withCheckedContinuation { (continuation: CheckedContinuation<CLAuthorizationStatus?, Never>) in
+                    guard !Task.isCancelled else { return continuation.resume(returning: nil) }
+                    authorizationRequest = continuation
+                    manager.requestWhenInUseAuthorization()
+                }
+            } onCancel: {
+                Task { @MainActor [weak self] in self?.cancelAuthorizationWait() }
             }
+            guard let decision else { throw .cancelled }
+            status = decision
         }
         switch status {
         case .authorizedWhenInUse, .authorizedAlways: break
@@ -49,10 +63,17 @@ final class DeviceLocation: NSObject {
 
         let location: CLLocation
         do {
-            location = try await withCheckedThrowingContinuation { continuation in
-                locationRequest = continuation
-                manager.requestLocation()
+            location = try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    guard !Task.isCancelled else { return continuation.resume(throwing: CancellationError()) }
+                    locationRequest = continuation
+                    manager.requestLocation()
+                }
+            } onCancel: {
+                Task { @MainActor [weak self] in self?.cancelLocationWait() }
             }
+        } catch is CancellationError {
+            throw .cancelled
         } catch let error as CLError where error.code == .denied {
             throw .denied
         } catch {
@@ -60,6 +81,22 @@ final class DeviceLocation: NSObject {
         }
         return GeoCoordinates(latitude: LocationProfile.rounded(location.coordinate.latitude),
                               longitude: LocationProfile.rounded(location.coordinate.longitude))
+    }
+
+    // Each pending continuation is taken (set to nil) before it is resumed, all on the main actor, so the delegate
+    // and a cancellation can never both resume it.
+
+    private func cancelAuthorizationWait() {
+        guard let request = authorizationRequest else { return }
+        authorizationRequest = nil
+        request.resume(returning: nil)
+    }
+
+    private func cancelLocationWait() {
+        guard let request = locationRequest else { return }
+        locationRequest = nil
+        manager.stopUpdatingLocation() // also cancels a pending `requestLocation()`
+        request.resume(throwing: CancellationError())
     }
 }
 

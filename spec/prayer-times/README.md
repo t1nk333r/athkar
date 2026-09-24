@@ -23,7 +23,8 @@ func schedule(on localDate: String, at coordinates: GeoCoordinates, in zone: Tim
 `PrayerSchedule` holds `localDate`, `zone` and six optional UTC instants: `fajr`, `sunrise`, `dhuhr`, `asr`,
 `maghrib`, `isha`. `CalculationSettings` is `method`, `asrSchool`, `highLatitudeRule`, `adjustments` (whole
 minutes per time) and `hijriOffset` (days, display only). Each field is its own `settings` key; see
-[`../schema.md`](../schema.md).
+[`../schema.md`](../schema.md). Reading the profile writes nothing. The app writes a field's key when the user
+chooses it, even if the choice equals the default, so a later PWA import cannot replace an explicit choice.
 
 ## Adapter configuration
 
@@ -39,6 +40,20 @@ minutes per time) and `hijriOffset` (days, display only). Each field is its own 
 
 For the PWA's five methods, Maghrib is sunset. None of them has a Maghrib angle or a Maghrib offset, so P1
 compares `maghrib` with the PWA's `sunset` directly.
+
+### The PWA is a day off in dateline zones
+
+The PWA's `solarDay` puts local noon at 720 − 4 × longitude + offset minutes after local midnight. Where the offset
+is about a day from the longitude, that lands on another civil day, so the PWA's "today" is really tomorrow or
+yesterday. Checked by running the PWA's own functions for 2026-06-21:
+
+- Kiritimati, Apia, Chatham, Tonga, Tokelau and Kanton get the next day's times. For example, Kiritimati's
+  sunrise comes out as 06:24 on 06-22.
+- Attu (172.9° E), which is on `America/Adak`, gets the previous day's times: sunrise 07:02 on 06-20.
+
+The native adapter is correct in all of these: every time falls on the requested date (P3 covers Kiritimati and
+Apia). PWA reminder users in these zones will see a one-day shift when they migrate. The wall-clock times move
+by one day's change, from seconds to a couple of minutes. `vectors.json` has no such zone, so P1 is unaffected.
 
 ### Parameters per method
 
@@ -63,6 +78,19 @@ Adhan adds on top of the computed time.
 The high-latitude rule bounds Isha too: it is never later than sunset + portion × night. Interval methods
 (`umm-al-qura`, `qatar`) are not bounded. `moonsighting-committee` ignores the rule and uses its own seasonal
 twilight, and above 55° it uses 1/7 of the night.
+
+`PrayerTimesMethodTests.swift` checks this table at Mecca and Istanbul on 2026-01-15:
+
+- **Angles.** Fajr, Isha and Tehran's Maghrib match their angle within 10 s, plus up to a minute for Singapore's
+  rounding. The reference is `SolarReference`: the PWA's NOAA formulas re-evaluated at the event, which agree with
+  Adhan to about 2 s at these places.
+- **Offsets.** Each preset's sunrise, Dhuhr, Asr and Maghrib offsets are checked exactly, to the second, against
+  the Umm al-Qura schedule, which has no offsets. That baseline itself matches the reference within 10 s.
+- **Isha interval.** Isha is exactly Maghrib + 90 min for `umm-al-qura` and `qatar`.
+- **Moonsighting Committee.** The seasonal Fajr is no earlier than 18°, and the seasonal Isha is no later than 18°.
+- **Singapore.** Every time falls on a whole minute.
+- **User adjustments.** Each one moves exactly its own time by minutes × 60 s, for both +7 and −3, and leaves the
+  other five alone.
 
 ## Default high-latitude rule: twilight angle
 
@@ -110,15 +138,24 @@ date shift, P3 failed for Kiritimati and Apia.
 3600 vectors. For 20 of them (Tromsø at both solstices) neither side computes times: the PWA returned `null`, and
 the test asserts that Adhan returns six `nil`s. That leaves 3580 vectors × 4 times.
 
-| Time | Within 120 s | Max \|Δ\| within | Max \|Δ\| below 59° |
+| Time | Within 120 s | Max \|Δ\| within | Max \|Δ\| at this grid's locations below 59° |
 | --- | --- | --- | --- |
 | Fajr | 3446 | 118 s | 102 s (Berlin 2026-08-15, Egyptian) |
 | Sunrise | 3570 | 114 s | 39 s |
 | Asr | 3395 | 118 s | 78 s (Toronto 2026-10-04) |
 | Sunset (Maghrib) | 3560 | 76 s | 39 s |
 
-Every vector below 59° is within tolerance. All 349 times outside tolerance are at Stockholm (59.33°), Oslo,
-Anchorage, Reykjavík or Tromsø.
+In this grid every vector below 59° is within tolerance, and all 349 times outside tolerance are at Stockholm
+(59.33°), Oslo, Anchorage, Reykjavík or Tromsø. That is a fact about the grid, not a latitude property: the grid has
+no location between Berlin (52.5°) and Stockholm (59.3°). The mechanisms below reach further south, so the two
+high-latitude classes apply from \|latitude\| ≥ 50°, with the same bounds. An external review ran the PWA at places
+off the grid and reported the differences below. It attributes them to the same mechanisms, and each is within its
+class bound. They are expected class members if the grid ever grows:
+
+- Fajr on 08-15, 123–148 s, at Copenhagen, Riga, Aberdeen and Tallinn;
+- Asr 190 s at Juneau (58.3°);
+- Asr 136 s at Adak (51.9°);
+- Fajr 130 s at Ushuaia (54.8° S).
 
 | Class | Times | Count | Max \|Δ\| | Bound | Where |
 | --- | --- | --- | --- | --- | --- |
@@ -140,13 +177,13 @@ output. That script is not kept.
   That rule is max(angle Fajr, sunrise − (sunrise − previous day's sunset) × fajrAngle/60). The angle Fajr is
   read with `.middleOfTheNight`, whose clamp is always earlier than the PWA's. The same reconstruction brings all
   3580 vectors within tolerance except the 32 in the next class.
-- **`high-latitude-solar-position`**, Fajr, sunrise, sunset at \|latitude\| ≥ 59°. The PWA evaluates every event
+- **`high-latitude-solar-position`**, Fajr, sunrise, sunset at \|latitude\| ≥ 50°. The PWA evaluates every event
   with the Sun's declination and equation of time at local solar noon, in one pass. Adhan (Meeus) interpolates
   the Sun's position to the event itself. Near the equinoxes that is a 0.1–0.2° difference in declination, and
   where the Sun crosses the event altitude at a shallow angle it moves the event by minutes. *Offline check:* the
   PWA formulas with the Sun's position taken at the event time agree with Adhan's angle Fajr to ≤ 8 s and with
   sunrise and sunset to ≤ 4 s, at every latitude except on the grazing-sun day.
-- **`high-latitude-asr`**, Asr at \|latitude\| ≥ 59°. Same as above, plus Adhan takes the Asr shadow angle from
+- **`high-latitude-asr`**, Asr at \|latitude\| ≥ 50°. Same as above, plus Adhan takes the Asr shadow angle from
   the declination at 0h UTC of the date, while the PWA takes it at local solar noon. Asr therefore comes later
   while the declination rises (January to June) and earlier while it falls. The data shows this sign pattern.
   *Offline check:* with both changes, Asr agrees to ≤ 18 s below 59° and ≤ 29 s above, except on the grazing-sun
@@ -175,7 +212,7 @@ cases pass. Documented behaviour is marked.
 | Equator, equinox | Pontianak 2026-03-20 | Asr is 3 h ± 5 min after Dhuhr (Sun overhead, so Asr is at 45° altitude; observed 2 h 59 min 21 s including MWL's Dhuhr +1) |
 | ≥ 60° N, June solstice | Helsinki 60.17°, Reykjavík 64.15°, Fairbanks 64.84°, Luleå 65.58°; 06-20..06-22; all three rules | Six ordered times; Fajr through Asr on the local date; Isha before the next day's Fajr. *Documented:* Maghrib and Isha can fall after local midnight (Reykjavík sunset 00:04, Isha 00:52; Luleå sunset 00:06). *Documented:* with `.middleOfTheNight`, Isha and the next Fajr both sit at the middle of the night, each measured from its own night, so Isha can be up to 14 s after the next Fajr (asserted ≤ 60 s). Twilight-angle and seventh keep a real gap. |
 | Polar day and night | Tromsø (69.65° N) 2026-06-21, 12-21 | *Documented:* all six `nil`, as the PWA's `computed: false` |
-| Polar-night edge | Tromsø 2026-01-15 | *Documented:* Asr (12:31:44 local) is after Maghrib (12:26:13). The Asr shadow altitude is below the horizon on the first day the Sun rises (see `grazing-sun`). Fajr < sunrise < Dhuhr < Maghrib < Isha still holds. Slices 5 and 6 must not assume Asr < Maghrib. Adhan has no times for 2026-01-14 there: polar night by its model. |
+| Polar-night edge | Tromsø 2026-01-15 | All six times exist; Fajr < sunrise < Dhuhr < Maghrib < Isha; Asr after Dhuhr. *Documented, not asserted:* Adhan 1.5.0 puts Asr (12:31:44 local) after Maghrib (12:26:13), because the Asr shadow altitude is below the horizon on the first day the Sun rises (see `grazing-sun`). Slices 5 and 6 must not assume Asr < Maghrib. Adhan has no times for 2026-01-14 there: polar night by its model. |
 | Southern hemisphere | Sydney (33.87° S), Johannesburg (26.2° S); 06-21, 12-21 | Six ordered times on the local date |
 | Southern high latitude | Punta Arenas (53.16° S) 2026-12-21 | Ordered; Fajr = sunrise − 18/60 × (next sunrise − sunset) ± 2 s: the default rule applies south of −48°, which Adhan's own default would not do; Isha (00:10) is before the next Fajr |
 | DST, both directions | New York 03-08 (forward) and 11-01 (back); Sydney 04-05 (back) and 10-04 (forward); London 03-29, 10-25 | On the transition day and each neighbour: six ordered times, all on their local date; each time 24 h ± 5 min after the previous day's (UTC continuous); Dhuhr's wall clock moves by exactly the offset change ± 5 min |

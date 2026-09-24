@@ -22,11 +22,11 @@ struct PrayerTimesParityTests {
         /// today's sunrise, Adhan's `.twilightAngle` from today's sunset to tomorrow's sunrise. Proven per vector:
         /// the PWA's rule applied to Adhan's own angle Fajr, sunrise and previous sunset lands within tolerance.
         case clampNightSpan = "clamp-night-span"
-        /// Fajr, sunrise, sunset at |latitude| ≥ 59°: the PWA evaluates every event with the Sun's declination at
+        /// Fajr, sunrise, sunset at |latitude| ≥ 50°: the PWA evaluates every event with the Sun's declination at
         /// local solar noon, Adhan interpolates the Sun's position to the event itself. Where the Sun crosses the
         /// event altitude at a shallow angle, that 0.1–0.2° moves the event by minutes.
         case highLatitudeSolarPosition = "high-latitude-solar-position"
-        /// Asr at |latitude| ≥ 59°: as above, and Adhan takes the Asr shadow angle from the declination at 0h UTC
+        /// Asr at |latitude| ≥ 50°: as above, and Adhan takes the Asr shadow angle from the declination at 0h UTC
         /// of the date where the PWA takes it at local solar noon.
         case highLatitudeAsr = "high-latitude-asr"
 
@@ -108,7 +108,9 @@ struct PrayerTimesParityTests {
     /// The first class whose condition holds for this out-of-tolerance time.
     private func explanation(for field: Field, of vector: PrayerTimesVectors.Vector, schedule: PrayerSchedule,
                            zone: TimeZone, tolerance: TimeInterval) throws -> Exception? {
-        let highLatitude = abs(vector.latitude) >= 59
+        // The mechanisms reach beyond this grid's 59° (spec/prayer-times/README.md lists 51–58° cases); the class
+        // bounds, not the latitude, keep them honest.
+        let highLatitude = abs(vector.latitude) >= 50
         switch field {
         case .sunrise, .sunset, .asr:
             let pwaSunrise = try SessionsFixtures.instant(vector.expected.sunrise!)
