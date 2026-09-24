@@ -43,10 +43,10 @@ struct PrayerTimesVectors: Decodable {
     }
 }
 
-/// An independent solar model for checking the Adhan presets: the NOAA formulas the PWA uses (`solarTerms`), with
-/// the Sun's position re-evaluated at the event itself so they are comparable with Adhan's (spec/prayer-times/README.md,
-/// P1 classes). Times are for the solar day around noon of a UTC calendar date, so use it where the local date and
-/// the UTC date of every event agree.
+/// An independent solar model: the NOAA formulas the PWA uses (`solarTerms`), with the Sun's position re-evaluated at
+/// the event itself, which is what Adhan does. P1 uses it to decide class membership and the method tests to check
+/// angles (spec/prayer-times/README.md). Times belong to the solar day whose transit falls on the given UTC calendar
+/// date, which is the local date for every zone in `vectors.json` and in the method tests.
 enum SolarReference {
     /// When the Sun's centre is at `altitude` degrees before (`afterNoon: false`) or after solar noon; `nil` if it
     /// never gets there.
@@ -76,6 +76,15 @@ enum SolarReference {
             minutes = 720 - 4 * longitude - terms(julianDay + minutes / 1440).equationOfTime
         }
         return midnight.addingTimeInterval(minutes * 60)
+    }
+
+    /// Asr with Adhan's convention: the shadow altitude from the declination at 0h UTC of `utcDate`
+    /// (`atan(1 / (factor + tan|latitude − declination|))`); the PWA uses the declination at solar noon.
+    static func asr(shadowFactor: Double, on utcDate: String, latitude: Double, longitude: Double) -> Date? {
+        let midnight = PrayerTimesTestCalendar.utcMidnight(utcDate)
+        let declination = terms(midnight.timeIntervalSince1970 / 86_400 + 2_440_587.5).declination
+        let altitude = degrees(atan(1 / (shadowFactor + tan(radians(abs(latitude - declination))))))
+        return instant(altitude: altitude, afterNoon: true, on: utcDate, latitude: latitude, longitude: longitude)
     }
 
     /// The PWA's `solarTerms`: declination (degrees) and equation of time (minutes) at a Julian day.

@@ -30,8 +30,9 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
     static func solarDate(localDay: Int64, longitude: Double, zone: TimeZone) -> DateComponents {
         var transitUTCHours = (12 - longitude / 15).truncatingRemainder(dividingBy: 24)
         if transitUTCHours < 0 { transitUTCHours += 24 }
-        let noon = Date(timeIntervalSince1970: Double(localDay) * 86_400 + 43_200)
-        let transitLocalHours = transitUTCHours + Double(zone.secondsFromGMT(for: noon)) / 3600
+        // 12:00 UTC, not local noon; a DST step of error can't move solar noon (9+ h from midnight) to another day.
+        let offsetSample = Date(timeIntervalSince1970: Double(localDay) * 86_400 + 43_200)
+        let transitLocalHours = transitUTCHours + Double(zone.secondsFromGMT(for: offsetSample)) / 3600
         let utcDay = localDay - Int64((transitLocalHours / 24).rounded(.down))
         return utcCalendar.dateComponents([.year, .month, .day],
                                           from: Date(timeIntervalSince1970: Double(utcDay) * 86_400))

@@ -14,7 +14,8 @@ struct PrayerTimesMethodTests {
         case angle(Double)
         /// Minutes after Maghrib.
         case interval(Int)
-        /// Moonsighting Committee's seasonal twilight: Fajr no earlier and Isha no later than at 18°.
+        /// Moonsighting Committee: the 18° time, but no earlier (Fajr) or later (Isha) than its seasonal twilight
+        /// (`moonsightingMinutes`, shafaq `general`).
         case seasonal
     }
 
@@ -119,7 +120,10 @@ struct PrayerTimesMethodTests {
             #expect(abs(day.fajr!.timeIntervalSince(expected)) <= 10 + slack, "\(label): Fajr at \(angle)°")
         case .seasonal:
             let angleFajr = try reference(place, depression: 18, afterNoon: false)
-            #expect(day.fajr! >= angleFajr.addingTimeInterval(-10), "\(label): Fajr earlier than at 18°")
+            let sunrise = try reference(place, depression: 0.833, afterNoon: false)
+            let minutes = Self.moonsightingMinutes(latitude: place.coordinates.latitude, morning: true)
+            let expected = max(angleFajr, sunrise.addingTimeInterval(-(minutes * 60).rounded()))
+            #expect(abs(day.fajr!.timeIntervalSince(expected)) <= 10, "\(label): seasonal Fajr")
         case .interval:
             Issue.record("\(label): no preset has an interval Fajr")
         }
@@ -131,7 +135,10 @@ struct PrayerTimesMethodTests {
             #expect(day.isha!.timeIntervalSince(day.maghrib!) == Double(minutes * 60), "\(label): Isha interval")
         case .seasonal:
             let angleIsha = try reference(place, depression: 18, afterNoon: true)
-            #expect(day.isha! <= angleIsha.addingTimeInterval(10), "\(label): Isha later than at 18°")
+            let sunset = try reference(place, depression: 0.833, afterNoon: true)
+            let minutes = Self.moonsightingMinutes(latitude: place.coordinates.latitude, morning: false)
+            let expected = min(angleIsha, sunset.addingTimeInterval((minutes * 60).rounded()))
+            #expect(abs(day.isha!.timeIntervalSince(expected)) <= 10, "\(label): seasonal Isha (shafaq general)")
         }
 
         if preset.roundsUp {
@@ -139,6 +146,25 @@ struct PrayerTimesMethodTests {
                 #expect(day[time]!.timeIntervalSince1970.truncatingRemainder(dividingBy: 60) == 0,
                         "\(label): \(time.rawValue) not on a whole minute")
             }
+        }
+    }
+
+    /// Khalid Shaukat's seasonal twilight for the Moonsighting Committee method, in minutes before sunrise or after
+    /// sunset, with shafaq `general` (the preset's). Interpolated through four seasonal values that grow with
+    /// latitude, for `date` (2026-01-15): 25 days after the December solstice (day of year 15 + 10) in the north.
+    static func moonsightingMinutes(latitude: Double, morning: Bool) -> Double {
+        let l = abs(latitude) / 55
+        let (a, b, c, d) = morning
+            ? (75 + 28.65 * l, 75 + 19.44 * l, 75 + 32.74 * l, 75 + 48.10 * l)
+            : (75 + 25.60 * l, 75 + 2.050 * l, 75 - 9.210 * l, 75 + 6.140 * l)
+        let days = 25.0
+        switch days {
+        case ..<91: return a + (b - a) / 91 * days
+        case ..<137: return b + (c - b) / 46 * (days - 91)
+        case ..<183: return c + (d - c) / 46 * (days - 137)
+        case ..<229: return d + (c - d) / 46 * (days - 183)
+        case ..<275: return c + (b - c) / 46 * (days - 229)
+        default: return b + (a - b) / 91 * (days - 275)
         }
     }
 
