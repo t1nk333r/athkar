@@ -244,7 +244,7 @@
       inset-block-start: max(0.65rem, env(safe-area-inset-top));
       z-index: 20;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 0.35rem;
       padding: 0.35rem;
       border: 1px solid var(--border);
@@ -296,55 +296,6 @@
       display: inline;
       color: var(--completed);
     }
-
-    .ruqyah-panel {
-      display: grid;
-      gap: 0.85rem;
-      margin-block-start: 1rem;
-      padding: clamp(1.2rem, 5vw, 1.8rem);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      background: var(--surface);
-      box-shadow: var(--shadow-soft);
-      text-align: center;
-    }
-
-    .ruqyah-panel[hidden] { display: none; }
-
-    .ruqyah-panel h2 {
-      margin: 0;
-      font-size: clamp(1.1rem, 4.6vw, 1.4rem);
-    }
-
-    .ruqyah-panel p {
-      margin: 0;
-      color: var(--text-secondary);
-      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.82rem;
-      line-height: 1.85;
-    }
-
-    .ruqyah-launch {
-      display: inline-flex;
-      min-height: 3rem;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      justify-self: center;
-      padding: 0.6rem 1.4rem;
-      border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.88rem;
-      font-weight: 800;
-      text-decoration: none;
-      transition: transform 100ms ease, border-color 150ms ease;
-    }
-
-    .ruqyah-launch:active { transform: scale(0.97); }
-
 
     .session-summary {
       margin-block-start: 0.85rem;
@@ -1651,21 +1602,14 @@
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
           </svg>
-          <span>الصباح</span>
+          <span>أذكار الصباح</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
           </svg>
-          <span>المساء</span>
-          <span class="period-status" aria-hidden="true"></span>
-        </button>
-        <button class="period-tab" id="ruqyah-tab" type="button" role="tab" aria-controls="ruqyah-panel" aria-selected="false" data-tab="ruqyah" tabindex="-1">
-          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 3 5 6v6.2c0 4.3 2.9 7.6 7 8.8 4.1-1.2 7-4.5 7-8.8V6l-7-3Z"></path>
-          </svg>
-          <span>رقية</span>
+          <span>أذكار المساء</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
       </nav>
@@ -1694,14 +1638,6 @@
         <footer class="app-footer">
           <p class="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
         </footer>
-      </section>
-      <section class="ruqyah-panel" id="ruqyah-panel" role="tabpanel" aria-labelledby="ruqyah-tab" hidden>
-        <h2>رقية القرين</h2>
-        <p>سورة ق، ثم سورة الجن، ثم سورة التكوير، ثم سورة الكافرون، ثم سورة الناس، بترتيبها وتكرارها على بطاقات قصيرة تُقرأ دون تمرير.</p>
-        <a class="ruqyah-launch" id="ruqyah-launch" href="https://t1nk333r.github.io/ruqyah-al-qareen/" target="_blank" rel="noopener">
-          <span aria-hidden="true">↗</span><span>فتح رقية القرين</span>
-        </a>
-        <p>تطبيق مستقل يعمل دون اتصال ويمكن تثبيته على الشاشة الرئيسية، وله عدّاداته الخاصة.</p>
       </section>
     </main>
 
@@ -2273,7 +2209,6 @@
     const body = document.body;
     const list = document.getElementById("athkar-list");
     const panel = document.getElementById("athkar-panel");
-    const ruqyahPanel = document.getElementById("ruqyah-panel");
     const previousCardButton = document.getElementById("previous-card");
     const nextCardButton = document.getElementById("next-card");
     const cardPosition = document.getElementById("card-position");
@@ -2349,7 +2284,6 @@
     let suppressCardClicksUntil = 0;
     let activePeriod = location.hash === "#evening" ? "evening" : "morning";
     let pendingConfirmation = null;
-    let activeTab = location.hash === "#ruqyah" ? "ruqyah" : activePeriod;
     let advanceTimer = null;
     let dayRolloverTimer = null;
     let installOnboardingTimer = null;
@@ -3140,27 +3074,19 @@
       sessionTitle.textContent = sectionNames[period];
       sessionReset.setAttribute("aria-label", "خيارات الإعادة");
       panel.setAttribute("aria-labelledby", `${period}-tab`);
-      selectTab(period, updateHash);
-      renderCards();
-    }
+      document.title = `${sectionNames[period]} — أذكار المسلم`;
 
-    function selectTab(tab, updateHash = true) {
-      activeTab = tab;
-      const showsRuqyah = tab === "ruqyah";
-      panel.hidden = showsRuqyah;
-      ruqyahPanel.hidden = !showsRuqyah;
-      sessionSummary.hidden = showsRuqyah;
-      document.title = showsRuqyah ? "رقية القرين — أذكار المسلم" : `${sectionNames[activePeriod]} — أذكار المسلم`;
-
-      document.querySelectorAll(".period-tab").forEach(button => {
-        const selected = (button.dataset.period || button.dataset.tab) === tab;
-        button.setAttribute("aria-selected", String(selected));
-        button.tabIndex = selected ? 0 : -1;
+      document.querySelectorAll(".period-tab").forEach(tab => {
+        const selected = tab.dataset.period === period;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
       });
 
-      if (updateHash && location.hash !== `#${tab}`) {
-        history.replaceState(null, "", `#${tab}`);
+      if (updateHash && location.hash !== `#${period}`) {
+        history.replaceState(null, "", `#${period}`);
       }
+
+      renderCards();
     }
 
     function hasResettableState() {
@@ -3803,25 +3729,18 @@
       }
     }
 
-    const tabOrder = ["morning", "evening", "ruqyah"];
-
-    function openTab(name) {
-      if (name === activeTab) return;
-      if (name === "ruqyah") selectTab("ruqyah");
-      else switchPeriod(name);
-      window.scrollTo({ top: 0, behavior: "auto" });
-    }
-
     document.querySelectorAll(".period-tab").forEach(tab => {
-      const name = tab.dataset.period || tab.dataset.tab;
-      tab.addEventListener("click", () => openTab(name));
+      tab.addEventListener("click", () => {
+        if (tab.dataset.period === activePeriod) return;
+        switchPeriod(tab.dataset.period);
+        window.scrollTo({ top: 0, behavior: "auto" });
+      });
       tab.addEventListener("keydown", event => {
         if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
         event.preventDefault();
-        const step = event.key === "ArrowRight" ? -1 : 1;
-        const next = tabOrder[(tabOrder.indexOf(activeTab) + step + tabOrder.length) % tabOrder.length];
-        openTab(next);
-        document.getElementById(`${next}-tab`).focus();
+        const nextPeriod = activePeriod === "morning" ? "evening" : "morning";
+        switchPeriod(nextPeriod);
+        document.getElementById(`${nextPeriod}-tab`).focus();
       });
     });
 
@@ -4124,10 +4043,8 @@
     });
 
     addEventListener("hashchange", () => {
-      const hash = location.hash.replace("#", "");
-      if (!tabOrder.includes(hash) || hash === activeTab) return;
-      if (hash === "ruqyah") selectTab("ruqyah", false);
-      else switchPeriod(hash, false);
+      const period = location.hash === "#evening" ? "evening" : location.hash === "#morning" ? "morning" : null;
+      if (period && period !== activePeriod) switchPeriod(period, false);
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
@@ -4178,7 +4095,6 @@
     updateManualCompletionControls();
     updateInstallUi();
     switchPeriod(activePeriod, false);
-    if (activeTab === "ruqyah") selectTab("ruqyah", false);
     scheduleReminders();
     scheduleDayRollover();
     document.fonts?.ready.then(() => fitVisibleCard());
