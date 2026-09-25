@@ -258,10 +258,32 @@ public struct BackupEnvelope: Codable, Equatable, Sendable {
 // MARK: - Reading and writing files
 
 extension BackupEnvelope {
-    /// Decodes and validates a backup file. A leading UTF-8 BOM is ignored.
+    /// Decodes and validates a backup file, accepting and rejecting what tools/backup-validate.mjs does.
+    ///
+    /// The file must be one UTF-8 JSON document; a leading UTF-8 BOM is ignored. The text is read by
+    /// `StoredValue(parsingJSON:)`, JavaScript's `JSON.parse` grammar, rather than by `JSONDecoder` directly:
+    /// duplicate keys keep the last value, numbers below the `Double` range read as 0, and a lone surrogate
+    /// escape reads as U+FFFD (still a string, as in JavaScript). `JSONDecoder` would keep the first duplicate
+    /// and reject the other two. `Codable` then decodes the parsed value, re-encoded as plain JSON.
     public static func decode(_ data: Data) throws -> BackupEnvelope {
         let bom: [UInt8] = [0xEF, 0xBB, 0xBF]
-        let json = data.starts(with: bom) ? data.dropFirst(bom.count) : data[...]
+        let bytes = data.starts(with: bom) ? data.dropFirst(bom.count) : data[...]
+        let text = String(decoding: bytes, as: UTF8.self)
+        // Decoding replaces invalid sequences with U+FFFD, so the bytes change exactly when they are not UTF-8.
+        guard text.utf8.elementsEqual(bytes) else { throw BackupError.malformed("not UTF-8") }
+        let root: SessionState.StoredValue
+        do {
+            root = try SessionState.StoredValue(parsingJSON: text)
+        } catch {
+            throw BackupError.malformed(error.description)
+        }
+        let json: Data
+        do {
+            json = try JSONEncoder().encode(root)
+        } catch {
+            throw BackupError.malformed(Self.describe(error))
+        }
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .custom { decoder in
             let container = try decoder.singleValueContainer()
@@ -292,8 +314,9 @@ extension BackupEnvelope {
         } catch {
             throw BackupError.malformed(Self.describe(error))
         }
-        // `Codable` ignores keys it does not know; the schema forbids them (`additionalProperties: false`).
-        try KeyShape.envelope.check(try JSONSerialization.jsonObject(with: json), path: "")
+        // `Codable` ignores keys it does not know, and reads `null` as an absent optional; the schema forbids
+        // both (`additionalProperties: false`, and no optional property allows `null`).
+        try KeyShape.envelope.check(root, path: "")
         try envelope.validate()
         return envelope
     }
@@ -310,8 +333,9 @@ extension BackupEnvelope {
     }
 
     /// The rules of envelope-v1.schema.json and tools/backup-validate.mjs that the types cannot express:
-    /// sections per app, calendar dates, number ranges, list sizes, history order relative to `today`, and the
-    /// PWA's five calculation methods (`CalculationMethod` also has the native-only presets).
+    /// sections per app, calendar dates, number ranges, list sizes, history order relative to `today`, item and
+    /// segment IDs without U+0000, and the PWA's five calculation methods (`CalculationMethod` also has the
+    /// native-only presets).
     func validate() throws {
         func invalid(_ path: String, _ reason: String) -> BackupError { .invalid(path: path, reason: reason) }
         func checkDate(_ value: String, _ path: String) throws {
@@ -322,6 +346,11 @@ extension BackupEnvelope {
             guard value.isFinite, value >= 0, value <= Self.maxSafeInteger else {
                 throw invalid(path, "\(value) is not a count between 0 and 2^53 - 1")
             }
+        }
+        /// SQLite binds text up to the first U+0000, so such an ID would be stored truncated (and could collide).
+        /// No content ID contains one.
+        func checkID(_ id: String, _ path: String) throws {
+            guard !id.utf8.contains(0) else { throw invalid(path, "contains U+0000") }
         }
 
         guard !meta.timeZone.isEmpty else { throw invalid("meta.timeZone", "empty") }
@@ -348,7 +377,9 @@ extension BackupEnvelope {
                 for (name, values) in [("progress", adhkar.today.progress[period]),
                                        ("targets", adhkar.today.targets[period])] {
                     for (itemId, value) in values {
-                        try checkCount(value, "adhkar.today.\(name).\(period.rawValue).\(itemId)")
+                        let path = "adhkar.today.\(name).\(period.rawValue).\(itemId)"
+                        try checkID(itemId, path)
+                        try checkCount(value, path)
                     }
                 }
             }
@@ -368,6 +399,7 @@ extension BackupEnvelope {
             let today = ruqyah.today.date
             try checkDate(today, "ruqyah.today.date")
             for (segmentId, count) in ruqyah.today.counts {
+                try checkID(segmentId, "ruqyah.today.counts.\(segmentId)")
                 try checkCount(Double(count), "ruqyah.today.counts.\(segmentId)")
             }
             guard ruqyah.history.count <= 365 else { throw invalid("ruqyah.history", "more than 365 entries") }
@@ -414,11 +446,14 @@ extension BackupEnvelope {
     }
 }
 
-/// The object keys envelope-v1.schema.json allows, for rejecting unknown ones at any depth. Types and required
-/// keys are checked by `Codable`; this only looks at key names.
+/// The object keys envelope-v1.schema.json allows, and where it allows `null`, for rejecting unknown keys at any
+/// depth and `null` in place of an optional section or key. Types and required keys are checked by `Codable`,
+/// which reads `null` for an `Optional` as absent; this looks only at key names and `null`.
 private indirect enum KeyShape: Sendable {
-    /// A scalar or `null`.
+    /// A scalar, not `null`.
     case value
+    /// A scalar or `null`.
+    case nullable
     /// An object with exactly these optional keys.
     case object([String: KeyShape])
     /// An object with arbitrary keys (item IDs, dates) whose values have one shape.
@@ -427,6 +462,7 @@ private indirect enum KeyShape: Sendable {
 
     static let envelope: KeyShape = {
         let perPeriod = KeyShape.object(["morning": .value, "evening": .value])
+        let nullablePerPeriod = KeyShape.object(["morning": .nullable, "evening": .nullable])
         let countsPerPeriod = KeyShape.object(["morning": .map(.value), "evening": .map(.value)])
         let toggle = KeyShape.object(["enabled": .value])
         return .object([
@@ -434,10 +470,11 @@ private indirect enum KeyShape: Sendable {
             "adhkar": .object([
                 "today": .object([
                     "date": .value, "progress": countsPerPeriod, "targets": countsPerPeriod,
-                    "completedAt": perPeriod, "manualCompletion": perPeriod,
+                    "completedAt": nullablePerPeriod, "manualCompletion": perPeriod,
                 ]),
                 "history": .list(.object([
-                    "date": .value, "morning": .value, "evening": .value, "morningAt": .value, "eveningAt": .value,
+                    "date": .value, "morning": .value, "evening": .value, "morningAt": .nullable,
+                    "eveningAt": .nullable,
                 ])),
             ]),
             "ruqyah": .object([
@@ -446,8 +483,8 @@ private indirect enum KeyShape: Sendable {
             ]),
             "reminders": .object([
                 "morning": toggle, "evening": toggle, "calculationMethod": .value, "asrSchool": .value,
-                "lastShown": perPeriod,
-                "location": .object(["latitude": .value, "longitude": .value, "updatedAt": .value]),
+                "lastShown": nullablePerPeriod,
+                "location": .object(["latitude": .value, "longitude": .value, "updatedAt": .nullable]),
             ]),
             "preferences": .object([
                 "theme": .value, "textSize": .value, "lineSpacing": .value, "haptics": .value,
@@ -456,15 +493,20 @@ private indirect enum KeyShape: Sendable {
         ])
     }()
 
-    /// Throws `.invalid` for the first key `json` has that the shape does not allow. `json` has already
-    /// decoded as a `BackupEnvelope`, so container types match the shape.
-    func check(_ json: Any, path: String) throws {
+    /// Throws `.invalid` for the first key `json` has that the shape does not allow, or the first `null` where
+    /// the shape does not allow one. `json` has already decoded as a `BackupEnvelope`, so non-null container
+    /// types match the shape.
+    func check(_ json: SessionState.StoredValue, path: String) throws {
         func child(_ key: String) -> String { path.isEmpty ? key : "\(path).\(key)" }
+        if json == .null {
+            guard case .nullable = self else { throw BackupError.invalid(path: path, reason: "null is not allowed") }
+            return
+        }
         switch self {
-        case .value:
+        case .value, .nullable:
             return
         case let .object(keys):
-            guard let object = json as? [String: Any] else { return }
+            guard case let .object(object) = json else { return }
             for key in object.keys.sorted() {
                 guard let shape = keys[key] else {
                     throw BackupError.invalid(path: child(key), reason: "unknown key")
@@ -472,10 +514,10 @@ private indirect enum KeyShape: Sendable {
                 try shape.check(object[key]!, path: child(key))
             }
         case let .map(shape):
-            guard let object = json as? [String: Any] else { return }
+            guard case let .object(object) = json else { return }
             for key in object.keys.sorted() { try shape.check(object[key]!, path: child(key)) }
         case let .list(shape):
-            guard let list = json as? [Any] else { return }
+            guard case let .array(list) = json else { return }
             for (index, element) in list.enumerated() { try shape.check(element, path: "\(path)[\(index)]") }
         }
     }

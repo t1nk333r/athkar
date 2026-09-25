@@ -5,8 +5,9 @@ import GRDB
 /// adhkar tables, and writes a state back (spec/schema.md "Session state bridge").
 ///
 /// - `load(date:)`: that date's `adhkar_item_progress` rows as `progress`/`targets`; `completedAt` and
-///   `manualCompletion` from its `adhkar_days` rows (manual iff origin `manual`); `history` = the newest
-///   ``SessionState/historyLimit`` earlier dates that have an `adhkar_days` row.
+///   `manualCompletion` from its `adhkar_days` rows (manual unless origin `counters`: see
+///   ``CompletionOrigin/isManualCompletion``); `history` = the newest ``SessionState/historyLimit`` earlier dates
+///   that have an `adhkar_days` row.
 /// - `save(_:)`: makes the rows for `state.date` match the state, in one transaction. History is not written:
 ///   it is a view of earlier days' rows, which were written when those days were live.
 public struct AdhkarSessionStore: Sendable {
@@ -26,7 +27,7 @@ public struct AdhkarSessionStore: Sendable {
                 state.progress[period] = .object(session.progress.mapValues { .number(Double($0)) })
                 state.targets[period] = .object(session.targets.mapValues { .number(Double($0)) })
                 state.completedAt[period] = session.completion?.completedAt.map(ISOInstant.format)
-                state.manualCompletion[period] = session.completion?.completionOrigin == .manual
+                state.manualCompletion[period] = session.completion?.completionOrigin.isManualCompletion ?? false
             }
             let dates = try String.fetchAll(db, sql: """
                 SELECT DISTINCT local_date FROM adhkar_days WHERE local_date < ? ORDER BY local_date DESC LIMIT ?
@@ -47,11 +48,12 @@ public struct AdhkarSessionStore: Sendable {
     /// Writes `state.date`'s counters, targets and completion. Rows whose values are unchanged keep their
     /// `updated_at`; changed rows get `now`.
     ///
-    /// Stored values are reduced to what the rules read from them: a counter to `floor(Number(value))` (dropped
-    /// when that is not a finite number ≥ 0), a target to `Number(value)` if it is an integer ≥ 0 (otherwise
-    /// dropped: it can never match a target option). A period has an `adhkar_days` row iff
-    /// `isComplete(period)`; origin `manual` when `manualCompletion`, else the existing non-manual origin or
-    /// `counters`; `completed_at` is `completedAt` when it is an ISO-8601 UTC instant, else null.
+    /// Stored values are reduced to what the rules read from them: a counter to `floor(Number(value))`, capped at
+    /// 2^53 − 1 (dropped when that is not a finite number ≥ 0), a target to `Number(value)` if it is an integer
+    /// ≥ 0 (otherwise dropped: it can never match a target option). A period has an `adhkar_days` row iff
+    /// `isComplete(period)`. Its origin is `counters` unless `manualCompletion`; a manual completion keeps an
+    /// existing `import` origin, otherwise it is `manual`. `completed_at` is `completedAt` when it is an ISO-8601
+    /// UTC instant, else null.
     public func save(_ state: SessionState, at now: Date = Date()) throws {
         try database.writer.write { db in try write(state, in: db, now: now) }
     }
@@ -103,9 +105,8 @@ public struct AdhkarSessionStore: Sendable {
             if existing != nil { _ = try AdhkarDay.deleteOne(db, key: key) }
             return
         }
-        let origin: CompletionOrigin = state.isManuallyComplete(period)
-            ? .manual
-            : existing.map(\.completionOrigin).flatMap { $0 == .manual ? nil : $0 } ?? .counters
+        let origin: CompletionOrigin = !state.isManuallyComplete(period) ? .counters
+            : existing?.completionOrigin == .imported ? .imported : .manual
         let row = AdhkarDay(localDate: state.date, period: period,
                             completedAt: state.completedAt[period].flatMap(ISOInstant.parse), completionOrigin: origin)
         if row != existing { try row.upsert(db) }
@@ -120,11 +121,12 @@ public struct AdhkarSessionStore: Sendable {
         }
     }
 
-    /// `countForState` before the clamp: `Number(value)` floored; `nil` when not a finite number ≥ 0.
+    /// `countForState` before the clamp to the target: `Number(value)` floored; `nil` when not a finite number ≥ 0.
+    /// Values above 2^53 − 1 are stored as 2^53 − 1: every target is far below it, so the rules read the same.
     private static func storedCount(_ value: SessionState.StoredValue) -> Int? {
         let number = value.numberValue
-        guard number.isFinite, number >= 0, number <= BackupEnvelope.maxSafeInteger else { return nil }
-        return Int(number.rounded(.down))
+        guard number.isFinite, number >= 0 else { return nil }
+        return Int(min(number, BackupEnvelope.maxSafeInteger).rounded(.down))
     }
 
     /// `targetForState` compares `Number(value)` with integer options, so only an integer ≥ 0 can ever count.

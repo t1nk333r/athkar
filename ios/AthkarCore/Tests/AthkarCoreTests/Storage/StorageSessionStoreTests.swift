@@ -194,6 +194,48 @@ struct StorageSessionStoreTests {
         try store.save(state, at: Instant.at("2026-09-24T00:00:00.000Z"))
         #expect(try dump(database) == before)
     }
+
+    /// A file whose `today.date` is ahead of this device (exported just after midnight, or further east) imports its
+    /// history entry for the device's today as an `import` row. It loads as complete, and a tap then keeps it.
+    @Test func importedCompletionOnTheLiveDaySurvivesSaving() throws {
+        try BackupImporter(database: database, content: RepoFile.content)
+            .importBackup(try RepoFile.data("spec/backup/examples/athkar-pwa.athkarbackup"))
+        let imported = AdhkarDay(localDate: "2026-09-22", period: .morning,
+                                 completedAt: Instant.at("2026-09-22T17:38:40.481Z"), completionOrigin: .imported)
+        var state = try store.load(date: "2026-09-22")
+        #expect(state.isComplete(.morning, in: collections))
+        #expect(state.completedAt.morning == "2026-09-22T17:38:40.481Z")
+
+        state.progress.morning["morning-01"] = .number(1)
+        let now = Instant.at("2026-09-22T20:00:00.000Z")
+        #expect(state.syncCompletion(.morning, in: collections, now: now).complete)
+        try store.save(state, at: now)
+        #expect(try database.adhkar.session(on: "2026-09-22", period: .morning).completion == imported)
+        #expect(try store.load(date: "2026-09-22") == state)
+
+        // Completing by counters makes it a counters completion, keeping the imported time.
+        fill(&state, .morning)
+        _ = state.syncCompletion(.morning, in: collections, now: now)
+        try store.save(state, at: now)
+        #expect(try database.adhkar.session(on: "2026-09-22", period: .morning).completion
+            == AdhkarDay(localDate: "2026-09-22", period: .morning, completedAt: imported.completedAt,
+                         completionOrigin: .counters))
+    }
+
+    /// Counters beyond 2^53 − 1 are stored as 2^53 − 1: the period stays complete after a reload.
+    @Test func countersBeyondTheSafeIntegerRangeKeepTheirOutcome() throws {
+        for huge in [1e300, 9_007_199_254_740_992] {
+            var state = SessionState.empty(date: "2026-09-22")
+            for item in collections[.morning] where !item.review {
+                state.progress.morning[item.id] = .number(huge)
+            }
+            #expect(state.isComplete(.morning, in: collections))
+            try store.save(state, at: Instant.at("2026-09-22T04:00:00.000Z"))
+            let loaded = try store.load(date: "2026-09-22")
+            #expect(loaded.isComplete(.morning, in: collections), "\(huge)")
+            #expect(loaded.progress.morning["morning-01"] == .number(9_007_199_254_740_991), "\(huge)")
+        }
+    }
 }
 
 /// `spec/sessions/fixtures/completion-sync.json` through the database: every case uses clean numbers.

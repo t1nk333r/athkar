@@ -5,7 +5,9 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
 `node tools/backup-validate.mjs <file>`. [`examples/`](examples/) holds real exports from each PWA.
 
 - One UTF-8 JSON document, file extension `.athkarbackup`, MIME `application/json`. The file name carries the
-  device's local date. Importers strip a leading BOM (files passed through Mail or Notes can gain one).
+  device's local date. Importers strip one leading BOM (files passed through Mail or Notes can gain one) and
+  reject any byte sequence that is not valid UTF-8. The document is read with `JSON.parse` semantics: a
+  duplicated key keeps its last value, numbers that underflow read as 0, lone surrogates in strings are kept.
 - Each PWA exports only its own sections. The athkar PWA writes `meta`, `adhkar`, `reminders`,
   `preferences`; the ruqyah PWA writes `meta`, `ruqyah`, `preferences`. An importer must accept either file,
   alone or both, in either order.
@@ -19,6 +21,12 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
   `today.date` (today appears once it is completed), capped to the 365 newest. Instants must round-trip
   through `Date` (so `2026-02-30T…` or `T24:00` are rejected rather than rolled over). So every field below
   always satisfies the schema.
+- Calendar checks apply to the schema's date and instant fields only (`meta.exportedAt`, every `date`,
+  `completedAt`, `morningAt`, `eveningAt`, `lastShown`, `location.updatedAt`, and the `ruqyah.history` keys):
+  a date is a real proleptic-Gregorian day for any year 0000–9999; an instant is such a date plus a real time
+  (hours 00–23, no leap second `:60`) with any number of fraction digits and an uppercase `Z`. Other
+  date-shaped strings (a `timeZone`, an item id) are not calendar-checked. Item and segment IDs
+  (`adhkar.today.progress`/`targets` keys, `ruqyah.today.counts` keys) must not contain U+0000.
 - Plaintext. Nothing leaves the device unless the user shares the file.
 
 ## Sections

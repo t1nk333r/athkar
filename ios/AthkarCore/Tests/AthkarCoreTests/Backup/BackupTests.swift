@@ -14,6 +14,30 @@ private func imported(_ paths: String...) throws -> AppDatabase {
     return database
 }
 
+/// `count` consecutive dates, newest first, starting at `newest`.
+private func consecutiveDates(from newest: String, count: Int) -> [String] {
+    let start = Instant.at("\(newest)T00:00:00.000Z")
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withFullDate]
+    return (0..<count).map { formatter.string(from: start.addingTimeInterval(-86_400 * Double($0))) }
+}
+
+/// An edit of the athkar example that appends `count` complete days after its one history entry (2026-09-22).
+private func adhkarHistory(adding count: Int) -> (String, String) {
+    let entries = consecutiveDates(from: "2026-09-21", count: count).map {
+        #"{"date": "\#($0)", "morning": true, "evening": false, "morningAt": null, "eveningAt": null}"#
+    }
+    return ("\"eveningAt\": null\n      }\n    ]", "\"eveningAt\": null\n      }, \(entries.joined(separator: ", "))]")
+}
+
+/// An edit of the ruqyah example that adds `count` completed days before its two (2026-09-21, 2026-09-22).
+private func ruqyahHistory(adding count: Int) -> (String, String) {
+    let entries = consecutiveDates(from: "2026-09-20", count: count).map {
+        #""\#($0)": {"completedAt": "\#($0)T05:00:00.000Z"}"#
+    }
+    return (#""history": {"#, #""history": {"# + entries.joined(separator: ", ") + ", ")
+}
+
 struct BackupRoundTripTests {
     @Test(arguments: [athkarFile, ruqyahFile])
     func exportAfterImportReproducesThePWAFile(path: String) throws {
@@ -173,6 +197,23 @@ struct BackupImportTests {
         #expect(settings.asrSchool == .hanafi)
     }
 
+    /// spec/schema.md merge rules: on an origin tie the existing settings row stays, so a second file from the
+    /// same PWA does not replace the first one's preferences or calculation profile.
+    @Test(arguments: [
+        (athkarFile, [(#""calculationMethod": "umm-al-qura""#, #""calculationMethod": "karachi""#),
+                      (#""theme": "dark""#, #""theme": "light""#)]),
+        (ruqyahFile, [(#""theme": "light""#, #""theme": "system""#), (#""haptics": true"#, #""haptics": false"#)]),
+    ])
+    func sameOriginImportKeepsTheExistingSettings(path: String, edits: [(String, String)]) throws {
+        let database = try imported(path)
+        let before = try dump(database)
+        let original = String(decoding: try RepoFile.data(path), as: UTF8.self)
+        let file = edits.reduce(original) { $0.replacingOccurrences(of: $1.0, with: $1.1) }
+        #expect(file != original)
+        try BackupImporter(database: database, content: try RepoFile.content).importBackup(Data(file.utf8))
+        #expect(try dump(database) == before)
+    }
+
     @Test(arguments: [athkarFile, ruqyahFile])
     func leadingByteOrderMarkIsIgnored(path: String) throws {
         let data = try RepoFile.data(path)
@@ -266,6 +307,31 @@ struct BackupImportTests {
          .invalid("adhkar.today.targets.morning.morning-20")),
         ("huge ruqyah count", ruqyahFile, [(#""nas-1-6": 3"#, #""nas-1-6": 9007199254740993"#)],
          .invalid("ruqyah.today.counts.nas-1-6")),
+        // List sizes: adhkar history holds at most 7 days, ruqyah history at most 365.
+        ("8 adhkar history entries", athkarFile, [adhkarHistory(adding: 7)], .invalid("adhkar.history")),
+        ("366 ruqyah history entries", ruqyahFile, [ruqyahHistory(adding: 364)], .invalid("ruqyah.history")),
+        // No optional section or key allows null (Codable alone reads null as absent).
+        ("null ruqyah section in athkar file", athkarFile, [(#""reminders": {"#, #""ruqyah": null, "reminders": {"#)],
+         .invalid("ruqyah")),
+        ("null adhkar section in ruqyah file", ruqyahFile,
+         [(#""preferences": {"#, #""adhkar": null, "reminders": null, "preferences": {"#)], .invalid("adhkar")),
+        ("null location", athkarFile,
+         [("\"location\": {\n      \"latitude\": 21.4225,\n      \"longitude\": 39.8262,\n"
+            + "      \"updatedAt\": \"2026-09-23T17:38:40.481Z\"\n    }", #""location": null"#)],
+         .invalid("reminders.location")),
+        ("null longOrder in ruqyah file", ruqyahFile, [(#""haptics": true"#, #""haptics": true, "longOrder": null"#)],
+         .invalid("preferences.longOrder")),
+        // JSON.parse keeps the last of duplicate keys.
+        ("duplicate key, last invalid", ruqyahFile, [(#""theme": "light""#, #""theme": "light", "theme": "bogus""#)],
+         .malformed),
+        // SQLite would store an ID truncated at U+0000.
+        ("U+0000 in an item ID", athkarFile, [(#""morning-01": 1"#, #""morning-01": 1, "a\u0000b": 1"#)],
+         .invalid("adhkar.today.progress.morning.a\u{0}b")),
+        ("U+0000 as a segment ID", ruqyahFile, [(#""nas-1-6": 3"#, #""nas-1-6": 3, "\u0000": 0"#)],
+         .invalid("ruqyah.today.counts.\u{0}")),
+        // Proleptic Gregorian: 100 is not a leap year.
+        ("0100-02-29", athkarFile, [(#""morning": "2026-09-22""#, #""morning": "0100-02-29""#)],
+         .invalid("reminders.lastShown.morning")),
     ]
 
     @Test(arguments: rejections.indices)
@@ -293,5 +359,66 @@ struct BackupImportTests {
             Issue.record("\(name): expected \(expected), got \(String(describing: error))")
         }
         #expect(try dump(database) == before, "\(name)")
+    }
+
+    /// Shapes tools/backup-validate.mjs accepts that `JSONDecoder` alone would reject or read differently.
+    static let acceptances: [(name: String, file: String, edits: [(String, String)])] = [
+        ("duplicate key, last valid", ruqyahFile, [(#""format": 1"#, #""format": 2, "format": 1"#)]),
+        ("duplicate app, last valid", athkarFile, [(#""app": "athkar-pwa""#, #""app": "other", "app": "athkar-pwa""#)]),
+        ("number below the Double range", athkarFile, [(#""morning-01": 1"#, #""morning-01": 1e-400"#)]),
+        ("lone surrogate escape", ruqyahFile, [(#""timeZone": "Asia/Riyadh""#, #""timeZone": "\ud800""#)]),
+        ("years 0000-0099", athkarFile,
+         [(#""morning": "2026-09-22""#, #""morning": "0000-02-29""#), (#""date": "2026-09-22""#, #""date": "0099-12-31""#),
+          ("2026-09-22T17:38:40.481Z", "0001-01-01T00:00:00.000Z")]),
+        ("date-shaped strings outside date fields", athkarFile,
+         [(#""timeZone": "Asia/Riyadh""#, #""timeZone": "2026-02-30""#), (#""morning-01": 1"#, #""2026-02-30": 1"#)]),
+        ("7 adhkar history entries", athkarFile, [adhkarHistory(adding: 6)]),
+        ("365 ruqyah history entries", ruqyahFile, [ruqyahHistory(adding: 363)]),
+    ]
+
+    @Test(arguments: acceptances.indices)
+    func acceptedFileImports(index: Int) throws {
+        let (name, path, edits) = Self.acceptances[index]
+        let original = String(decoding: try RepoFile.data(path), as: UTF8.self)
+        let file = edits.reduce(original) { $0.replacingOccurrences(of: $1.0, with: $1.1) }
+        #expect(file != original, "\(name): edit did not apply")
+        let database = try AppDatabase.inMemory()
+        #expect(throws: Never.self, "\(name)") {
+            try BackupImporter(database: database, content: try RepoFile.content).importBackup(Data(file.utf8))
+        }
+    }
+
+    @Test func duplicateKeysKeepTheLastValue() throws {
+        let file = String(decoding: try RepoFile.data(athkarFile), as: UTF8.self)
+            .replacingOccurrences(of: #""morning-01": 1"#, with: #""morning-01": 7, "morning-01": 1e-400"#)
+        let envelope = try BackupEnvelope.decode(Data(file.utf8))
+        #expect(envelope.adhkar?.today.progress.morning["morning-01"] == 0)
+    }
+
+    /// envelope-v1.md: one UTF-8 JSON document. Foundation would sniff and accept UTF-16.
+    @Test func nonUTF8FileIsRejected() throws {
+        let text = String(decoding: try RepoFile.data(ruqyahFile), as: UTF8.self)
+        let parts = text.components(separatedBy: "Asia/Riyadh")
+        let invalidByte = Data(parts[0].utf8) + Data("Asia/Riyadh".utf8) + Data([0xFF]) + Data(parts[1].utf8)
+        #expect(throws: BackupError.malformed("not UTF-8")) { try BackupEnvelope.decode(invalidByte) }
+        // ASCII in UTF-16 is valid UTF-8 with NUL bytes between the characters: not JSON.
+        for data in [text.data(using: .utf16LittleEndian)!, text.data(using: .utf16)!] {
+            let error = #expect(throws: BackupError.self) { try BackupEnvelope.decode(data) }
+            guard case .malformed? = error else { Issue.record("\(String(describing: error))"); continue }
+        }
+    }
+}
+
+struct BackupExportLimitTests {
+    /// The ruqyah PWA keeps a year of history; envelope v1 allows at most 365 days.
+    @Test func ruqyahHistoryExportsTheNewest365Days() throws {
+        let database = try AppDatabase.inMemory()
+        let days = consecutiveDates(from: "2026-09-23", count: 367)
+        for day in days {
+            try database.ruqyah.markComplete(on: day, completedAt: Instant.at("\(day)T05:00:00.000Z"))
+        }
+        let envelope = try BackupExporter(database: database).export(
+            app: .ruqyahPWA, today: "2026-09-22", timeZone: "Asia/Riyadh")
+        #expect(try #require(envelope.ruqyah).history.keys.sorted() == Array(days[1...365].reversed()))
     }
 }

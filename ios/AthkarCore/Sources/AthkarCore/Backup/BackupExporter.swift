@@ -46,7 +46,7 @@ public struct BackupExporter: Sendable {
             today.progress[period] = session.progress.mapValues(Double.init)
             today.targets[period] = session.targets.mapValues(Double.init)
             today.completedAt[period] = session.completion?.completedAt
-            today.manualCompletion[period] = session.completion?.completionOrigin == .manual
+            today.manualCompletion[period] = session.completion?.completionOrigin.isManualCompletion ?? false
         }
 
         // The PWA keeps one entry per day it rolled over, newest first, at most 7.

@@ -9,6 +9,14 @@ public enum CompletionOrigin: String, Codable, Sendable, DatabaseValueConvertibl
     case manual
     /// Came from a backup file; the file does not say how.
     case imported = "import"
+
+    /// How an adhkar completion reads in the PWA's `athkar-progress-v2` shape: as `manualCompletion` unless the
+    /// counters made it. An imported history entry says only that the period was complete, so when its date is
+    /// the live day (a file exported ahead of this device's local date) it stands as a manual completion, which
+    /// the rules keep without counters. `AdhkarSessionStore.load` and `BackupExporter` read origins this way.
+    public var isManualCompletion: Bool {
+        self != .counters
+    }
 }
 
 /// One row per (local date, period) whose adhkar session is complete; no row means not complete.

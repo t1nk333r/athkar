@@ -201,7 +201,10 @@ between it and the adhkar tables, so the rules and their fixtures stay the contr
 - `progress[p]` / `targets[p]`: that date's `adhkar_item_progress` rows with a non-null `count` / `target`, as
   numbers.
 - `completedAt[p]`: the `adhkar_days` row's `completed_at` (null without a row, or when the row has none).
-- `manualCompletion[p]`: true if and only if the row's `completion_origin` is `manual`.
+- `manualCompletion[p]`: true if and only if the row's `completion_origin` is not `counters`. An `import` row on
+  the loaded date comes from a file whose `today.date` was ahead of this device (exported just after midnight,
+  or in a zone further east). The file says only that the period was complete, which in the PWA's shape is a
+  manual completion. Loading it as incomplete would delete it on the next save.
 - `history`: the 7 newest earlier dates with an `adhkar_days` row, newest first. A period is `true` if and only
   if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
 
@@ -210,7 +213,8 @@ between it and the adhkar tables, so the rules and their fixtures stay the contr
 - Item rows are upserted and deleted to match the union of `progress[p]` and `targets[p]`. Unchanged rows keep
   their `updated_at`.
 - Each period has an `adhkar_days` row if and only if the rules call it complete (`isComplete`). The origin is
-  `manual` when `manualCompletion`. Otherwise it keeps an existing non-manual origin, or is `counters`.
+  `counters` unless `manualCompletion`. A manual completion keeps an existing `import` origin, and is `manual`
+  otherwise.
 - `history` is not written. Earlier days' rows were written when those days were live.
 
 Save followed by load gives back the same state, except for these shapes, which the tables cannot hold. Each is
@@ -218,7 +222,8 @@ reduced to what the rules read from it, so `count(for:)`, `target(for:)`, `isCom
 change:
 
 - A counter that is not a non-negative integer number (a string, boolean, fraction, negative, or non-finite
-  value). It is stored as `floor(Number(value))`, and dropped when that is not a finite number ≥ 0.
+  value). It is stored as `floor(Number(value))`, and dropped when that is not a finite number ≥ 0. A counter
+  above 2^53 − 1 is stored as 2^53 − 1, far above every target.
 - A target that is not an integer number ≥ 0 after `Number()`. It is stored as that integer, or dropped: a
   non-integer can never match a target option, so it already means the default.
 - `progress[p]` or `targets[p]` held as an array rather than an object. It has only index keys, which match no
@@ -268,14 +273,18 @@ The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repe
 ## Backup import (envelope v1)
 
 Import validates the whole file first. It rejects everything `spec/backup/envelope-v1.schema.json` and
-`tools/backup-validate.mjs` reject: unknown keys at any depth, sections not allowed for `meta.app` (athkar-pwa:
-`adhkar`, `reminders`, `preferences` required, no `ruqyah`; ruqyah-pwa: `ruqyah`, `preferences` required, no
-`adhkar` or `reminders`), `longOrder`/`longOrderPromptAnswered` present in a ruqyah file or missing from an
-athkar file, dates that are not calendar days, instants that are not real UTC times, adhkar history that is not
-strictly newest-first or has an entry on or after `adhkar.today.date`, ruqyah history after `ruqyah.today.date`,
-and counts or targets that are negative, non-finite, or above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`). It then
-merges the file in one transaction, so a file that fails validation changes nothing. Imported rows get
-`updated_at = meta.exportedAt`, which makes import deterministic.
+`tools/backup-validate.mjs` reject: a file that is not UTF-8 (one leading BOM is ignored) or not one JSON document,
+unknown keys at any depth, `null` for an optional section or key, sections not allowed for `meta.app`
+(athkar-pwa: `adhkar`, `reminders`, `preferences` required, no `ruqyah`; ruqyah-pwa: `ruqyah`, `preferences`
+required, no `adhkar` or `reminders`), `longOrder`/`longOrderPromptAnswered` present in a ruqyah file or missing
+from an athkar file, dates that are not calendar days (years 0000–9999, proleptic Gregorian), instants that are
+not real UTC times, adhkar history that is not strictly newest-first, has more than 7 entries, or has an entry on
+or after `adhkar.today.date`, more than 365 ruqyah history entries or any after `ruqyah.today.date`, item or
+segment IDs containing U+0000 (SQLite would store them truncated), and counts or targets that are negative,
+non-finite, or above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`). The JSON is read as `JSON.parse` reads it: a
+duplicate key keeps its last value, a number below the `Double` range is 0, and a lone surrogate escape is a
+string (U+FFFD in Swift). It then merges the file in one transaction, so a file that fails validation changes
+nothing. Imported rows get `updated_at = meta.exportedAt`, which makes import deterministic.
 
 ### Mapping
 
@@ -322,6 +331,8 @@ merges the file in one transaction, so a file that fails validation changes noth
 `reminders` and `preferences` (with `longOrder` keys). For the ruqyah PWA it is `ruqyah` and `preferences`. The
 caller passes `today` (the local date), the zone, the export instant, and the per-export location opt-in.
 
+- `adhkar.today` is the session state `load(date: today)` gives, so `manualCompletion[p]` is true for a `manual`
+  or `import` row.
 - `adhkar.history` lists the dates before `today` that have any adhkar row, newest first, capped at 7. A period
   is `true` if and only if its `adhkar_days` row exists.
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
