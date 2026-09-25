@@ -55,15 +55,35 @@ final class AppModel {
     let morning: AdhkarDeckModel
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
-    var selection: DeckID = .morning {
-        didSet {
-            switch selection {
-            case .morning: lastPeriod = .morning
-            case .evening: lastPeriod = .evening
-            case .ruqyah: break
+    /// The tab on screen: الصباح, المساء or أخرى.
+    var tab: HomeTab = .morning
+    /// The section open in the أخرى tab, or `nil` for its list.
+    var otherSection: OtherSection?
+    /// The deck on screen, or the one the أخرى tab's colours follow while its list shows. Setting it opens the deck.
+    var selection: DeckID {
+        get {
+            switch tab {
+            case .morning: .morning
+            case .evening: .evening
+            case .other: otherSection?.deck ?? .ruqyah
+            }
+        }
+        set {
+            switch newValue {
+            case .morning:
+                tab = .morning
+                lastPeriod = .morning
+            case .evening:
+                tab = .evening
+                lastPeriod = .evening
+            case .ruqyah:
+                tab = .other
+                otherSection = .ruqyah
             }
         }
     }
+    /// The أخرى tab is showing its list of sections.
+    var showsOtherList: Bool { tab == .other && otherSection == nil }
     /// The adhkar period last on screen (`activePeriod`): long-order keeps its current card.
     private(set) var lastPeriod: Period = .morning
     /// Set when a database write fails; the screen shows it once.

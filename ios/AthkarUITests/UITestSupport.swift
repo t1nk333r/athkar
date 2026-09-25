@@ -125,8 +125,15 @@ class DeckTestCase: XCTestCase {
         XCTAssertTrue(wait { control.buttons[option].isSelected }, "\(identifier) → \(option)")
     }
 
+    /// `morning`, `evening`, `other` (its list or last section), or `ruqyah`: أخرى, then its row when the list shows.
     func selectTab(_ id: String) {
-        app.buttons["tab.\(id)"].tap()
+        guard id == "ruqyah" else {
+            app.buttons["tab.\(id)"].tap()
+            return
+        }
+        app.buttons["tab.other"].tap()
+        let row = app.buttons["other.ruqyah"]
+        if row.waitForExistence(timeout: 1) { row.tap() }
     }
 
     /// Settings → manual completion of the morning, so the deck can be browsed freely.

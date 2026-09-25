@@ -22,8 +22,12 @@ Session rules that already have fixtures (`spec/sessions/fixtures/`) are the con
 A **card's number** is its 1-based position in content order, in Arabic-Indic digits. Long-order never changes
 it. **Positions** («٢ من ٢٦») are 1-based positions in the deck as currently ordered.
 
-The screen switches between the decks with three tabs in this order: الصباح, المساء, رقية. Each deck keeps its
-current card while another is shown.
+The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
+list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة); only
+رقية القرين opens yet, and the others are listed as «قريبًا». Each row shows the section's summary copy, and «✓»
+once today is complete. While a section is open, the header title is replaced by a back button with the section's
+title, and tapping أخرى again also returns to the list. The list has no summary and the reset button is disabled.
+The أخرى tab never shows «✓»; completion is shown per row. Each deck keeps its current card while another is shown.
 
 ### Adhkar item fields
 
@@ -98,7 +102,7 @@ The setting is `long_order` (`last` | `original`; default `original`).
 - **Rebuild the order** only at these moments. A deck is not re-sorted on every tap.
   1. When long-order is toggled. The current card of the active adhkar period stays in view at its new position,
      or the deck moves to its first unread card if that item is gone. The other period moves to its first unread
-     card. The active period is the adhkar period shown last, even when the ruqyah tab is open.
+     card. The active period is the adhkar period shown last, even when the أخرى tab is open.
   2. When a target changes while long-order is on. Focus stays on the changed item.
   3. On day rollover.
 - **One-time question.** It is asked 0.7 s after the first launch, while `long_order_prompt_answered` is false. If
@@ -235,7 +239,7 @@ The completion dialog shows:
 - The completion time, «وقت الإكمال: h:mm», localised ar-EG.
 - Buttons: `completion.adhkar.done`, and `completion.adhkar.switch`, which opens the other period.
 
-The tab shows «✓» and is spoken «<section>، مكتملة اليوم».
+The tab (adhkar) or the أخرى row (ruqyah) shows «✓» and is spoken «<section>، مكتملة اليوم».
 
 ### Ruqyah
 
@@ -243,7 +247,7 @@ The tab shows «✓» and is spoken «<section>، مكتملة اليوم».
 - The dialog shows `completion.ruqyah.title` and `completion.ruqyah.message`, with the buttons
   `completion.ruqyah.close` and `completion.ruqyah.restart`. «بدء رقية جديدة» is a day reset (§8); today stays
   recorded.
-- The tab shows «✓» once today is recorded.
+- Its أخرى row shows «✓» once today is recorded.
 
 ## 8. Scoped reset
 

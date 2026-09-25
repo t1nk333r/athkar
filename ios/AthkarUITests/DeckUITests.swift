@@ -209,12 +209,21 @@ final class DeckUITests: DeckTestCase {
         XCTAssertEqual(title.label, "تمت الرقية بحمد الله")
         expectLabel(summary, "٣٣ من ٣٣ تكرارًا")
         XCTAssertTrue(app.staticTexts["summary.status"].label.hasPrefix("تمت رقية اليوم في"))
-        XCTAssertEqual(app.buttons["tab.ruqyah"].label, "رقية القرين، مكتملة اليوم")
 
         app.buttons["completion.primary"].tap()
         expectLabel(summary, "٠ من ٣٣ تكرارًا")
         expectPosition(1, of: 15, noun: "المقطع")
         XCTAssertTrue(app.staticTexts["summary.status"].label.hasPrefix("تمت رقية اليوم في"), "history kept")
+
+        // The أخرى list marks the section done; its row reopens the deck.
+        app.buttons["header.back"].tap()
+        XCTAssertEqual(app.buttons["tab.other"].label, "أخرى")
+        XCTAssertTrue(app.buttons["other.ruqyah"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.buttons["other.ruqyah"].label, "رقية القرين، مكتملة اليوم")
+        XCTAssertFalse(app.buttons["other.sleep"].isEnabled, "not built yet")
+        XCTAssertFalse(headerReset.isEnabled, "nothing to reset on the list")
+        app.buttons["other.ruqyah"].tap()
+        expectPosition(1, of: 15, noun: "المقطع")
 
         headerReset.tap()
         app.buttons["reset.everything"].tap()

@@ -1,8 +1,8 @@
 import AthkarCore
 import SwiftUI
 
-/// The أذكار screen: header (reset and settings), the الصباح / المساء / رقية switch, the session summary and the
-/// deck. Laid out like the PWAs' phone layout (`max-width: 45rem` portrait), which fits one screen without
+/// The أذكار screen: header (reset and settings), the الصباح / المساء / أخرى switch, the session summary and the
+/// deck; the أخرى tab lists its sections first (``OtherSectionsView``). Laid out like the PWAs' phone layout (`max-width: 45rem` portrait), which fits one screen without
 /// scrolling.
 struct HomeView: View {
     let app: AppModel
@@ -39,10 +39,15 @@ struct HomeView: View {
         return VStack(spacing: 0) {
             header(deck, palette: palette)
             tabs(palette: palette)
-            summary(deck.summary, palette: palette)
-                .padding(.top, 5.6)
-                .padding(.bottom, 8)
-            deckView
+            if app.showsOtherList {
+                OtherSectionsView(app: app)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else {
+                summary(deck.summary, palette: palette)
+                    .padding(.top, 5.6)
+                    .padding(.bottom, 8)
+                deckView
+            }
         }
         .padding(.horizontal, min(max(10, width * 0.028), 13.6))
         .padding(.top, 4)
@@ -113,12 +118,35 @@ struct HomeView: View {
     // MARK: Header (`.brand-row`)
 
     private func header(_ deck: any DeckModel, palette: Palette) -> some View {
-        HStack(spacing: 9.6) {
-            Text("بكرة وأصيلا")
-                .font(.title2.weight(.heavy))
-                .foregroundStyle(palette.textPrimary)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("title")
+        let canReset = !app.showsOtherList && deck.canReset
+        return HStack(spacing: 9.6) {
+            if let section = app.otherSection, app.tab == .other {
+                // A section of أخرى: its title leads back to the list, in the title's place so the page keeps its height.
+                Button {
+                    app.otherSection = nil
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.backward").font(.body.weight(.bold))
+                        Text(section.title)
+                            .font(.title3.weight(.heavy))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .foregroundStyle(palette.textPrimary)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("رجوع إلى أخرى")
+                .accessibilityValue(section.title)
+                .accessibilityIdentifier("header.back")
+            } else {
+                Text("بكرة وأصيلا")
+                    .font(.title2.weight(.heavy))
+                    .foregroundStyle(palette.textPrimary)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("title")
+            }
             Spacer(minLength: 0)
             Button {
                 app.ensureCurrentDay()
@@ -132,8 +160,8 @@ struct HomeView: View {
                 .headerButton(palette)
             }
             .buttonStyle(.plain)
-            .disabled(!deck.canReset)
-            .opacity(deck.canReset ? 1 : 0.4)
+            .disabled(!canReset)
+            .opacity(canReset ? 1 : 0.4)
             .accessibilityLabel("خيارات الإعادة")
             .accessibilityIdentifier("header.reset")
             Button {
@@ -155,13 +183,21 @@ struct HomeView: View {
 
     private func tabs(palette: Palette) -> some View {
         HStack(spacing: 4) {
-            ForEach(DeckID.allCases) { id in
-                let selected = app.selection == id
-                let complete = app.deck(id).isComplete
+            ForEach(HomeTab.allCases) { id in
+                let selected = app.tab == id
+                let complete = Self.deck(id).map { app.deck($0).isComplete } ?? false
                 Button {
-                    guard app.selection != id else { return }
+                    if app.tab == id {
+                        // Tapping أخرى again goes back to its list.
+                        if id == .other { app.otherSection = nil }
+                        return
+                    }
                     app.ensureCurrentDay()
-                    app.selection = id
+                    switch id {
+                    case .morning: app.selection = .morning
+                    case .evening: app.selection = .evening
+                    case .other: app.tab = .other
+                    }
                 } label: {
                     HStack(spacing: 6.4) {
                         Image(systemName: Self.icon(id)).imageScale(.small)
@@ -179,7 +215,7 @@ struct HomeView: View {
                     .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(app.deck(id).definition.title + (complete ? "، مكتملة اليوم" : ""))
+                .accessibilityLabel(Self.tabLabel(id) + (complete ? "، مكتملة اليوم" : ""))
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
                 .accessibilityIdentifier("tab.\(id.rawValue)")
             }
@@ -190,19 +226,36 @@ struct HomeView: View {
         .shadow(color: .black.opacity(0.08), radius: 19, y: 14)
     }
 
-    private static func icon(_ id: DeckID) -> String {
+    private static func icon(_ id: HomeTab) -> String {
         switch id {
         case .morning: "sun.max"
         case .evening: "moon"
-        case .ruqyah: "shield"
+        case .other: "square.grid.2x2"
         }
     }
 
-    private static func tabTitle(_ id: DeckID) -> String {
+    private static func tabTitle(_ id: HomeTab) -> String {
         switch id {
         case .morning: "الصباح"
         case .evening: "المساء"
-        case .ruqyah: "رقية"
+        case .other: "أخرى"
+        }
+    }
+
+    private static func tabLabel(_ id: HomeTab) -> String {
+        switch id {
+        case .morning: DeckDefinition.morning.title
+        case .evening: DeckDefinition.evening.title
+        case .other: "أخرى"
+        }
+    }
+
+    /// The deck whose completion the tab's ✓ shows; أخرى shows it per section instead.
+    private static func deck(_ id: HomeTab) -> DeckID? {
+        switch id {
+        case .morning: .morning
+        case .evening: .evening
+        case .other: nil
         }
     }
 
