@@ -234,7 +234,7 @@ content/
   reference/             # frozen upstream snapshots for every ayah used
     alquran-cloud.quran-uthmani.json
     quran-com.v4.uthmani.json
-  REVIEW.md              # named review log: pack version, reviewer, date-free sequence id, scope, outcome
+  REVIEW.md              # named review log: pack version, reviewed pack SHA-256, reviewer, date-free sequence id, scope, outcome
 tools/
   content-validate.mjs   # schema, id uniqueness, order, checksum, two-source Quran comparison
   content-export-pwa.mjs # regenerates ruqyah/content.js and (optionally) the athkar inline arrays from the packs

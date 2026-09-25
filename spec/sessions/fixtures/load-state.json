@@ -843,6 +843,105 @@
       }
     },
     {
+      "name": "DST spring-forward eve, 1 ms before local midnight (America/Los_Angeles): no rollover",
+      "input": {
+        "timeZone": "America/Los_Angeles",
+        "now": "2026-03-08T07:59:59.999Z",
+        "nowLocal": "2026-03-07T23:59:59.999-08:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-03-07\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":true,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-03-07",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "DST fall-back day, 1 ms before local midnight (America/Los_Angeles): no rollover",
+      "input": {
+        "timeZone": "America/Los_Angeles",
+        "now": "2026-11-02T07:59:59.999Z",
+        "nowLocal": "2026-11-01T23:59:59.999-08:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-11-01\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":true,\"evening\":false},\"history\":[]}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-11-01",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": true,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
+      "name": "a stored state followed by trailing text is malformed JSON: empty state for today",
+      "input": {
+        "timeZone": "Asia/Riyadh",
+        "now": "2026-09-23T05:00:00.000Z",
+        "nowLocal": "2026-09-23T08:00:00.000+03:00",
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-09-23\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":true,\"evening\":true},\"history\":[]}x"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-09-23",
+          "progress": {
+            "morning": {},
+            "evening": {}
+          },
+          "targets": {
+            "morning": {},
+            "evening": {}
+          },
+          "completedAt": {
+            "morning": null,
+            "evening": null
+          },
+          "manualCompletion": {
+            "morning": false,
+            "evening": false
+          },
+          "history": []
+        }
+      }
+    },
+    {
       "name": "number literal beyond double range parses as Infinity: that count reads as 0, history kept",
       "input": {
         "timeZone": "Asia/Riyadh",

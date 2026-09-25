@@ -508,6 +508,19 @@ function loadStateCases() {
     loadCase("DST fall-back day, second 01:30 local: still the same local date", ny, Date.parse("2026-11-01T06:30:00.000Z"), {
       "athkar-progress-v2": JSON.stringify(baseState("2026-11-01"))
     }),
+    // The local date uses the zone offset at the instant itself: 1 ms before local midnight on the evening before a
+    // DST change, the offset in force a few hours later (or today) would name the next day.
+    loadCase("DST spring-forward eve, 1 ms before local midnight (America/Los_Angeles): no rollover", "America/Los_Angeles",
+      Date.parse("2026-03-08T07:59:59.999Z"), {
+        "athkar-progress-v2": JSON.stringify(baseState("2026-03-07", { manualCompletion: { morning: true, evening: false } }))
+      }),
+    loadCase("DST fall-back day, 1 ms before local midnight (America/Los_Angeles): no rollover", "America/Los_Angeles",
+      Date.parse("2026-11-02T07:59:59.999Z"), {
+        "athkar-progress-v2": JSON.stringify(baseState("2026-11-01", { manualCompletion: { morning: true, evening: false } }))
+      }),
+    loadCase("a stored state followed by trailing text is malformed JSON: empty state for today", z, riyadh0800, {
+      "athkar-progress-v2": `${JSON.stringify(baseState("2026-09-23", { manualCompletion: { morning: true, evening: true } }))}x`
+    }),
     // JSON.parse edge cases: the native port must parse exactly as the PWA does.
     loadCase("number literal beyond double range parses as Infinity: that count reads as 0, history kept", z, riyadh0800, {
       "athkar-progress-v2": replaceOnce(JSON.stringify(baseState("2026-09-22", {

@@ -2975,6 +2975,7 @@
       return `<span class="history-state${className}">${label} ${marker}</span>`;
     }
 
+    // Same entries the backup carries: real calendar days before today, de-duplicated, newest first (backupHistory).
     function updateHistoryView() {
       const entries = [
         {
@@ -2983,7 +2984,7 @@
           evening: periodIsComplete("evening"),
           isToday: true
         },
-        ...state.history.map(entry => ({ ...entry, isToday: false }))
+        ...backupHistory(state.history, state.date).map(entry => ({ ...entry, isToday: false }))
       ];
       historyList.innerHTML = entries.map(entry => `
         <li class="history-row${entry.isToday ? " is-today" : ""}">
@@ -3735,11 +3736,13 @@
         switchPeriod(tab.dataset.period);
         window.scrollTo({ top: 0, behavior: "auto" });
       });
+      // WAI-ARIA tabs: arrows move to the other tab, Home/End to the first/last.
       tab.addEventListener("keydown", event => {
-        if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+        const tabKeys = { Home: "morning", End: "evening", ArrowLeft: null, ArrowRight: null };
+        if (!(event.key in tabKeys)) return;
         event.preventDefault();
-        const nextPeriod = activePeriod === "morning" ? "evening" : "morning";
-        switchPeriod(nextPeriod);
+        const nextPeriod = tabKeys[event.key] ?? (activePeriod === "morning" ? "evening" : "morning");
+        if (nextPeriod !== activePeriod) switchPeriod(nextPeriod);
         document.getElementById(`${nextPeriod}-tab`).focus();
       });
     });
@@ -3781,15 +3784,18 @@
     function backupDate(value) {
       if (typeof value !== "string" || !backupDatePattern.test(value)) return null;
       const [year, month, day] = value.split("-").map(Number);
-      const date = new Date(Date.UTC(year, month - 1, day));
+      // setUTCFullYear, unlike Date.UTC, keeps years 0–99 (tools/backup-validate.mjs uses the same check).
+      const date = new Date(0);
+      date.setUTCFullYear(year, month - 1, day);
       return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day ? value : null;
     }
 
     // Date.parse rolls impossible instants over (2026-02-30T…, T24:00) instead of rejecting them; require a round trip.
+    // Exported in toISOString form (milliseconds), as the native app re-exports it.
     function backupInstant(value) {
       if (typeof value !== "string" || !backupInstantPattern.test(value)) return null;
       const parsed = new Date(value);
-      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 19) === value.slice(0, 19) ? value : null;
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 19) === value.slice(0, 19) ? parsed.toISOString() : null;
     }
 
     // Same coercion countForState applies on read; values it would treat as 0 because they are not finite or negative are dropped.
@@ -4042,9 +4048,12 @@
       if (root.dataset.theme === "system") applyTheme("system", false);
     });
 
+    // Only #morning and #evening name a tab; anything else (e.g. #ruqyah from the removed tab) shows morning.
     addEventListener("hashchange", () => {
-      const period = location.hash === "#evening" ? "evening" : location.hash === "#morning" ? "morning" : null;
-      if (period && period !== activePeriod) switchPeriod(period, false);
+      if (!location.hash) return;
+      const period = location.hash === "#evening" ? "evening" : "morning";
+      if (location.hash !== `#${period}`) history.replaceState(null, "", `#${period}`);
+      if (period !== activePeriod) switchPeriod(period, false);
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
@@ -4095,6 +4104,7 @@
     updateManualCompletionControls();
     updateInstallUi();
     switchPeriod(activePeriod, false);
+    if (location.hash && location.hash !== `#${activePeriod}`) history.replaceState(null, "", `#${activePeriod}`);
     scheduleReminders();
     scheduleDayRollover();
     document.fonts?.ready.then(() => fitVisibleCard());

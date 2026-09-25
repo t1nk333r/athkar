@@ -1,0 +1,7 @@
+{
+  "note": "Word ranges of the adhkar items marked partial. wordFrom and wordTo are 1-based over the addressed ayah range as the reference gives it (leading basmala dropped), counting only tokens that contain a letter, so a standalone pause mark is not a word. tools/content-validate.mjs requires the item text to equal exactly that slice of each reference source.",
+  "excerpts": {
+    "morning-26": { "wordFrom": 4, "wordTo": 14 },
+    "evening-24": { "wordFrom": 4, "wordTo": 14 }
+  }
+}

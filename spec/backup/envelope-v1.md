@@ -19,8 +19,10 @@ Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). 
   dropped when its own `date` is invalid); adhkar history is de-duplicated by date (first stored entry wins),
   sorted newest first, limited to days before `today.date` and capped at 7; ruqyah history keeps days up to
   `today.date` (today appears once it is completed), capped to the 365 newest. Instants must round-trip
-  through `Date` (so `2026-02-30T…` or `T24:00` are rejected rather than rolled over). So every field below
-  always satisfies the schema.
+  through `Date` (so `2026-02-30T…` or `T24:00` are rejected rather than rolled over) and are written in
+  `toISOString()` form (millisecond precision, extra fraction digits truncated), as the native app writes them.
+  So every field below always satisfies the schema. The PWAs' settings history lists exactly the days the
+  export would carry.
 - Calendar checks apply to the schema's date and instant fields only (`meta.exportedAt`, every `date`,
   `completedAt`, `morningAt`, `eveningAt`, `lastShown`, `location.updatedAt`, and the `ruqyah.history` keys):
   a date is a real proleptic-Gregorian day for any year 0000–9999; an instant is such a date plus a real time

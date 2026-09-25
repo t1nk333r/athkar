@@ -21,11 +21,11 @@
       ],
       "source": "quran-com.v4.imlaei",
       "diff": [
-        "+يئوده",
-        "-يؤوده"
+        "+يَئُودُهُ",
+        "-يَؤُودُهُ"
       ],
       "reviewRecord": "R1",
-      "note": "Same hamza-seat difference as above, seen at letter level."
+      "note": "Same hamza-seat difference as above, seen at letter-and-vowel level (imlaei has no pause marks)."
     }
   ]
 }
