@@ -8,9 +8,9 @@
     },
     "ruqyah": {
       "file": "ruqyah.v1.json",
-      "version": "1.0.0",
-      "sha256": "a7a3dc2172268088aa3295a9fc2f23973fcb0a14b39891c07e2fd5018274bfcf",
-      "reviewRecord": "R2"
+      "version": "1.0.1",
+      "sha256": "6f84db7ade29161d3b7ae756fe8a6ba45b962c35225e33cdd891cba013e5ff89",
+      "reviewRecord": "R4"
     }
   }
 }

@@ -25,6 +25,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>kfgqpc-uthman-taha-naskh.ttf</string>
+		<string>kfgqpc-hafs-v30.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

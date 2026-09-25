@@ -32,6 +32,9 @@ targets:
       - path: ../fonts/kfgqpc-uthman-taha-naskh.ttf
         buildPhase: resources
         group: Resources
+      - path: ../fonts/kfgqpc-hafs-v30.ttf
+        buildPhase: resources
+        group: Resources
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -45,7 +48,7 @@ targets:
         # One-shot, when-in-use, prayer times only (NATIVE_APP_PLAN.md §7.4, §8.5).
         NSLocationWhenInUseUsageDescription: يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.
         UILaunchScreen: {}
-        UIAppFonts: [kfgqpc-uthman-taha-naskh.ttf]
+        UIAppFonts: [kfgqpc-uthman-taha-naskh.ttf, kfgqpc-hafs-v30.ttf]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
   AthkarUITests:
     type: bundle.ui-testing

@@ -17,7 +17,7 @@ struct SourceSheet: View {
                         let isNote = offset == item.noteIndex
                         Text(detail)
                             .font(ReadingFont.detail(metrics.detailText))
-                            .cssLineHeight(metrics.detailLineHeight, size: metrics.detailText, quran: false)
+                            .cssLineHeight(metrics.detailLineHeight, size: metrics.detailText, face: .system)
                             .foregroundStyle(palette.reference)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(isNote ? 14 : 0)

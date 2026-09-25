@@ -1,3 +1,4 @@
+import AthkarCore
 import SwiftUI
 
 /// One card: the PWAs' `.dhikr-card` / `.surah-card`. The whole card is the tap target (a button under the
@@ -361,7 +362,7 @@ private struct DhikrCardBody: View {
                 Text(prefix)
                     .font(item.isQuran ? ReadingFont.quran(metrics.quranPrefix) : .system(size: metrics.quranPrefix,
                                                                                          weight: .heavy))
-                    .cssLineHeight(1.7, size: metrics.quranPrefix, quran: item.isQuran)
+                    .cssLineHeight(1.7, size: metrics.quranPrefix, face: item.isQuran ? .quran : .system)
                     .foregroundStyle(palette.accentStrong)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
@@ -370,7 +371,7 @@ private struct DhikrCardBody: View {
             }
             Text(item.text)
                 .font(item.isQuran ? ReadingFont.quran(size.text) : ReadingFont.dhikr(size.text))
-                .cssLineHeight(size.textLineHeight, size: size.text, quran: item.isQuran)
+                .cssLineHeight(size.textLineHeight, size: size.text, face: item.isQuran ? .quran : .system)
                 .foregroundStyle(palette.textPrimary)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -382,7 +383,7 @@ private struct DhikrCardBody: View {
                     ForEach(Array(item.visibleDetails.enumerated()), id: \.offset) { _, detail in
                         Text(detail)
                             .font(ReadingFont.detail(size.detail))
-                            .cssLineHeight(size.detailLineHeight, size: size.detail, quran: false)
+                            .cssLineHeight(size.detailLineHeight, size: size.detail, face: .system)
                             .foregroundStyle(palette.reference)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -441,7 +442,7 @@ private struct ReviewCardBody: View {
             }
             Text(item.reviewTitle ?? item.text)
                 .font(ReadingFont.dhikr(metrics.dhikrText))
-                .cssLineHeight(metrics.dhikrLineHeight, size: metrics.dhikrText, quran: false)
+                .cssLineHeight(metrics.dhikrLineHeight, size: metrics.dhikrText, face: .system)
                 .foregroundStyle(palette.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -450,7 +451,7 @@ private struct ReviewCardBody: View {
             if let copy = item.reviewCopy {
                 Text(copy)
                     .font(.system(size: copySize, weight: .bold))
-                    .cssLineHeight(1.8, size: copySize, quran: false)
+                    .cssLineHeight(1.8, size: copySize, face: .system)
                     .foregroundStyle(palette.warning)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -517,7 +518,7 @@ private struct RuqyahCardBody: View {
     @Environment(\.readingMetrics) private var metrics
 
     /// Printed as in the ruqyah PWA (`segmentMarkup`), which does not take it from the pack.
-    private static let basmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+    private static let basmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
 
     var body: some View {
         let steps = ReadingMetrics.ruqyahSteps
@@ -532,16 +533,16 @@ private struct RuqyahCardBody: View {
         return VStack(spacing: 0) {
             if segment.basmala {
                 let basmalaSize = size * 0.92
-                Text(Self.basmala)
-                    .font(ReadingFont.quran(basmalaSize))
-                    .cssLineHeight(lineHeight, size: basmalaSize, quran: true)
+                Text(MushafEncoding.kfgqpc(Self.basmala))
+                    .font(ReadingFont.mushaf(basmalaSize))
+                    .cssLineHeight(lineHeight, size: basmalaSize, face: .mushaf)
                     .foregroundStyle(palette.accentStrong)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, index == 0 ? 11.2 : 8)
             }
             Text(ayat(size: size))
-                .font(ReadingFont.quran(size))
-                .cssLineHeight(lineHeight, size: size, quran: true)
+                .font(ReadingFont.mushaf(size))
+                .cssLineHeight(lineHeight, size: size, face: .mushaf)
                 .foregroundStyle(palette.textPrimary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -557,7 +558,8 @@ private struct RuqyahCardBody: View {
         var result = AttributedString()
         for (offset, ayah) in segment.ayahs.enumerated() {
             if offset > 0 { result += AttributedString(" ") }
-            result += AttributedString(ayah.text + " ")
+            // Set in KFGQPC HAFS, which reads the King Fahd Complex's encoding of the text.
+            result += AttributedString(MushafEncoding.kfgqpc(ayah.text) + " ")
             var marker = AttributedString("﴿\(ArabicFormat.number(ayah.number))﴾")
             marker.font = ReadingFont.quran(size * 0.78)
             marker.foregroundColor = palette.accentStrong

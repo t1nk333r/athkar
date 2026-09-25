@@ -14,6 +14,7 @@
 		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
 		4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */; };
 		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
+		5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
 		631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4723AB110276E031039F64 /* DeckModel.swift */; };
 		6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */; };
@@ -32,6 +33,7 @@
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
 		D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042329F8B233CEB3D355A537 /* UITestSupport.swift */; };
 		D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */; };
+		DFDF1111CCFA43A6D30C55BF /* kfgqpc-hafs-v30.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */; };
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
 		F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4280DECA9C457370A36B4B3 /* HomeView.swift */; };
 		F96134CFA1F9A4AF648287CC /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CADA9419CAC70B90CD19CFD /* manifest.json */; };
@@ -62,9 +64,11 @@
 		407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRegressionUITests.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
 		58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDialogs.swift; sourceTree = "<group>"; };
+		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A69E443B335C7F687972315F /* AdhkarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdhkarDeckModel.swift; sourceTree = "<group>"; };
+		A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-hafs-v30.ttf"; path = "../fonts/kfgqpc-hafs-v30.ttf"; sourceTree = "<group>"; };
 		A9B85A291084AF937C35C88A /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
 		B714704C81ED5A22715203DD /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
@@ -125,6 +129,7 @@
 			children = (
 				58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */,
 				F4280DECA9C457370A36B4B3 /* HomeView.swift */,
+				6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */,
 				FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */,
 			);
 			path = Screens;
@@ -145,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				C91EA781FB90F2751708543C /* adhkar.v1.json */,
+				A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */,
 				3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */,
 				3CADA9419CAC70B90CD19CFD /* manifest.json */,
 				CE857DADF37638C3F15FE817 /* ruqyah.v1.json */,
@@ -312,6 +318,7 @@
 			files = (
 				A06DC5D44DC79BA41CF265A5 /* Assets.xcassets in Resources */,
 				31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */,
+				DFDF1111CCFA43A6D30C55BF /* kfgqpc-hafs-v30.ttf in Resources */,
 				B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */,
 				F96134CFA1F9A4AF648287CC /* manifest.json in Resources */,
 				83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */,
@@ -337,6 +344,7 @@
 				03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */,
 				64B683DDF039D486630601E7 /* Haptics.swift in Sources */,
 				F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */,
+				5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */,
 				86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */,
 				BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */,
 				D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */,

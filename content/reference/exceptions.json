@@ -26,6 +26,30 @@
       ],
       "reviewRecord": "R1",
       "note": "Same hamza-seat difference as above, seen at letter-and-vowel level (imlaei has no pause marks)."
+    },
+    {
+      "items": [
+        "jinn-8-13"
+      ],
+      "source": "alquran-cloud.quran-uthmani",
+      "diff": [
+        "+ٱلْءَانَ",
+        "-ٱلْأٓنَ"
+      ],
+      "reviewRecord": "R4",
+      "note": "Al-Jinn 9 is spelt ٱلْأٓنَ, as in the King Fahd Complex's HAFS text (content/reference/kfgqpc-hafs.ruqyah.json); this source writes the hamza on its own before the alef."
+    },
+    {
+      "items": [
+        "jinn-8-13"
+      ],
+      "source": "quran-com.v4.uthmani",
+      "diff": [
+        "+ٱلْءَانَ",
+        "-ٱلْأٓنَ"
+      ],
+      "reviewRecord": "R4",
+      "note": "Al-Jinn 9 is spelt ٱلْأٓنَ, as in the King Fahd Complex's HAFS text (content/reference/kfgqpc-hafs.ruqyah.json); this source writes the hamza on its own before the alef."
     }
   ]
 }

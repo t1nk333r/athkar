@@ -111,20 +111,34 @@ extension EnvironmentValues {
                                                typeScale: 1)
 }
 
-/// The two reading faces: KFGQPC Uthman Taha Naskh for Quran text (bundled, as in both PWAs) and the system Arabic
-/// face for other adhkar (what the athkar PWA's Naskh font stack falls back to on iOS).
+/// The reading faces: KFGQPC Uthman Taha Naskh for the adhkar's Quran text and the ayah markers (bundled, as in both
+/// PWAs), KFGQPC HAFS Uthmanic Script for the ruqyah pages, and the system Arabic face for other adhkar (what the
+/// athkar PWA's Naskh font stack falls back to on iOS).
 enum ReadingFont {
+    /// Which face a text is set in, for its natural line height.
+    enum Face {
+        case system, quran, mushaf
+    }
+
     static let quranName = "KFGQPCUthmanTahaNaskh"
+    /// The ruqyah text is Uthmani script with marks Uthman Taha has no glyphs for (ٱ, ۭ, ۢ, ۥ, ۦ, ۟, waqf signs). Core
+    /// Text sets such a letter in a fallback font, which breaks its join with the letter before; HAFS covers them all.
+    static let mushafName = "KFGQPCHAFSUthmanicScript-Regula"
 
     static func quran(_ size: CGFloat) -> Font { .custom(quranName, fixedSize: size) }
+
+    static func mushaf(_ size: CGFloat) -> Font { .custom(mushafName, fixedSize: size) }
 
     static func dhikr(_ size: CGFloat) -> Font { .system(size: size, weight: .medium) }
 
     static func detail(_ size: CGFloat) -> Font { .system(size: size, weight: .semibold) }
 
-    static func naturalLineHeight(quran: Bool, size: CGFloat) -> CGFloat {
-        if quran { return UIFont(name: quranName, size: size)?.lineHeight ?? size * 1.685 }
-        return UIFont.systemFont(ofSize: size, weight: .medium).lineHeight
+    static func naturalLineHeight(_ face: Face, size: CGFloat) -> CGFloat {
+        switch face {
+        case .system: UIFont.systemFont(ofSize: size, weight: .medium).lineHeight
+        case .quran: UIFont(name: quranName, size: size)?.lineHeight ?? size * 1.685
+        case .mushaf: UIFont(name: mushafName, size: size)?.lineHeight ?? size * 1.758
+        }
     }
 }
 
@@ -132,11 +146,11 @@ extension View {
     /// CSS `line-height: <multiple>` for text set at `size` points: exact from iOS 26, otherwise the difference to the
     /// font's natural line height as extra spacing (never negative, so tight steps are looser there).
     @ViewBuilder
-    func cssLineHeight(_ multiple: CGFloat, size: CGFloat, quran: Bool) -> some View {
+    func cssLineHeight(_ multiple: CGFloat, size: CGFloat, face: ReadingFont.Face) -> some View {
         if #available(iOS 26.0, *) {
             lineHeight(.exact(points: multiple * size))
         } else {
-            lineSpacing(max(0, multiple * size - ReadingFont.naturalLineHeight(quran: quran, size: size)))
+            lineSpacing(max(0, multiple * size - ReadingFont.naturalLineHeight(face, size: size)))
         }
     }
 }
