@@ -179,23 +179,35 @@ struct StorageRepositoryTests {
         #expect(try settings.value(for: .haptics) == true)
     }
 
-    /// Reading the profile invents no rows; each chosen field lands in its own key.
+    /// Reading the profile invents no rows; each chosen field lands in its own key and reads back.
     @Test func calculationSettingsReadEachKeyAndInventNothing() throws {
         let settings = database.settings
-        #expect(try settings.calculationSettings() == CalculationSettings())
+        // The defaults in spec/schema.md: the PWA's behaviour, no adjustments, no Hijri offset.
+        #expect(try settings.calculationSettings()
+                == CalculationSettings(method: .mwl, asrSchool: .standard, highLatitudeRule: .twilightAngle,
+                                       adjustments: PrayerAdjustments(), hijriOffset: 0))
         #expect(try database.reader.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM settings") } == 0)
 
-        try settings.set(.seventhOfTheNight, for: .highLatitudeRule, at: t0)
-        try settings.set(PrayerAdjustments(isha: 5), for: .prayerAdjustments, at: t0)
-        #expect(try settings.calculationSettings()
-                == CalculationSettings(highLatitudeRule: .seventhOfTheNight, adjustments: PrayerAdjustments(isha: 5)))
+        let chosen = CalculationSettings(method: .tehran, asrSchool: .hanafi, highLatitudeRule: .seventhOfTheNight,
+                                         adjustments: PrayerAdjustments(fajr: -2, sunrise: 1, dhuhr: 3, asr: -4,
+                                                                        maghrib: 5, isha: 6),
+                                         hijriOffset: 2)
+        try settings.set(chosen.method, for: .calculationMethod, at: t0)
+        try settings.set(chosen.asrSchool, for: .asrSchool, at: t0)
+        try settings.set(chosen.highLatitudeRule, for: .highLatitudeRule, at: t0)
+        try settings.set(chosen.adjustments, for: .prayerAdjustments, at: t0)
+        try settings.set(chosen.hijriOffset, for: .hijriOffset, at: t0)
+        #expect(try settings.calculationSettings() == chosen)
         let rows = try database.reader.read { db in
             try Row.fetchAll(db, sql: "SELECT key, value_json FROM settings ORDER BY key").map {
                 [$0["key"] as String, $0["value_json"] as String]
             }
         }
-        #expect(rows == [["high_latitude_rule", #""seventh-of-the-night""#],
-                         ["prayer_adjustments", #"{"asr":0,"dhuhr":0,"fajr":0,"isha":5,"maghrib":0,"sunrise":0}"#]])
+        #expect(rows == [["asr_school", #""hanafi""#],
+                         ["calculation_method", #""tehran""#],
+                         ["high_latitude_rule", #""seventh-of-the-night""#],
+                         ["hijri_offset", "2"],
+                         ["prayer_adjustments", #"{"asr":-4,"dhuhr":3,"fajr":-2,"isha":6,"maghrib":5,"sunrise":1}"#]])
     }
 
     @Test func locationIsASingleProfileRoundedToTwoDecimals() throws {

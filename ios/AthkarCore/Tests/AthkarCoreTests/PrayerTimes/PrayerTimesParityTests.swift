@@ -17,9 +17,10 @@ struct PrayerTimesParityTests {
 
     /// Why a vector may sit outside tolerance. Each class is written up in spec/prayer-times/README.md.
     enum Exception: String, CaseIterable {
-        /// The Sun's noon altitude is within about a degree of the horizon (the PWA's day is under 2 h; Tromsø
-        /// 2026-01-15). Sunrise, sunset and Asr are ill-conditioned there: both models' approximations move them by
-        /// many minutes.
+        /// The Sun's noon or midnight altitude is within `grazingMargin` of the sunrise altitude (Tromsø 2026-01-15:
+        /// the first sunrise after the polar night). Sunrise, sunset and Fajr are ill-conditioned there: both
+        /// models' approximations move them by minutes. Asr, when the noon Sun is that low, is not a usable time at
+        /// all; it is checked against the Dhuhr–Maghrib window instead of a bound.
         case grazingSun = "grazing-sun"
         /// Fajr where a night-fraction clamp decides it: the PWA takes the night from the previous day's sunset to
         /// today's sunrise, Adhan's `.twilightAngle` from today's sunset to tomorrow's sunrise. Proven per vector:
@@ -33,10 +34,10 @@ struct PrayerTimesParityTests {
         /// 0h UTC of the date where the PWA takes it at local solar noon.
         case asrShadowDeclination = "asr-shadow-declination"
 
-        /// The largest difference the class accounts for.
+        /// The largest difference the class accounts for (grazing Asr: see above).
         var bound: TimeInterval {
             switch self {
-            case .grazingSun: 32 * 60
+            case .grazingSun: 20 * 60
             case .clampNightSpan: 6 * 60
             case .solarPositionAtEvent: 3 * 60
             case .asrShadowDeclination: 7 * 60
@@ -44,8 +45,14 @@ struct PrayerTimesParityTests {
         }
     }
 
+    /// Degrees between the Sun's noon or midnight altitude and the sunrise altitude (−0.833°) below which a day is
+    /// grazing. The closest out-of-tolerance time outside it, in this grid and in the external review's 30 places, is
+    /// 5.6° away (Nuuk 2026-01-15 Asr).
+    static let grazingMargin = 2.0
+
     /// How closely Adhan must agree with `SolarReference` for a class to apply. Measured over every vector except the
-    /// grazing-sun day: Fajr 8.0 s, sunrise 2.8 s, sunset 4.2 s, Asr 29.0 s.
+    /// grazing-sun day: Fajr 8.0 s, sunrise 2.8 s, sunset 4.2 s, Asr 29.0 s. These are this grid's maxima; above
+    /// about 62° they do not hold (spec/prayer-times/README.md).
     static func referenceAgreement(_ field: Field) -> TimeInterval {
         field == .asr ? 30 : 10
     }
@@ -58,7 +65,7 @@ struct PrayerTimesParityTests {
         #expect(file.vectors.count == 3600)
         var inTolerance: [Field: (count: Int, max: TimeInterval)] = [:]
         var explained: [Exception: (count: Int, max: TimeInterval)] = [:]
-        var notComputed = 0
+        var notComputed = 0, grazingAsr = 0
 
         for vector in file.vectors {
             let zone = try #require(TimeZone(identifier: vector.timeZone))
@@ -97,9 +104,16 @@ struct PrayerTimesParityTests {
                     Issue.record("\(description): outside tolerance and no explanation class applies (\(reason))")
                     continue
                 }
+                explained[exception, default: (0, 0)].count += 1
+                if exception == .grazingSun && field == .asr {
+                    let dhuhr = try #require(schedule.dhuhr), maghrib = try #require(schedule.maghrib)
+                    #expect(dhuhr < actualTime && actualTime <= maghrib,
+                            "\(description): grazing Asr outside the Dhuhr–Maghrib window")
+                    grazingAsr += 1
+                    continue
+                }
                 #expect(abs(delta) <= exception.bound,
                         "\(description): beyond the \(exception.rawValue) bound of \(Int(exception.bound)) s")
-                explained[exception, default: (0, 0)].count += 1
                 explained[exception]!.max = max(explained[exception]!.max, abs(delta))
             }
         }
@@ -111,7 +125,8 @@ struct PrayerTimesParityTests {
         }
         for exception in Exception.allCases {
             let entry = explained[exception] ?? (0, 0)
-            report.append("  \(exception.rawValue): \(entry.count), max \(Int(entry.max.rounded())) s")
+            let asr = exception == .grazingSun ? " (\(grazingAsr) of them Asr, in the window)" : ""
+            report.append("  \(exception.rawValue): \(entry.count)\(asr), max \(Int(entry.max.rounded())) s")
         }
         print(report.joined(separator: "\n"))
     }
@@ -120,10 +135,12 @@ struct PrayerTimesParityTests {
     private func explanation(for field: Field, of vector: PrayerTimesVectors.Vector, actual: Date,
                              schedule: PrayerSchedule, zone: TimeZone,
                              tolerance: TimeInterval) throws -> (Exception?, String) {
-        if field != .fajr {
-            let pwaSunrise = try SessionsFixtures.instant(vector.expected.sunrise!)
-            let pwaSunset = try SessionsFixtures.instant(vector.expected.sunset!)
-            if pwaSunset.timeIntervalSince(pwaSunrise) < 2 * 3600 { return (.grazingSun, "") }
+        let altitudes = SolarReference.extremeAltitudes(on: vector.date, latitude: vector.latitude,
+                                                        longitude: vector.longitude)
+        let noonMargin = altitudes.noon + 0.833, midnightMargin = -0.833 - altitudes.midnight
+        // Asr depends on how high the noon Sun gets; the other three can also graze at midnight.
+        if (field == .asr ? noonMargin : min(noonMargin, midnightMargin)) < Self.grazingMargin {
+            return (.grazingSun, "")
         }
         guard let reference = reference(field, of: vector) else { return (nil, "the reference has no time") }
         let disagreement = actual.timeIntervalSince(reference)

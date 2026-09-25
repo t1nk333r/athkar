@@ -98,17 +98,36 @@ struct PrayerTimesEdgeCaseTests {
         #expect(PrayerTime.allCases.allSatisfy { day[$0] == nil })
     }
 
-    /// On the first day the Sun rises after the polar night every time exists and the day's frame holds. Where Asr
-    /// falls relative to Maghrib is not asserted: the Asr shadow altitude is below the horizon that day and Adhan 1.5.0
-    /// puts Asr after Maghrib (documented in spec/prayer-times/README.md).
-    @Test("Tromsø on the first sunrise after the polar night: six times, Fajr < sunrise < Dhuhr < Maghrib < Isha")
-    func polarNightEdge() throws {
-        let day = try schedule(Place(name: "Tromsø", latitude: 69.65, longitude: 18.96, zone: "Europe/Oslo"),
-                               "2026-01-15")
-        let fajr = try #require(day.fajr), sunrise = try #require(day.sunrise), dhuhr = try #require(day.dhuhr)
-        let asr = try #require(day.asr), maghrib = try #require(day.maghrib), isha = try #require(day.isha)
-        #expect(fajr < sunrise && sunrise < dhuhr && dhuhr < maghrib && maghrib < isha)
-        #expect(asr > dhuhr)
+    /// Where the noon Sun is within a few degrees of the horizon, Adhan 1.5.0's Asr is unusable. Entering the polar
+    /// night (November–December) it comes before Dhuhr, by minutes and then by hours or days; leaving it (January) it
+    /// comes after Maghrib, by minutes and then by hours (Murmansk 01-16: after Isha) or days (Inuvik 01-12). The
+    /// adapter ends Asr at Maghrib and sets `asrClamped` (spec/prayer-times/README.md). Every day of both windows,
+    /// both Asr schools: all six times or none, and when there are times, they are ordered.
+    @Test("Polar-night edges, every day of 1–31 Jan and 10 Nov–20 Dec: fajr < sunrise < dhuhr < asr ≤ maghrib < isha",
+          arguments: [Place(name: "Tromsø (69.65° N)", latitude: 69.65, longitude: 18.96, zone: "Europe/Oslo"),
+                      Place(name: "Murmansk (68.97° N)", latitude: 68.97, longitude: 33.08, zone: "Europe/Moscow"),
+                      Place(name: "Inuvik (68.36° N)", latitude: 68.36, longitude: -133.72, zone: "America/Inuvik"),
+                      Place(name: "Bodø (67.28° N)", latitude: 67.28, longitude: 14.40, zone: "Europe/Oslo")],
+          AsrSchool.allCases)
+    func polarNightEdge(place: Place, school: AsrSchool) throws {
+        let dates = (0..<31).map { PrayerTimesTestCalendar.localDate("2026-01-01", adding: $0) }
+            + (0..<41).map { PrayerTimesTestCalendar.localDate("2026-11-10", adding: $0) }
+        var clamped: [String] = []
+        for date in dates {
+            let schedule = try schedule(place, date, settings: CalculationSettings(asrSchool: school))
+            let times = PrayerTime.allCases.compactMap { schedule[$0] }
+            guard !times.isEmpty else { continue }
+            let label = "\(place.name) \(date) \(school.rawValue)"
+            try #require(times.count == 6, "\(label): only \(times.count) times")
+            let (fajr, sunrise, dhuhr, asr, maghrib, isha) = (times[0], times[1], times[2], times[3], times[4], times[5])
+            #expect(fajr < sunrise && sunrise < dhuhr && dhuhr < asr && asr <= maghrib && maghrib < isha,
+                    "\(label): \(times.map(SessionCalendar.isoString))")
+            #expect(schedule.asrClamped == (asr == maghrib), "\(label): asrClamped \(schedule.asrClamped)")
+            if schedule.asrClamped { clamped.append(date) }
+        }
+        // Adhan misplaces Asr in both windows at each of these places, so both sides of the clamp are exercised.
+        #expect(clamped.contains { $0.hasPrefix("2026-01") } && clamped.contains { !$0.hasPrefix("2026-01") },
+                "\(place.name) \(school.rawValue): clamped on \(clamped)")
     }
 
     // MARK: Southern hemisphere
@@ -186,6 +205,29 @@ struct PrayerTimesEdgeCaseTests {
         #expect((11.5...13.5).contains(noon), "\(place.name) \(date): Dhuhr at \(noon) h")
         let next = try schedule(place, PrayerTimesTestCalendar.localDate(date, adding: 1))
         #expect(abs(next.dhuhr!.timeIntervalSince(day.dhuhr!) - 86_400) <= 60)
+    }
+
+    /// A saved location seen from a device zone about 12 h from its solar time puts Dhuhr near local midnight, and
+    /// the equation of time (±16 min) decides which side. New York from Bangkok: mean transit 23:56, true transit
+    /// 00:10 in February, 23:40 in November. Each day's Dhuhr must be on that day and one solar day after the
+    /// previous one; midday then lies around midnight, so only Dhuhr is on the date.
+    @Test("Zone about 12 h from the location's solar time: Dhuhr on the requested date",
+          arguments: [
+              (Place(name: "New York from Bangkok", latitude: 40.71, longitude: -74.01, zone: "Asia/Bangkok"),
+               "2026-02-11"),
+              (Place(name: "New York from Bangkok", latitude: 40.71, longitude: -74.01, zone: "Asia/Bangkok"),
+               "2026-11-03"),
+              (Place(name: "135° W from Cairo", latitude: 30, longitude: -135, zone: "Africa/Cairo"), "2026-10-25"),
+          ])
+    func solarMidnightZone(place: Place, date: String) throws {
+        let days = try [-1, 0, 1].map { try schedule(place, PrayerTimesTestCalendar.localDate(date, adding: $0)) }
+        for day in days {
+            try checkDay(day, onDate: [.dhuhr], "\(place.name) \(day.localDate)")
+        }
+        for (before, after) in zip(days, days.dropFirst()) {
+            let step = after.dhuhr!.timeIntervalSince(before.dhuhr!)
+            #expect(abs(step - 86_400) <= 60, "\(place.name) \(after.localDate): Dhuhr \(step) s after the day before")
+        }
     }
 
     // MARK: Input

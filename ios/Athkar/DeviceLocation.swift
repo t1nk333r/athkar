@@ -29,6 +29,9 @@ final class DeviceLocation: NSObject {
     /// Resumed with the decision, or `nil` when the wait is cancelled.
     private var authorizationRequest: CheckedContinuation<CLAuthorizationStatus?, Never>?
     private var locationRequest: CheckedContinuation<CLLocation, any Error>?
+    /// Counts admitted calls. A cancellation reaches the main actor one hop late, so it carries its call's number
+    /// and does nothing once a later call has been admitted.
+    private var generation = 0
 
     override init() {
         super.init()
@@ -40,6 +43,8 @@ final class DeviceLocation: NSObject {
     /// Asks for when-in-use permission if it was never asked, then for a single fix.
     func currentCoordinates() async throws(DeviceLocationError) -> GeoCoordinates {
         guard authorizationRequest == nil, locationRequest == nil else { throw .busy }
+        generation &+= 1
+        let call = generation
 
         var status = manager.authorizationStatus
         if status == .notDetermined {
@@ -50,7 +55,7 @@ final class DeviceLocation: NSObject {
                     manager.requestWhenInUseAuthorization()
                 }
             } onCancel: {
-                Task { @MainActor [weak self] in self?.cancelAuthorizationWait() }
+                Task { @MainActor [weak self] in self?.cancelAuthorizationWait(call) }
             }
             guard let decision else { throw .cancelled }
             status = decision
@@ -70,7 +75,7 @@ final class DeviceLocation: NSObject {
                     manager.requestLocation()
                 }
             } onCancel: {
-                Task { @MainActor [weak self] in self?.cancelLocationWait() }
+                Task { @MainActor [weak self] in self?.cancelLocationWait(call) }
             }
         } catch is CancellationError {
             throw .cancelled
@@ -84,16 +89,17 @@ final class DeviceLocation: NSObject {
     }
 
     // Each pending continuation is taken (set to nil) before it is resumed, all on the main actor, so the delegate
-    // and a cancellation can never both resume it.
+    // and a cancellation can never both resume it. A cancellation for an earlier call finds a newer `generation`:
+    // its own wait already ended, and the pending one belongs to the next caller.
 
-    private func cancelAuthorizationWait() {
-        guard let request = authorizationRequest else { return }
+    private func cancelAuthorizationWait(_ call: Int) {
+        guard call == generation, let request = authorizationRequest else { return }
         authorizationRequest = nil
         request.resume(returning: nil)
     }
 
-    private func cancelLocationWait() {
-        guard let request = locationRequest else { return }
+    private func cancelLocationWait(_ call: Int) {
+        guard call == generation, let request = locationRequest else { return }
         locationRequest = nil
         manager.stopUpdatingLocation() // also cancels a pending `requestLocation()`
         request.resume(throwing: CancellationError())

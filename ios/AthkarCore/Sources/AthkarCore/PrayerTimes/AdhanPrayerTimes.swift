@@ -14,28 +14,51 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
         guard let localDay = LocalDate.days(fromDateBytes: ArraySlice(localDate.utf8)) else {
             throw .invalidLocalDate(localDate)
         }
-        // Adhan returns all six times or none (no sunrise or sunset: polar day or night).
-        let times = PrayerTimes(
-            coordinates: Coordinates(latitude: coordinates.latitude, longitude: coordinates.longitude),
-            date: Self.solarDate(localDay: localDay, longitude: coordinates.longitude, zone: zone),
-            calculationParameters: Self.parameters(settings))
-        return PrayerSchedule(localDate: localDate, zone: zone, fajr: times?.fajr, sunrise: times?.sunrise,
-                              dhuhr: times?.dhuhr, asr: times?.asr, maghrib: times?.maghrib, isha: times?.isha)
+        let location = Coordinates(latitude: coordinates.latitude, longitude: coordinates.longitude)
+        let parameters = Self.parameters(settings)
+        func times(utcDay: Int64) -> PrayerTimes? {
+            // Adhan returns all six times or none (no sunrise or sunset: polar day or night).
+            PrayerTimes(coordinates: location, date: Self.utcComponents(utcDay), calculationParameters: parameters)
+        }
+        let guess = Self.meanTransitUTCDay(localDay: localDay, longitude: coordinates.longitude, zone: zone)
+        var result = times(utcDay: guess)
+        // Dhuhr is the true transit (equation of time, the offset in force at that instant, and any Dhuhr
+        // adjustment included). If it lands on a neighbouring civil day, move the UTC date back by that difference.
+        if let dhuhr = result?.dhuhr, case let dhuhrDay = Self.localDay(of: dhuhr, in: zone), dhuhrDay != localDay {
+            result = times(utcDay: guess + localDay - dhuhrDay)
+        }
+        guard let result else {
+            return PrayerSchedule(localDate: localDate, zone: zone, fajr: nil, sunrise: nil, dhuhr: nil, asr: nil,
+                                  maghrib: nil, isha: nil)
+        }
+        // Where the noon Sun barely clears the horizon, Adhan's single correction step can put Asr before Dhuhr or
+        // after Maghrib (even after Isha). Asr then ends at Maghrib (spec/prayer-times/README.md, P3).
+        let asrInWindow = result.dhuhr < result.asr && result.asr <= result.maghrib
+        return PrayerSchedule(localDate: localDate, zone: zone, fajr: result.fajr, sunrise: result.sunrise,
+                              dhuhr: result.dhuhr, asr: asrInWindow ? result.asr : result.maghrib,
+                              maghrib: result.maghrib, isha: result.isha, asrClamped: !asrInWindow)
     }
 
-    /// Adhan computes the solar day around the transit on a UTC calendar date, at about 12:00 − longitude/15 h UTC.
-    /// Where a zone's offset is about a day away from its longitude (Pacific/Kiritimati: UTC+14 at 157° W;
-    /// Pacific/Apia: UTC+13 at 172° W), that transit falls on the next civil day, so pick the UTC date whose transit
-    /// falls on `localDay` in `zone`.
-    static func solarDate(localDay: Int64, longitude: Double, zone: TimeZone) -> DateComponents {
+    /// Adhan computes the solar day around the transit on a UTC calendar date. First guess: the UTC date whose mean
+    /// transit, 12:00 − longitude/15 h UTC, falls on `localDay` in `zone`. Where a zone's offset is about a day away
+    /// from its longitude (Pacific/Kiritimati: UTC+14 at 157° W; Pacific/Apia: UTC+13 at 172° W) that is the
+    /// previous UTC date. The guess ignores the equation of time (±16 min), so `schedule` checks it against Dhuhr.
+    static func meanTransitUTCDay(localDay: Int64, longitude: Double, zone: TimeZone) -> Int64 {
         var transitUTCHours = (12 - longitude / 15).truncatingRemainder(dividingBy: 24)
         if transitUTCHours < 0 { transitUTCHours += 24 }
-        // 12:00 UTC, not local noon; a DST step of error can't move solar noon (9+ h from midnight) to another day.
+        // 12:00 UTC, not the transit: `schedule` corrects the rare guess this puts on the wrong side of midnight.
         let offsetSample = Date(timeIntervalSince1970: Double(localDay) * 86_400 + 43_200)
         let transitLocalHours = transitUTCHours + Double(zone.secondsFromGMT(for: offsetSample)) / 3600
-        let utcDay = localDay - Int64((transitLocalHours / 24).rounded(.down))
-        return utcCalendar.dateComponents([.year, .month, .day],
-                                          from: Date(timeIntervalSince1970: Double(utcDay) * 86_400))
+        return localDay - Int64((transitLocalHours / 24).rounded(.down))
+    }
+
+    /// Days since 1970-01-01 of the civil date of `instant` in `zone`. Adhan's times are whole seconds.
+    static func localDay(of instant: Date, in zone: TimeZone) -> Int64 {
+        Int64(((instant.timeIntervalSince1970 + Double(zone.secondsFromGMT(for: instant))) / 86_400).rounded(.down))
+    }
+
+    static func utcComponents(_ utcDay: Int64) -> DateComponents {
+        utcCalendar.dateComponents([.year, .month, .day], from: Date(timeIntervalSince1970: Double(utcDay) * 86_400))
     }
 
     static func parameters(_ settings: CalculationSettings) -> CalculationParameters {

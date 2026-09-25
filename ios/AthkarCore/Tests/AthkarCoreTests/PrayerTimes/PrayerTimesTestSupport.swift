@@ -87,6 +87,15 @@ enum SolarReference {
         return instant(altitude: altitude, afterNoon: true, on: utcDate, latitude: latitude, longitude: longitude)
     }
 
+    /// The Sun's geometric altitude (degrees, no refraction) at solar noon and at the following solar midnight, from
+    /// the declination at noon: `90 − |latitude − δ|` and `|latitude + δ| − 90`.
+    static func extremeAltitudes(on utcDate: String, latitude: Double,
+                                 longitude: Double) -> (noon: Double, midnight: Double) {
+        let noon = transit(on: utcDate, longitude: longitude)
+        let declination = terms(noon.timeIntervalSince1970 / 86_400 + 2_440_587.5).declination
+        return (90 - abs(latitude - declination), abs(latitude + declination) - 90)
+    }
+
     /// The PWA's `solarTerms`: declination (degrees) and equation of time (minutes) at a Julian day.
     private static func terms(_ julianDay: Double) -> (declination: Double, equationOfTime: Double) {
         let century = (julianDay - 2_451_545) / 36_525

@@ -18,7 +18,8 @@ public enum PrayerTime: String, Codable, Sendable, CaseIterable {
 }
 
 /// One civil day's times as UTC instants, with the zone whose `localDate` they belong to.
-/// A time is `nil` when it cannot be computed for that place and day (polar day or night).
+/// A time is `nil` when it cannot be computed for that place and day (polar day or night); then all six are.
+/// Otherwise Dhuhr falls on `localDate` and Asr is after Dhuhr and no later than Maghrib.
 public struct PrayerSchedule: Equatable, Sendable {
     /// `YYYY-MM-DD` in `zone`.
     public let localDate: String
@@ -26,12 +27,16 @@ public struct PrayerSchedule: Equatable, Sendable {
     public let fajr: Date?
     public let sunrise: Date?
     public let dhuhr: Date?
+    /// After Dhuhr and no later than Maghrib. Equal to Maghrib when `asrClamped`.
     public let asr: Date?
     public let maghrib: Date?
     public let isha: Date?
+    /// The calculation put Asr outside (Dhuhr, Maghrib], so `asr` is Maghrib instead. Happens where the noon Sun
+    /// barely clears the horizon (the first days after a polar night) or where adjustments push Asr past Maghrib.
+    public let asrClamped: Bool
 
     public init(localDate: String, zone: TimeZone, fajr: Date?, sunrise: Date?, dhuhr: Date?, asr: Date?,
-                maghrib: Date?, isha: Date?) {
+                maghrib: Date?, isha: Date?, asrClamped: Bool = false) {
         self.localDate = localDate
         self.zone = zone
         self.fajr = fajr
@@ -40,6 +45,7 @@ public struct PrayerSchedule: Equatable, Sendable {
         self.asr = asr
         self.maghrib = maghrib
         self.isha = isha
+        self.asrClamped = asrClamped
     }
 
     public subscript(time: PrayerTime) -> Date? {
