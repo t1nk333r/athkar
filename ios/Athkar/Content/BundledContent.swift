@@ -14,6 +14,9 @@ struct AdhkarItemContent: Decodable, Equatable, Sendable {
     var countLabel: String?
     var targetOptions: [Int]?
     var noteIndex: Int?
+    /// A review item's card shows these instead of the text and footer (`cardMarkup` for `item.review`).
+    var reviewTitle: String?
+    var reviewCopy: String?
 
     var isQuran: Bool { kind == "quran" }
     var isReview: Bool { kind == "review" }
@@ -101,6 +104,9 @@ struct BundledContent: Sendable {
     }
 
     private static func resource(_ name: String, in bundle: Bundle) throws -> Data {
+        if let directory = TestHooks.contentDirectory {
+            return try Data(contentsOf: directory.appendingPathComponent(name))
+        }
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
             throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: name])
         }

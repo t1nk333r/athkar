@@ -84,18 +84,20 @@ final class AppModel {
     }
 
     /// Opens the on-disk database (Application Support), loads the bundled packs and records their versions.
-    /// `--reset-data` starts from an empty database (UI tests).
+    /// In Debug builds `--reset-data` starts from an empty database (UI tests); Release builds ignore it.
     static func launch(arguments: [String] = ProcessInfo.processInfo.arguments) throws -> AppModel {
         let directory = try FileManager.default
             .url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("Athkar", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let url = directory.appendingPathComponent("athkar.sqlite")
+        #if DEBUG
         if arguments.contains("--reset-data") {
             for suffix in ["", "-wal", "-shm"] {
                 try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
             }
         }
+        #endif
         let database = try AppDatabase.onDisk(at: url)
         let content = try BundledContent.load()
         try BundledContent.recordInstalls(manifest: content.manifest, in: database)

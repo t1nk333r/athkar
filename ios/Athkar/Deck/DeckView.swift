@@ -7,7 +7,7 @@ import SwiftUI
 struct DeckView<Model: DeckModel>: View {
     let model: Model
     let haptics: Bool
-    /// Runs the day rollover; `true` means the day changed and the tap must not count.
+    /// Runs the day rollover; `true` means the day changed and the tap, reset or target change must not apply.
     let ensureCurrentDay: () -> Bool
     let onDeckCompleted: () -> Void
 
@@ -23,7 +23,10 @@ struct DeckView<Model: DeckModel>: View {
 
     private struct DragState {
         var offset: CGFloat = 0
+        /// Whether a touch is down on the deck (`swipeGesture` exists).
+        var isTracking = false
         var axis: Axis?
+        /// Touch-down time, the base of the average velocity (the PWA's `pointerdown`).
         var startedAt = Date.distantPast
         /// `suppressCardClicksUntil`: a tap that ends a horizontal swipe does not count.
         var suppressTapsUntil = Date.distantPast
@@ -202,7 +205,7 @@ struct DeckView<Model: DeckModel>: View {
     }
 
     private func setTarget(_ target: Int, _ index: Int) {
-        guard let change = model.setTarget(target, forCardAt: index) else { return }
+        guard !ensureCurrentDay(), let change = model.setTarget(target, forCardAt: index) else { return }
         if let card = model.cards[safe: model.currentIndex] { Self.announce(card.progressLabel) }
         handle(change, at: index)
     }
@@ -229,6 +232,7 @@ struct DeckView<Model: DeckModel>: View {
     }
 
     private func requestReset(_ index: Int) {
+        guard !ensureCurrentDay() else { return }
         if let confirmation = model.resetConfirmation(forCardAt: index) {
             pendingReset = PendingReset(index: index, confirmation: confirmation)
         } else {
@@ -236,22 +240,30 @@ struct DeckView<Model: DeckModel>: View {
         }
     }
 
+    /// Also run when the question is confirmed, which may be after midnight.
     private func resetCard(_ index: Int) {
+        guard !ensureCurrentDay() else { return }
         model.resetCard(at: index)
         if let card = model.cards[safe: index] { Self.announce(card.progressLabel) }
     }
 
     // MARK: Swipe (`beginCardSwipe` … `finishCardSwipe`)
 
+    /// Recognised from touch-down (the PWA's `pointerdown`), so the swipe's duration starts there; the axis is
+    /// decided after 8 points, as in `moveCardSwipe`.
     private func swipe(width: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 8, coordinateSpace: .global)
+        DragGesture(minimumDistance: 0, coordinateSpace: .global)
             .onChanged { value in
+                if !drag.isTracking {
+                    drag.isTracking = true
+                    drag.startedAt = value.time
+                }
                 let dx = value.translation.width
                 let dy = value.translation.height
                 if drag.axis == nil {
                     // Axis lock: the first 8 points decide; a vertical start leaves the gesture to scrolling.
+                    guard max(abs(dx), abs(dy)) >= 8 else { return }
                     drag.axis = abs(dy) >= abs(dx) ? .vertical : .horizontal
-                    drag.startedAt = value.time
                 }
                 guard drag.axis == .horizontal else { return }
                 drag.suppressTapsUntil = Date().addingTimeInterval(0.45)
@@ -260,6 +272,7 @@ struct DeckView<Model: DeckModel>: View {
             .onEnded { value in
                 let axis = drag.axis
                 drag.axis = nil
+                drag.isTracking = false
                 guard axis == .horizontal else {
                     drag.offset = 0
                     return

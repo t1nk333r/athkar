@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 
 /// Arabic-Indic digits, as the app writes every number (`Intl.NumberFormat("ar-EG")`).
@@ -149,4 +150,71 @@ class DeckTestCase: XCTestCase {
         XCTAssertTrue(option.waitForExistence(timeout: 3), "target \(target)")
         option.tap()
     }
+
+    // MARK: Test hooks (Debug builds only)
+
+    /// A file whose number of days the app adds to today (`ATHKAR_UITEST_DAY_OFFSET_FILE`), starting at 0 and
+    /// removed after the test. Pass `["ATHKAR_UITEST_DAY_OFFSET_FILE": clock.path]` to `launch`.
+    func makeDayClock() throws -> URL {
+        let clock = URL(fileURLWithPath: "/tmp/athkar-uitest-day-\(UUID().uuidString).txt")
+        try setDayOffset(0, clock)
+        addTeardownBlock { try? FileManager.default.removeItem(at: clock) }
+        return clock
+    }
+
+    /// Moves the running app's date; it notices at the next rollover check (tap, reset, foreground…).
+    func setDayOffset(_ days: Int, _ clock: URL) throws {
+        try String(days).write(to: clock, atomically: true, encoding: .utf8)
+    }
+
+    /// Writes a small content pack built from the repository's packs (`ATHKAR_UITEST_CONTENT_DIR`), removed after
+    /// the test. `morning`, `evening` and `ruqyah` pick items and segments by ID, in that order; an entry of
+    /// `review` puts the review item `morning-90` there.
+    func makeContentPack(morning: [String], evening: [String], ruqyah: [String]) throws -> URL {
+        let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("content")
+        func object(_ name: String) throws -> [String: Any] {
+            let data = try Data(contentsOf: source.appendingPathComponent(name))
+            return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any], name)
+        }
+        func pick(_ ids: [String], from items: [[String: Any]]) throws -> [[String: Any]] {
+            try ids.map { id in
+                if id == "review" { return Self.reviewItem }
+                return try XCTUnwrap(items.first { $0["id"] as? String == id }, id)
+            }
+        }
+
+        var manifest = try object("manifest.json")
+        var packs = try XCTUnwrap(manifest["packs"] as? [String: [String: Any]])
+        var adhkar = try object(try XCTUnwrap(packs["adhkar"]?["file"] as? String))
+        var periods = try XCTUnwrap(adhkar["periods"] as? [String: [[String: Any]]])
+        periods["morning"] = try pick(morning, from: periods["morning"] ?? [])
+        periods["evening"] = try pick(evening, from: periods["evening"] ?? [])
+        adhkar["periods"] = periods
+        var ruqyahPack = try object(try XCTUnwrap(packs["ruqyah"]?["file"] as? String))
+        ruqyahPack["segments"] = try pick(ruqyah, from: ruqyahPack["segments"] as? [[String: Any]] ?? [])
+
+        let directory = URL(fileURLWithPath: "/tmp/athkar-uitest-pack-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: directory) }
+        for (packId, pack) in [("adhkar", adhkar), ("ruqyah", ruqyahPack)] {
+            let data = try JSONSerialization.data(withJSONObject: pack)
+            let file = try XCTUnwrap(packs[packId]?["file"] as? String)
+            try data.write(to: directory.appendingPathComponent(file))
+            packs[packId]?["sha256"] = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        }
+        manifest["packs"] = packs
+        try JSONSerialization.data(withJSONObject: manifest).write(to: directory.appendingPathComponent("manifest.json"))
+        return directory
+    }
+
+    static let reviewTitle = "ذكر قيد المراجعة"
+    static let reviewCopy = "يُراجَع نصه ومصدره قبل اعتماده."
+
+    /// A review item as `content/schema/adhkar.schema.json` allows it: `text` and `details` are required of every
+    /// item, but the card shows `reviewTitle` and `reviewCopy`.
+    static let reviewItem: [String: Any] = [
+        "id": "morning-90", "kind": "review", "review": true, "text": "نص لا يظهر على البطاقة", "details": [],
+        "reviewTitle": reviewTitle, "reviewCopy": reviewCopy,
+    ]
 }

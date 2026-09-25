@@ -226,8 +226,8 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(wait { !self.headerReset.isEnabled })
     }
 
-    /// Counters, targets, settings and the answered question survive a relaunch; each deck reopens on its first
-    /// unread card.
+    /// Counters, targets, settings (theme included) and the answered question survive a relaunch; each deck reopens
+    /// on its first unread card.
     func testStateSurvivesRelaunch() {
         launch(answer: Self.moveLongLast)
         tapCard()
@@ -235,6 +235,7 @@ final class DeckUITests: DeckTestCase {
         tapCard()
         expectLabel(counter, "ذكر ٢، تم تكراره ١ من أصل ٣ مرات")
         openSettings()
+        choose("داكن", in: "settings.theme")
         choose("كبير", in: "settings.textSize")
         choose("واسع", in: "settings.lineSpacing")
         toggle("settings.manual.evening", to: true)
@@ -253,6 +254,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertEqual(app.buttons["tab.evening"].label, "أذكار المساء، مكتملة اليوم")
 
         openSettings()
+        XCTAssertTrue(app.segmentedControls["settings.theme"].buttons["داكن"].isSelected)
         XCTAssertTrue(app.segmentedControls["settings.textSize"].buttons["كبير"].isSelected)
         XCTAssertTrue(app.segmentedControls["settings.lineSpacing"].buttons["واسع"].isSelected)
         XCTAssertTrue(isOn(reveal(app.switches["settings.longOrder"])))

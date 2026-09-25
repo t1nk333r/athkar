@@ -24,4 +24,14 @@ enum TestHooks {
         nil
         #endif
     }
+
+    /// Reads the manifest and packs from this directory instead of the app bundle
+    /// (`ATHKAR_UITEST_CONTENT_DIR`), so a test can run on a small pack of its own.
+    static var contentDirectory: URL? {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["ATHKAR_UITEST_CONTENT_DIR"].map { URL(fileURLWithPath: $0) }
+        #else
+        nil
+        #endif
+    }
 }

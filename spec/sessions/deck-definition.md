@@ -31,6 +31,7 @@ The card reads these item fields:
 
 - `id`, `kind` (`quran` | `dhikr` | `review`), `text`, `prefix?`, `details[]`
 - `count?`, `countLabel?`, `targetOptions?`, `defaultTarget?`, `noteIndex?`
+- `reviewTitle?`, `reviewCopy?` (review items)
 
 Presentation:
 
@@ -40,7 +41,10 @@ Presentation:
 - The card shows `details[0..<noteIndex]`, or every detail when `noteIndex` is absent or out of range.
 - When `noteIndex < details.count`, a «المصدر والتفاصيل» link opens a sheet with all the details. The detail at
   `noteIndex` is styled as a note.
-- `review` items are shown with the badge «بحاجة إلى مراجعة». They are never counted, and cannot be tapped.
+- `review` items are never counted and cannot be tapped. Their card (`.needs-review`: dashed warning border on a
+  warning tint) shows only the number with the badge «بحاجة إلى مراجعة», then `reviewTitle` (or `text` when
+  absent) in the dhikr text style, then `reviewCopy` in the warning colour (1 rem, bold, line height 1.8). There
+  is no requirement row, counter, reset or tap target, and the body is not fitted; it scrolls if it must.
 
 ### Ruqyah segment fields
 
@@ -186,7 +190,7 @@ Measure the drag in screen coordinates, not layout-mirrored ones. A **rightward*
 - `distance = |dx|`
 - `threshold = max(32, min(52, cardWidth × 0.1))`
 - `velocity` in pt/ms: the recent velocity when its sign matches `dx`, taking `max(|recent|, average)`. Otherwise
-  the average (`|dx| / duration`).
+  the average (`|dx| / duration`, with the duration measured from touch-down, not from the axis lock).
 - `flick = distance >= 18 && velocity >= 0.35`
 - `horizontal = distance > |dy| × 0.75`
 
@@ -282,7 +286,8 @@ The storage for all of this is in `spec/schema.md`.
   - A second line: «رقية اليوم لم تكتمل بعد.», or «تمت رقية اليوم في h:mm.» once today is recorded.
 
 **Day rollover.** Runs at local midnight, on returning to the foreground, on a clock or time-zone change, and
-before each tap and reset.
+before each tap, card reset (including a confirmed one) and target change. When that check finds a new date, the
+tap, reset or target change is dropped: it belonged to the previous day's card.
 
 - A new local date loads that date's rows, and each deck opens on its first unread card.
 - Nothing is deleted. The previous day is already history.
@@ -334,10 +339,12 @@ Line heights (multiples of the font size), by the `line_spacing` setting:
   - Tight: text `clamp(1.08, 4.7, 1.48)`, line height 1.65; detail `clamp(0.9, 3.7, 1.04)`, line height 1.5.
 - Ruqyah (`fitCardText`): (scale, line-height reduction) steps (1, 0), (0.94, 0.12), (0.88, 0.24), (0.82, 0.34),
   (0.76, 0.44), (0.70, 0.54).
-  - A platform that cannot set a line height below the font's natural height adds (0.66, 0.54) and (0.62, 0.54).
-    iOS before 26 does this.
-- Acceptance: all 15 ruqyah pages fit without scrolling at the three text sizes on a 375 × 667 pt screen
-  (iOS `AutoFitUITests`).
+  - Native adds (0.66, 0.54) and (0.62, 0.54): iOS sets these pages about one step taller than Chromium, and
+    without them some pages scroll at wide spacing and large text on a 375 pt screen.
+  - A platform that cannot set a line height below the font's natural height adds (0.58, 0.54) and (0.54, 0.54)
+    as well. iOS before 26 does this.
+- Acceptance: all 15 ruqyah pages fit without scrolling at the three text sizes, with comfortable and with wide
+  line spacing, on a 375 × 667 pt screen (iOS `AutoFitUITests`).
 
 **Overflow hint** (native addition; the PWAs show nothing because iOS Safari hides scroll bars). A card that
 scrolls flashes its scroll indicator when it appears. While more than 1 pt of its content lies below the visible

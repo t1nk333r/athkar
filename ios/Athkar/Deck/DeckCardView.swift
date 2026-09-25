@@ -25,27 +25,34 @@ struct DeckCardView: View {
 
     var body: some View {
         ZStack {
-            Button(action: onTap) {
-                Color.clear.contentShape(Rectangle())
+            // A review card has no tap target and no footer (`cardMarkup` for `item.review`).
+            if !card.isReview {
+                Button(action: onTap) {
+                    Color.clear.contentShape(Rectangle())
+                }
+                .buttonStyle(PressTrackingStyle(isPressed: $isPressed))
+                .disabled(card.isComplete)
+                .accessibilityLabel(card.tapLabel)
+                .accessibilityIdentifier("deck.card.tap")
+                // Read after the text and the counter, as the PWAs' `.card-tap-target` comes last in the card.
+                .accessibilitySortPriority(-1)
             }
-            .buttonStyle(PressTrackingStyle(isPressed: $isPressed))
-            .disabled(card.isComplete)
-            .accessibilityLabel(card.tapLabel)
-            .accessibilityIdentifier("deck.card.tap")
-            // Read after the text and the counter, as the PWAs' `.card-tap-target` comes last in the card.
-            .accessibilitySortPriority(-1)
 
             VStack(spacing: 0) {
                 if case let .ruqyah(segment) = card.content {
                     RuqyahCardHead(segment: segment)
                 }
                 switch card.content {
+                case let .dhikr(item) where card.isReview:
+                    ReviewCardBody(item: item, number: card.number)
                 case let .dhikr(item):
                     DhikrCardBody(item: item, number: card.number, onTap: onTap, onSource: onSource)
                 case let .ruqyah(segment):
                     RuqyahCardBody(segment: segment, onTap: onTap)
                 }
-                footer
+                if !card.isReview {
+                    footer
+                }
             }
             .padding(padding)
             .environment(\.cardFill, fill)
@@ -66,21 +73,29 @@ struct DeckCardView: View {
         return isDhikr ? min(max(18.4, vw), 28) : min(max(16.8, vw), 25.6)
     }
 
+    /// `.dhikr-card.is-complete`, and `.dhikr-card.needs-review`: a dashed warning border on a warning tint.
     private var fill: Color {
-        card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surface
+        if card.isReview { return palette.warningSoft.mixed(0.55, with: palette.surface) }
+        return card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surface
     }
 
     private var background: some View {
         shape
             .fill(fill)
             .overlay {
-                shape.strokeBorder(card.isComplete ? palette.completed.mixed(0.48, with: palette.border) : palette.border)
+                if card.isReview {
+                    shape.strokeBorder(palette.warning.mixed(0.6, with: palette.border),
+                                       style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                } else {
+                    shape.strokeBorder(card.isComplete
+                        ? palette.completed.mixed(0.48, with: palette.border) : palette.border)
+                }
             }
             .overlay(alignment: .leading) {
                 if isDhikr {
                     Capsule()
-                        .fill(card.isComplete ? palette.completed : palette.divider)
-                        .frame(width: card.isComplete ? 4.8 : 3.5)
+                        .fill(card.isComplete && !card.isReview ? palette.completed : palette.divider)
+                        .frame(width: card.isComplete && !card.isReview ? 4.8 : 3.5)
                         .padding(.vertical, 17.6)
                 }
             }
@@ -353,15 +368,6 @@ private struct DhikrCardBody: View {
                     .padding(.bottom, 13.6)
                     .allowsHitTesting(false)
             }
-            if item.isReview {
-                Text("بحاجة إلى مراجعة")
-                    .font(.caption.weight(.heavy))
-                    .foregroundStyle(palette.warning)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(palette.warningSoft))
-                    .padding(.bottom, 8)
-            }
             Text(item.text)
                 .font(item.isQuran ? ReadingFont.quran(size.text) : ReadingFont.dhikr(size.text))
                 .cssLineHeight(size.textLineHeight, size: size.text, quran: item.isQuran)
@@ -401,6 +407,58 @@ private struct DhikrCardBody: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// A review item (`.dhikr-card.needs-review`): its number with the badge «بحاجة إلى مراجعة», then `reviewTitle` set
+/// as the text and `reviewCopy` in the warning colour. It is never fitted, so it scrolls when it must.
+private struct ReviewCardBody: View {
+    let item: AdhkarItemContent
+    let number: Int
+
+    @Environment(\.palette) private var palette
+    @Environment(\.readingMetrics) private var metrics
+
+    var body: some View {
+        FittedBody(steps: 1, alignment: .top, onTap: {}) { _ in
+            content
+        }
+    }
+
+    private var content: some View {
+        let copySize = 16 * metrics.typeScale
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 7.2) {
+                CardNumber(number: number)
+                Text("بحاجة إلى مراجعة")
+                    .font(.caption.weight(.heavy))
+                    .foregroundStyle(palette.warning)
+                    .padding(.horizontal, 10.4)
+                    .padding(.vertical, 4)
+                    .frame(minHeight: 32)
+                    .background(Capsule().fill(palette.warningSoft))
+                    .accessibilityIdentifier("deck.card.review.badge")
+            }
+            Text(item.reviewTitle ?? item.text)
+                .font(ReadingFont.dhikr(metrics.dhikrText))
+                .cssLineHeight(metrics.dhikrLineHeight, size: metrics.dhikrText, quran: false)
+                .foregroundStyle(palette.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("deck.card.review.title")
+            if let copy = item.reviewCopy {
+                Text(copy)
+                    .font(.system(size: copySize, weight: .bold))
+                    .cssLineHeight(1.8, size: copySize, quran: false)
+                    .foregroundStyle(palette.warning)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("deck.card.review.copy")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .allowsHitTesting(false)
     }
 }
 

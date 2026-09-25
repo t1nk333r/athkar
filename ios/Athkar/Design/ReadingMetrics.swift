@@ -90,16 +90,19 @@ struct ReadingMetrics: Equatable, Sendable {
         var lead: CGFloat
     }
 
-    /// Unfitted, then `.is-fit-1` … `.is-fit-5`. Before iOS 26 a line can be no shorter than the font's natural line
-    /// height (1.685em for Uthman Taha), so the last steps save less height than the PWA's `line-height`; two
-    /// smaller steps make up for it there, so a page that fits on iOS 26 at step 5 still fits instead of scrolling.
+    /// Unfitted, then `.is-fit-1` … `.is-fit-5`, then two native steps: at the same width iOS sets these pages about
+    /// one step taller than the PWA in Chromium, so with wide spacing and large text on a 375 pt screen some needed
+    /// more than step 5; `(0.66, 0.54)` and `(0.62, 0.54)` keep them from scrolling. Before iOS 26 a line can be no
+    /// shorter than the font's natural line height (1.685em for Uthman Taha), so the last steps save less height
+    /// than the PWA's `line-height`; two more steps make up for it there.
     static var ruqyahSteps: [RuqyahStep] {
         let steps = [
             RuqyahStep(scale: 1, lead: 0), RuqyahStep(scale: 0.94, lead: 0.12), RuqyahStep(scale: 0.88, lead: 0.24),
             RuqyahStep(scale: 0.82, lead: 0.34), RuqyahStep(scale: 0.76, lead: 0.44), RuqyahStep(scale: 0.70, lead: 0.54),
+            RuqyahStep(scale: 0.66, lead: 0.54), RuqyahStep(scale: 0.62, lead: 0.54),
         ]
         if #available(iOS 26.0, *) { return steps }
-        return steps + [RuqyahStep(scale: 0.66, lead: 0.54), RuqyahStep(scale: 0.62, lead: 0.54)]
+        return steps + [RuqyahStep(scale: 0.58, lead: 0.54), RuqyahStep(scale: 0.54, lead: 0.54)]
     }
 }
 
