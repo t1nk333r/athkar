@@ -59,7 +59,7 @@ profile (`CalculationSettings`, spec/prayer-times/README.md).
 | `haptics` | boolean | `true` | `athkar-haptics` / `ruqyah-haptics` ≠ `"off"` |
 | `long_order` | `"last"` \| `"original"` | `"original"` | `athkar-long-order-v1` |
 | `long_order_prompt_answered` | boolean | `false` | `athkar-long-order-prompt-v1` |
-| `calculation_method` | `"mwl"` \| `"umm-al-qura"` \| `"egyptian"` \| `"karachi"` \| `"north-america"` (the PWA's five), or a native-only adhan-swift preset: `"dubai"` \| `"moonsighting-committee"` \| `"kuwait"` \| `"qatar"` \| `"singapore"` \| `"tehran"` \| `"turkey"` | `"mwl"` | `athkar-reminders-v2.calculationMethod` |
+| `calculation_method` | `"mwl"` \| `"umm-al-qura"` \| `"egyptian"` \| `"karachi"` \| `"north-america"` (the PWA's five), or a native-only adhan-swift preset: `"dubai"` \| `"moonsighting-committee"` \| `"kuwait"` \| `"qatar"` \| `"singapore"` \| `"tehran"` \| `"turkey"` | `"mwl"` (the key's default and what a backup exports while unset; the app calculates an unset method as `"umm-al-qura"`, or `"mwl"` beyond 48° N/S: `CalculationMethod.unsetDefault`) | `athkar-reminders-v2.calculationMethod` |
 | `asr_school` | `"standard"` \| `"hanafi"` | `"standard"` | `athkar-reminders-v2.asrSchool` |
 | `high_latitude_rule` | `"twilight-angle"` \| `"middle-of-the-night"` \| `"seventh-of-the-night"` | `"twilight-angle"` | none (the PWA's fixed clamp is the twilight-angle rule) |
 | `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |

@@ -55,6 +55,7 @@ final class AppModel {
     let morning: AdhkarDeckModel
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
+    let prayer: PrayerTimesModel
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -84,6 +85,8 @@ final class AppModel {
     }
     /// The أخرى tab is showing its list of sections.
     var showsOtherList: Bool { tab == .other && otherSection == nil }
+    /// A deck is on screen (not the أخرى list, nor a section without a deck such as أوقات الصلاة).
+    var showsDeck: Bool { tab != .other || otherSection?.deck != nil }
     /// The adhkar period last on screen (`activePeriod`): long-order keeps its current card.
     private(set) var lastPeriod: Period = .morning
     /// Set when a database write fails; the screen shows it once.
@@ -98,6 +101,7 @@ final class AppModel {
         morning = AdhkarDeckModel(period: .morning, session: adhkar)
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
+        prayer = try PrayerTimesModel(database: database, report: report)
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
         }

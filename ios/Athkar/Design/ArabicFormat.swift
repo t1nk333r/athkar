@@ -12,8 +12,10 @@ enum ArabicFormat {
     }
 
     /// `Intl.DateTimeFormat("ar-EG", { hour: "numeric", minute: "2-digit" })`, e.g. «٥:٠٣ م».
-    static func time(_ instant: Date) -> String {
-        instant.formatted(Date.FormatStyle(locale: Locale(identifier: "ar-EG")).hour().minute())
+    static func time(_ instant: Date, in zone: TimeZone = .current) -> String {
+        var style = Date.FormatStyle(locale: Locale(identifier: "ar-EG")).hour().minute()
+        style.timeZone = zone
+        return instant.formatted(style)
     }
 
     /// `dayCountLabel(count)` in both PWAs.

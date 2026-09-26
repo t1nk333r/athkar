@@ -42,6 +42,9 @@ struct HomeView: View {
             if app.showsOtherList {
                 OtherSectionsView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .prayerTimes {
+                PrayerTimesView(model: app.prayer)
+                    .frame(maxHeight: .infinity, alignment: .top)
             } else {
                 summary(deck.summary, palette: palette)
                     .padding(.top, 5.6)
@@ -118,7 +121,7 @@ struct HomeView: View {
     // MARK: Header (`.brand-row`)
 
     private func header(_ deck: any DeckModel, palette: Palette) -> some View {
-        let canReset = !app.showsOtherList && deck.canReset
+        let canReset = app.showsDeck && deck.canReset
         return HStack(spacing: 9.6) {
             if let section = app.otherSection, app.tab == .other {
                 // A section of أخرى: its title leads back to the list, in the title's place so the page keeps its height.

@@ -97,6 +97,15 @@ twilight, and above 55° it uses 1/7 of the night.
 - **User adjustments.** Each one moves exactly its own time by minutes × 60 s, for both +7 and −3, and leaves the
   other five alone.
 
+## Default method: Umm al-Qura below 48°
+
+While the user has not chosen a method, the app calculates with Umm al-Qura, and with MWL beyond 48° N or S
+(`CalculationMethod.unsetDefault`, content owner's decision of 2026-09-26). Umm al-Qura's Isha is an interval
+(Maghrib + 90 min), which the high-latitude rule does not bound: at Fairbanks (64.84° N) on 2026-06-21 it falls after
+the next Fajr (`UnsetMethodDefaultTests`). MWL's angle-based Isha is bounded. The settings key's default, and what a
+backup exports while the method is unset, stay `mwl`, the PWAs' default. A method the user picks, including the one
+the app was already using, is stored and always wins.
+
 ## Default high-latitude rule: twilight angle
 
 The PWA has one fixed rule: Fajr = max(angle Fajr, sunrise − night × fajrAngle/60). It applies at every latitude.

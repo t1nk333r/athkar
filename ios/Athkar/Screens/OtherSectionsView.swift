@@ -35,13 +35,16 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// The deck the section opens, or `nil` while it is not built yet.
+    /// The deck the section opens, if it is a deck.
     var deck: DeckID? {
         switch self {
         case .ruqyah: .ruqyah
         case .sleep, .afterPrayer, .waking, .prayerTimes, .qibla: nil
         }
     }
+
+    /// Whether the section opens yet; the rest are listed as «قريبًا».
+    var isAvailable: Bool { deck != nil || self == .prayerTimes }
 }
 
 /// The أخرى tab's list: one row per section, with its progress today where it has a deck.
@@ -74,21 +77,22 @@ struct OtherSectionsView: View {
 
     private func row(_ section: OtherSection) -> some View {
         let deck = section.deck.map(app.deck)
+        let available = section.isAvailable
         return Button {
-            guard section.deck != nil else { return }
+            guard available else { return }
             app.ensureCurrentDay()
             app.otherSection = section
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: section.icon)
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(deck == nil ? palette.textSecondary : palette.accentStrong)
+                    .foregroundStyle(available ? palette.accentStrong : palette.textSecondary)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(section.title)
                         .font(.body.weight(.heavy))
-                        .foregroundStyle(deck == nil ? palette.textSecondary : palette.textPrimary)
-                    Text(deck?.summary.copy ?? "قريبًا")
+                        .foregroundStyle(available ? palette.textPrimary : palette.textSecondary)
+                    Text(subtitle(section, deck: deck))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(deck?.isComplete == true ? palette.completed : palette.textSecondary)
                 }
@@ -96,7 +100,7 @@ struct OtherSectionsView: View {
                 if deck?.isComplete == true {
                     Text("✓").font(.body.weight(.heavy)).foregroundStyle(palette.completed)
                 }
-                if deck != nil {
+                if available {
                     Image(systemName: "chevron.forward")
                         .font(.footnote.weight(.bold))
                         .foregroundStyle(palette.textSecondary)
@@ -107,10 +111,20 @@ struct OtherSectionsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(deck == nil)
-        .opacity(deck == nil ? 0.55 : 1)
-        .accessibilityLabel(section.title + (deck.map { $0.isComplete ? "، مكتملة اليوم" : "" } ?? "، قريبًا"))
-        .accessibilityValue(deck?.summary.copy ?? "")
+        .disabled(!available)
+        .opacity(available ? 1 : 0.55)
+        .accessibilityLabel(section.title + (!available ? "، قريبًا" : deck?.isComplete == true ? "، مكتملة اليوم" : ""))
+        .accessibilityValue(available ? subtitle(section, deck: deck) : "")
         .accessibilityIdentifier("other.\(section.rawValue)")
+    }
+
+    /// The deck's summary, the next prayer, or «قريبًا».
+    private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
+        if let deck { return deck.summary.copy }
+        guard section == .prayerTimes else { return "قريبًا" }
+        guard let next = app.prayer.nextPrayer() else {
+            return app.prayer.location == nil ? "حدّد موقعك لعرض المواقيت" : "لا مواقيت لهذا اليوم في موقعك"
+        }
+        return "\(PrayerNames.name(next.prayer)) \(ArabicFormat.time(next.at, in: app.prayer.zone))"
     }
 }

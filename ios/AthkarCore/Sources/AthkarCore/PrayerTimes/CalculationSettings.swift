@@ -18,6 +18,18 @@ public enum CalculationMethod: String, Codable, Sendable, CaseIterable {
     case tehran
     case turkey
 
+    /// Beyond this latitude, north or south, Umm al-Qura's fixed 90-minute Isha can fall after the next Fajr in
+    /// summer; there an unset method is `mwl`, whose angle-based Isha the high-latitude rule bounds.
+    public static let ummAlQuraLatitudeLimit = 48.0
+
+    /// What the app calculates with while the user has not chosen a method: Umm al-Qura, except beyond
+    /// ``ummAlQuraLatitudeLimit`` (content owner's decision, 2026-09-26). The PWAs, and the settings key's
+    /// `defaultValue`, stay `mwl`.
+    public static func unsetDefault(latitude: Double?) -> CalculationMethod {
+        guard let latitude else { return .ummAlQura }
+        return abs(latitude) > ummAlQuraLatitudeLimit ? .mwl : .ummAlQura
+    }
+
     /// The methods the PWA offers; backup envelope v1 carries only these.
     public var isPWAMethod: Bool {
         switch self {
@@ -89,13 +101,24 @@ public struct CalculationSettings: Codable, Equatable, Sendable {
 }
 
 extension SettingsRepository {
-    /// The stored profile, with each key's default where no row exists.
+    /// The stored profile, with each key's default where no row exists. This is the profile a backup exports.
     public func calculationSettings() throws -> CalculationSettings {
+        try calculationSettings(unsetMethod: SettingKey.calculationMethod.defaultValue)
+    }
+
+    /// The profile to calculate with at `latitude`: as ``calculationSettings()``, except that an unset method is
+    /// ``CalculationMethod/unsetDefault(latitude:)``.
+    public func calculationSettings(latitude: Double?) throws -> CalculationSettings {
+        try calculationSettings(unsetMethod: CalculationMethod.unsetDefault(latitude: latitude))
+    }
+
+    private func calculationSettings(unsetMethod: CalculationMethod) throws -> CalculationSettings {
         try writer.read { db in
             func value<Value>(_ key: SettingKey<Value>) throws -> Value {
                 try Self.value(in: db, for: key) ?? key.defaultValue
             }
-            return CalculationSettings(method: try value(.calculationMethod), asrSchool: try value(.asrSchool),
+            return CalculationSettings(method: try Self.value(in: db, for: .calculationMethod) ?? unsetMethod,
+                                       asrSchool: try value(.asrSchool),
                                        highLatitudeRule: try value(.highLatitudeRule),
                                        adjustments: try value(.prayerAdjustments),
                                        hijriOffset: try value(.hijriOffset))

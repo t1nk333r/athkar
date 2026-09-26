@@ -23,9 +23,9 @@ A **card's number** is its 1-based position in content order, in Arabic-Indic di
 it. **Positions** («٢ من ٢٦») are 1-based positions in the deck as currently ordered.
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
-list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة); only
-رقية القرين opens yet, and the others are listed as «قريبًا». Each row shows the section's summary copy, and «✓»
-once today is complete. While a section is open, the header title is replaced by a back button with the section's
+list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة); رقية القرين
+and أوقات الصلاة open, and the others are listed as «قريبًا». A deck row shows the deck's summary copy, and «✓»
+once today is complete; the أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض المواقيت». While a section is open, the header title is replaced by a back button with the section's
 title, and tapping أخرى again also returns to the list. The list has no summary and the reset button is disabled.
 The أخرى tab never shows «✓»; completion is shown per row. Each deck keeps its current card while another is shown.
 
