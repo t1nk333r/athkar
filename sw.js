@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v27";
+const CACHE_NAME = "athkar-static-v28";
 // Navigations are answered from the network and fall back to ./index.html, so "./" is never read from the cache.
 const APP_SHELL = [
   "./index.html",
@@ -9,6 +9,7 @@ const APP_SHELL = [
   "./icons/icon-192.png?v=13",
   "./icons/icon-512.png?v=13",
   "./fonts/kfgqpc-uthman-taha-naskh.ttf",
+  "./fonts/kfgqpc-hafs-v30.ttf",
 ];
 
 self.addEventListener("install", event => {

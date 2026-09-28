@@ -14,9 +14,10 @@ final class DeckRegressionUITests: DeckTestCase {
         let more = app.buttons["deck.card.more"]
         let detail = app.staticTexts.matching(identifier: "deck.card.detail").firstMatch
         XCTAssertTrue(more.waitForExistence(timeout: 3), "no «المزيد» on an overflowing card")
-        XCTAssertFalse(detail.isHittable, "the detail should start below the visible area")
-
         let scroll = app.scrollViews["deck.card.overflow"]
+        // Its first line may show under the fade; the rest is past the visible area.
+        XCTAssertGreaterThan(detail.frame.maxY, scroll.frame.maxY, "the detail should run past the visible area")
+
         for _ in 0..<4 where more.exists {
             scroll.swipeUp()
         }

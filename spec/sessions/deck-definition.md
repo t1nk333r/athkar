@@ -40,8 +40,9 @@ The card reads these item fields:
 Presentation:
 
 - `prefix` is centred above the text.
-- `quran` items use KFGQPC Uthman Taha Naskh for the prefix and text. Other items use the platform's Arabic
-  Naskh/system face.
+- `quran` items (all in the Uthmani edition) use KFGQPC HAFS for the prefix and text, converted to the King Fahd
+  Complex's encoding (`MushafEncoding.kfgqpc`, `kfgqpcEncoding` in the PWA); their ﴿n﴾ numbers stay in KFGQPC Uthman
+  Taha Naskh. Other items use the platform's Arabic Naskh/system face.
 - The card shows `details[0..<noteIndex]`, or every detail when `noteIndex` is absent or out of range.
 - When `noteIndex < details.count`, a «المصدر والتفاصيل» link opens a sheet with all the details. The detail at
   `noteIndex` is styled as a note.

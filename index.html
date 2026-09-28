@@ -55,6 +55,17 @@
       font-display: swap;
     }
 
+    /* The Quran items, in the Uthmani mushaf text: Uthman Taha lacks glyphs for several Uthmani marks, and a letter
+       set in a fallback font loses its join in Safari. HAFS covers them; it reads the King Fahd Complex's encoding
+       (kfgqpcEncoding). The ayah numbers stay in Uthman Taha. */
+    @font-face {
+      font-family: "KFGQPC HAFS";
+      src: url("./fonts/kfgqpc-hafs-v30.ttf") format("truetype");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
     :root {
       color-scheme: light;
       --background: #f7f5ef;
@@ -776,8 +787,13 @@
 
     .dhikr-card.quran .dhikr-prefix,
     .dhikr-card.quran .dhikr-text {
-      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      font-family: "KFGQPC HAFS", "KFGQPC Uthman Taha Naskh", var(--font-arabic);
       font-weight: 400;
+    }
+
+    .dhikr-card.quran .ayah-number {
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      white-space: nowrap;
     }
 
     .dhikr-card.quran .dhikr-prefix { font-size: var(--quran-prefix-size); }
@@ -1915,7 +1931,7 @@
 
     const ayatAlKursi = {
       quran: true,
-      text: `اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا وَهُوَ الْعَلِيُّ الْعَظِيمُ ﴿٢٥٥﴾`,
+      text: `ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلْحَىُّ ٱلْقَيُّومُ ۚ لَا تَأْخُذُهُۥ سِنَةٌۭ وَلَا نَوْمٌۭ ۚ لَّهُۥ مَا فِى ٱلسَّمَٰوَٰتِ وَمَا فِى ٱلْأَرْضِ ۗ مَن ذَا ٱلَّذِى يَشْفَعُ عِندَهُۥٓ إِلَّا بِإِذْنِهِۦ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَىْءٍۢ مِّنْ عِلْمِهِۦٓ إِلَّا بِمَا شَآءَ ۚ وَسِعَ كُرْسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ ۖ وَلَا يَـُٔودُهُۥ حِفْظُهُمَا ۚ وَهُوَ ٱلْعَلِىُّ ٱلْعَظِيمُ ﴿٢٥٥﴾`,
       details: [
         `من قالها حين يصبح أجير من الجن حتى يمسي ومن قالها حين يمسي أجير منهم حتى يصبح. (رواه الحاكم)`,
         `«البقرة»`
@@ -1924,8 +1940,8 @@
 
     const alIkhlas = {
       quran: true,
-      prefix: `بسم الله الرحمن الرحيم`,
-      text: `قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾ اللَّهُ الصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ ﴿٤﴾`,
+      prefix: `بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ`,
+      text: `قُلْ هُوَ ٱللَّهُ أَحَدٌ ﴿١﴾ ٱللَّهُ ٱلصَّمَدُ ﴿٢﴾ لَمْ يَلِدْ وَلَمْ يُولَدْ ﴿٣﴾ وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ ﴿٤﴾`,
       details: [`«الإخلاص»`],
       count: 3,
       countLabel: `ثلاث مرات`
@@ -1933,8 +1949,8 @@
 
     const alFalaq = {
       quran: true,
-      prefix: `بسم الله الرحمن الرحيم`,
-      text: `قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ﴿١﴾ مِنْ شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ﴿٤﴾ وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾`,
+      prefix: `بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ`,
+      text: `قُلْ أَعُوذُ بِرَبِّ ٱلْفَلَقِ ﴿١﴾ مِن شَرِّ مَا خَلَقَ ﴿٢﴾ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ﴿٣﴾ وَمِن شَرِّ ٱلنَّفَّٰثَٰتِ فِى ٱلْعُقَدِ ﴿٤﴾ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ ﴿٥﴾`,
       details: [`«الفلق»`],
       count: 3,
       countLabel: `ثلاث مرات`
@@ -1942,8 +1958,8 @@
 
     const anNas = {
       quran: true,
-      prefix: `بسم الله الرحمن الرحيم`,
-      text: `قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴿١﴾ مَلِكِ النَّاسِ ﴿٢﴾ إِلَٰهِ النَّاسِ ﴿٣﴾ مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ﴿٤﴾ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ﴿٥﴾ مِنَ الْجِنَّةِ وَالنَّاسِ ﴿٦﴾`,
+      prefix: `بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ`,
+      text: `قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ ﴿١﴾ مَلِكِ ٱلنَّاسِ ﴿٢﴾ إِلَٰهِ ٱلنَّاسِ ﴿٣﴾ مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ ﴿٤﴾ ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ ﴿٥﴾ مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ ﴿٦﴾`,
       details: [`«الناس»`],
       count: 3,
       countLabel: `ثلاث مرات`
@@ -2036,7 +2052,7 @@
 
     const comprehensiveDua = {
       quran: true,
-      text: `رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ ﴿٢٠١﴾`,
+      text: `رَبَّنَآ ءَاتِنَا فِى ٱلدُّنْيَا حَسَنَةًۭ وَفِى ٱلْءَاخِرَةِ حَسَنَةًۭ وَقِنَا عَذَابَ ٱلنَّارِ ﴿٢٠١﴾`,
       details: [
         `دعاء جامع من القرآن، كان النبي ﷺ يُكثر منه. (رواه البخاري ومسلم)`,
         `«البقرة»`,
@@ -2454,6 +2470,48 @@
       return Boolean(item.count || item.targetOptions);
     }
 
+    // The pack's Quran items store Tanzil's Uthmani encoding; KFGQPC HAFS expects the King Fahd Complex's. Mirrors
+    // MushafEncoding.kfgqpc in the athkar repository: sukun U+0652 → U+06E1, rounded zero U+06DF → U+0652, open
+    // tanween (ً ٌ + U+06ED, ٍ + U+06E2) → U+08F0–U+08F2, iqlab (ً ٌ + U+06E2, ٍ + U+06ED) → َ ُ ِ + the meem,
+    // undotted final ya ى → ي unless a true alef maksura (after a bare fatha, or with ٰ), waqf signs join their word.
+    function kfgqpcEncoding(text) {
+      const pairs = {
+        "\u064B\u06ED": "\u08F0", "\u064C\u06ED": "\u08F1", "\u064D\u06E2": "\u08F2",
+        "\u064B\u06E2": "\u064E\u06E2", "\u064C\u06E2": "\u064F\u06E2", "\u064D\u06ED": "\u0650\u06ED",
+      };
+      const chars = Array.from(text);
+      let out = "";
+      for (let i = 0; i < chars.length; i += 1) {
+        const c = chars[i];
+        const next = chars[i + 1] ?? "";
+        if (pairs[c + next]) {
+          out += pairs[c + next];
+          i += 1;
+        } else if (c === "\u0652") {
+          out += "\u06E1";
+        } else if (c === "\u06DF") {
+          out += "\u0652";
+        } else if (c === "\u0649") {
+          const marked = next >= "\u064B" && next <= "\u0652";
+          out += next === "\u0670" || (chars[i - 1] === "\u064E" && !marked) ? "\u0649" : "\u064A";
+        } else if (c === " " && next >= "\u06D6" && next <= "\u06DC") {
+          continue;
+        } else {
+          out += c;
+        }
+      }
+      return out;
+    }
+
+
+    /** A Quran item's text: the ayat in the Complex's encoding for HAFS, each ﴿n﴾ number in Uthman Taha. */
+    function quranTextMarkup(text) {
+      return text
+        .split(/(﴿[٠-٩]+﴾)/)
+        .map(part => /^﴿[٠-٩]+﴾$/.test(part) ? `<span class="ayah-number">${part}</span>` : escapeHtml(kfgqpcEncoding(part)))
+        .join("");
+    }
+
     function escapeHtml(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -2508,8 +2566,8 @@
           <article class="dhikr-card${item.quran ? " quran" : ""}" id="${item.id}" data-id="${item.id}">
             <div class="card-content">
               ${cardHeader}
-              ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.prefix)}</p>` : ""}
-              <p class="dhikr-text">${escapeHtml(item.text)}</p>
+              ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.quran ? kfgqpcEncoding(item.prefix) : item.prefix)}</p>` : ""}
+              <p class="dhikr-text">${item.quran ? quranTextMarkup(item.text) : escapeHtml(item.text)}</p>
               ${details || sourceButton ? `<div class="dhikr-details">${details}${sourceButton}</div>` : ""}
             </div>
             <div class="requirement-row">

@@ -2,18 +2,6 @@
   "exceptions": [
     {
       "items": [
-        "morning-01",
-        "evening-01"
-      ],
-      "source": "alquran-cloud.quran-simple",
-      "diff": [
-        "+ۚ"
-      ],
-      "reviewRecord": "R5",
-      "note": "The ۚ pause mark before وَهُوَ is not in the pack text; reviewer t1nk333r corrected only the hamza seat (R5) and kept the text without the mark."
-    },
-    {
-      "items": [
         "jinn-8-13"
       ],
       "source": "alquran-cloud.quran-uthmani",

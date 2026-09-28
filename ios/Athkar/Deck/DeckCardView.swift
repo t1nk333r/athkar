@@ -339,6 +339,24 @@ private extension EnvironmentValues {
 
 // MARK: - Adhkar card body (`.card-content`)
 
+extension DhikrCardBody {
+    /// A Quran item's text (`quranTextMarkup`): the ayat, stored in the Uthmani references' encoding, converted for
+    /// KFGQPC HAFS; each ﴿n﴾ number stays in Uthman Taha.
+    static func quranText(_ text: String, size: CGFloat) -> AttributedString {
+        var result = AttributedString()
+        var rest = Substring(text)
+        while let marker = rest.firstMatch(of: /﴿[٠-٩]+﴾/) {
+            result += AttributedString(MushafEncoding.kfgqpc(String(rest[..<marker.range.lowerBound])))
+            var number = AttributedString(String(marker.output))
+            number.font = ReadingFont.quran(size)
+            result += number
+            rest = rest[marker.range.upperBound...]
+        }
+        result += AttributedString(MushafEncoding.kfgqpc(String(rest)))
+        return result
+    }
+}
+
 private struct DhikrCardBody: View {
     let item: AdhkarItemContent
     let number: Int
@@ -359,19 +377,21 @@ private struct DhikrCardBody: View {
         VStack(alignment: .leading, spacing: 0) {
             CardNumber(number: number)
             if let prefix = item.prefix {
-                Text(prefix)
-                    .font(item.isQuran ? ReadingFont.quran(metrics.quranPrefix) : .system(size: metrics.quranPrefix,
-                                                                                         weight: .heavy))
-                    .cssLineHeight(1.7, size: metrics.quranPrefix, face: item.isQuran ? .quran : .system)
+                Text(item.isQuran ? MushafEncoding.kfgqpc(prefix) : prefix)
+                    .font(item.isQuran ? ReadingFont.mushaf(metrics.quranPrefix) : .system(size: metrics.quranPrefix,
+                                                                                          weight: .heavy))
+                    .cssLineHeight(1.7, size: metrics.quranPrefix, face: item.isQuran ? .mushaf : .system)
                     .foregroundStyle(palette.accentStrong)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 13.6)
                     .allowsHitTesting(false)
             }
-            Text(item.text)
-                .font(item.isQuran ? ReadingFont.quran(size.text) : ReadingFont.dhikr(size.text))
-                .cssLineHeight(size.textLineHeight, size: size.text, face: item.isQuran ? .quran : .system)
+            Group {
+                if item.isQuran { Text(Self.quranText(item.text, size: size.text)) } else { Text(item.text) }
+            }
+                .font(item.isQuran ? ReadingFont.mushaf(size.text) : ReadingFont.dhikr(size.text))
+                .cssLineHeight(size.textLineHeight, size: size.text, face: item.isQuran ? .mushaf : .system)
                 .foregroundStyle(palette.textPrimary)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)

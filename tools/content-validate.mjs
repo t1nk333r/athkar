@@ -80,6 +80,12 @@ for (const period of ["morning", "evening"]) {
     if (item.kind === "quran") {
       for (const f of quranFields) if (item[f] === undefined) fail(`${where}: quran item missing ${f}`);
       if (item.ayahTo < item.ayahFrom) fail(`${where}: ayahTo < ayahFrom`);
+      // Both apps set every Quran item in KFGQPC HAFS through the Complex's encoding, which reads Uthmani text only.
+      if (item.edition !== "alquran-cloud:quran-uthmani") fail(`${where}: quran items must be alquran-cloud:quran-uthmani (rendered in KFGQPC HAFS), not ${item.edition}`);
+      if (item.prefix !== undefined) {
+        const basmala = reference["alquran-cloud.quran-uthmani"][`${item.surah}:1`]?.normalize("NFC").split(/\s+/).slice(0, 4).join(" ");
+        if (item.prefix.normalize("NFC") !== basmala) fail(`${where}: prefix must be the basmala as alquran-cloud.quran-uthmani gives it for ${item.surah}:1`);
+      }
     } else if ([...quranFields, "partial"].some(f => item[f] !== undefined)) fail(`${where}: quran fields on ${item.kind} item`);
     if ((item.kind === "review") !== (item.review === true)) fail(`${where}: kind review must match review: true`);
     if (item.count !== undefined && item.targetOptions) fail(`${where}: count and targetOptions are exclusive`);
