@@ -791,6 +791,13 @@
       font-weight: 400;
     }
 
+    /* A Quran item kept in the simplified (imla'i) text (pack edition simplified-rasm) is not mushaf text: HAFS would
+       draw its final ي undotted, so it is set in Uthman Taha and skips kfgqpcEncoding. */
+    .dhikr-card.quran.plain-rasm .dhikr-prefix,
+    .dhikr-card.quran.plain-rasm .dhikr-text {
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+    }
+
     .dhikr-card.quran .ayah-number {
       font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
       white-space: nowrap;
@@ -2052,7 +2059,8 @@
 
     const comprehensiveDua = {
       quran: true,
-      text: `رَبَّنَآ ءَاتِنَا فِى ٱلدُّنْيَا حَسَنَةًۭ وَفِى ٱلْءَاخِرَةِ حَسَنَةًۭ وَقِنَا عَذَابَ ٱلنَّارِ ﴿٢٠١﴾`,
+      mushaf: false,
+      text: `رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ ﴿٢٠١﴾`,
       details: [
         `دعاء جامع من القرآن، كان النبي ﷺ يُكثر منه. (رواه البخاري ومسلم)`,
         `«البقرة»`,
@@ -2505,10 +2513,10 @@
 
 
     /** A Quran item's text: the ayat in the Complex's encoding for HAFS, each ﴿n﴾ number in Uthman Taha. */
-    function quranTextMarkup(text) {
+    function quranTextMarkup(text, mushaf = true) {
       return text
         .split(/(﴿[٠-٩]+﴾)/)
-        .map(part => /^﴿[٠-٩]+﴾$/.test(part) ? `<span class="ayah-number">${part}</span>` : escapeHtml(kfgqpcEncoding(part)))
+        .map(part => /^﴿[٠-٩]+﴾$/.test(part) ? `<span class="ayah-number">${part}</span>` : escapeHtml(mushaf ? kfgqpcEncoding(part) : part))
         .join("");
     }
 
@@ -2563,11 +2571,11 @@
 
       return `
         <li data-card-index="${index}">
-          <article class="dhikr-card${item.quran ? " quran" : ""}" id="${item.id}" data-id="${item.id}">
+          <article class="dhikr-card${item.quran ? " quran" : ""}${item.quran && item.mushaf === false ? " plain-rasm" : ""}" id="${item.id}" data-id="${item.id}">
             <div class="card-content">
               ${cardHeader}
-              ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.quran ? kfgqpcEncoding(item.prefix) : item.prefix)}</p>` : ""}
-              <p class="dhikr-text">${item.quran ? quranTextMarkup(item.text) : escapeHtml(item.text)}</p>
+              ${item.prefix ? `<p class="dhikr-prefix">${escapeHtml(item.quran && item.mushaf !== false ? kfgqpcEncoding(item.prefix) : item.prefix)}</p>` : ""}
+              <p class="dhikr-text">${item.quran ? quranTextMarkup(item.text, item.mushaf !== false) : escapeHtml(item.text)}</p>
               ${details || sourceButton ? `<div class="dhikr-details">${details}${sourceButton}</div>` : ""}
             </div>
             <div class="requirement-row">

@@ -25,7 +25,9 @@ export function loadPwaAdhkar(indexPath = join(repoRoot, "index.html")) {
 /** Converts a pack item back to the PWA's in-memory object shape (inverse of the extraction). */
 export function packItemToPwa(item) {
   const { kind, edition, surah, ayahFrom, ayahTo, partial, ...rest } = item;
-  return kind === "quran" ? { quran: true, ...rest } : rest;
+  // Quran items in the simplified text are not set as mushaf text in the PWA (`mushaf: false`).
+  if (kind !== "quran") return rest;
+  return edition === "simplified-rasm" ? { quran: true, mushaf: false, ...rest } : { quran: true, ...rest };
 }
 
 /** Order-insensitive deep equality for plain JSON values. */

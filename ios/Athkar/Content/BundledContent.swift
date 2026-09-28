@@ -7,6 +7,8 @@ import Foundation
 struct AdhkarItemContent: Decodable, Equatable, Sendable {
     var id: String
     var kind: String
+    /// For Quran items: `alquran-cloud:quran-uthmani` (mushaf text, set in KFGQPC HAFS) or `simplified-rasm`.
+    var edition: String?
     var text: String
     var prefix: String?
     var details: [String]
@@ -19,6 +21,9 @@ struct AdhkarItemContent: Decodable, Equatable, Sendable {
     var reviewCopy: String?
 
     var isQuran: Bool { kind == "quran" }
+    /// Mushaf (Uthmani) text goes through `MushafEncoding.kfgqpc` into KFGQPC HAFS; a Quran item kept in the simplified
+    /// (imla'i) text is set in Uthman Taha as written, since HAFS would draw its final ي undotted.
+    var isMushafText: Bool { isQuran && edition != "simplified-rasm" }
     var isReview: Bool { kind == "review" }
     /// `isExplicitlyCounted(item)`: shows `count/target` rather than «اضغط بعد القراءة».
     var isCounted: Bool { (count ?? 0) != 0 || targetOptions != nil }

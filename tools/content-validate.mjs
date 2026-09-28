@@ -81,7 +81,9 @@ for (const period of ["morning", "evening"]) {
       for (const f of quranFields) if (item[f] === undefined) fail(`${where}: quran item missing ${f}`);
       if (item.ayahTo < item.ayahFrom) fail(`${where}: ayahTo < ayahFrom`);
       // Both apps set every Quran item in KFGQPC HAFS through the Complex's encoding, which reads Uthmani text only.
-      if (item.edition !== "alquran-cloud:quran-uthmani") fail(`${where}: quran items must be alquran-cloud:quran-uthmani (rendered in KFGQPC HAFS), not ${item.edition}`);
+      // Items in the Uthmani text are rendered through the Complex's encoding; the al-Baqarah 201 dua is kept in the
+      // simplified (imla'i) text the reviewer chose (R7), checked against quran-simple and quran.com imlaei.
+      if (item.edition !== "alquran-cloud:quran-uthmani" && !(item.edition === "simplified-rasm" && item.partial === true)) fail(`${where}: quran items must be alquran-cloud:quran-uthmani (rendered in KFGQPC HAFS), or simplified-rasm for a partial excerpt, not ${item.edition}`);
       if (item.prefix !== undefined) {
         const basmala = reference["alquran-cloud.quran-uthmani"][`${item.surah}:1`]?.normalize("NFC").split(/\s+/).slice(0, 4).join(" ");
         if (item.prefix.normalize("NFC") !== basmala) fail(`${where}: prefix must be the basmala as alquran-cloud.quran-uthmani gives it for ${item.surah}:1`);

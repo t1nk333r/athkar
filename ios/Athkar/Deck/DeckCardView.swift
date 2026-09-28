@@ -377,10 +377,12 @@ private struct DhikrCardBody: View {
         VStack(alignment: .leading, spacing: 0) {
             CardNumber(number: number)
             if let prefix = item.prefix {
-                Text(item.isQuran ? MushafEncoding.kfgqpc(prefix) : prefix)
-                    .font(item.isQuran ? ReadingFont.mushaf(metrics.quranPrefix) : .system(size: metrics.quranPrefix,
-                                                                                          weight: .heavy))
-                    .cssLineHeight(1.7, size: metrics.quranPrefix, face: item.isQuran ? .mushaf : .system)
+                Text(item.isMushafText ? MushafEncoding.kfgqpc(prefix) : prefix)
+                    .font(item.isMushafText ? ReadingFont.mushaf(metrics.quranPrefix)
+                          : item.isQuran ? ReadingFont.quran(metrics.quranPrefix)
+                          : .system(size: metrics.quranPrefix, weight: .heavy))
+                    .cssLineHeight(1.7, size: metrics.quranPrefix,
+                                   face: item.isMushafText ? .mushaf : item.isQuran ? .quran : .system)
                     .foregroundStyle(palette.accentStrong)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
@@ -388,10 +390,12 @@ private struct DhikrCardBody: View {
                     .allowsHitTesting(false)
             }
             Group {
-                if item.isQuran { Text(Self.quranText(item.text, size: size.text)) } else { Text(item.text) }
+                if item.isMushafText { Text(Self.quranText(item.text, size: size.text)) } else { Text(item.text) }
             }
-                .font(item.isQuran ? ReadingFont.mushaf(size.text) : ReadingFont.dhikr(size.text))
-                .cssLineHeight(size.textLineHeight, size: size.text, face: item.isQuran ? .mushaf : .system)
+                .font(item.isMushafText ? ReadingFont.mushaf(size.text)
+                      : item.isQuran ? ReadingFont.quran(size.text) : ReadingFont.dhikr(size.text))
+                .cssLineHeight(size.textLineHeight, size: size.text,
+                               face: item.isMushafText ? .mushaf : item.isQuran ? .quran : .system)
                 .foregroundStyle(palette.textPrimary)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
