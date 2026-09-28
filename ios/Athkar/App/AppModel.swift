@@ -56,6 +56,7 @@ final class AppModel {
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
     let prayer: PrayerTimesModel
+    let reminders: ReminderModel
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -102,8 +103,28 @@ final class AppModel {
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
         prayer = try PrayerTimesModel(database: database, report: report)
+        reminders = try ReminderModel(repository: database.reminders, report: report)
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
+        }
+        reminders.inputs = { [weak self] in
+            guard let self else { return nil }
+            ensureCurrentDay()
+            let prayer = prayer
+            return ReminderModel.PlanInputs(
+                zone: prayer.zone,
+                schedule: { date in prayer.schedule(on: date) },
+                completeToday: Set(Period.allCases.filter { self.adhkar.isComplete($0) }))
+        }
+    }
+
+    /// A tapped reminder: an adhkar reminder opens its deck, a prayer reminder أوقات الصلاة.
+    func open(_ payload: ReminderPayload) {
+        if let deck = payload.deck {
+            selection = deck
+        } else if payload.isPrayer {
+            tab = .other
+            otherSection = .prayerTimes
         }
     }
 

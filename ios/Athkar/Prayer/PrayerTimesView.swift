@@ -5,9 +5,11 @@ import SwiftUI
 /// produced them, and the calculation settings (NATIVE_APP_PLAN.md §7.3).
 struct PrayerTimesView: View {
     let model: PrayerTimesModel
+    let reminders: ReminderModel
 
     @Environment(\.palette) private var palette
     @State private var showsSettings = false
+    @State private var showsReminders = false
     @State private var showsManualLocation = false
 
     var body: some View {
@@ -26,6 +28,16 @@ struct PrayerTimesView: View {
                     locationCard
                 }
                 Button {
+                    showsReminders = true
+                } label: {
+                    Label("تنبيهات الصلاة", systemImage: "bell")
+                        .font(.subheadline.weight(.heavy))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(palette.textSecondary)
+                .accessibilityIdentifier("prayer.reminders")
+                Button {
                     showsSettings = true
                 } label: {
                     Label("إعدادات الحساب", systemImage: "slider.horizontal.3")
@@ -39,6 +51,10 @@ struct PrayerTimesView: View {
             .padding(.top, 8)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .sheet(isPresented: $showsReminders) {
+            PrayerRemindersView(reminders: reminders, prayer: model)
+                .environment(\.palette, palette)
+        }
         .sheet(isPresented: $showsSettings) {
             PrayerSettingsView(model: model)
                 .environment(\.palette, palette)

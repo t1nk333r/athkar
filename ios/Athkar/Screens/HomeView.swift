@@ -43,7 +43,7 @@ struct HomeView: View {
                 OtherSectionsView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .prayerTimes {
-                PrayerTimesView(model: app.prayer)
+                PrayerTimesView(model: app.prayer, reminders: app.reminders)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else {
                 summary(deck.summary, palette: palette)

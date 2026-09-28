@@ -1,7 +1,7 @@
 import AthkarCore
 import SwiftUI
 
-/// «الإعدادات» for this slice: reading and appearance, long-order, manual completion, haptics, with the athkar
+/// «الإعدادات» for this slice: reading and appearance, reminders, long-order, manual completion, haptics, with the athkar
 /// PWA's wording. Every change is written to the `settings` table (or the adhkar session) as it is made.
 struct SettingsView: View {
     let app: AppModel
@@ -21,6 +21,8 @@ struct SettingsView: View {
                     segmented("تباعد السطور", selection: $settings.lineSpacing, identifier: "settings.lineSpacing",
                               options: [(.compact, "متقارب"), (.comfortable, "مريح"), (.wide, "واسع")])
                 }
+
+                AdhkarReminderSection(app: app)
 
                 Section("ترتيب الأذكار الطويلة") {
                     Toggle(isOn: Binding(get: { app.settings.longOrder == .last }, set: { enabled in

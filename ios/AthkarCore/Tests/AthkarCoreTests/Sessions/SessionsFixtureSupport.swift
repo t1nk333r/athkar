@@ -30,9 +30,13 @@ enum SessionsFixtures {
         return url.appending(path: "spec/sessions/fixtures")
     }()
 
+    /// `<repo>/spec/reminders/fixtures`, whose files share this format.
+    static let remindersDirectory = directory.deletingLastPathComponent().deletingLastPathComponent()
+        .appending(path: "reminders/fixtures")
+
     /// Parses the file as `JSON.parse` would (the fixtures may contain lone surrogate escapes, which
     /// `JSONDecoder` rejects).
-    static func cases(_ file: String) throws -> [SessionsFixtureCase] {
+    static func cases(_ file: String, in directory: URL = directory) throws -> [SessionsFixtureCase] {
         let data = try Data(contentsOf: directory.appending(path: file))
         let root = try SessionState.StoredValue(parsingJSON: String(decoding: data, as: UTF8.self))
         guard case .object(let fixture) = root,

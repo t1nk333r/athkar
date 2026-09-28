@@ -40,10 +40,14 @@ final class PrayerTimesModel {
 
     /// The schedule `offset` days from today, or `nil` without a location.
     func schedule(dayOffset offset: Int, now: Date = Date()) -> PrayerSchedule? {
+        schedule(on: Self.localDate(daysFromToday: offset, now: now, in: zone))
+    }
+
+    /// The schedule of a civil date (`YYYY-MM-DD`) in `zone`, or `nil` without a location.
+    func schedule(on localDate: String) -> PrayerSchedule? {
         guard let location else { return nil }
-        let date = Self.localDate(daysFromToday: offset, now: now, in: zone)
-        return try? port.schedule(on: date, at: GeoCoordinates(latitude: location.latitude,
-                                                               longitude: location.longitude),
+        return try? port.schedule(on: localDate, at: GeoCoordinates(latitude: location.latitude,
+                                                                    longitude: location.longitude),
                                   in: zone, settings: settings)
     }
 
