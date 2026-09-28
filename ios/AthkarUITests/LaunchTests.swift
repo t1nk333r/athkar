@@ -1,10 +1,13 @@
 import XCTest
 
 final class LaunchTests: XCTestCase {
+    /// A fresh launch shows the prayer row in the header, not the title.
     @MainActor
-    func testLaunchShowsTitle() {
+    func testLaunchShowsPrayerRow() {
         let app = XCUIApplication()
+        app.launchArguments = ["--reset-data"]
         app.launch()
-        XCTAssertTrue(app.staticTexts["title"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["home.prayerRow"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["title"].exists)
     }
 }

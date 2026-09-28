@@ -43,77 +43,88 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// The title's colour in the grid, one per section as in the adhkar apps the layout follows.
+    var tint: Color {
+        switch self {
+        case .ruqyah: .teal
+        case .sleep: .purple
+        case .afterPrayer: .blue
+        case .waking: .orange
+        case .prayerTimes: .indigo
+        case .qibla: .green
+        }
+    }
+
     /// Whether the section opens yet; the rest are listed as «قريبًا».
     var isAvailable: Bool { deck != nil || self == .prayerTimes }
 }
 
-/// The أخرى tab's list: one row per section, with its progress today where it has a deck.
+/// The أخرى tab: a two-column grid of its sections, each title in its own colour, with its progress today where it
+/// has a deck.
 struct OtherSectionsView: View {
     let app: AppModel
 
     @Environment(\.palette) private var palette
 
+    private let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
+
     var body: some View {
-        // Scrolls only when the rows do not fit (large text): a scroll view holds back quick taps on its rows.
+        // Scrolls only when the cells do not fit (large text): a scroll view holds back quick taps on its cells.
         ViewThatFits(in: .vertical) {
-            list
-            ScrollView { list }
+            grid
+            ScrollView { grid }
         }
     }
 
-    private var list: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(OtherSection.allCases.enumerated()), id: \.element) { index, section in
-                if index > 0 {
-                    Divider().overlay(palette.border)
-                }
-                row(section)
+    private var grid: some View {
+        LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(OtherSection.allCases) { section in
+                cell(section)
             }
         }
-        .background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
-        .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
         .padding(.top, 8)
     }
 
-    private func row(_ section: OtherSection) -> some View {
+    private func cell(_ section: OtherSection) -> some View {
         let deck = section.deck.map(app.deck)
         let available = section.isAvailable
+        let complete = deck?.isComplete == true
         return Button {
             guard available else { return }
             app.ensureCurrentDay()
             app.otherSection = section
         } label: {
-            HStack(spacing: 12) {
-                Image(systemName: section.icon)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(available ? palette.accentStrong : palette.textSecondary)
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(section.title)
-                        .font(.body.weight(.heavy))
-                        .foregroundStyle(available ? palette.textPrimary : palette.textSecondary)
-                    Text(subtitle(section, deck: deck))
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(deck?.isComplete == true ? palette.completed : palette.textSecondary)
-                }
-                Spacer(minLength: 0)
-                if deck?.isComplete == true {
-                    Text("✓").font(.body.weight(.heavy)).foregroundStyle(palette.completed)
-                }
-                if available {
-                    Image(systemName: "chevron.forward")
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Image(systemName: section.icon)
                         .font(.footnote.weight(.bold))
-                        .foregroundStyle(palette.textSecondary)
+                    Text(section.title)
+                        .font(.subheadline.weight(.heavy))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Spacer(minLength: 0)
+                    if complete {
+                        Text("✓").font(.subheadline.weight(.heavy)).foregroundStyle(palette.completed)
+                    }
                 }
+                .foregroundStyle(available ? section.tint : palette.textSecondary)
+                Text(subtitle(section, deck: deck))
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(complete ? palette.completed : palette.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .padding(.horizontal, 14)
-            .frame(maxWidth: .infinity, minHeight: 60)
-            .contentShape(Rectangle())
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
+            .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
+            .contentShape(RoundedRectangle(cornerRadius: 14.4, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(!available)
         .opacity(available ? 1 : 0.55)
-        .accessibilityLabel(section.title + (!available ? "، قريبًا" : deck?.isComplete == true ? "، مكتملة اليوم" : ""))
+        .accessibilityLabel(section.title + (!available ? "، قريبًا" : complete ? "، مكتملة اليوم" : ""))
         .accessibilityValue(available ? subtitle(section, deck: deck) : "")
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
@@ -123,7 +134,7 @@ struct OtherSectionsView: View {
         if let deck { return deck.summary.copy }
         guard section == .prayerTimes else { return "قريبًا" }
         guard let next = app.prayer.nextPrayer() else {
-            return app.prayer.location == nil ? "حدّد موقعك لعرض المواقيت" : "لا مواقيت لهذا اليوم في موقعك"
+            return app.prayer.location == nil ? "حدّد موقعك" : "لا مواقيت اليوم"
         }
         return "\(PrayerNames.name(next.prayer)) \(ArabicFormat.time(next.at, in: app.prayer.zone))"
     }

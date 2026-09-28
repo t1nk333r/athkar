@@ -23,9 +23,11 @@
 		647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11171CCC784D1B7FD1830ACE /* BundledContent.swift */; };
 		64B683DDF039D486630601E7 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B85A291084AF937C35C88A /* Haptics.swift */; };
 		7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12427B8BADEDCAF23C15E22C /* DeckUITests.swift */; };
+		7B4B08D28FA4B78C6CD87E31 /* HomePrayerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */; };
 		83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = CE857DADF37638C3F15FE817 /* ruqyah.v1.json */; };
 		86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */; };
 		932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */; };
+		94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */; };
 		9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */; };
 		A06DC5D44DC79BA41CF265A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEDDB713CE939FA556214E4E /* Assets.xcassets */; };
 		A1612B587F6D98670C98278D /* PrayerTimesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */; };
@@ -70,6 +72,7 @@
 		407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRegressionUITests.swift; sourceTree = "<group>"; };
 		43802A54E228E374EADE3ACE /* PrayerTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesView.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
+		51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRowUITests.swift; sourceTree = "<group>"; };
 		58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDialogs.swift; sourceTree = "<group>"; };
 		5DC7E0AFC9F1DFA5A8ADD025 /* ReminderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderModel.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
@@ -91,6 +94,7 @@
 		CE857DADF37638C3F15FE817 /* ruqyah.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = ruqyah.v1.json; path = ../content/ruqyah.v1.json; sourceTree = "<group>"; };
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuqyahDeckModel.swift; sourceTree = "<group>"; };
+		E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRow.swift; sourceTree = "<group>"; };
 		E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUITests.swift; sourceTree = "<group>"; };
 		EBC80EB016E62A55F7388473 /* DeckCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCardView.swift; sourceTree = "<group>"; };
 		F334FF1145895D5E01B03C01 /* ReminderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderViews.swift; sourceTree = "<group>"; };
@@ -142,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */,
+				E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */,
 				F4280DECA9C457370A36B4B3 /* HomeView.swift */,
 				6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */,
 				FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */,
@@ -243,6 +248,7 @@
 				B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */,
 				407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */,
 				12427B8BADEDCAF23C15E22C /* DeckUITests.swift */,
+				51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */,
 				CDFAF5DB1A7749351672C27D /* LaunchTests.swift */,
 				808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */,
 				E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */,
@@ -377,6 +383,7 @@
 				C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */,
 				03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */,
 				64B683DDF039D486630601E7 /* Haptics.swift in Sources */,
+				7B4B08D28FA4B78C6CD87E31 /* HomePrayerRow.swift in Sources */,
 				F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */,
 				5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */,
 				86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */,
@@ -398,6 +405,7 @@
 				AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */,
 				4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */,
 				7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */,
+				94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */,
 				2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */,
 				A1612B587F6D98670C98278D /* PrayerTimesUITests.swift in Sources */,
 				9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */,

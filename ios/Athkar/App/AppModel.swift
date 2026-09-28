@@ -10,6 +10,7 @@ final class SettingsModel {
     var textSize: TextSize { didSet { write(textSize, .textSize) } }
     var lineSpacing: LineSpacing { didSet { write(lineSpacing, .lineSpacing) } }
     var haptics: Bool { didSet { write(haptics, .haptics) } }
+    var homePrayerRow: Bool { didSet { write(homePrayerRow, .homePrayerRow) } }
     private(set) var longOrder: LongOrder
     private(set) var longOrderPromptAnswered: Bool
 
@@ -23,6 +24,7 @@ final class SettingsModel {
         textSize = try repository.value(for: .textSize)
         lineSpacing = try repository.value(for: .lineSpacing)
         haptics = try repository.value(for: .haptics)
+        homePrayerRow = try repository.value(for: .homePrayerRow)
         longOrder = try repository.value(for: .longOrder)
         longOrderPromptAnswered = try repository.value(for: .longOrderPromptAnswered)
     }

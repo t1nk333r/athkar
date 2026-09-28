@@ -70,6 +70,8 @@ extension SettingKey where Value == Int {
 extension SettingKey where Value == Bool {
     public static var haptics: Self { Self(name: "haptics", defaultValue: true) }
     public static var longOrderPromptAnswered: Self { Self(name: "long_order_prompt_answered", defaultValue: false) }
+    /// The home header shows the prayer row (current prayer, Hijri date, next prayer) instead of the title.
+    public static var homePrayerRow: Self { Self(name: "home_prayer_row", defaultValue: true) }
 }
 
 /// Who wrote a `settings` row. Import precedence: native > athkar-pwa > ruqyah-pwa; ties keep the existing row.

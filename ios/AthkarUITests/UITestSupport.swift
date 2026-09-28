@@ -28,7 +28,7 @@ class DeckTestCase: XCTestCase {
         app.launchArguments = reset ? ["--reset-data"] : []
         app.launchEnvironment = environment
         app.launch()
-        XCTAssertTrue(app.staticTexts["title"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["header.more"].firstMatch.waitForExistence(timeout: 10))
         if let answer {
             let alert = app.alerts["تأجيل الأذكار الطويلة؟"]
             XCTAssertTrue(alert.waitForExistence(timeout: 5), "long-order question")
@@ -46,7 +46,27 @@ class DeckTestCase: XCTestCase {
     var nextButton: XCUIElement { app.buttons["deck.next"] }
     var previousButton: XCUIElement { app.buttons["deck.previous"] }
     var resetCardButton: XCUIElement { app.buttons["deck.card.reset"] }
-    var headerReset: XCUIElement { app.buttons["header.reset"] }
+    /// «إعادة» in the «⋯» menu, which this opens.
+    var headerReset: XCUIElement {
+        openMoreMenu()
+        return app.buttons["header.reset"]
+    }
+
+    func openMoreMenu() {
+        guard !app.buttons["header.reset"].exists else { return }
+        app.buttons["header.more"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["header.reset"].waitForExistence(timeout: 3), "«⋯» menu")
+    }
+
+    /// Whether «إعادة» is enabled; opens the «⋯» menu to read it and closes it again.
+    func resetEnabled() -> Bool {
+        openMoreMenu()
+        let enabled = app.buttons["header.reset"].isEnabled
+        // An open menu takes a tap anywhere to close itself, without passing it on.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        _ = wait { !self.app.buttons["header.reset"].exists }
+        return enabled
+    }
 
     func card(_ id: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "deck.card.\(id)").firstMatch
@@ -85,6 +105,7 @@ class DeckTestCase: XCTestCase {
     }
 
     func openSettings() {
+        openMoreMenu()
         app.buttons["header.settings"].tap()
         XCTAssertTrue(app.navigationBars["الإعدادات"].waitForExistence(timeout: 3))
     }

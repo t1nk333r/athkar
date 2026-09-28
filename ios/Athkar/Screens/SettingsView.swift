@@ -54,6 +54,14 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings.haptics")
                 }
+
+                Section("الصفحة الرئيسية") {
+                    Toggle(isOn: $settings.homePrayerRow) {
+                        toggleCopy("المواقيت في أعلى الصفحة",
+                                   "الصلاة الحالية والتاريخ الهجري والصلاة القادمة مكان عنوان «بكرة وأصيلا».")
+                    }
+                    .accessibilityIdentifier("settings.homePrayerRow")
+                }
             }
             .navigationTitle("الإعدادات")
             .navigationBarTitleDisplayMode(.inline)

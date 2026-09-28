@@ -154,7 +154,7 @@ final class DeckUITests: DeckTestCase {
     /// The reset picker: today's counters at once; week and everything after a question that can be declined.
     func testScopedReset() {
         launch()
-        XCTAssertFalse(headerReset.isEnabled, "nothing to reset yet")
+        XCTAssertFalse(resetEnabled(), "nothing to reset yet")
         tapCard()
         expectLabel(summary, "١ من ٢٦ ذكرًا")
 
@@ -162,7 +162,7 @@ final class DeckUITests: DeckTestCase {
         app.buttons["reset.day"].tap()
         expectLabel(summary, "٠ من ٢٦ ذكرًا")
         expectPosition(1, of: 26)
-        XCTAssertTrue(wait { !self.headerReset.isEnabled })
+        XCTAssertTrue(wait { !self.resetEnabled() })
 
         tapCard()
         expectLabel(summary, "١ من ٢٦ ذكرًا")
@@ -181,7 +181,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(everything.staticTexts["ستُعاد العدادات وسيُحذف السجل كاملًا. لا يمكن التراجع."].exists)
         everything.buttons["إعادة"].tap()
         expectLabel(summary, "٠ من ٢٦ ذكرًا")
-        XCTAssertTrue(wait { !self.headerReset.isEnabled })
+        XCTAssertTrue(wait { !self.resetEnabled() })
     }
 
     /// Ruqyah: segments repeat 1 or 7 times, advance when done; all 33 readings record the day and open the
@@ -221,7 +221,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(app.buttons["other.ruqyah"].waitForExistence(timeout: 3))
         XCTAssertEqual(app.buttons["other.ruqyah"].label, "رقية القرين، مكتملة اليوم")
         XCTAssertFalse(app.buttons["other.sleep"].isEnabled, "not built yet")
-        XCTAssertFalse(headerReset.isEnabled, "nothing to reset on the list")
+        XCTAssertFalse(resetEnabled(), "nothing to reset on the list")
         app.buttons["other.ruqyah"].tap()
         expectPosition(1, of: 15, noun: "المقطع")
 
@@ -232,7 +232,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(everything.staticTexts["ستُعاد العدادات وسيُحذف السجل كاملًا (يوم واحد). لا يمكن التراجع."].exists)
         everything.buttons["إعادة"].tap()
         expectLabel(app.staticTexts["summary.status"], "رقية اليوم لم تكتمل بعد.")
-        XCTAssertTrue(wait { !self.headerReset.isEnabled })
+        XCTAssertTrue(wait { !self.resetEnabled() })
     }
 
     /// Counters, targets, settings (theme included) and the answered question survive a relaunch; each deck reopens

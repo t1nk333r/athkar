@@ -149,14 +149,10 @@ struct DeckView<Model: DeckModel>: View {
                     show(index + 1, .forward, announce: true)
                 }
             }
-            Text(model.definition.hint)
-                .font(.caption)
-                .foregroundStyle(palette.textSecondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(model.definition.navigationLabel)
+        .accessibilityHint(model.definition.hint)
     }
 
     private func navigationButton(_ title: String, arrow: String, arrowFirst: Bool, enabled: Bool,

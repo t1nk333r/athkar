@@ -1,7 +1,8 @@
 import AthkarCore
 import SwiftUI
 
-/// The أذكار screen: header (reset and settings), the الصباح / المساء / أخرى switch, the session summary and the
+/// The أذكار screen: header (the prayer row or the title), the الصباح / المساء / أخرى switch, the session summary with
+/// the «⋯» menu (إعادة, الإعدادات) and the
 /// deck; the أخرى tab lists its sections first (``OtherSectionsView``). Laid out like the PWAs' phone layout (`max-width: 45rem` portrait), which fits one screen without
 /// scrolling.
 struct HomeView: View {
@@ -48,7 +49,7 @@ struct HomeView: View {
             } else {
                 summary(deck.summary, palette: palette)
                     .padding(.top, 5.6)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 16)
                 deckView
             }
         }
@@ -143,6 +144,11 @@ struct HomeView: View {
                 .accessibilityLabel("رجوع إلى أخرى")
                 .accessibilityValue(section.title)
                 .accessibilityIdentifier("header.back")
+            } else if app.settings.homePrayerRow {
+                HomePrayerRow(prayer: app.prayer) {
+                    app.tab = .other
+                    app.otherSection = .prayerTimes
+                }
             } else {
                 Text("بكرة وأصيلا")
                     .font(.title2.weight(.heavy))
@@ -150,36 +156,46 @@ struct HomeView: View {
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("title")
             }
-            Spacer(minLength: 0)
+            // With a deck on screen the «⋯» menu sits in the summary bar; elsewhere (أخرى's list, أوقات الصلاة) here.
+            if !app.showsDeck {
+                Spacer(minLength: 0)
+                moreMenu(canReset: canReset, palette: palette)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .padding(.horizontal, 4)
+        .padding(.bottom, 8.8)
+    }
+
+    /// «⋯»: إعادة (the scope picker) and الإعدادات.
+    private func moreMenu(canReset: Bool, palette: Palette) -> some View {
+        Menu {
             Button {
                 app.ensureCurrentDay()
                 if app.deck(app.selection).canReset { showsResetScope = true }
             } label: {
-                HStack(spacing: 4) {
-                    Text("↻").accessibilityHidden(true)
-                    Text("إعادة")
-                }
-                .font(.footnote.weight(.heavy))
-                .headerButton(palette)
+                Label("إعادة", systemImage: "arrow.counterclockwise")
             }
-            .buttonStyle(.plain)
             .disabled(!canReset)
-            .opacity(canReset ? 1 : 0.4)
-            .accessibilityLabel("خيارات الإعادة")
             .accessibilityIdentifier("header.reset")
             Button {
                 showsSettings = true
             } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.body.weight(.semibold))
-                    .headerButton(palette)
+                Label("الإعدادات", systemImage: "slider.horizontal.3")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("فتح الإعدادات")
             .accessibilityIdentifier("header.settings")
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.body.weight(.bold))
+                .foregroundStyle(palette.textSecondary)
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(palette.surfaceRaised))
+                .overlay(Circle().strokeBorder(palette.border))
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
-        .padding(.horizontal, 4)
-        .padding(.bottom, 8.8)
+        .accessibilityLabel("المزيد: إعادة والإعدادات")
+        .accessibilityIdentifier("header.more")
     }
 
     // MARK: Tabs (`.period-tabs`)
@@ -277,6 +293,9 @@ struct HomeView: View {
                     .tint(summary.isComplete ? palette.completed : palette.accent)
                     .accessibilityLabel(summary.accessibilityLabel)
                     .accessibilityValue("")
+                moreMenu(canReset: app.deck(app.selection).canReset, palette: palette)
+                    .padding(.vertical, -8)
+                    .padding(.trailing, -6)
             }
             if let status = summary.status {
                 Text(status)
@@ -348,14 +367,3 @@ struct HomeView: View {
     }
 }
 
-private extension View {
-    /// `.session-reset`, `.settings-button`.
-    func headerButton(_ palette: Palette) -> some View {
-        foregroundStyle(palette.textSecondary)
-            .padding(.horizontal, 10)
-            .frame(minWidth: 44, minHeight: 44)
-            .background(Capsule().fill(palette.surfaceRaised))
-            .overlay(Capsule().strokeBorder(palette.border))
-            .contentShape(Capsule())
-    }
-}

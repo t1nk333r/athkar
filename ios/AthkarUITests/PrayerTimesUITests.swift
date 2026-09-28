@@ -32,10 +32,10 @@ final class PrayerTimesUITests: DeckTestCase {
         launch()
         app.buttons["tab.other"].tap()
         XCTAssertTrue(app.buttons["other.prayerTimes"].waitForExistence(timeout: 3))
-        XCTAssertEqual(app.buttons["other.prayerTimes"].value as? String, "حدّد موقعك لعرض المواقيت")
+        XCTAssertEqual(app.buttons["other.prayerTimes"].value as? String, "حدّد موقعك")
         app.buttons["other.prayerTimes"].tap()
         XCTAssertTrue(app.buttons["prayer.locate"].waitForExistence(timeout: 3))
-        XCTAssertFalse(headerReset.isEnabled, "nothing to reset here")
+        XCTAssertFalse(resetEnabled(), "nothing to reset here")
         XCTAssertFalse(time("fajr").exists)
 
         enterLocation("٢١٫٤٢", "٣٩٫٨٢")
