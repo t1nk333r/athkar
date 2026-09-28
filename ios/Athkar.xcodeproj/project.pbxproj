@@ -13,7 +13,9 @@
 		31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = C91EA781FB90F2751708543C /* adhkar.v1.json */; };
 		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
 		37B7CFF6BEA627BDF70F5534 /* ReminderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334FF1145895D5E01B03C01 /* ReminderViews.swift */; };
+		393E5863E65F5FB131563FA4 /* QiblaUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150FDEA907C03DC351639CA /* QiblaUITests.swift */; };
 		4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */; };
+		546AB6664195846DDA46B54C /* DeviceHeading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */; };
 		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
 		5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
@@ -33,6 +35,7 @@
 		A1612B587F6D98670C98278D /* PrayerTimesUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */; };
 		A5F55D9A0351E6537E474C4E /* ReminderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC7E0AFC9F1DFA5A8ADD025 /* ReminderModel.swift */; };
 		AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */; };
+		B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4A7DAF059476E447785AE3 /* QiblaView.swift */; };
 		B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */; };
 		BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69E443B335C7F687972315F /* AdhkarDeckModel.swift */; };
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
@@ -64,6 +67,7 @@
 		11171CCC784D1B7FD1830ACE /* BundledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledContent.swift; sourceTree = "<group>"; };
 		12427B8BADEDCAF23C15E22C /* DeckUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckUITests.swift; sourceTree = "<group>"; };
 		17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingMetrics.swift; sourceTree = "<group>"; };
+		1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeading.swift; sourceTree = "<group>"; };
 		204F141E2D9C1C962271896B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		27D2779D803C0DEA8171968D /* AthkarCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AthkarCore; path = AthkarCore; sourceTree = SOURCE_ROOT; };
 		3CADA9419CAC70B90CD19CFD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../content/manifest.json; sourceTree = "<group>"; };
@@ -76,6 +80,7 @@
 		58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDialogs.swift; sourceTree = "<group>"; };
 		5DC7E0AFC9F1DFA5A8ADD025 /* ReminderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderModel.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
+		6F4A7DAF059476E447785AE3 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesUITests.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -92,6 +97,7 @@
 		CD75292C037557D011FF2D90 /* TestHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHooks.swift; sourceTree = "<group>"; };
 		CDFAF5DB1A7749351672C27D /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
 		CE857DADF37638C3F15FE817 /* ruqyah.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = ruqyah.v1.json; path = ../content/ruqyah.v1.json; sourceTree = "<group>"; };
+		D150FDEA907C03DC351639CA /* QiblaUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaUITests.swift; sourceTree = "<group>"; };
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuqyahDeckModel.swift; sourceTree = "<group>"; };
 		E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRow.swift; sourceTree = "<group>"; };
@@ -136,6 +142,7 @@
 				8B1F748FE0CF29EBBC198B92 /* Design */,
 				0B6738EC7BA2292971E87FB5 /* Platform */,
 				6D3F563EABB6B8297550A985 /* Prayer */,
+				6899972F3AB9680ACD22A641 /* Qibla */,
 				FDD547B092311CE8B9BE90D7 /* Reminders */,
 				4A19A294B20B9DCEC455FD7F /* Screens */,
 			);
@@ -187,6 +194,15 @@
 				E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */,
 			);
 			path = Deck;
+			sourceTree = "<group>";
+		};
+		6899972F3AB9680ACD22A641 /* Qibla */ = {
+			isa = PBXGroup;
+			children = (
+				1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */,
+				6F4A7DAF059476E447785AE3 /* QiblaView.swift */,
+			);
+			path = Qibla;
 			sourceTree = "<group>";
 		};
 		698EEA3E3F84F0119408EB40 /* Content */ = {
@@ -251,6 +267,7 @@
 				51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */,
 				CDFAF5DB1A7749351672C27D /* LaunchTests.swift */,
 				808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */,
+				D150FDEA907C03DC351639CA /* QiblaUITests.swift */,
 				E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */,
 				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
 				042329F8B233CEB3D355A537 /* UITestSupport.swift */,
@@ -381,6 +398,7 @@
 				6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */,
 				631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */,
 				C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */,
+				546AB6664195846DDA46B54C /* DeviceHeading.swift in Sources */,
 				03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */,
 				64B683DDF039D486630601E7 /* Haptics.swift in Sources */,
 				7B4B08D28FA4B78C6CD87E31 /* HomePrayerRow.swift in Sources */,
@@ -389,6 +407,7 @@
 				86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */,
 				EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */,
 				626A2510A916FA3FC997C2A1 /* PrayerTimesView.swift in Sources */,
+				B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */,
 				BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */,
 				A5F55D9A0351E6537E474C4E /* ReminderModel.swift in Sources */,
 				37B7CFF6BEA627BDF70F5534 /* ReminderViews.swift in Sources */,
@@ -408,6 +427,7 @@
 				94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */,
 				2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */,
 				A1612B587F6D98670C98278D /* PrayerTimesUITests.swift in Sources */,
+				393E5863E65F5FB131563FA4 /* QiblaUITests.swift in Sources */,
 				9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */,
 				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
 				D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */,

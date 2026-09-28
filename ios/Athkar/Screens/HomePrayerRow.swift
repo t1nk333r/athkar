@@ -103,8 +103,9 @@ struct HomePrayerRow: View {
     static func left(from now: Date, to target: Date) -> String {
         let minutes = max(0, Int((target.timeIntervalSince(now) / 60).rounded(.up)))
         let hours = minutes / 60
-        return hours == 0 ? "\(ArabicFormat.number(minutes)) د"
-            : "\(ArabicFormat.number(hours)) س \(ArabicFormat.number(minutes % 60)) د"
+        if hours == 0 { return "\(ArabicFormat.number(minutes)) د" }
+        if minutes % 60 == 0 { return "\(ArabicFormat.number(hours)) س" }
+        return "\(ArabicFormat.number(hours)) س \(ArabicFormat.number(minutes % 60)) د"
     }
 
     private static func spoken(current: NextPrayer?, next: NextPrayer?, now: Date, date: HijriDay,

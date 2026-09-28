@@ -1,3 +1,4 @@
+import AthkarCore
 import SwiftUI
 
 /// The أذكار screen's three tabs: الصباح, المساء and أخرى.
@@ -56,7 +57,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
     }
 
     /// Whether the section opens yet; the rest are listed as «قريبًا».
-    var isAvailable: Bool { deck != nil || self == .prayerTimes }
+    var isAvailable: Bool { deck != nil || self == .prayerTimes || self == .qibla }
 }
 
 /// The أخرى tab: a two-column grid of its sections, each title in its own colour, with its progress today where it
@@ -132,6 +133,11 @@ struct OtherSectionsView: View {
     /// The deck's summary, the next prayer, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
         if let deck { return deck.summary.copy }
+        if section == .qibla {
+            guard let location = app.prayer.location else { return "حدّد موقعك" }
+            let place = GeoCoordinates(latitude: location.latitude, longitude: location.longitude)
+            return "\(QiblaView.degrees(Qibla.bearing(from: place))) من الشمال"
+        }
         guard section == .prayerTimes else { return "قريبًا" }
         guard let next = app.prayer.nextPrayer() else {
             return app.prayer.location == nil ? "حدّد موقعك" : "لا مواقيت اليوم"

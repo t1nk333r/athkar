@@ -21,7 +21,7 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.</string>
+	<string>يُطلب موقعك مرة واحدة عند الحاجة، لحساب مواقيت الصلاة واتجاه القبلة فقط. يُحفظ على جهازك بدقة تقريبية ولا يُرسل إلى أي جهة.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>kfgqpc-uthman-taha-naskh.ttf</string>

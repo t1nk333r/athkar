@@ -46,6 +46,9 @@ struct HomeView: View {
             } else if app.tab == .other, app.otherSection == .prayerTimes {
                 PrayerTimesView(model: app.prayer, reminders: app.reminders)
                     .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .qibla {
+                QiblaView(prayer: app.prayer) { app.otherSection = .prayerTimes }
+                    .frame(maxHeight: .infinity, alignment: .top)
             } else {
                 summary(deck.summary, palette: palette)
                     .padding(.top, 5.6)
