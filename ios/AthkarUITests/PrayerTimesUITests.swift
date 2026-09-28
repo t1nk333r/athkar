@@ -83,4 +83,35 @@ final class PrayerTimesUITests: DeckTestCase {
         let value = row.value as? String ?? ""
         XCTAssertTrue(["الفجر", "الظهر", "العصر", "المغرب", "العشاء"].contains { value.hasPrefix($0) }, value)
     }
+
+    /// Manual location by city name: an Arabic spelling without «ال» or hamza finds Riyadh; picking it saves its
+    /// coordinates and the card names the city. The Latin name finds it too.
+    func testManualLocationByCityName() {
+        launch()
+        openPrayerTimes()
+        XCTAssertTrue(app.buttons["prayer.manual"].waitForExistence(timeout: 3))
+        app.buttons["prayer.manual"].tap()
+        let search = app.textFields["prayer.manual.city"]
+        XCTAssertTrue(search.waitForExistence(timeout: 3))
+        search.tap()
+        search.typeText("jeddah")
+        XCTAssertTrue(app.buttons["prayer.manual.result.105343"].waitForExistence(timeout: 5), "Latin name")
+        search.clearText()
+        search.typeText("رياض")
+        let riyadh = app.buttons["prayer.manual.result.108410"]
+        XCTAssertTrue(riyadh.waitForExistence(timeout: 5))
+        riyadh.tap()
+        let city = app.staticTexts["prayer.city"]
+        XCTAssertTrue(city.waitForExistence(timeout: 5))
+        XCTAssertTrue(city.label.hasPrefix("الرياض"), city.label)
+        XCTAssertTrue(app.staticTexts["prayer.location"].label.contains("٢٤٫٦٩"), app.staticTexts["prayer.location"].label)
+        XCTAssertTrue(time("fajr").exists)
+    }
+}
+
+private extension XCUIElement {
+    func clearText() {
+        guard let text = value as? String, !text.isEmpty else { return }
+        typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: text.count))
+    }
 }

@@ -10,6 +10,7 @@ struct PrayerTimesView: View {
     @Environment(\.palette) private var palette
     @State private var showsSettings = false
     @State private var showsReminders = false
+    private let cities = CityDirectory.shared
     @State private var showsManualLocation = false
 
     var body: some View {
@@ -51,6 +52,7 @@ struct PrayerTimesView: View {
             .padding(.top, 8)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .task { await cities.load() }
         .sheet(isPresented: $showsReminders) {
             PrayerRemindersView(reminders: reminders, prayer: model)
                 .environment(\.palette, palette)
@@ -229,6 +231,12 @@ struct PrayerTimesView: View {
     private var locationCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let location = model.location {
+                if let city = cities.nearestName(location) {
+                    Text(city)
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundStyle(palette.textPrimary)
+                        .accessibilityIdentifier("prayer.city")
+                }
                 Text("الموقع: \(PrayerDates.coordinates(location.latitude, location.longitude))"
                      + (location.source == .manual ? " (يدوي)" : ""))
                     .accessibilityIdentifier("prayer.location")
@@ -375,12 +383,55 @@ struct ManualLocationView: View {
     let save: (Double, Double) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
     @State private var latitude = ""
     @State private var longitude = ""
+    @State private var results: [City] = []
+    private let cities = CityDirectory.shared
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    TextField("اسم المدينة (مثل الرياض أو Riyadh)", text: $query)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .submitLabel(.search)
+                        .accessibilityIdentifier("prayer.manual.city")
+                    if cities.index == nil {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("تحميل قائمة المدن…").foregroundStyle(.secondary)
+                        }
+                    } else if !query.trimmingCharacters(in: .whitespaces).isEmpty, results.isEmpty {
+                        Text("لم توجد مدينة بهذا الاسم. جرّب الاسم بالإنجليزية، أو أدخل الإحداثيات أدناه.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(results) { city in
+                        Button {
+                            save(city.coordinates.latitude, city.coordinates.longitude)
+                            dismiss()
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(CityDirectory.label(city))
+                                    .font(.body.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                if !city.arabicNames.isEmpty, let english = city.englishNames.last {
+                                    Text(english).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("prayer.manual.result.\(city.id)")
+                    }
+                } header: {
+                    Text("البحث عن مدينة")
+                } footer: {
+                    Text("البحث في قائمة مدن داخل التطبيق، ولا يُرسل ما تكتبه إلى أي جهة. أسماء المدن من GeoNames (CC BY 4.0).")
+                }
                 Section {
                     TextField("خط العرض (مثل ٢١٫٤٢)", text: $latitude)
                         .keyboardType(.numbersAndPunctuation)
@@ -388,6 +439,8 @@ struct ManualLocationView: View {
                     TextField("خط الطول (مثل ٣٩٫٨٢)", text: $longitude)
                         .keyboardType(.numbersAndPunctuation)
                         .accessibilityIdentifier("prayer.manual.longitude")
+                } header: {
+                    Text("أو الإحداثيات")
                 } footer: {
                     Text("خط العرض بين −٩٠ و٩٠، وخط الطول بين −١٨٠ و١٨٠. يُحفظ بمنزلتين عشريتين.")
                 }
@@ -411,7 +464,14 @@ struct ManualLocationView: View {
                     longitude = String(location.longitude)
                 }
             }
+            .task { await cities.load() }
+            .onChange(of: query) { search() }
+            .onChange(of: cities.index == nil) { search() }
         }
+    }
+
+    private func search() {
+        results = cities.index?.search(query, limit: 20) ?? []
     }
 
     private var coordinates: (Double, Double)? {

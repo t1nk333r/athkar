@@ -28,6 +28,7 @@ struct QiblaView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .onAppear { heading.start() }
+        .task { await CityDirectory.shared.load() }
         .onDisappear { heading.stop() }
     }
 
@@ -143,7 +144,8 @@ struct QiblaView: View {
             Divider().overlay(palette.border)
             detailRow("المسافة إلى الكعبة", Self.kilometres(Qibla.distanceKilometres(from: place)))
             Divider().overlay(palette.border)
-            detailRow("الموقع", PrayerDates.coordinates(place.latitude, place.longitude))
+            detailRow("الموقع", prayer.location.flatMap { CityDirectory.shared.nearestName($0) }
+                ?? PrayerDates.coordinates(place.latitude, place.longitude))
         }
         .padding(14)
         .qiblaCard(palette)

@@ -35,6 +35,10 @@ targets:
       - path: ../fonts/kfgqpc-hafs-v30.ttf
         buildPhase: resources
         group: Resources
+      # Offline city list for manual location (data/README.md).
+      - path: ../data/cities.tsv
+        buildPhase: resources
+        group: Resources
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
