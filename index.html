@@ -1712,6 +1712,10 @@
       .dhikr-card, .session-summary, .period-tabs { border-width: 2px; }
     }
   </style>
+  <!-- Anonymous page-load count on the developer's self-hosted GoatCounter. Fixed path "/" and empty title/referrer so
+       no tab, sura or hash ever leaves the device; no click events; nothing from localStorage. Cross-origin, so sw.js
+       never caches count.js and an offline launch sends nothing. -->
+  <script async data-goatcounter="https://count.aloqaili.xyz/count" data-goatcounter-settings='{"path":"/","title":"","referrer":"","no_events":true}' src="https://count.aloqaili.xyz/count.js"></script>
 </head>
 <body data-period="morning">
   <a class="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
@@ -1809,7 +1813,7 @@
   <dialog id="reset-dialog" aria-labelledby="reset-dialog-title" aria-describedby="reset-dialog-copy">
     <div class="dialog-body">
       <h2 id="reset-dialog-title">ما الذي تريد إعادته؟</h2>
-      <p id="reset-dialog-copy">اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز.</p>
+      <p id="reset-dialog-copy">اختر نطاق الإعادة. تبقى العدادات والسجل على هذا الجهاز ولا يُرسل منها شيء.</p>
       <div class="reset-options">
         <button class="reset-option" id="reset-day" type="button">
           <strong>تقدم اليوم</strong>
@@ -1999,11 +2003,12 @@
         <h3 id="app-settings-title">التطبيق</h3>
         <button class="settings-action" id="install-button" type="button" disabled>تثبيت التطبيق</button>
         <p class="settings-note" id="install-status">يمكن تثبيت التطبيق من قائمة المتصفح عند توفر الخيار.</p>
+        <p class="settings-note" id="visit-count-note">تُحصى مرات فتح التطبيق إحصاءً مجهول الهوية على خادم المطوّر الخاص (نوع المتصفح والنظام وعرض الشاشة والبلد فقط)، دون ملفات تعريف ارتباط ولا بيانات شخصية ولا أي شيء عمّا تقرؤه أو تحفظه.</p>
       </section>
 
       <section class="settings-section" aria-labelledby="backup-settings-title">
         <h3 id="backup-settings-title">النسخة الاحتياطية</h3>
-        <p class="settings-note" id="backup-note">احفظ تقدّم اليوم وسجل الإكمال والإعدادات في ملف يمكن استيراده في تطبيق الجوال. يُنشأ الملف على جهازك ولا يُرسل إلى أي خادم.</p>
+        <p class="settings-note" id="backup-note">احفظ تقدّم اليوم وسجل الإكمال والإعدادات في ملف يمكن استيراده في تطبيق الجوال. يُنشأ الملف على جهازك، ولا يُرسل هو ولا محتواه إلى أي خادم.</p>
         <label class="settings-toggle-control" for="backup-include-location">
           <span class="settings-toggle-copy">
             <strong>تضمين الموقع المحفوظ</strong>

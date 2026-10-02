@@ -499,7 +499,9 @@ Support routes for morning, evening, a specific card, a prayer occurrence, searc
 
 ### Launch posture
 
-- No ads, behavioral analytics, accounts, remote content, or third-party tracking.
+- No ads, behavioral analytics, accounts, remote content, or third-party tracking in the native app.
+- The **PWA** (not the native app) sends one anonymous page-load count per page load to a self-hosted GoatCounter on the developer's own server (`https://count.aloqaili.xyz`), to judge how many people use it and on which platforms. The hit carries a fixed path `/`, no title, no referrer and no click events; it sets no cookies and sends nothing from `localStorage`, so no tab, hash, sura, counter, history, location, setting or backup leaves the device. The server is configured to keep aggregate counts only (browser, OS, screen width, country), not individual pageviews. The PWA's Settings discloses this. `sw.js` never caches the cross-origin script, so an offline launch sends nothing.
+- The native app's 1.0 release gate of “no data collected/shared” (Store declarations below) is unchanged: it ships no counter.
 - No worship or location data leaves the device during ordinary use.
 - Location is one-shot, coarse enough for calculation, rounded before storage, and never collected in the background.
 - Notification text contains no personal prayer history.

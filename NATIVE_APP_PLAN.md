@@ -473,7 +473,7 @@ Everything in section 4.1's table, plus:
 
 Start when all of section 1.4 (S1–S7) hold **and** one of:
 
-- T1: PWA usage from Android user agents is a meaningful share of PWA traffic `[INFERENCE: no analytics exist; this would have to be judged from support requests or a privacy-preserving self-report, decision 11.10]`.
+- T1: PWA usage from Android user agents is a meaningful share of PWA traffic, read from the PWA's anonymous page-load counter (decision 11.10).
 - T2: a content or rule change is being held back on the PWA side because keeping PWA and iOS behaviourally aligned has become the dominant maintenance cost.
 
 Revisit the KMP rejection (section 4.2) at that moment only if `AthkarCore` has exceeded roughly 3 000 lines of domain logic that fixtures alone struggle to pin; below that, a direct Kotlin port against the fixtures remains cheaper.
@@ -544,6 +544,6 @@ The athkar PWA's ruqyah launcher tab stays as is. `MOBILE_APP_PLAN.md` and this 
 7. **Product name and English metadata.** The PWA titles itself "أذكار المسلم" (document title in `selectTab`); confirm the App Store name and whether English store metadata is provided at launch.
 8. **Quran edition policy for adhkar items.** Keep the simplified rasm for `ayatAlKursi`, `alIkhlas`, `alFalaq`, `anNas`, `comprehensiveDua` and verify against a matching reference, or migrate them to the same Uthmani edition as ruqyah. Recommendation: keep as shipped for 1.0, record the edition in the pack, and treat unification as a reviewed content change later. **Decided 2026-09-28:** migrated to the Uthmani edition (adhkar 1.1.0, REVIEW.md R6), set in KFGQPC HAFS like the ruqyah; the validator now requires it.
 9. **Fate of the ruqyah PWA after Android ships.** Keep live indefinitely, or convert to a redirect page with export instructions. Recommendation: keep live; the maintenance cost is near zero once content is regenerated from the pack.
-10. **How Android demand will be judged.** No analytics exist and none are planned; decide whether support requests alone are sufficient to satisfy trigger T1, or whether the PWA gains a privacy-preserving "I use Android" self-report link.
+10. **How Android demand will be judged.** **Decided 2026-10-03:** the **PWA** sends one anonymous page-load count per page load to a self-hosted GoatCounter on the developer's own server (`https://count.aloqaili.xyz`, dashboard browser/OS breakdown), which judges trigger T1. Fixed path `/`, no title, no referrer, no click events, no cookies, nothing from `localStorage`; no tab, hash, sura or worship data leaves the device, and the server keeps aggregate counts only. The PWA's Settings discloses it; details in `MOBILE_APP_PLAN.md` §15. The native app ships no counter, and its "no data collected" privacy label and release gate (section 8.5, `MOBILE_APP_PLAN.md` §15) are unchanged.
 11. **Location rounding.** Confirm two decimals (section 7.4) versus the PWA's four.
 12. **Backup encryption.** Whether iOS 1.0 ships plaintext-only export (with the location exclusion default) and defers the passphrase envelope to 1.1, as this plan recommends.
