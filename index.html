@@ -4305,7 +4305,8 @@
 
     function normalizeSuwarState(parsed) {
       const date = typeof parsed?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) ? parsed.date : localDateKey();
-      const normalized = emptySuwarState(date, suwarById[parsed?.selected] ? parsed.selected : undefined);
+      const selected = parsed?.selected;
+      const normalized = emptySuwarState(date, typeof selected === "string" && Object.hasOwn(suwarById, selected) ? selected : undefined);
       for (const sura of suwarContent.suwar) {
         for (const page of sura.pages) {
           if (parsed?.read?.[sura.id]?.[page.id] === true) normalized.read[sura.id][page.id] = true;
@@ -4315,7 +4316,7 @@
       }
       for (const [day, entry] of Object.entries(parsed?.history && typeof parsed.history === "object" ? parsed.history : {})) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day >= date || !entry || typeof entry !== "object") continue;
-        const completed = Object.fromEntries(Object.entries(entry).filter(([id, at]) => suwarById[id] && typeof at === "string"));
+        const completed = Object.fromEntries(Object.entries(entry).filter(([id, at]) => typeof id === "string" && Object.hasOwn(suwarById, id) && typeof at === "string"));
         if (Object.keys(completed).length) normalized.history[day] = completed;
       }
       return normalized;
