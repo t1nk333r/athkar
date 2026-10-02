@@ -6,7 +6,7 @@ bundled icons, and the KFGQPC Uthman Taha Naskh font. There is no build step: ed
 and bumping `CACHE_NAME` in `sw.js` is how a change ships.
 
 Content packs in `content/` are the source of truth for adhkar, ruqyah and suwar text (`suwar.v1.json`: al-Kahf,
-Ya-Sin, al-Waqi'a, al-Mulk in pages for the «سور» tab; not in `manifest.json` until the iOS app bundles it). After changing
+Ya-Sin, as-Saffat, al-Waqi'a, al-Mulk in pages for the «سور» tab; not in `manifest.json` until the iOS app bundles it). After changing
 adhkar or suwar data in `index.html` (or a pack), keep them in sync and run
 `node tools/content-validate.mjs` and `node tools/content-export-pwa.mjs --check --ruqyah ../ruqyah-al-qareen/content.js`.
 Behaviour fixtures in `spec/` are regenerated with `node tools/fixtures-generate.mjs`; see `spec/README.md`.

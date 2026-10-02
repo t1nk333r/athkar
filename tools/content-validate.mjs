@@ -75,11 +75,14 @@ for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah]]) {
 {
   const actual = sha256(join(contentDir, suwarFile));
   const rows = [...reviewEntries].filter(([, entry]) => entry.pack === "suwar" && entry.version === suwar.version);
+  // The suwar pack has never been approved, so its versions may await review (blank reviewer) until a suwar row first
+  // names a reviewer; from then on every suwar version needs one, as for adhkar and ruqyah.
+  const suwarEverReviewed = [...reviewEntries.values()].some(entry => entry.pack === "suwar" && entry.reviewer);
   if (!rows.length) fail(`REVIEW.md: no row for suwar ${suwar.version}; a text or order change needs a new row and a version bump`);
   else if (latestReviewed.get("suwar") !== suwar.version) fail(`REVIEW.md: suwar ${suwar.version} is not the pack's latest reviewed version`);
   for (const [id, entry] of rows) {
     if (entry.sha256 !== actual) fail(`${suwarFile} (sha256 ${actual}) was not reviewed: ${id} approved ${entry.sha256}`);
-    if (!entry.reviewer && suwar.version !== "1.0.0") fail(`REVIEW.md ${id}: a named reviewer is required to ship suwar ${suwar.version}`);
+    if (!entry.reviewer && suwar.version !== "1.0.0" && suwarEverReviewed) fail(`REVIEW.md ${id}: a named reviewer is required to ship suwar ${suwar.version} (a suwar row has named a reviewer)`);
   }
 }
 
@@ -147,7 +150,7 @@ for (const [i, segment] of ruqyah.segments.entries()) {
   }
 }
 // The suras of the suwar pack, in mushaf order: id, display name, number, ayah count. Pages cover each sura exactly.
-const suwarTable = [["kahf", "سورة الكهف", 18, 110], ["yasin", "سورة يس", 36, 83], ["waqiah", "سورة الواقعة", 56, 96], ["mulk", "سورة الملك", 67, 30]];
+const suwarTable = [["kahf", "سورة الكهف", 18, 110], ["yasin", "سورة يس", 36, 83], ["saffat", "سورة الصافات", 37, 182], ["waqiah", "سورة الواقعة", 56, 96], ["mulk", "سورة الملك", 67, 30]];
 if (suwar.suwar.map(s => s.id).join() !== suwarTable.map(([id]) => id).join()) fail(`suwar: suras must be ${suwarTable.map(([id]) => id).join(", ")} in that order`);
 for (const [id, name, number, count] of suwarTable) {
   const sura = suwar.suwar.find(s => s.id === id);

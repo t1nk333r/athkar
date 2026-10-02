@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "suwar.schema.json",
-  "title": "Suwar content pack (Al-Kahf, Ya-Sin, Al-Waqi'a, Al-Mulk in pages)",
+  "title": "Suwar content pack (Al-Kahf, Ya-Sin, As-Saffat, Al-Waqi'a, Al-Mulk in pages)",
   "type": "object",
   "additionalProperties": false,
   "required": [
