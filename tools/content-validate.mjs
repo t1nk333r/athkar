@@ -50,9 +50,22 @@ const reviewEntries = new Map();
 const semver = version => version.split(".").map(Number);
 const newer = (a, b) => { const [x, y] = [semver(a), semver(b)]; const k = x.findIndex((n, i) => n !== y[i]); return k >= 0 && x[k] > y[k]; };
 const latestReviewed = new Map();
-for (const match of reviewLog.matchAll(/^\| (R\d+) \| ([^|]*) \| ([^|]*) \| ([^|]*) \| ([^|]*) \| ([^|]*) \| ([^|]*) \|$/gm)) {
-  const [, id, pack, version, sha256, reviewer, scope, outcome] = match.map(s => s.trim());
+// Review rows are Markdown table rows read cell by cell (`|R8|` and `| R8 |` alike). Apart from the header and the
+// separator, a table row that does not parse as a review row is an error, as is a reused review ID.
+// The suwar pack has never been approved, so its rows may leave Reviewer blank until a suwar row first names one;
+// every later suwar row must name one too.
+let firstNamedSuwarRow = null;
+for (const line of reviewLog.split("\n").map(line => line.trim()).filter(line => line.startsWith("|"))) {
+  const cells = line.endsWith("|") ? line.slice(1, -1).split("|").map(cell => cell.trim()) : [];
+  if (cells[0] === "ID" || (cells.length && cells.every(cell => /^:?-+:?$/.test(cell)))) continue;
+  if (cells.length !== 7 || !/^R\d+$/.test(cells[0])) { fail(`REVIEW.md: cannot parse review row «${line}»`); continue; }
+  const [id, pack, version, sha256, reviewer, scope, outcome] = cells;
+  if (reviewEntries.has(id)) { fail(`REVIEW.md ${id}: duplicate review ID; rows are append-only with a new ID each`); continue; }
   reviewEntries.set(id, { pack, version, sha256, reviewer, scope, outcome });
+  if (pack === "suwar") {
+    if (reviewer) firstNamedSuwarRow ??= id;
+    else if (firstNamedSuwarRow) fail(`REVIEW.md ${id}: suwar rows after ${firstNamedSuwarRow} (the first with a named reviewer) must name a reviewer`);
+  }
   if (!/^[0-9a-f]{64}$/.test(sha256)) fail(`REVIEW.md ${id}: Pack SHA-256 must be the 64-hex digest of the reviewed pack file`);
   if (!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(version)) fail(`REVIEW.md ${id}: version ${version} is not semver`);
   else if (latestReviewed.has(pack) && !newer(version, latestReviewed.get(pack))) fail(`REVIEW.md ${id}: ${pack} ${version} does not bump ${latestReviewed.get(pack)}`);
@@ -75,14 +88,10 @@ for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah]]) {
 {
   const actual = sha256(join(contentDir, suwarFile));
   const rows = [...reviewEntries].filter(([, entry]) => entry.pack === "suwar" && entry.version === suwar.version);
-  // The suwar pack has never been approved, so its versions may await review (blank reviewer) until a suwar row first
-  // names a reviewer; from then on every suwar version needs one, as for adhkar and ruqyah.
-  const suwarEverReviewed = [...reviewEntries.values()].some(entry => entry.pack === "suwar" && entry.reviewer);
   if (!rows.length) fail(`REVIEW.md: no row for suwar ${suwar.version}; a text or order change needs a new row and a version bump`);
   else if (latestReviewed.get("suwar") !== suwar.version) fail(`REVIEW.md: suwar ${suwar.version} is not the pack's latest reviewed version`);
   for (const [id, entry] of rows) {
     if (entry.sha256 !== actual) fail(`${suwarFile} (sha256 ${actual}) was not reviewed: ${id} approved ${entry.sha256}`);
-    if (!entry.reviewer && suwar.version !== "1.0.0" && suwarEverReviewed) fail(`REVIEW.md ${id}: a named reviewer is required to ship suwar ${suwar.version} (a suwar row has named a reviewer)`);
   }
 }
 

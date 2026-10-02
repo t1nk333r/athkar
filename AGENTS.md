@@ -10,6 +10,7 @@ Ya-Sin, as-Saffat, al-Waqi'a, al-Mulk in pages for the «سور» tab; not in `m
 adhkar or suwar data in `index.html` (or a pack), keep them in sync and run
 `node tools/content-validate.mjs` and `node tools/content-export-pwa.mjs --check --ruqyah ../ruqyah-al-qareen/content.js`.
 Behaviour fixtures in `spec/` are regenerated with `node tools/fixtures-generate.mjs`; see `spec/README.md`.
+After changing the REVIEW.md rules in `tools/content-validate.mjs`, run `node tools/content-review-test.mjs`.
 
 Planning documents: [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) is the current stack and sequencing
 decision (Swift/SwiftUI iOS first, Kotlin/Compose later); [`MOBILE_APP_PLAN.md`](MOBILE_APP_PLAN.md)
