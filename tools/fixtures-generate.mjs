@@ -60,7 +60,7 @@ const contentData = lines.slice(dataStart, dataEnd).join("\n");
 const constants = [
   "collections", "sectionNames", "storageKey", "legacyStorageKey", "remindersStorageKey",
   "legacyRemindersStorageKey", "longDhikrThreshold", "prayerCalculationMethods", "asrShadowFactors",
-  "currentIndices", "decks", "reminderTimers", "numberFormatter"
+  "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices"
 ];
 
 const functions = [
@@ -71,6 +71,9 @@ const functions = [
   "deck", "invalidateDecks", "firstIncompleteIndex", "syncCompletionState", "setManualCompletion",
   "hasResettableState", "resetDayProgress", "recentDates", "resetWeek", "resetEverything",
   "dayCountLabel", "formatNumber",
+  // the scoped resets also clear athkar-suwar-v1 (kept empty here, so the adhkar state under test is unaffected)
+  "emptySuwarState", "saveSuwarState", "suraPagesRead", "suwarHasResettableState", "resetSuwarProgress",
+  "deleteSuwarHistory",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",
@@ -98,6 +101,7 @@ ${constants.map(extractConst).join("\n")}
 let state = null;
 let reminderPreferences = null;
 let longAdhkarLast = false;
+let suwarState = emptySuwarState("2000-01-01");
 let activePeriod = "morning";
 ${stubs}
 ${functions.map(extractFunction).join("\n\n")}

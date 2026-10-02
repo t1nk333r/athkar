@@ -31,6 +31,11 @@ const adhkar = readJSON(join(contentDir, "adhkar.v1.json"));
 check(readJSON(join(contentDir, "schema/adhkar.schema.json")), adhkar, "adhkar");
 const ruqyah = readJSON(join(contentDir, "ruqyah.v1.json"));
 check(readJSON(join(contentDir, "schema/ruqyah.schema.json")), ruqyah, "ruqyah");
+// The suwar pack (the PWA's «سور» tab) is not in manifest.json yet: the iOS app installs every manifest pack from its
+// bundle, so the entry lands together with the iOS resource. Until then it is bound to its REVIEW.md row here.
+const suwarFile = "suwar.v1.json";
+const suwar = readJSON(join(contentDir, suwarFile));
+check(readJSON(join(contentDir, "schema/suwar.schema.json")), suwar, "suwar");
 const reference = Object.fromEntries(
   ["alquran-cloud.quran-uthmani", "alquran-cloud.quran-simple", "quran-com.v4.uthmani", "quran-com.v4.imlaei"]
     .map(name => [name, readJSON(join(contentDir, "reference", `${name}.json`)).verses])
@@ -65,6 +70,16 @@ for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah]]) {
     if (entry.pack !== name || entry.version !== pack.version) fail(`REVIEW.md ${ref.reviewRecord} covers ${entry.pack} ${entry.version}, not ${name} ${pack.version}`);
     if (entry.sha256 !== ref.sha256) fail(`manifest.${name}.sha256 was not reviewed: ${ref.reviewRecord} approved ${entry.sha256}; a text or order change needs a new REVIEW.md row and a version bump`);
     if (!entry.reviewer && pack.version !== "1.0.0") fail(`REVIEW.md ${ref.reviewRecord}: a named reviewer is required to ship ${name} ${pack.version}`);
+  }
+}
+{
+  const actual = sha256(join(contentDir, suwarFile));
+  const rows = [...reviewEntries].filter(([, entry]) => entry.pack === "suwar" && entry.version === suwar.version);
+  if (!rows.length) fail(`REVIEW.md: no row for suwar ${suwar.version}; a text or order change needs a new row and a version bump`);
+  else if (latestReviewed.get("suwar") !== suwar.version) fail(`REVIEW.md: suwar ${suwar.version} is not the pack's latest reviewed version`);
+  for (const [id, entry] of rows) {
+    if (entry.sha256 !== actual) fail(`${suwarFile} (sha256 ${actual}) was not reviewed: ${id} approved ${entry.sha256}`);
+    if (!entry.reviewer && suwar.version !== "1.0.0") fail(`REVIEW.md ${id}: a named reviewer is required to ship suwar ${suwar.version}`);
   }
 }
 
@@ -131,13 +146,40 @@ for (const [i, segment] of ruqyah.segments.entries()) {
     fail(`${where}: segments must follow mushaf order (surah, then ayah) without overlap`);
   }
 }
+// The suras of the suwar pack, in mushaf order: id, display name, number, ayah count. Pages cover each sura exactly.
+const suwarTable = [["kahf", "سورة الكهف", 18, 110], ["yasin", "سورة يس", 36, 83], ["waqiah", "سورة الواقعة", 56, 96], ["mulk", "سورة الملك", 67, 30]];
+if (suwar.suwar.map(s => s.id).join() !== suwarTable.map(([id]) => id).join()) fail(`suwar: suras must be ${suwarTable.map(([id]) => id).join(", ")} in that order`);
+for (const [id, name, number, count] of suwarTable) {
+  const sura = suwar.suwar.find(s => s.id === id);
+  if (!sura) continue;
+  if (sura.surah !== name || sura.surahNumber !== number) fail(`suwar ${id}: must be surah ${number} «${name}»`);
+  const basmala = reference["alquran-cloud.quran-uthmani"][`${number}:1`]?.normalize("NFC").split(/\s+/).slice(0, 4).join(" ");
+  if (suwar.basmala.normalize("NFC") !== basmala) fail(`suwar.basmala must be the basmala as alquran-cloud.quran-uthmani gives it for ${number}:1`);
+  let next = 1;
+  for (const [i, page] of sura.pages.entries()) {
+    const where = `suwar.${id}.pages[${i}] ${page.id}`;
+    unique(page.id, where);
+    page.ayahs.forEach(ayah => {
+      if (ayah.number !== next++) fail(`${where}: ayah ${ayah.number} out of order (pages must cover the sura contiguously)`);
+      if (/[﴿﴾]/.test(ayah.text)) fail(`${where}: ayah ${ayah.number} text carries an ayah marker (the PWA numbers ayahs itself)`);
+    });
+    if (!page.ayahs.length) continue;
+    const first = page.ayahs[0].number;
+    const last = page.ayahs.at(-1).number;
+    if (page.id !== `${id}-${first}-${last}`) fail(`${where}: id must be ${id}-${first}-${last}`);
+    const range = first === last ? `الآية ${arabicDigits(first)}` : `الآيات ${arabicDigits(first)} – ${arabicDigits(last)}`;
+    if (page.range !== range) fail(`${where}: range «${page.range}» must be «${range}»`);
+  }
+  if (next !== count + 1) fail(`suwar ${id}: pages cover ayahs 1…${next - 1}, surah ${number} has ${count}`);
+}
 
 // ---- Quran comparison (rule 2) ----
 const normalise = text => text.normalize("NFC").replace(/\s*﴿[\u0660-\u0669]+﴾/g, "").replace(/\s+/g, " ").trim();
 const dropBasmala = (key, text) => (key.endsWith(":1") && key !== "1:1" && text.startsWith("بِسْمِ") ? text.split(" ").slice(4).join(" ") : text);
 // quran.com encodes a few marks differently from tanzil-derived alquran.cloud: tatweel before superscript alef,
-// hamza above on tatweel instead of a bare hamza, and no small meem after tanween.
-const quranComEncoding = text => text.replace(/\u0640([\u064B-\u0652]?)\u0654/g, "\u0621$1").replace(/[\u0640\u06ED]/g, "").replace(/([\u064B-\u064D])\u06E2/g, "$1");
+// hamza above on tatweel instead of a bare hamza (also after an open tanween, «شَيْـًۭٔا»), and no small meem after
+// tanween (also after a shadda on the same letter, «ظِلٍّۢ»).
+const quranComEncoding = text => text.replace(/\u0640([\u064B-\u0652]?)\u06ED?\u0654/g, "\u0621$1").replace(/[\u0640\u06ED]/g, "").replace(/([\u064B-\u064D]\u0651?)\u06E2/g, "$1");
 // Letters and vowels: drops shadda, sukun, Quranic annotation and pause marks, superscript alef and tatweel; keeps
 // fatha, damma, kasra and tanween. Equal between quran-simple and imlaei on every reference verse.
 const vowelled = text => text.replace(/[\u0651\u0652\u06D6-\u06ED\u0670\u0640]/g, "").replace(/\s+/g, " ").trim();
@@ -229,6 +271,13 @@ for (const segment of ruqyah.segments) {
     compareQuran(`ruqyah ${segment.id} ${segment.surahNumber}:${ayah.number}`, segment.id, ruqyah.edition, segment.surahNumber, ayah.number, ayah.number, ayah.text, null);
   }
 }
+for (const sura of suwar.suwar) {
+  for (const page of sura.pages) {
+    for (const ayah of page.ayahs) {
+      compareQuran(`suwar ${page.id} ${sura.surahNumber}:${ayah.number}`, page.id, suwar.edition, sura.surahNumber, ayah.number, ayah.number, ayah.text, null);
+    }
+  }
+}
 for (const exception of exceptions) {
   if (!usedExceptions.has(exception)) fail(`exceptions.json: stale exception for ${exception.items.join(",")} vs ${exception.source}`);
   if (!reviewEntries.has(exception.reviewRecord)) fail(`exceptions.json: ${exception.reviewRecord} has no row in REVIEW.md`);
@@ -241,4 +290,6 @@ if (errors.length) {
 }
 const quranItems = [...adhkar.periods.morning, ...adhkar.periods.evening].filter(i => i.kind === "quran").length;
 const ayahs = ruqyah.segments.reduce((n, s) => n + s.ayahs.length, 0);
-console.log(`✓ content valid: adhkar ${adhkar.version} (${quranItems} quran items), ruqyah ${ruqyah.version} (${ayahs} ayahs), ${usedExceptions.size} reviewed exception(s)`);
+const suwarAyahs = suwar.suwar.reduce((n, s) => n + s.pages.reduce((m, p) => m + p.ayahs.length, 0), 0);
+const suwarPages = suwar.suwar.map(s => `${s.id} ${s.pages.length}`).join(", ");
+console.log(`✓ content valid: adhkar ${adhkar.version} (${quranItems} quran items), ruqyah ${ruqyah.version} (${ayahs} ayahs), suwar ${suwar.version} (${suwarAyahs} ayahs; pages ${suwarPages}), ${usedExceptions.size} reviewed exception(s)`);

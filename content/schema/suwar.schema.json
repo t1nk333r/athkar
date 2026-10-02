@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "suwar.schema.json",
+  "title": "Suwar content pack (Al-Kahf, Ya-Sin, Al-Waqi'a, Al-Mulk in pages)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack",
+    "version",
+    "edition",
+    "basmala",
+    "suwar"
+  ],
+  "properties": {
+    "pack": {
+      "const": "suwar"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "edition": {
+      "const": "alquran-cloud:quran-uthmani"
+    },
+    "basmala": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Shown on its own above the first page of each sura."
+    },
+    "suwar": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "surah",
+          "surahNumber",
+          "pages"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z]+$",
+            "description": "Immutable once shipped: athkar-suwar-v1 and the #id deep link are keyed by it."
+          },
+          "surah": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surahNumber": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 114
+          },
+          "pages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "range",
+                "ayahs"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[a-z]+-[0-9]+-[0-9]+$",
+                  "description": "athkar-suwar-v1 records a read page by this id; changing a page's ayahs changes it."
+                },
+                "range": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "ayahs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "number",
+                      "text"
+                    ],
+                    "properties": {
+                      "number": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
