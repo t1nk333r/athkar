@@ -1712,10 +1712,37 @@
       .dhikr-card, .session-summary, .period-tabs { border-width: 2px; }
     }
   </style>
-  <!-- Anonymous page-load count on the developer's self-hosted GoatCounter. Fixed path "/" and empty title/referrer so
-       no tab, sura or hash ever leaves the device; no click events; nothing from localStorage. Cross-origin, so sw.js
-       never caches count.js and an offline launch sends nothing. -->
-  <script async data-goatcounter="https://count.aloqaili.xyz/count" data-goatcounter-settings='{"path":"/","title":"","referrer":"","no_events":true}' src="https://count.aloqaili.xyz/count.js"></script>
+  <script>
+    // Anonymous page-load count on the developer's self-hosted GoatCounter: one GET per page load, with a fixed
+    // query of p=/ (never the tab, hash, sura or page query), screen width, GoatCounter's bot code and a cache
+    // buster. No referrer, no cookies, no other storage read. Skipped offline, in frames, on local hosts, and when
+    // GoatCounter's own opt-out flag (localStorage "skipgc" = "t") is set. Bot codes mirror count.js v2.7.0.
+    (() => {
+      try {
+        if (navigator.onLine === false || window.top !== window.self || location.protocol === "file:"
+          || /(localhost$|^127\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^0\.0\.0\.0$)/.test(location.hostname)) return;
+        try { if (localStorage.getItem("skipgc") === "t") return; } catch (_) {}
+        let sent = false;
+        const send = () => {
+          if (sent || (document.visibilityState && document.visibilityState !== "visible")) return;
+          sent = true;
+          document.removeEventListener("visibilitychange", send);
+          try {
+            const w = window, d = document;
+            const bot = (w.callPhantom || w._phantom || w.phantom) ? 150 : w.__nightmare ? 151
+              : (d.__selenium_unwrapped || d.__webdriver_evaluate || d.__driver_evaluate) ? 152 : navigator.webdriver ? 153 : 0;
+            const width = Math.round(Number(screen.width)) || 0;
+            const rnd = (Math.random().toString(36).slice(2) + "00000000").slice(0, 8);
+            fetch(`https://count.aloqaili.xyz/count?p=%2F&s=${width}&b=${bot}&rnd=${rnd}`, {
+              method: "GET", mode: "no-cors", credentials: "omit", referrerPolicy: "no-referrer", keepalive: true, cache: "no-store"
+            }).catch(() => {});
+          } catch (_) {}
+        };
+        const start = () => { document.addEventListener("visibilitychange", send); send(); };
+        if (document.readyState === "complete") start(); else window.addEventListener("load", start, { once: true });
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body data-period="morning">
   <a class="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
@@ -2003,7 +2030,7 @@
         <h3 id="app-settings-title">التطبيق</h3>
         <button class="settings-action" id="install-button" type="button" disabled>تثبيت التطبيق</button>
         <p class="settings-note" id="install-status">يمكن تثبيت التطبيق من قائمة المتصفح عند توفر الخيار.</p>
-        <p class="settings-note" id="visit-count-note">تُحصى مرات فتح التطبيق إحصاءً مجهول الهوية على خادم المطوّر الخاص (نوع المتصفح والنظام وعرض الشاشة والبلد فقط)، دون ملفات تعريف ارتباط ولا بيانات شخصية ولا أي شيء عمّا تقرؤه أو تحفظه.</p>
+        <p class="settings-note" id="visit-count-note">تُحصى مرات فتح التطبيق على خادم المطوّر الخاص. يتلقى الخادم عنوان IP ومعرّف المتصفح مؤقتًا لإجراء العدّ، ولا يُبقي إلا أرقامًا إجمالية: المتصفح والنظام وعرض الشاشة والبلد. لا يُرسل شيء عن قراءتك أو تقدّمك أو سجلك أو موقعك، ولا تُستخدم ملفات تعريف الارتباط.</p>
       </section>
 
       <section class="settings-section" aria-labelledby="backup-settings-title">
