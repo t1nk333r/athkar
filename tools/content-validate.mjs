@@ -50,15 +50,31 @@ const reviewEntries = new Map();
 const semver = version => version.split(".").map(Number);
 const newer = (a, b) => { const [x, y] = [semver(a), semver(b)]; const k = x.findIndex((n, i) => n !== y[i]); return k >= 0 && x[k] > y[k]; };
 const latestReviewed = new Map();
-// Review rows are Markdown table rows read cell by cell (`|R8|` and `| R8 |` alike). Apart from the header and the
-// separator, a table row that does not parse as a review row is an error, as is a reused review ID.
+// The review table runs from its header line to the first blank line. Its rows are Markdown table rows with optional
+// outer pipes, read cell by cell (`|R8|`, `| R8 |` and `R8 | … |` alike); after the header and separator every line
+// in it must parse as a review row. Anywhere in REVIEW.md, a line that looks like a review row (a fullwidth pipe, a
+// line starting with an R<n>-like ID, or a piped line with an R<n>-like cell) and is not a parsed table row is an
+// error too, as is a reused review ID: nothing review-like is ever skipped.
 // The suwar pack has never been approved, so its rows may leave Reviewer blank until a suwar row first names one;
 // every later suwar row must name one too.
+const reviewLines = reviewLog.split("\n").map(line => line.trim());
+const tableCells = line => line.replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
+const reviewIdLike = /^[|]?\s*[RrＲｒ]\s*[0-9０-９]/;
+const looksLikeReviewRow = line => line.includes("｜") || reviewIdLike.test(line) || (line.includes("|") && tableCells(line).some(cell => /^[RrＲｒ]\s*[0-9０-９]+$/.test(cell)));
+const reviewHeader = reviewLines.findIndex(line => tableCells(line).join("|") === "ID|Pack|Version|Pack SHA-256|Reviewer|Scope|Outcome");
+if (reviewHeader < 0) fail("REVIEW.md: review table header «| ID | Pack | Version | Pack SHA-256 | Reviewer | Scope | Outcome |» not found");
+let reviewTableEnd = reviewHeader;
+while (reviewHeader >= 0 && reviewTableEnd + 1 < reviewLines.length && reviewLines[reviewTableEnd + 1]) reviewTableEnd++;
 let firstNamedSuwarRow = null;
-for (const line of reviewLog.split("\n").map(line => line.trim()).filter(line => line.startsWith("|"))) {
-  const cells = line.endsWith("|") ? line.slice(1, -1).split("|").map(cell => cell.trim()) : [];
-  if (cells[0] === "ID" || (cells.length && cells.every(cell => /^:?-+:?$/.test(cell)))) continue;
-  if (cells.length !== 7 || !/^R\d+$/.test(cells[0])) { fail(`REVIEW.md: cannot parse review row «${line}»`); continue; }
+for (const [i, line] of reviewLines.entries()) {
+  if (i === reviewHeader) continue;
+  if (reviewHeader < 0 || i < reviewHeader || i > reviewTableEnd) {
+    if (looksLikeReviewRow(line)) fail(`REVIEW.md: review-like line outside the review table «${line}»`);
+    continue;
+  }
+  const cells = tableCells(line);
+  if (i === reviewHeader + 1 && cells.length === 7 && cells.every(cell => /^:?-+:?$/.test(cell))) continue;
+  if (line.includes("｜") || cells.length !== 7 || !/^R\d+$/.test(cells[0])) { fail(`REVIEW.md: cannot parse review row «${line}»`); continue; }
   const [id, pack, version, sha256, reviewer, scope, outcome] = cells;
   if (reviewEntries.has(id)) { fail(`REVIEW.md ${id}: duplicate review ID; rows are append-only with a new ID each`); continue; }
   reviewEntries.set(id, { pack, version, sha256, reviewer, scope, outcome });

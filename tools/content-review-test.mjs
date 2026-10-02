@@ -56,6 +56,21 @@ const cases = [
     name: "a review row that cannot be parsed is an error, not skipped",
     review: review.replace(/\n*$/, `\n| R10 | suwar | 1.2.0 |\n`),
     fails: /cannot parse review row «\| R10 \| suwar \| 1\.2\.0 \|»/
+  },
+  {
+    name: "(f) named R8 written without the leading pipe (`R8 | … |`), then blank R9",
+    review: replaceRow(review, "R8", edit("R8", { 4: "Someone" }).replace(/^\| /, "")),
+    fails: /R9: suwar rows after R8 \(the first with a named reviewer\) must name a reviewer/
+  },
+  {
+    name: "(g) named R8 written with fullwidth pipes (｜), then blank R9",
+    review: replaceRow(review, "R8", edit("R8", { 4: "Someone" }).replace(/\|/g, "｜")),
+    fails: /cannot parse review row «｜ R8 ｜/
+  },
+  {
+    name: "a review row after the table (past a blank line) is an error, not skipped",
+    review: review.replace(/\n*$/, `\n\n${edit("R8", { 0: "R10", 2: "1.2.0", 4: "Someone" })}\n`),
+    fails: /review-like line outside the review table «\| R10 \| suwar \| 1\.2\.0/
   }
 ];
 
