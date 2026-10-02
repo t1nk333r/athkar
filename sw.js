@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v34";
+const CACHE_NAME = "athkar-static-v35";
 // Navigations are answered from the network and fall back to ./index.html, so "./" is never read from the cache.
 const APP_SHELL = [
   "./index.html",
