@@ -122,6 +122,11 @@ The setting is `long_order` (`last` | `original`; default `original`).
 - **Forward** («التالي», and a swipe forward) is enabled when `index < count − 1`, and additionally:
   - Adhkar: the current item is complete, or is a review item, or the period is manually complete (the lock).
   - Ruqyah: no other condition; never locked.
+  - The ruqyah PWA differs here. Since it gained one tab per sura (ruqyah-al-qareen 7973628), each sura is its own
+    deck, and forward is also locked until the current segment's repeats are complete, as in the adhkar PWA's «سور»
+    tab. The sura chips still switch suras at any time, and the PWA opens on ق at its first incomplete segment
+    unless a sura deep link (`#qaf`, `#jinn`, `#takwir`, `#kafirun`, `#nas`) names another. The native app keeps
+    the single unlocked deck described above until it gets sura tabs.
 - **Position.** Shown as «N من M». Spoken as «الذكر N من M» for adhkar and «المقطع N من M» for ruqyah, and
   announced after every navigation.
 - **Hint below the controls.** `deck.hint.adhkar` or `deck.hint.ruqyah`.
