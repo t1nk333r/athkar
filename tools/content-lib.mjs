@@ -43,10 +43,26 @@ export function jsonEqual(a, b) {
   return a === b;
 }
 
-/** Serialises the ruqyah pack exactly as ruqyah-al-qareen/content.js is laid out. */
+/**
+ * Serialises the ruqyah pack exactly as ruqyah-al-qareen/content.js is laid out: `RUQYAH_SUWAR`, one entry per sura
+ * in pack order, `{ id, surah, segments }`. The sura id is the segment-id prefix up to the first "-" (the validator
+ * fixes it to qaf/jinn/takwir/kafirun/nas); a sura's segments must be consecutive in the pack.
+ */
 export function ruqyahContentJs(pack) {
-  const segments = pack.segments.map(({ id, surah, range, repeat, basmala, ayahs }) => ({ id, surah, range, repeat, basmala, ayahs }));
-  return `"use strict";\n\nconst RUQYAH_SEGMENTS = ${JSON.stringify(segments, null, 2)};\n`;
+  const suwar = [];
+  for (const { id, surah, range, repeat, basmala, ayahs } of pack.segments) {
+    const suraId = id.slice(0, id.indexOf("-"));
+    if (!suraId) throw new Error(`ruqyah segment ${id}: id has no sura prefix`);
+    let sura = suwar.at(-1);
+    if (sura?.id !== suraId) {
+      if (suwar.some(other => other.id === suraId)) throw new Error(`ruqyah segment ${id}: sura ${suraId} is not consecutive in the pack`);
+      sura = { id: suraId, surah, segments: [] };
+      suwar.push(sura);
+    }
+    if (sura.surah !== surah) throw new Error(`ruqyah segment ${id}: surah "${surah}" differs from "${sura.surah}" in sura ${suraId}`);
+    sura.segments.push({ id, surah, range, repeat, basmala, ayahs });
+  }
+  return `"use strict";\n\nconst RUQYAH_SUWAR = ${JSON.stringify(suwar, null, 2)};\n`;
 }
 
 /**
