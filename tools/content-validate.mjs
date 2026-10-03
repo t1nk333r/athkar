@@ -2,7 +2,8 @@
 //   node tools/content-validate.mjs
 //
 // Quran comparison (rule 2). Every quran item is checked against two independent sources:
-//   alquran-cloud:quran-uthmani  -> alquran-cloud.quran-uthmani (exact)   + quran-com.v4.uthmani (encoding-normalised)
+//   alquran-cloud:quran-uthmani  -> alquran-cloud.quran-uthmani (exact but for the seat of a hamza after lam)
+//                                   + quran-com.v4.uthmani (encoding-normalised; the hamza seat compared exactly)
 //   simplified-rasm              -> alquran-cloud.quran-simple (exact)     + quran-com.v4.imlaei  (letters and vowels)
 // For simplified-rasm, letters and fatha/damma/kasra/tanween are two-source. Shadda, sukun, pause and annotation
 // marks, superscript alef and tatweel are checked against quran-simple only: imlaei marks idgham differently (no
@@ -204,16 +205,22 @@ for (const [id, name, number, count] of suwarTable) {
 // ---- Quran comparison (rule 2) ----
 const normalise = text => text.normalize("NFC").replace(/\s*﴿[\u0660-\u0669]+﴾/g, "").replace(/\s+/g, " ").trim();
 const dropBasmala = (key, text) => (key.endsWith(":1") && key !== "1:1" && text.startsWith("بِسْمِ") ? text.split(" ").slice(4).join(" ") : text);
-// quran.com encodes a few marks differently from tanzil-derived alquran.cloud: tatweel before superscript alef,
-// hamza above on tatweel instead of a bare hamza (also after an open tanween, «شَيْـًۭٔا»), and no small meem after
-// tanween (also after a shadda on the same letter, «ظِلٍّۢ»).
-const quranComEncoding = text => text.replace(/\u0640([\u064B-\u0652]?)\u06ED?\u0654/g, "\u0621$1").replace(/[\u0640\u06ED]/g, "").replace(/([\u064B-\u064D]\u0651?)\u06E2/g, "$1");
+// quran.com encodes a few marks differently from tanzil-derived alquran.cloud; each rule removes only its own mark,
+// in its own context: tatweel before superscript alef («تَبَـٰرَكَ»), and the small meem after tanween («شَيْـًۭٔا»,
+// also after a shadda on the same letter, «ظِلٍّۢ»). Every other tatweel stays, so the seat of a hamza is compared
+// exactly: hamza above on tatweel (U+0640 U+0654) and a bare hamza (U+0621) differ.
+const quranComEncoding = text => text.replace(/\u0640(?=\u0670)/g, "").replace(/([\u064B-\u064D]\u0651?)[\u06E2\u06ED]/g, "$1");
+// Tanzil, and so alquran.cloud, writes a bare hamza after a lam inside a word («لِءَابَآئِهِمْ», «ٱلْءَاخِرِينَ»), which
+// leaves the lam unjoined; quran.com and the King Fahd Complex join the lam to a tatweel carrying the hamza
+// («لِـَٔابَآئِهِمْ»), as the mushaf does. Packs follow quran.com; this maps alquran.cloud's spelling to it (a word-final
+// hamza after lam, «مِّلْءُ», stays bare in every source and is not touched).
+const tanzilHamzaSeat = text => text.replace(/\u0644([\u064E\u0650\u0652]?)\u0621([\u064B-\u0650])(?=\p{L})/gu, "\u0644$1\u0640$2\u0654");
 // Letters and vowels: drops shadda, sukun, Quranic annotation and pause marks, superscript alef and tatweel; keeps
 // fatha, damma, kasra and tanween. Equal between quran-simple and imlaei on every reference verse.
 const vowelled = text => text.replace(/[\u0651\u0652\u06D6-\u06ED\u0670\u0640]/g, "").replace(/\s+/g, " ").trim();
 
 const comparisons = {
-  "alquran-cloud:quran-uthmani": [["alquran-cloud.quran-uthmani", t => t], ["quran-com.v4.uthmani", quranComEncoding]],
+  "alquran-cloud:quran-uthmani": [["alquran-cloud.quran-uthmani", tanzilHamzaSeat], ["quran-com.v4.uthmani", quranComEncoding]],
   "simplified-rasm": [["alquran-cloud.quran-simple", t => t], ["quran-com.v4.imlaei", vowelled]]
 };
 

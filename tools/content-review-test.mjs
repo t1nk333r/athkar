@@ -16,6 +16,9 @@ const format = cellList => `| ${cellList.join(" | ")} |`;
 const edit = (id, changes) => format(cells(row(id)).map((cell, i) => (i in changes ? changes[i] : cell)));
 const replaceRow = (text, id, line) => text.replace(row(id), line);
 const fakeSha = "0".repeat(64);
+// The suwar rows in order, and an ID no committed row uses, so the cases hold as rows are appended.
+const suwarRows = review.split("\n").filter(line => /^\| R\d+ \| suwar \|/.test(line)).map(line => cells(line)[0]);
+const freshId = `R${Math.max(...review.split("\n").flatMap(line => (/^\| R(\d+) \|/.exec(line) ?? []).slice(1).map(Number))) + 1}`;
 
 const cases = [
   {
@@ -29,12 +32,12 @@ const cases = [
     fails: /R9: suwar rows after R8 \(the first with a named reviewer\) must name a reviewer/
   },
   {
-    name: "(c) named R8 1.0.0, blank R10 1.0.1, named R9 1.1.0 (current)",
+    name: `(c) named R8 1.0.0, blank ${freshId} 1.0.1, named R9 1.1.0`,
     review: replaceRow(
-      replaceRow(review, "R9", `${format(["R10", "suwar", "1.0.1", fakeSha, "", "test", "Awaiting review"])}\n${edit("R9", { 4: "Someone" })}`),
+      replaceRow(review, "R9", `${format([freshId, "suwar", "1.0.1", fakeSha, "", "test", "Awaiting review"])}\n${edit("R9", { 4: "Someone" })}`),
       "R8", edit("R8", { 4: "Someone" })
     ),
-    fails: /R10: suwar rows after R8 \(the first with a named reviewer\) must name a reviewer/
+    fails: new RegExp(`${freshId}: suwar rows after R8 \\(the first with a named reviewer\\) must name a reviewer`)
   },
   { name: "(d) REVIEW.md as committed", review, passes: true },
   {
@@ -48,14 +51,14 @@ const cases = [
     fails: /R4: a named reviewer is required to ship ruqyah 1\.0\.1/
   },
   {
-    name: "blank suwar R8, then named R9 (blank rows before the first named one stay legal)",
-    review: replaceRow(review, "R9", edit("R9", { 4: "Someone" })),
+    name: "blank suwar R8, then every later suwar row named (blank rows before the first named one stay legal)",
+    review: suwarRows.slice(1).reduce((text, id) => replaceRow(text, id, edit(id, { 4: "Someone" })), review),
     passes: true
   },
   {
     name: "a review row that cannot be parsed is an error, not skipped",
-    review: review.replace(/\n*$/, `\n| R10 | suwar | 1.2.0 |\n`),
-    fails: /cannot parse review row «\| R10 \| suwar \| 1\.2\.0 \|»/
+    review: review.replace(/\n*$/, `\n| ${freshId} | suwar | 1.2.0 |\n`),
+    fails: new RegExp(`cannot parse review row «\\| ${freshId} \\| suwar \\| 1\\.2\\.0 \\|»`)
   },
   {
     name: "(f) named R8 written without the leading pipe (`R8 | … |`), then blank R9",
@@ -69,8 +72,8 @@ const cases = [
   },
   {
     name: "a review row after the table (past a blank line) is an error, not skipped",
-    review: review.replace(/\n*$/, `\n\n${edit("R8", { 0: "R10", 2: "1.2.0", 4: "Someone" })}\n`),
-    fails: /review-like line outside the review table «\| R10 \| suwar \| 1\.2\.0/
+    review: review.replace(/\n*$/, `\n\n${edit("R8", { 0: freshId, 2: "1.2.0", 4: "Someone" })}\n`),
+    fails: new RegExp(`review-like line outside the review table «\\| ${freshId} \\| suwar \\| 1\\.2\\.0`)
   }
 ];
 
