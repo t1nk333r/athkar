@@ -7893,13 +7893,19 @@
     });
 
     // Touch and pen count on each finger lift on the card, so overlapping taps of two thumbs count twice; a lift after
-    // the pointer moved (a drag) or a pointercancel (a scroll) does not count. The compatibility click a touch then
-    // produces is ignored: by its pointerType where click is a PointerEvent, otherwise as the one click that follows a
-    // lift within 800 ms and 30 px. Mouse counts once per click, the keyboard (Enter, Space) through the button's click.
+    // the pointer moved (a drag) or a pointercancel (a scroll) does not count. Each lift may be followed by one
+    // compatibility click, whatever its pointerType (WebKit gives it "mouse" or none): the first click within 800 ms and
+    // 30 px of a pending lift is ignored and consumes it, and a touch/pen-typed click consumes one too. At most two lifts
+    // wait at once, and a mouse pointerdown (an independent mouse gesture; a touch never produces one) clears them all.
+    // Keyboard activation (detail 0) always counts.
     const tasbihTouches = new Map();
-    let tasbihLastLift = null;
+    let tasbihPendingLifts = [];
+    const tasbihCompatWindowMs = 800;
     tasbihSurface.addEventListener("pointerdown", event => {
-      if (event.pointerType === "mouse") return;
+      if (event.pointerType === "mouse") {
+        tasbihPendingLifts = [];
+        return;
+      }
       tasbihTouches.set(event.pointerId, { x: event.clientX, y: event.clientY, moved: false });
     });
     tasbihSurface.addEventListener("pointermove", event => {
@@ -7911,17 +7917,22 @@
       const touch = tasbihTouches.get(event.pointerId);
       tasbihTouches.delete(event.pointerId);
       if (!touch) return;
-      tasbihLastLift = { at: performance.now(), x: event.clientX, y: event.clientY };
+      tasbihPendingLifts = [...tasbihPendingLifts, { at: performance.now(), x: event.clientX, y: event.clientY }].slice(-2);
       const rect = tasbihSurface.getBoundingClientRect();
       const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
       if (!touch.moved && inside) addTasbihCount();
     });
     tasbihSurface.addEventListener("click", event => {
-      if (event.pointerType === "touch" || event.pointerType === "pen") return;
-      if (!event.pointerType && event.detail !== 0 && tasbihLastLift) {
-        const lift = tasbihLastLift;
-        if (performance.now() - lift.at < 800 && Math.hypot(event.clientX - lift.x, event.clientY - lift.y) <= 30) {
-          tasbihLastLift = null;
+      const now = performance.now();
+      tasbihPendingLifts = tasbihPendingLifts.filter(lift => now - lift.at < tasbihCompatWindowMs);
+      if (event.pointerType === "touch" || event.pointerType === "pen") {
+        tasbihPendingLifts.shift();
+        return;
+      }
+      if (event.detail !== 0) {
+        const index = tasbihPendingLifts.findIndex(lift => Math.hypot(event.clientX - lift.x, event.clientY - lift.y) <= 30);
+        if (index !== -1) {
+          tasbihPendingLifts.splice(index, 1);
           return;
         }
       }
