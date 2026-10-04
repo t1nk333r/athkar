@@ -7920,7 +7920,9 @@
       const touch = tasbihTouches.get(event.pointerId);
       tasbihTouches.delete(event.pointerId);
       if (!touch) return;
-      tasbihPendingLifts.push({ pointerId: event.pointerId, x: event.clientX, y: event.clientY, at: performance.now() });
+      const now = performance.now();
+      tasbihPendingLifts = tasbihPendingLifts.filter(lift => now - lift.at < tasbihCompatWindowMs);
+      tasbihPendingLifts.push({ pointerId: event.pointerId, x: event.clientX, y: event.clientY, at: now });
       const rect = tasbihSurface.getBoundingClientRect();
       const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
       if (!touch.moved && inside) addTasbihCount();
