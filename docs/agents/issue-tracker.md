@@ -13,9 +13,9 @@ This repo tracks issues and specs as GitHub issues. Use the `gh` CLI for all ope
 
 Run `git remote -v` to identify the repo. `gh` detects it automatically inside a clone.
 
-## Triage for pull requests
+## Pull requests as a triage surface
 
-**External PRs as feature requests: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
+**PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
 
 When set to `yes`, PRs follow the same labels and states as issues. Use the equivalent `gh pr` commands:
 
@@ -34,6 +34,8 @@ Create a GitHub issue.
 Run `gh issue view <number> --comments`.
 
 ## Wayfinding operations
+
+Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.
 
 - **Map.** Create one issue labelled `wayfinder:map` with the Notes / Decisions-so-far / Fog body. Run `gh issue create --label wayfinder:map`.
 - **Child ticket.** Create a GitHub sub-issue linked to the map with `gh api` on the sub-issues endpoint. If sub-issues are not enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Apply a `wayfinder:<type>` label (`research`/`prototype`/`grilling`/`task`). Once someone claims the ticket, assign it to the driving dev.

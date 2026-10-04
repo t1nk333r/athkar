@@ -31,8 +31,9 @@ If this ever becomes a multi-package repo, re-run the setup skill to switch to a
 When your output names a domain concept in an issue title, refactor proposal, hypothesis, or test name, use the
 term defined in `CONTEXT.md`. Do not replace glossary terms with synonyms that it explicitly avoids.
 
-If you are inventing a term the project does not use, reconsider it. If the glossary has a real gap, note it for
-`/domain-modeling`.
+If a concept you need is missing from the glossary, check whether you are inventing a term the project does not use or have found a real gap. Reconsider an invented term; note a real gap for `/domain-modeling`.
+
+## Flag ADR conflicts
 
 If your output contradicts an existing ADR, state that directly instead of overriding it silently:
 

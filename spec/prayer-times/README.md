@@ -241,9 +241,10 @@ the same check in the test.
   the Sun's position to the event itself. Near the equinoxes that is a 0.1–0.2° difference in declination, and
   where the Sun crosses the event altitude at a shallow angle it moves the event by minutes. *Test condition:*
   Adhan agrees with `SolarReference` (Fajr ≤ 8 s, sunrise and sunset ≤ 4 s measured).
-- **`asr-shadow-declination`**, Asr. Adhan takes the Asr shadow angle from
-  the declination at 0h UTC of the date, while the PWA takes it at local solar noon. Asr therefore comes later
-  while the declination rises (January to June) and earlier while it falls. The data shows this sign pattern.
+- **`asr-shadow-declination`**, Asr. As above, Adhan interpolates the Sun's position to the event itself, while
+  the PWA evaluates it at local solar noon. Adhan also takes the Asr shadow angle from the declination at
+  0h UTC of the date, while the PWA takes it at local solar noon. Asr therefore comes later while the
+  declination rises (January to June) and earlier while it falls. The data shows this sign pattern.
   *Test condition:* Adhan agrees with `SolarReference.asr`, which uses the same convention (≤ 29 s measured).
 - **`grazing-sun`**, sunrise, sunset and Fajr when the Sun's noon or midnight altitude is within 2° of the
   −0.833° sunrise altitude; Asr qualifies when the noon altitude is within 2° of that altitude. On Tromsø

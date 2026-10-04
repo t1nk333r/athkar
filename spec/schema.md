@@ -202,7 +202,7 @@ between that shape and the adhkar tables. The rules and their fixtures define th
 
 - `progress[p]` and `targets[p]` contain numbers from that date's `adhkar_item_progress` rows. Include only
   non-null `count` values in `progress[p]` and non-null `target` values in `targets[p]`.
-- Set `completedAt[p]` to the row's `completed_at`. Use null when no row exists or its value is null.
+- Set `completedAt[p]` to the `adhkar_days` row's `completed_at`. Use null when no such row exists or its value is null.
 - `manualCompletion[p]` is true if and only if the row's `completion_origin` is not `counters`. An `import` row
   on the loaded date comes from a file whose `today.date` was ahead of this device (exported just after midnight,
   or in a zone further east). The file records only that the period was complete, which the PWA represents as a
@@ -263,7 +263,7 @@ The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repe
 
 - **Counting.** `setCount(_:for:on:completingDayAt:)` upserts the segment row. When that reading completes every
   segment, the method also inserts today's `ruqyah_days` row with `completion_origin = counters` in the same
-  transaction. The method never replaces an existing row, so it preserves the first completion time as in the
+  transaction. It never replaces an existing `ruqyah_days` row, preserving the first completion time as in the
   PWA's `recordToday`. Resetting one segment sets `count = 0`.
 - **Scoped reset.** `resetCounts(on:removing:)` runs in one transaction:
   - It sets every non-zero count of that date to 0 (`resetDayProgress`). The rows are kept.

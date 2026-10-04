@@ -9,8 +9,7 @@ This prevents unreviewed changes from shipping.
 Append rows only. Identify each row by a sequence ID, not a date. For every version after 1.0.0, the
 **Reviewer** column must name a person.
 
-The suwar pack is an exception. It has never been approved, so later versions may have a blank **Reviewer**
-until a suwar row first names one. From then on, every suwar version needs a named reviewer.
+The suwar pack is an exception. It has never been approved, so later versions may also await review with a blank **Reviewer** until a suwar row first names one. From then on, every suwar version needs a named reviewer.
 
 | ID | Pack | Version | Pack SHA-256 | Reviewer | Scope | Outcome |
 | --- | --- | --- | --- | --- | --- | --- |

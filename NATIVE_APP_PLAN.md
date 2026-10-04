@@ -157,7 +157,7 @@ This trim is a scope change to the reviewed plan and is listed as a decision the
 
 ### 3.4 What happens to رقية القرين as a separate app
 
-The ruqyah PWA will no longer be a product. Non-iOS users will continue to use it.
+The ruqyah PWA stops being a product and becomes a distribution channel for non-iOS users.
 
 1. Move `RUQYAH_SEGMENTS` from `content.js` to `content/ruqyah.v1.json` in the athkar repo (section 5). Generate the ruqyah repo's `content.js` from that file instead of editing it by hand. This gives the content pack one source of truth from the day it exists.
 2. The ruqyah PWA gets the same export button as athkar (section 6.4), because a native app cannot read its `ruqyah-daily-v1` localStorage.
@@ -189,14 +189,14 @@ The shared artefacts are files under version control in the athkar repo:
 | Deep-link routes | `spec/routes.md` | Route table | `URL` handling | Intent filters |
 | Domain wording | `content/ui-copy.json` | Arabic strings for domain states (unrecorded, prayed, not applicable, Friday choice, timing labels, reset confirmations) | String catalog seeded from it | `strings.xml` seeded from it |
 
-Write all other views, view models, repositories, scheduler adapters, and location adapters separately for each platform.
+Write everything else separately for each platform, including views, view models, repositories, scheduler adapters, and location adapters.
 
 ### 4.2 Rejected alternatives
 
 | Alternative | Why rejected |
 | --- | --- |
 | **Pure duplication** (no shared artefacts, Android re-derives everything from the iOS app) | Quran text must never diverge. Two hand-maintained copies of `content.js` could let a text error ship on only one platform. Fixtures also make a later Android port testable instead of relying on whether it looks the same. |
-| **Kotlin Multiplatform core** (domain + calculation + planner in Kotlin, consumed on iOS as an XCFramework) | KMP shares real logic, but it adds a Gradle toolchain to every iOS build even though the second platform may be deferred indefinitely. Debugging Swift through KMP interop is materially harder than debugging native Swift. The domain code totals a few hundred lines, and each platform already has a maintained native prayer-time library. KMP would fit a team building both platforms at once. Reconsider it only if Android starts and the Swift domain layer grows beyond what fixtures can pin (section 9.3 gives the trigger). |
+| **Kotlin Multiplatform core** (domain + calculation + planner in Kotlin, consumed on iOS as an XCFramework) | Genuine shared logic, but: it adds a Gradle toolchain to every iOS build on a solo project whose second platform is deferred indefinitely; Swift-side debugging through KMP interop is materially worse than native Swift; the domain code in question is a few hundred lines; and for prayer times a maintained native library already exists on each platform. KMP would be the right answer for a team building both platforms concurrently. Revisit only if Android starts and the Swift domain layer has grown beyond what fixtures can pin (section 9.3 states the trigger). |
 | **Spec + golden vectors for calculation, hand-ported from the PWA's `solarDay`** | The PWA engine computes only Fajr, sunrise, Asr, and sunset (`solarDay` returns exactly those four), plus one high-latitude clamp (`safeFajr` in `prayerTimesForDate`, a night-fraction rule). It has no Dhuhr, Maghrib, Isha, Isha-interval methods (Umm al-Qura), or configurable high-latitude rules. Porting it would mean adding these features. Adhan already contains audited versions of them. The PWA engine remains the comparison reference for its four computed values. |
 | **WebView reuse** (ship `index.html` inside a native shell) | WebView reuse retains every limitation the native app exists to remove. Notifications still need a native scheduler and a native data store the web code cannot see. Auto-fit and RTL layout inside a WKWebView are no better than in Safari. App Store review treats thin wrappers unfavourably. WebView reuse would also make the iOS app a third front end to maintain instead of replacing the PWA. |
 | **Sharing TypeScript via a JS engine (JavaScriptCore)** | Sharing TypeScript through JavaScriptCore has the same issues as KMP and worse tooling. The rules are too small to justify a runtime. |
@@ -264,7 +264,7 @@ Pack schema additions over today's fields: `kind` (`quran` | `dhikr` | `review`)
 
 **SQLite via GRDB.swift**, WAL mode, forward-only numbered migrations, schema documented in `spec/schema.md`.
 
-Reject SwiftData/Core Data because a non-Apple port cannot inspect their schemas, tests cannot easily check migrations against seeded previous-version databases (`MOBILE_APP_PLAN.md` §17 requires this), and SwiftData raises the minimum OS. A plain SQL schema is a shared artefact that Android can implement with Room or SQLDelight.
+Reject SwiftData/Core Data because their schemas are opaque to a non-Apple port, migration behavior is harder to test against seeded previous-version databases (`MOBILE_APP_PLAN.md` §17 requires this), and SwiftData raises the minimum OS. A plain SQL schema is the shared artifact Android will implement with Room or SQLDelight.
 
 Store settings unrelated to worship data (theme, text size, line spacing, haptics, long-order, reduced motion) in the SQLite `settings` table (`spec/schema.md`) and mirror them into the backup envelope. The app may also mirror them into `UserDefaults` for fast launch-time reads. SQLite holds the authoritative values; record import precedence between the two PWA files in `spec/schema.md`. Keep worship data and reminder rules only in SQLite.
 
@@ -287,11 +287,11 @@ Extends `MOBILE_APP_PLAN.md` §11 (authoritative) with the ruqyah pillar and the
 | `reminder_state` | `rule_id, last_shown_local_date` | From `athkar-reminders-v2.lastShown`; needed for the 15-minute catch-up rule. |
 | `notification_audit` | per §11 | Redacted. |
 
-Document these invariants in `spec/schema.md`: a day counts as complete for a period only if an `adhkar_days` row exists; `countForState` clamps counters to target on read; a `review`-kind item never participates in completion (`periodCountersComplete`).
+The invariants in `spec/schema.md` are: a day is complete for a period if and only if an `adhkar_days` row exists; readers clamp counters to target exactly as `countForState` does; a `review`-kind item never participates in completion (`periodCountersComplete`).
 
 ### 6.3 Day rollover
 
-Both PWAs roll at local civil midnight. `scheduleDayRollover` sets 00:00:01, and `ensureCurrentDay` runs on visibility change. The native app also rolls at local civil midnight, using `NSCalendarDayChanged` plus a foreground check. It handles a case the PWAs cannot: when the app is not open at midnight. Rollover depends only on `local_date`; it deletes nothing, so if rollover is missed, today's counters start on first open.
+Both PWAs roll at local civil midnight. `scheduleDayRollover` sets 00:00:01, and `ensureCurrentDay` runs on visibility change. The native app also rolls at local civil midnight, using `NSCalendarDayChanged` plus a foreground check. It handles a case the PWAs cannot: when the app is not open at midnight. Rollover is a pure function of `local_date`; it deletes nothing, so if rollover is missed, today's counters start on first open.
 
 ### 6.4 Migration from both PWAs
 
@@ -516,7 +516,7 @@ AI token costs are highest in phases with long feedback loops, such as SwiftUI l
 
 - Reject this plan if Slice 3 shows that Adhan cannot reproduce the PWA's Fajr within tolerance in the launch regions and no documented rule explains the difference. In that case, extend `solarDay` into a hand-ported engine that also computes Isha/Maghrib, then regenerate the vectors.
 - If Slice 4 shows that SwiftUI cannot fit ruqyah pages without scrolling on the smallest supported device with large text, add per-segment layout hints to the pack or drop the smallest device from support.
-- If the identity gate proves impossible because no qualifying entity can be formed, delay iOS distribution or ship under a personal seller name, against the advice in `MOBILE_APP_PLAN.md` §20. Reconsider Android first, since Play does not impose the same seller-name constraint `[INFERENCE]`.
+- If the identity gate proves impossible because no qualifying entity can be formed, iOS distribution is delayed or shipped under a personal seller name, against the advice in `MOBILE_APP_PLAN.md` §20. An Android-first sequence would then be reconsidered, since Play does not impose the same seller-name constraint `[INFERENCE]`.
 
 ### 10.4 Interim policy for the two live PWAs
 

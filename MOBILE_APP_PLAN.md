@@ -108,7 +108,7 @@ The PWA's reminder timers work reliably only while the page is open. The native 
 - Six daily times: Fajr, sunrise, Dhuhr, Asr, Maghrib, and Isha.
 - Calculation profile, location, time zone, adjustments, and fallback indicator.
 - Previous/next day navigation and monthly view.
-- Add a Qibla entry point only when the user installs that module.
+- Show a Qibla entry point when that module is installed.
 
 ### Prayer tracker
 
@@ -163,7 +163,7 @@ A `prayed` row may have an optional user-selected timing value:
 - `late`
 - `made_up`
 
-The user supplies those values. Content reviewers must approve the wording before release.
+The app must not derive those labels from the clock. The user supplies them, and the wording receives content review before release.
 
 Optional modifiers are separate fields rather than new completion states:
 
@@ -211,7 +211,7 @@ On Friday, the app may display the Dhuhr occurrence as a Jumu'ah/Dhuhr choice. T
 
 ### 6.8 Optional prayers
 
-Sunnah, Witr, Duha, Qiyam, and Tarawih are separate optional modules. They never change obligatory-prayer completion, and the app hides them until enabled.
+Sunnah, Witr, Duha, Qiyam, and Tarawih are separate optional modules. They never change obligatory-prayer completion and are absent until enabled.
 
 ### 6.9 Date, midnight, and travel rules
 
@@ -283,7 +283,7 @@ Any material time shift requires an explicit product/content sign-off and releas
 
 ### Reminder planner
 
-A deterministic planner receives the current time, location profile, time zone, calculation settings, completion/log state, reminder rules, and scheduling horizon. It returns stable notification IDs and UTC trigger instants.
+A pure, deterministic planner receives the current time, location profile, time zone, calculation settings, completion/log state, reminder rules, and scheduling horizon. It returns stable notification IDs and UTC trigger instants.
 
 Replan after:
 
@@ -341,7 +341,7 @@ Why this is the default:
 
 Do not use Expo Go as the production architecture; widgets, boot receivers, and alarm configuration require development builds/prebuild.
 
-### When to reject the recommendation
+### Architecture falsifiers
 
 Run a native spike before committing. Switch the recommendation if:
 
@@ -365,7 +365,7 @@ tools/                  Content validation, parity fixtures, release scripts
 
 Only move the PWA under `apps/pwa` after GitHub Pages and migration tooling work from the new layout.
 
-### Module boundaries
+### Module seams
 
 - `content`: pack validation, Arabic search index, sources, favorites, and audio metadata.
 - `sessions`: counters, targets, manual completion, rollover, and history.
@@ -414,7 +414,7 @@ Extract inline content into a versioned bundled Arabic pack containing:
 - Stable slug and collection-specific ID.
 - Quran/dhikr kind, Arabic text, prefix, details, count, target options, and label.
 - Structured sources: collection/book, reference number, grading, grader, and scholarly note.
-- The review state lets reviewers exclude an item from completion.
+- A review state that can exclude an item from completion.
 - Optional audio metadata: file, hash, reciter, license, and reviewer approval.
 
 Launch packs are bundled and work offline. Do not add remote packs until signature verification and rollback exist.
@@ -510,7 +510,7 @@ Support routes for morning, evening, a specific card, a prayer occurrence, searc
   If it fails, GoatCounter's own cleanup (about 30 days) is the fallback. The PWA's Settings discloses this.
 - The native app's 1.0 release gate of "no data collected/shared" (Store declarations below) is unchanged. It ships no counter.
 - No worship or location data leaves the device during ordinary use.
-- The app requests location once, uses a coarse location sufficient for calculations, rounds coordinates before storage, and never collects location in the background.
+- The app uses one-shot location requests, uses a coarse location sufficient for calculations, rounds coordinates before storage, and never collects location in the background.
 - Notification text contains no personal prayer history.
 - Exclude sensitive details from default exports and redact them from diagnostics.
 - Offer delete-all in settings and require deliberate confirmation.
@@ -553,7 +553,7 @@ Apple requires privacy details for apps and third-party SDKs. Google requires a 
 - Test reminder planning with a fake clock for deterministic IDs, horizon budget, completion cancellation, duplicate prevention, and catch-up behavior.
 - Test prayer-tracker transitions for undo, Friday choice, travel modifiers, not-applicable ranges, and import idempotence.
 - Test Arabic search normalization without modifying displayed text.
-- Test backup round trips with wrong passphrases, corruption, unsupported versions, merge, replace, and rollback.
+- Test backup round trips, wrong passphrases, corruption, unsupported versions, merge, replace, and rollback.
 - Test every SQLite migration against seeded previous-version databases.
 
 ### Device tests
@@ -604,7 +604,7 @@ Build a disposable React Native/Expo prototype that proves:
 - One quick action and skeleton WidgetKit/Glance targets.
 - A terminated-state notification action that records a prayer idempotently and exposes undo on the next launch.
 
-**Exit:** Reviewers approve font rendering, notifications survive the physical-device run, and none of these conditions applies.
+**Exit:** Font rendering is approved, notifications survive the physical-device run, and no architecture falsifier from section 10 is triggered.
 
 ### Phase 1: shared foundation and migration
 
@@ -638,7 +638,7 @@ Build a disposable React Native/Expo prototype that proves:
 - Native scheduler adapters, rolling horizon, channels, actions, cancellation, Android receivers, permission flows, and diagnostics.
 - Existing adhkar reminders, all five prayer reminders, and personal reminder rules.
 
-**Exit:** The physical-device notification matrix shows zero duplicates and verifies that the app cancels reminders after completion. Users can see fallback limitations.
+**Exit:** The physical-device notification matrix passes with zero duplicates and correct completion cancellation. Users can see fallback limitations.
 
 ### Phase 5: privacy, release, and migration beta
 
@@ -799,7 +799,7 @@ Do not create an App Store Connect app record, upload a TestFlight build, or rel
 - [ ] Ship all eight README features in their assigned release or explicitly hold them for the named 1.1 gate.
 - [ ] Prayer calculations pass approved golden and authority comparisons.
 - [ ] Never describe an unrecorded prayer as missed.
-- [ ] Test tracker edits, undo, Friday, travel, and not-applicable cases for reversibility.
+- [ ] Tracker edits, undo, Friday, travel, and not-applicable cases are reversible and tested.
 - [ ] Adhkar and prayer reminders survive termination and cancel after completion.
 - [ ] Test time-zone, DST, reboot, clock-change, permission, and OEM battery cases on physical devices. Verify and disclose iOS reschedule-on-launch limitations.
 - [ ] PWA export imports into native with a semantic round-trip match.

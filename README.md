@@ -9,7 +9,7 @@ A mobile-first Arabic PWA for morning and evening adhkar.
 - [Native app plan: Swift first, Kotlin later](NATIVE_APP_PLAN.md). This is the current stack and sequencing decision.
 - [Native iOS and Android product and engineering plan](MOBILE_APP_PLAN.md). It covers domain, content, privacy, and release details. Its stack decision is superseded by the plan above.
 
-## To do
+## TODO
 
 - [ ] **Quick card index.** Jump directly to any dhikr in the current wird.
 - [ ] **Search.** Find a dhikr by a word or phrase.
