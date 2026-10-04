@@ -6547,7 +6547,9 @@
         input.tabIndex = -1;
         hapticSwitchLabel = document.createElement("label");
         hapticSwitchLabel.setAttribute("aria-hidden", "true");
-        hapticSwitchLabel.style.display = "none";
+        // Kept in the render tree (a display:none control is the riskiest case of this undocumented behaviour) but
+        // off-screen, invisible and inert: fixed positioning keeps it out of layout and scrolling, tabindex -1 out of focus.
+        hapticSwitchLabel.style.cssText = "position:fixed;inset-block-start:-100px;inset-inline-start:0;opacity:0;pointer-events:none";
         hapticSwitchLabel.append(input);
         body.append(hapticSwitchLabel);
       }

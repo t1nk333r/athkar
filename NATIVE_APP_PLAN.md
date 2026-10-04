@@ -529,6 +529,8 @@ Effective from the end of Slice 1:
 | The export feature (Slice 1) and, at 1.0, the iOS install banner | Import into the PWA (native is the destination, not the PWA) |
 | `sw.js` cache-name bumps to deliver the above | Any change to `normalizeState`, `rollStateToDate`, `buildDeck`, `prayerTimesForDate`, `nextReminderTime` unless the corresponding fixture is updated first |
 
+**Owner-approved exceptions (2026-10-04).** The owner approved these additions to the live PWAs, though they fall in the "not allowed" column above. In athkar: the «سور» tab (`athkar-suwar-v1`, shipped 2026-10-02) and the «مسبحة» tab (`#tasbih`, `athkar-tasbih-v1`, shipped 2026-10-04). In ruqyah: one tab per sura (shipped 2026-10-03), with `ruqyah-suwar-v1` and the IndexedDB database `ruqyah` (object store `state`, records `daily` and `suwar`). Backup envelope v1 does not carry the per-sura or tasbih state (`athkar-suwar-v1`, `athkar-tasbih-v1`, `ruqyah-suwar-v1` and the `suwar` record). The `daily` record has the shape of `ruqyah-daily-v1` and is exported as before.
+
 The athkar PWA's ruqyah launcher tab stays as is. `MOBILE_APP_PLAN.md` and this document are linked from the athkar README; the ruqyah README gains one line pointing here.
 
 ---
