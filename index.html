@@ -487,8 +487,11 @@
       font-weight: 600;
     }
 
-    .reset-option:hover,
     .reset-option:focus-visible { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+
+    @media (hover: hover) {
+      .reset-option:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+    }
 
     .settings-button svg {
       width: 1.15rem;
@@ -701,7 +704,7 @@
 
     .dhikr-card:has(.card-tap-target:focus-visible),
     .dhikr-card:not(.tasbih-card):focus-within,
-    .tasbih-card:focus-visible {
+    .dhikr-card.tasbih-card:focus-visible {
       border-color: var(--focus);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 24%, transparent), var(--shadow-soft);
     }
@@ -1776,6 +1779,18 @@
 
     .tasbih-input-row .settings-action { flex: none; }
     .tasbih-input-row .settings-action:disabled { opacity: 0.5; cursor: default; }
+    /* Short screens: the options scroll and «إلغاء» stays pinned under them. */
+    #tasbih-target-dialog[open] {
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    #tasbih-target-dialog .dialog-body {
+      min-block-size: 0;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+    }
+
     .tasbih-target-form { margin-block-start: 0.75rem; }
     .tasbih-target-form[hidden] { display: none; }
     .dialog-body .tasbih-error { margin-block-start: 0.45rem; color: var(--warning); }
@@ -2228,7 +2243,7 @@
       </div>
       <form class="tasbih-target-form" id="tasbih-target-form" hidden novalidate>
         <div class="location-row tasbih-input-row">
-          <input class="settings-select" id="tasbih-target-input" type="text" inputmode="numeric" dir="ltr" maxlength="4" autocomplete="off" enterkeyhint="done" placeholder="مثل ٢٥٠" aria-label="عدد آخر">
+          <input class="settings-select" id="tasbih-target-input" type="text" inputmode="numeric" dir="ltr" maxlength="5" autocomplete="off" enterkeyhint="done" placeholder="مثل ٢٥٠" aria-label="عدد آخر">
           <button class="settings-action" type="submit">حفظ</button>
         </div>
         <p class="settings-note tasbih-error" id="tasbih-target-error" hidden>أدخل عددًا من ١ إلى ٩٩٩٩.</p>
@@ -5720,13 +5735,29 @@
       return text.replace(/[\u064B-\u065F\u0670]/g, "");
     }
 
-    // Typed phrases are compared without tashkeel, with أ إ آ ٱ read as ا and ى as ي.
-    function tasbihMatchKey(text) {
-      return stripTashkeel(text).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي");
+    // Tatweel and invisible format characters (ZWSP, ZWNJ, ZWJ, LRM, RLM, ALM) are dropped from typed phrases, and
+    // Urdu heh goal (ہ) is read as heh (ه).
+    function stripTasbihInvisibles(text) {
+      return text.replace(/[\u0640\u200B-\u200F\u061C]/g, "").replace(/\u06C1/g, "\u0647");
     }
 
+    // Typed phrases are compared without tashkeel, with أ إ آ ٱ read as ا and ى as ي.
+    function tasbihMatchKey(text) {
+      return stripTashkeel(stripTasbihInvisibles(text)).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي");
+    }
+
+    // The saved form of a typed phrase, or "" when nothing is left once marks and invisible characters are removed.
     function cleanTasbihPhrase(text) {
-      return text.replace(/\s+/g, " ").trim().slice(0, tasbihMaxPhraseLength).trim();
+      const cleaned = stripTasbihInvisibles(text).replace(/\s+/g, " ").trim().slice(0, tasbihMaxPhraseLength).trim();
+      return stripTashkeel(cleaned).trim() ? cleaned : "";
+    }
+
+    function isRealDateKey(value) {
+      if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(0);
+      date.setUTCFullYear(year, month - 1, day);
+      return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
     }
 
     function isTasbihKey(key) {
@@ -5754,7 +5785,7 @@
     }
 
     function normalizeTasbihState(parsed) {
-      const date = typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) ? parsed.date : localDateKey();
+      const date = isRealDateKey(parsed.date) ? parsed.date : localDateKey();
       const normalized = emptyTasbihState(date);
       if (Object.hasOwn(parsed, "target")) {
         const target = parsed.target;
@@ -5778,7 +5809,7 @@
       normalized.firstUse = [...new Set([...firstUse, ...Object.keys(normalized.counts)])];
       const history = parsed.history && typeof parsed.history === "object" && !Array.isArray(parsed.history) ? parsed.history : {};
       for (const [day, entry] of Object.entries(history)) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day >= date) continue;
+        if (!isRealDateKey(day) || day >= date) continue;
         const counts = tasbihCounts(entry);
         if (Object.keys(counts).length) normalized.history[day] = counts;
       }
@@ -5792,10 +5823,13 @@
       return Object.fromEntries(keys.filter(key => candidate.counts[key] > 0).map(key => [key, candidate.counts[key]]));
     }
 
+    // A later stored date (the device clock moved back) keeps its counts as today's; history never holds a day at or
+    // after the new date.
     function rollTasbihStateToDate(candidate, nextDate) {
-      const history = { ...candidate.history };
+      const history = Object.fromEntries(Object.entries(candidate.history).filter(([day]) => day < nextDate));
+      if (candidate.date > nextDate) return { ...candidate, date: nextDate, history: trimDailyHistory(history) };
       const day = tasbihDayCounts(candidate);
-      if (candidate.date < nextDate && Object.keys(day).length) history[candidate.date] = day;
+      if (Object.keys(day).length) history[candidate.date] = day;
       return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history) };
     }
 
@@ -5855,6 +5889,7 @@
       if (refresh) {
         renderCards();
         updateHistoryView();
+        if (tasbihLabelDialog.open) refreshTasbihPhraseSheet();
         liveRegion.textContent = "بدأ وِرد يوم جديد";
       }
       return true;
@@ -6553,7 +6588,13 @@
         hapticSwitchLabel.append(input);
         body.append(hapticSwitchLabel);
       }
+      // Clicking the label focuses its input; give focus back so Enter/Space keep acting on the control in use.
+      const focused = document.activeElement;
       hapticSwitchLabel.click();
+      if (document.activeElement !== focused) {
+        if (focused instanceof HTMLElement && focused !== body) focused.focus({ preventScroll: true });
+        else document.activeElement?.blur();
+      }
       return true;
     }
 
@@ -6913,7 +6954,7 @@
       const count = tasbihCount(key);
       const name = count ? `${phrase.short}، اليوم ${formatNumber(count)}` : phrase.short;
       return `<button class="reset-option tasbih-option" type="button" data-key="${escapeHtml(key)}" aria-pressed="${key === tasbihState.selected}" aria-label="${escapeHtml(name)}">
-        <strong>${escapeHtml(phrase.label)}</strong>${count ? `<small>${formatNumber(count)}</small>` : ""}
+        <strong${key.startsWith("c:") ? ' dir="auto"' : ""}>${escapeHtml(phrase.label)}</strong>${count ? `<small>${formatNumber(count)}</small>` : ""}
       </button>`;
     }
 
@@ -6934,6 +6975,13 @@
       tasbihCustomForm.hidden = full;
       tasbihCustomLimit.hidden = !full;
       updateTasbihCustomAdd();
+    }
+
+    // Redraws an open sheet (new counts after a rollover) and keeps focus on the same row.
+    function refreshTasbihPhraseSheet() {
+      const focusedKey = tasbihLabelDialog.contains(document.activeElement) ? document.activeElement.dataset.key : undefined;
+      renderTasbihPhraseSheet();
+      if (focusedKey !== undefined) tasbihLabelDialog.querySelector(`.tasbih-option[data-key="${CSS.escape(focusedKey)}"]`)?.focus();
     }
 
     function openTasbihPhraseSheet() {
@@ -7833,9 +7881,38 @@
       list.focus();
     });
 
-    tasbihSurface.addEventListener("click", addTasbihCount);
+    // Touch and pen count on each finger lift on the card, so overlapping taps of two thumbs count twice; a lift after
+    // the pointer moved (a drag) or a pointercancel (a scroll) does not count, and the click a touch then synthesises is
+    // ignored. Mouse counts once per click, and the keyboard (Enter, Space) through the button's own click (detail 0).
+    const tasbihTouches = new Map();
+    let tasbihTouchCountedAt = -Infinity;
+    tasbihSurface.addEventListener("pointerdown", event => {
+      if (event.pointerType === "mouse") return;
+      tasbihTouches.set(event.pointerId, { x: event.clientX, y: event.clientY, moved: false });
+    });
+    tasbihSurface.addEventListener("pointermove", event => {
+      const touch = tasbihTouches.get(event.pointerId);
+      if (touch && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 10) touch.moved = true;
+    });
+    tasbihSurface.addEventListener("pointercancel", event => tasbihTouches.delete(event.pointerId));
+    tasbihSurface.addEventListener("pointerup", event => {
+      const touch = tasbihTouches.get(event.pointerId);
+      tasbihTouches.delete(event.pointerId);
+      if (!touch) return;
+      tasbihTouchCountedAt = performance.now();
+      const rect = tasbihSurface.getBoundingClientRect();
+      const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+      if (!touch.moved && inside) addTasbihCount();
+    });
+    tasbihSurface.addEventListener("click", event => {
+      if (event.detail !== 0 && performance.now() - tasbihTouchCountedAt < 800) return;
+      addTasbihCount();
+    });
     // A held Enter repeats the button's activation; one press adds exactly one (Space already activates on key-up).
     tasbihSurface.addEventListener("keydown", event => {
+      if (event.key === "Enter" && event.repeat) event.preventDefault();
+    });
+    tasbihUndo.addEventListener("keydown", event => {
       if (event.key === "Enter" && event.repeat) event.preventDefault();
     });
     tasbihNumber.addEventListener("animationend", () => tasbihNumber.classList.remove("is-breathing"));
@@ -7904,9 +7981,19 @@
     resetDialog.addEventListener("click", event => {
       if (event.target === resetDialog) resetDialog.close();
     });
+    // Today's tasbih counts cannot be rebuilt, so clearing them asks first, as the in-tab reset does.
     resetDayButton.addEventListener("click", () => {
       resetDialog.close();
-      resetDayProgress();
+      const total = tasbihDayTotal();
+      if (!total) {
+        resetDayProgress();
+        return;
+      }
+      openConfirmation(
+        "إعادة تقدم اليوم؟",
+        `ستُعاد عدادات اليوم، ومنها المسبحة (${formatNumber(total)})، مع بقاء السجل كما هو. لا يمكن التراجع.`,
+        () => resetDayProgress()
+      );
     });
     resetWeekButton.addEventListener("click", () => {
       resetDialog.close();
