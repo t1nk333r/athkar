@@ -61,7 +61,8 @@ const constants = [
   "collections", "sectionNames", "storageKey", "legacyStorageKey", "remindersStorageKey",
   "legacyRemindersStorageKey", "longDhikrThreshold", "prayerCalculationMethods", "asrShadowFactors",
   "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices",
-  "tasbihStorageKey", "tasbihPresets", "tasbihDefaultTarget"
+  "tasbihStorageKey", "tasbihPresets", "tasbihDefaultTarget", "suwarHistoryDays", "tasbihPresetById",
+  "tasbihMaxTarget", "tasbihMaxCount", "tasbihMaxCustom", "tasbihMaxPhraseLength"
 ];
 
 const functions = [
@@ -77,6 +78,10 @@ const functions = [
   "emptySuwarState", "saveSuwarState", "suraPagesRead", "suwarHasResettableState", "resetSuwarProgress",
   "deleteSuwarHistory", "emptyTasbihState", "saveTasbihState", "tasbihHasResettableState", "resetTasbihProgress",
   "deleteTasbihHistory",
+  // athkar-tasbih-v1 load: normalisation (phrase-key migration) and rollover
+  "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
+  "canonicalTasbihKey", "findTasbihPhrase", "tasbihCounts", "normalizeTasbihState", "tasbihDayCounts",
+  "rollTasbihStateToDate", "loadTasbihState",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",
@@ -1029,6 +1034,62 @@ function reminderCases() {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// Tasbih fixtures (athkar-tasbih-v1)
+// ---------------------------------------------------------------------------------------------------
+
+// A stored athkar-tasbih-v1 object; `date` defaults to the fixtures' "today".
+function tasbihStored(overrides = {}) {
+  return { date: "2026-10-04", selected: "subhan", target: 33, counts: {}, firstUse: [], custom: [], history: {}, ...overrides };
+}
+
+// loadTasbihState on `storage`, then again on what it returned (as saved back): a lossy or unstable migration
+// shows as a difference between `state` and `reloaded`.
+function tasbihLoadCase(name, raw) {
+  const timeZone = SESSION_ZONE;
+  const nowMs = localMs(timeZone, 2026, 10, 4, 9, 0);
+  const now = new Date(nowMs).toISOString();
+  const storageEntries = { "athkar-tasbih-v1": typeof raw === "string" ? raw : JSON.stringify(raw) };
+  prepare({ ...sessionDefaults, timeZone, now, storage: storageEntries });
+  const loaded = plain(fn.loadTasbihState());
+  prepare({ ...sessionDefaults, timeZone, now, storage: { "athkar-tasbih-v1": JSON.stringify(loaded) } });
+  const reloaded = plain(fn.loadTasbihState());
+  return {
+    name,
+    input: { now, nowLocal: localIso(timeZone, nowMs), storage: storageEntries },
+    expected: { state: loaded, reloaded }
+  };
+}
+
+function tasbihLoadCases() {
+  return [
+    tasbihLoadCase("empty storage: defaults (subhan, target 33)", null),
+    tasbihLoadCase("heh goal «يا اللہ» saved and selected, today 17, yesterday 11: migrates to «يا الله», counts kept",
+      tasbihStored({ selected: "c:يا اللہ", custom: ["يا اللہ"], counts: { "c:يا اللہ": 17 }, firstUse: ["c:يا اللہ"], history: { "2026-10-03": { "c:يا اللہ": 11 } } })),
+    tasbihLoadCase("heh goal stored the day before: today's counts roll into history under the migrated key",
+      tasbihStored({ date: "2026-10-03", selected: "c:يا اللہ", custom: ["يا اللہ"], counts: { "c:يا اللہ": 17 }, firstUse: ["c:يا اللہ"], history: { "2026-10-01": { "c:يا اللہ": 11 } } })),
+    tasbihLoadCase("tatweel «سبحـان الله» merges into the subhan preset: counts summed, earliest first use kept",
+      tasbihStored({ selected: "c:سبحـان الله", custom: ["سبحـان الله"], counts: { "c:سبحـان الله": 5, hamd: 2, subhan: 3 }, firstUse: ["c:سبحـان الله", "hamd", "subhan"], history: { "2026-10-03": { hamd: 4, "c:سبحـان الله": 2, subhan: 1 } } })),
+    tasbihLoadCase("RLM and ZWSP spellings of «ذكر» merge into one saved phrase, counts summed",
+      tasbihStored({ selected: "c:ذكر\u200F", custom: ["ذكر\u200F", "ذك\u200Bر"], counts: { "c:ذك\u200Bر": 6, "c:ذكر\u200F": 4 }, firstUse: ["c:ذك\u200Bر", "c:ذكر\u200F"], history: { "2026-10-03": { "c:ذكر\u200F": 1, "c:ذك\u200Bر": 2 } } })),
+    tasbihLoadCase("ZWNJ reads as a space: «سبحان‌الله» merges into the preset, «يا‌حي يا قيوم» is saved with a space",
+      tasbihStored({ selected: "c:يا\u200Cحي يا قيوم", custom: ["سبحان\u200Cالله", "يا\u200Cحي يا قيوم"], counts: { "c:سبحان\u200Cالله": 7, "c:يا\u200Cحي يا قيوم": 2 }, firstUse: ["c:سبحان\u200Cالله", "c:يا\u200Cحي يا قيوم"] })),
+    tasbihLoadCase("deleted custom phrase (not in custom) keeps today's count and history under its migrated key",
+      tasbihStored({ counts: { "c:حسبـي الله": 9 }, firstUse: ["c:حسبـي الله"], history: { "2026-10-03": { "c:حسبـي الله": 2 } } })),
+    tasbihLoadCase("converging keys are summed and capped at 99,999",
+      tasbihStored({ custom: ["ذكر", "ذكـر"], counts: { "c:ذكر": 60000, "c:ذكـر": 50000 }, history: { "2026-10-03": { "c:ذكر": 99999, "c:ذكـر": 1 } } })),
+    tasbihLoadCase("invisible-only legacy key keeps its counts and history (not offered in the picker)",
+      tasbihStored({ custom: ["\u200B"], counts: { "c:\u200B": 3 }, history: { "2026-10-03": { "c:\u200B": 1 } } })),
+    tasbihLoadCase("__proto__ keys and wrong types are dropped without touching prototypes",
+      '{"date":"2026-10-04","__proto__":{"target":5,"polluted":true},"selected":"__proto__","target":"33","custom":["__proto__",5,"  سبحان   الله  "],' +
+      '"firstUse":"nope","counts":{"__proto__":7,"subhan":"5","hamd":3.5,"takbir":-1,"tahlil":4,"constructor":3},' +
+      '"history":{"__proto__":{"subhan":1},"2026-02-30":{"subhan":1},"2026-10-03":{"__proto__":2,"istighfar":6}}}'),
+    tasbihLoadCase("future stored date (clock moved back): counts kept as today's, history at or after today dropped",
+      tasbihStored({ date: "2026-10-05", counts: { subhan: 7 }, firstUse: ["subhan"], history: { "2026-10-04": { hamd: 5 }, "2026-10-03": { takbir: 3 } } }))
+  ];
+}
+
+
+// ---------------------------------------------------------------------------------------------------
 // Write everything
 // ---------------------------------------------------------------------------------------------------
 
@@ -1068,6 +1129,10 @@ writeCases("spec/sessions/fixtures/scoped-reset.json",
   sessionMeta("Scoped reset outcomes (confirmation accepted). day: resetDayProgress; week: resetWeek; everything: resetEverything.",
     "resetDayProgress, resetWeek, recentDates, resetEverything, hasResettableState"),
   sessionDefaultInput, scopedResetCases());
+writeCases("spec/sessions/fixtures/tasbih-load-state.json",
+  sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date. `reloaded` is the same load run on the saved result and must equal `state`.",
+    "loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate"),
+  { timeZone: SESSION_ZONE }, tasbihLoadCases());
 writeCases("spec/reminders/fixtures/next-reminder-time.json",
   {
     about: "Adhkar reminder timing. nextReminderTime: today's time if in the future and not shown today; now+300 ms if ≤15 min past and not shown; else tomorrow's. scheduled: scheduleReminders outcome (skipped when disabled, permission not granted, period complete, or no time).",

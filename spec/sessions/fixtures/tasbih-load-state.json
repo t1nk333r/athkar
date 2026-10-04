@@ -1,0 +1,524 @@
+{
+  "about": "athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date. `reloaded` is the same load run on the saved result and must equal `state`.",
+  "source": "index.html: loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh"
+  },
+  "cases": [
+    {
+      "name": "empty storage: defaults (subhan, target 33)",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "null"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {},
+          "firstUse": [],
+          "custom": [],
+          "history": {}
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {},
+          "firstUse": [],
+          "custom": [],
+          "history": {}
+        }
+      }
+    },
+    {
+      "name": "heh goal «يا اللہ» saved and selected, today 17, yesterday 11: migrates to «يا الله», counts kept",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"c:يا اللہ\",\"target\":33,\"counts\":{\"c:يا اللہ\":17},\"firstUse\":[\"c:يا اللہ\"],\"custom\":[\"يا اللہ\"],\"history\":{\"2026-10-03\":{\"c:يا اللہ\":11}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "c:يا الله",
+          "target": 33,
+          "counts": {
+            "c:يا الله": 17
+          },
+          "firstUse": [
+            "c:يا الله"
+          ],
+          "custom": [
+            "يا الله"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:يا الله": 11
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "c:يا الله",
+          "target": 33,
+          "counts": {
+            "c:يا الله": 17
+          },
+          "firstUse": [
+            "c:يا الله"
+          ],
+          "custom": [
+            "يا الله"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:يا الله": 11
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "heh goal stored the day before: today's counts roll into history under the migrated key",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-03\",\"selected\":\"c:يا اللہ\",\"target\":33,\"counts\":{\"c:يا اللہ\":17},\"firstUse\":[\"c:يا اللہ\"],\"custom\":[\"يا اللہ\"],\"history\":{\"2026-10-01\":{\"c:يا اللہ\":11}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "c:يا الله",
+          "target": 33,
+          "counts": {},
+          "firstUse": [],
+          "custom": [
+            "يا الله"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:يا الله": 17
+            },
+            "2026-10-01": {
+              "c:يا الله": 11
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "c:يا الله",
+          "target": 33,
+          "counts": {},
+          "firstUse": [],
+          "custom": [
+            "يا الله"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:يا الله": 17
+            },
+            "2026-10-01": {
+              "c:يا الله": 11
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "tatweel «سبحـان الله» merges into the subhan preset: counts summed, earliest first use kept",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"c:سبحـان الله\",\"target\":33,\"counts\":{\"c:سبحـان الله\":5,\"hamd\":2,\"subhan\":3},\"firstUse\":[\"c:سبحـان الله\",\"hamd\",\"subhan\"],\"custom\":[\"سبحـان الله\"],\"history\":{\"2026-10-03\":{\"hamd\":4,\"c:سبحـان الله\":2,\"subhan\":1}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "subhan": 8,
+            "hamd": 2
+          },
+          "firstUse": [
+            "subhan",
+            "hamd"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "hamd": 4,
+              "subhan": 3
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "subhan": 8,
+            "hamd": 2
+          },
+          "firstUse": [
+            "subhan",
+            "hamd"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "hamd": 4,
+              "subhan": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "RLM and ZWSP spellings of «ذكر» merge into one saved phrase, counts summed",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"c:ذكر‏\",\"target\":33,\"counts\":{\"c:ذك​ر\":6,\"c:ذكر‏\":4},\"firstUse\":[\"c:ذك​ر\",\"c:ذكر‏\"],\"custom\":[\"ذكر‏\",\"ذك​ر\"],\"history\":{\"2026-10-03\":{\"c:ذكر‏\":1,\"c:ذك​ر\":2}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "c:ذكر",
+          "target": 33,
+          "counts": {
+            "c:ذكر": 10
+          },
+          "firstUse": [
+            "c:ذكر"
+          ],
+          "custom": [
+            "ذكر"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:ذكر": 3
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "c:ذكر",
+          "target": 33,
+          "counts": {
+            "c:ذكر": 10
+          },
+          "firstUse": [
+            "c:ذكر"
+          ],
+          "custom": [
+            "ذكر"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:ذكر": 3
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ZWNJ reads as a space: «سبحان‌الله» merges into the preset, «يا‌حي يا قيوم» is saved with a space",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"c:يا‌حي يا قيوم\",\"target\":33,\"counts\":{\"c:سبحان‌الله\":7,\"c:يا‌حي يا قيوم\":2},\"firstUse\":[\"c:سبحان‌الله\",\"c:يا‌حي يا قيوم\"],\"custom\":[\"سبحان‌الله\",\"يا‌حي يا قيوم\"],\"history\":{}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "c:يا حي يا قيوم",
+          "target": 33,
+          "counts": {
+            "subhan": 7,
+            "c:يا حي يا قيوم": 2
+          },
+          "firstUse": [
+            "subhan",
+            "c:يا حي يا قيوم"
+          ],
+          "custom": [
+            "يا حي يا قيوم"
+          ],
+          "history": {}
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "c:يا حي يا قيوم",
+          "target": 33,
+          "counts": {
+            "subhan": 7,
+            "c:يا حي يا قيوم": 2
+          },
+          "firstUse": [
+            "subhan",
+            "c:يا حي يا قيوم"
+          ],
+          "custom": [
+            "يا حي يا قيوم"
+          ],
+          "history": {}
+        }
+      }
+    },
+    {
+      "name": "deleted custom phrase (not in custom) keeps today's count and history under its migrated key",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:حسبـي الله\":9},\"firstUse\":[\"c:حسبـي الله\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:حسبـي الله\":2}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:حسبي الله": 9
+          },
+          "firstUse": [
+            "c:حسبي الله"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "c:حسبي الله": 2
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:حسبي الله": 9
+          },
+          "firstUse": [
+            "c:حسبي الله"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "c:حسبي الله": 2
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "converging keys are summed and capped at 99,999",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:ذكر\":60000,\"c:ذكـر\":50000},\"firstUse\":[],\"custom\":[\"ذكر\",\"ذكـر\"],\"history\":{\"2026-10-03\":{\"c:ذكر\":99999,\"c:ذكـر\":1}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:ذكر": 99999
+          },
+          "firstUse": [
+            "c:ذكر"
+          ],
+          "custom": [
+            "ذكر"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:ذكر": 99999
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:ذكر": 99999
+          },
+          "firstUse": [
+            "c:ذكر"
+          ],
+          "custom": [
+            "ذكر"
+          ],
+          "history": {
+            "2026-10-03": {
+              "c:ذكر": 99999
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "invisible-only legacy key keeps its counts and history (not offered in the picker)",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:​\":3},\"firstUse\":[],\"custom\":[\"​\"],\"history\":{\"2026-10-03\":{\"c:​\":1}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:​": 3
+          },
+          "firstUse": [
+            "c:​"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "c:​": 1
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:​": 3
+          },
+          "firstUse": [
+            "c:​"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "c:​": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "__proto__ keys and wrong types are dropped without touching prototypes",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"__proto__\":{\"target\":5,\"polluted\":true},\"selected\":\"__proto__\",\"target\":\"33\",\"custom\":[\"__proto__\",5,\"  سبحان   الله  \"],\"firstUse\":\"nope\",\"counts\":{\"__proto__\":7,\"subhan\":\"5\",\"hamd\":3.5,\"takbir\":-1,\"tahlil\":4,\"constructor\":3},\"history\":{\"__proto__\":{\"subhan\":1},\"2026-02-30\":{\"subhan\":1},\"2026-10-03\":{\"__proto__\":2,\"istighfar\":6}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "tahlil": 4
+          },
+          "firstUse": [
+            "tahlil"
+          ],
+          "custom": [
+            "__proto__"
+          ],
+          "history": {
+            "2026-10-03": {
+              "istighfar": 6
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "tahlil": 4
+          },
+          "firstUse": [
+            "tahlil"
+          ],
+          "custom": [
+            "__proto__"
+          ],
+          "history": {
+            "2026-10-03": {
+              "istighfar": 6
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "future stored date (clock moved back): counts kept as today's, history at or after today dropped",
+      "input": {
+        "now": "2026-10-04T06:00:00.000Z",
+        "nowLocal": "2026-10-04T09:00:00.000+03:00",
+        "storage": {
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-05\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":7},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{\"2026-10-04\":{\"hamd\":5},\"2026-10-03\":{\"takbir\":3}}}"
+        }
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "subhan": 7
+          },
+          "firstUse": [
+            "subhan"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "takbir": 3
+            }
+          }
+        },
+        "reloaded": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "subhan": 7
+          },
+          "firstUse": [
+            "subhan"
+          ],
+          "custom": [],
+          "history": {
+            "2026-10-03": {
+              "takbir": 3
+            }
+          }
+        }
+      }
+    }
+  ]
+}

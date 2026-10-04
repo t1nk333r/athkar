@@ -48,6 +48,7 @@ time zone. Regenerate only after deliberately changing the PWA behaviour, and re
 | `sessions/fixtures/first-incomplete-index.json` | `firstIncompleteIndex` | `longAdhkarLast`, `state` | per period `{index, itemId}` |
 | `sessions/fixtures/completion-sync.json` | `syncCompletionState`, `setManualCompletion` | `now`, `state`, `operation` | `returned` (sync only, else `null`), resulting `state` |
 | `sessions/fixtures/scoped-reset.json` | `resetDayProgress` / `resetWeek` / `resetEverything`, `hasResettableState` | `now`, `timeZone`, `scope` (`day`/`week`/`everything`), `state` | `hasResettableStateBefore`, `deletedHistoryDates` (week), resulting `state` |
+| `sessions/fixtures/tasbih-load-state.json` | `loadTasbihState` (`normalizeTasbihState`, phrase-key migration, rollover) | `now`, `timeZone`, `storage` (`athkar-tasbih-v1` raw string) | resulting `state` (`{date, selected, target, counts, firstUse, custom, history}`), and `reloaded`: the same load on the saved result, equal to `state` |
 | `reminders/fixtures/next-reminder-time.json` | `nextReminderTime`, `scheduleReminders`, `prayerTimesForDate` | `now`, `timeZone`, `preferences` (the `athkar-reminders-v2` shape), `state`, `notificationPermission` | `todaySchedule`, per period `nextReminderTime`, and per period `scheduled: {delayMs, fireAt}` or `null` |
 
 ### Reminder notes
