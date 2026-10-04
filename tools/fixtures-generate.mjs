@@ -60,7 +60,8 @@ const contentData = lines.slice(dataStart, dataEnd).join("\n");
 const constants = [
   "collections", "sectionNames", "storageKey", "legacyStorageKey", "remindersStorageKey",
   "legacyRemindersStorageKey", "longDhikrThreshold", "prayerCalculationMethods", "asrShadowFactors",
-  "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices"
+  "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices",
+  "tasbihStorageKey", "tasbihPresets", "tasbihDefaultTarget"
 ];
 
 const functions = [
@@ -71,9 +72,11 @@ const functions = [
   "deck", "invalidateDecks", "firstIncompleteIndex", "syncCompletionState", "setManualCompletion",
   "hasResettableState", "resetDayProgress", "recentDates", "resetWeek", "resetEverything",
   "dayCountLabel", "formatNumber",
-  // the scoped resets also clear athkar-suwar-v1 (kept empty here, so the adhkar state under test is unaffected)
+  // the scoped resets also clear athkar-suwar-v1 and athkar-tasbih-v1 (kept empty here, so the adhkar state under test
+  // is unaffected)
   "emptySuwarState", "saveSuwarState", "suraPagesRead", "suwarHasResettableState", "resetSuwarProgress",
-  "deleteSuwarHistory",
+  "deleteSuwarHistory", "emptyTasbihState", "saveTasbihState", "tasbihHasResettableState", "resetTasbihProgress",
+  "deleteTasbihHistory",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",
@@ -102,6 +105,7 @@ let state = null;
 let reminderPreferences = null;
 let longAdhkarLast = false;
 let suwarState = emptySuwarState("2000-01-01");
+let tasbihState = emptyTasbihState("2000-01-01");
 let activePeriod = "morning";
 ${stubs}
 ${functions.map(extractFunction).join("\n\n")}

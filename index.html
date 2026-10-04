@@ -255,7 +255,7 @@
       inset-block-start: max(0.65rem, env(safe-area-inset-top));
       z-index: 20;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0.35rem;
       padding: 0.35rem;
       border: 1px solid var(--border);
@@ -309,6 +309,8 @@
       display: inline;
       color: var(--completed);
     }
+
+    .tab-label-short { display: none; }
 
     .session-summary {
       margin-block-start: 0.85rem;
@@ -698,7 +700,8 @@
     .dhikr-card:has(.card-tap-target:active) { transform: scale(0.993); }
 
     .dhikr-card:has(.card-tap-target:focus-visible),
-    .dhikr-card:focus-within {
+    .dhikr-card:not(.tasbih-card):focus-within,
+    .tasbih-card:focus-visible {
       border-color: var(--focus);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 24%, transparent), var(--shadow-soft);
     }
@@ -1449,6 +1452,25 @@
       --background-glow: #38332a;
     }
 
+    /* «مسبحة» tab: a muted indigo accent, same variable names as the other tabs. */
+    body[data-period="tasbih"] {
+      --accent: #5c62a3;
+      --accent-strong: #454a86;
+      --accent-soft: #ebebf6;
+      --divider: #d0d2e8;
+      --focus: #50569a;
+      --background-glow: #f1f1f9;
+    }
+
+    :root[data-resolved-theme="dark"] body[data-period="tasbih"] {
+      --accent: #a2a8ea;
+      --accent-strong: #cfd2f7;
+      --accent-soft: #353858;
+      --divider: #55597e;
+      --focus: #b6bbf2;
+      --background-glow: #2d3046;
+    }
+
     .sura-picker {
       display: flex;
       gap: 0.3rem;
@@ -1535,6 +1557,239 @@
       flex-wrap: wrap;
       grid-column: 1 / -1;
       gap: 0.25rem 0.75rem;
+    }
+
+    /* «مسبحة» tab: one tap surface (the whole card) with the phrase, a lap ring and the count. */
+    body[data-period="tasbih"] .summary-row { display: none; }
+
+    .tasbih-picker {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .tasbih-picker[hidden] { display: none; }
+    #tasbih-label-button { flex: 1 1 0; }
+
+    #tasbih-target-button {
+      flex: 0 0 auto;
+      padding-inline: 0.8rem;
+    }
+
+    #tasbih-panel.is-entering { animation: section-in 180ms ease both; }
+
+    .tasbih-card {
+      display: grid;
+      grid-template-rows: auto minmax(0, 18rem) auto;
+      align-content: center;
+      justify-items: center;
+      gap: 0.75rem;
+      inline-size: 100%;
+      block-size: clamp(26rem, 60vh, 34rem);
+      block-size: clamp(26rem, 60svh, 34rem);
+      margin: 0 0 0.75rem;
+      font: inherit;
+      color: inherit;
+      text-align: center;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .tasbih-card:focus-visible { outline: none; }
+    .tasbih-card:active { transform: scale(0.993); }
+
+    .tasbih-label {
+      display: -webkit-box;
+      max-inline-size: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--accent-strong);
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      font-size: var(--dhikr-text-size);
+      line-height: 1.6;
+      unicode-bidi: plaintext;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .tasbih-ring {
+      position: relative;
+      display: grid;
+      place-items: center;
+      block-size: 100%;
+      max-block-size: 18rem;
+      min-block-size: 0;
+      max-inline-size: 100%;
+      aspect-ratio: 1;
+      container-type: size;
+    }
+
+    /* A dial like a clock face: starts at 12 o'clock and runs clockwise, never mirrored in RTL. */
+    .tasbih-ring svg {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      overflow: visible;
+      transform: rotate(-90deg);
+    }
+
+    .tasbih-track,
+    .tasbih-arc {
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .tasbih-track { stroke: var(--border); }
+
+    .tasbih-arc {
+      stroke: var(--accent);
+      stroke-linecap: round;
+      transition: stroke-dasharray var(--arc-duration, 160ms) ease-out, stroke 180ms ease;
+    }
+
+    /* An empty arc would still draw a round-capped dot: hide it once the retraction has finished. */
+    .tasbih-arc.is-empty {
+      stroke-opacity: 0;
+      transition: stroke-dasharray var(--arc-duration, 160ms) ease-out, stroke 180ms ease, stroke-opacity 0s linear var(--arc-duration, 160ms);
+    }
+
+    .tasbih-card.is-complete .tasbih-arc { stroke: var(--completed); }
+
+    .tasbih-number {
+      position: relative;
+      color: var(--text-primary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: clamp(3.5rem, 22vw, 5.5rem);
+      font-size: 30cqi;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      direction: ltr;
+      transition: color 180ms ease;
+    }
+
+    .tasbih-number[data-digits="4"] {
+      font-size: clamp(2.8rem, 17vw, 4.4rem);
+      font-size: 23cqi;
+    }
+
+    .tasbih-number[data-digits="5"] {
+      font-size: clamp(2.2rem, 13vw, 3.4rem);
+      font-size: 18cqi;
+    }
+
+    .tasbih-number[data-state="zero"] { color: var(--text-secondary); }
+    .tasbih-number[data-state="lap"] { color: var(--completed); }
+    .tasbih-number.is-breathing { animation: tasbih-breath 260ms ease-in-out; }
+
+    .tasbih-status {
+      display: block;
+      margin: 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 750;
+      transition: color 180ms ease;
+    }
+
+    .tasbih-card.is-complete .tasbih-status { color: var(--completed); }
+    .tasbih-status.is-fresh { animation: tasbih-fade 180ms ease both; }
+
+    @keyframes tasbih-breath {
+      50% { transform: scale(1.04); }
+    }
+
+    @keyframes tasbih-fade {
+      from { opacity: 0; }
+    }
+
+    .tasbih-hint-fine { display: none; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .tasbih-hint-touch { display: none; }
+      .tasbih-hint-fine { display: inline; }
+    }
+
+    .tasbih-options {
+      display: grid;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tasbih-option {
+      inline-size: 100%;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      column-gap: 0.75rem;
+    }
+
+    .tasbih-option strong {
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      font-size: 1.05rem;
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      unicode-bidi: plaintext;
+    }
+
+    .tasbih-option small { font-size: 0.78rem; }
+
+    .tasbih-option[aria-pressed="true"],
+    .tasbih-target-option[aria-pressed="true"] {
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .tasbih-custom-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tasbih-custom-row .tasbih-option {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .tasbih-option-delete {
+      flex: none;
+      inline-size: 2.75rem;
+      block-size: 2.75rem;
+      padding: 0;
+      font-size: 1.1rem;
+    }
+
+    .tasbih-input-row {
+      margin-block: 0.5rem 0;
+    }
+
+    .tasbih-input-row .settings-select {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 1rem;
+    }
+
+    .tasbih-input-row .settings-action { flex: none; }
+    .tasbih-input-row .settings-action:disabled { opacity: 0.5; cursor: default; }
+    .tasbih-target-form { margin-block-start: 0.75rem; }
+    .tasbih-target-form[hidden] { display: none; }
+    .dialog-body .tasbih-error { margin-block-start: 0.45rem; color: var(--warning); }
+
+    .history-tasbih {
+      display: flex;
+      flex-wrap: wrap;
+      grid-column: 1 / -1;
+      gap: 0.25rem 0.75rem;
+    }
+
+    .history-tasbih strong {
+      color: var(--text-primary);
+      font-weight: 850;
     }
 
     @media (min-width: 46rem) {
@@ -1634,6 +1889,18 @@
         min-block-size: 0;
       }
 
+      #tasbih-panel:not([hidden]) {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto auto;
+        block-size: 100%;
+        min-block-size: 0;
+      }
+
+      .tasbih-card {
+        block-size: 100%;
+        min-block-size: 0;
+      }
+
       .athkar-list {
         block-size: auto;
         min-block-size: 0;
@@ -1687,10 +1954,17 @@
       .requirement-row { align-items: flex-start; }
     }
 
-    /* Three tabs on one row: below 30rem the labels drop their icons so «أذكار الصباح» and its ✓ never wrap. */
-    @media (max-width: 30rem) {
+    /* Four tabs on one row: up to 40rem the tabs drop their icons and show the short labels («الصباح», «المساء»), so a
+       label and its ✓ never wrap (about 5px to spare for «المساء ✓» at 320px); at 23rem and below the padding tightens. */
+    @media (max-width: 40rem) {
       .period-icon { display: none; }
       .period-tab { gap: 0.3rem; padding-inline: 0.3rem; }
+      .tab-label-full { display: none; }
+      .tab-label-short { display: inline; }
+    }
+
+    @media (max-width: 23rem) {
+      .period-tab { gap: 0.2rem; padding-inline: 0.2rem; }
     }
 
     @media (max-width: 20rem) {
@@ -1705,6 +1979,7 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
+      .tasbih-card:active { transform: translateZ(0); }
     }
 
     @media (prefers-contrast: more) {
@@ -1748,7 +2023,7 @@
   </script>
 </head>
 <body data-period="morning">
-  <a class="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
+  <a class="skip-link" id="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
 
   <div class="app-shell">
     <header class="app-header">
@@ -1774,21 +2049,29 @@
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
           </svg>
-          <span>أذكار الصباح</span>
+          <span class="tab-label-full">أذكار الصباح</span><span class="tab-label-short">الصباح</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
           </svg>
-          <span>أذكار المساء</span>
+          <span class="tab-label-full">أذكار المساء</span><span class="tab-label-short">المساء</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="suwar-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="suwar" tabindex="-1">
           <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 6.2C10 4.7 7.3 4.2 3.5 4.4v13.8c3.8-.2 6.5.3 8.5 1.8 2-1.5 4.7-2 8.5-1.8V4.4c-3.8-.2-6.5.3-8.5 1.8Z"></path><path d="M12 6.2V20"></path>
           </svg>
-          <span>سور</span>
+          <span class="tab-label-full">سور</span><span class="tab-label-short">سور</span>
+          <span class="period-status" aria-hidden="true"></span>
+        </button>
+        <button class="period-tab" id="tasbih-tab" type="button" role="tab" aria-controls="tasbih-panel" aria-selected="false" data-period="tasbih" tabindex="-1">
+          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="9.6" r="6.4" stroke-width="2.6" stroke-dasharray="0 3.351"></circle>
+            <path d="M12 16v2.4M10.3 21.6 12 18.4l1.7 3.2"></path>
+          </svg>
+          <span class="tab-label-full">مسبحة</span><span class="tab-label-short">مسبحة</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
       </nav>
@@ -1801,6 +2084,10 @@
           <button class="sura-chip" type="button" data-sura="saffat" aria-pressed="false">الصافات<span class="sura-chip-status" aria-hidden="true"></span></button>
           <button class="sura-chip" type="button" data-sura="waqiah" aria-pressed="false">الواقعة<span class="sura-chip-status" aria-hidden="true"></span></button>
           <button class="sura-chip" type="button" data-sura="mulk" aria-pressed="false">الملك<span class="sura-chip-status" aria-hidden="true"></span></button>
+        </div>
+        <div class="tasbih-picker" id="tasbih-picker" hidden>
+          <button class="sura-chip" id="tasbih-label-button" type="button" aria-haspopup="dialog">اختيار الذكر <span aria-hidden="true">▾</span></button>
+          <button class="sura-chip" id="tasbih-target-button" type="button" aria-haspopup="dialog"><span id="tasbih-target-chip-text">الهدف: ٣٣</span> <span aria-hidden="true">▾</span></button>
         </div>
         <div class="summary-row">
           <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
@@ -1825,6 +2112,30 @@
           <p class="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
         </footer>
       </section>
+      <section id="tasbih-panel" role="tabpanel" aria-labelledby="tasbih-tab" hidden>
+        <button class="dhikr-card tasbih-card" id="tasbih-surface" type="button" aria-label="أضف واحدًا" aria-describedby="tasbih-sr-summary tasbih-status">
+          <span class="tasbih-label" id="tasbih-label-text"></span>
+          <span class="tasbih-ring" aria-hidden="true">
+            <svg viewBox="0 0 100 100" focusable="false">
+              <circle class="tasbih-track" cx="50" cy="50" r="46"></circle>
+              <circle class="tasbih-arc is-empty" id="tasbih-arc" cx="50" cy="50" r="46"></circle>
+            </svg>
+            <span class="tasbih-number" id="tasbih-number" data-digits="1" data-state="zero">٠</span>
+          </span>
+          <span class="tasbih-status" id="tasbih-status"></span>
+          <span class="sr-only" id="tasbih-sr-summary"></span>
+        </button>
+        <div class="deck-navigation" role="group" aria-label="أدوات المسبحة">
+          <button class="deck-button" id="tasbih-undo" type="button" aria-label="تراجع عن العدّة الأخيرة" disabled>تراجع</button>
+          <output class="card-position" id="tasbih-total">اليوم: ٠</output>
+          <button class="deck-button" id="tasbih-reset" type="button" disabled>
+            <span aria-hidden="true">↻</span><span>إعادة</span>
+          </button>
+        </div>
+        <footer class="app-footer">
+          <p class="deck-hint"><span class="tasbih-hint-touch">اضغط في أي مكان من البطاقة للعدّ</span><span class="tasbih-hint-fine">اضغط على البطاقة أو مفتاح المسافة للعدّ</span></p>
+        </footer>
+      </section>
     </main>
 
   </div>
@@ -1847,7 +2158,7 @@
       <div class="reset-options">
         <button class="reset-option" id="reset-day" type="button">
           <strong>تقدم اليوم</strong>
-          <small>إعادة عدادات اليوم فقط مع بقاء السجل كما هو.</small>
+          <small>إعادة عدادات اليوم، ومنها المسبحة، مع بقاء السجل كما هو.</small>
         </button>
         <button class="reset-option" id="reset-week" type="button">
           <strong>هذا الأسبوع</strong>
@@ -1861,6 +2172,70 @@
     </div>
     <div class="dialog-actions">
       <button class="dialog-button" id="reset-dialog-cancel" type="button">إلغاء</button>
+    </div>
+  </dialog>
+
+  <dialog class="sheet-dialog" id="tasbih-label-dialog" aria-labelledby="tasbih-label-dialog-title">
+    <div class="sheet-header">
+      <h2 id="tasbih-label-dialog-title">اختيار الذكر</h2>
+      <button class="sheet-close" id="tasbih-label-dialog-close" type="button">إغلاق</button>
+    </div>
+    <div class="sheet-body">
+      <section class="settings-section" aria-labelledby="tasbih-presets-title">
+        <h3 id="tasbih-presets-title">أذكار مقترحة</h3>
+        <ul class="tasbih-options" id="tasbih-preset-list"></ul>
+      </section>
+      <section class="settings-section" id="tasbih-custom-section" aria-labelledby="tasbih-custom-title" hidden>
+        <h3 id="tasbih-custom-title">عباراتك</h3>
+        <ul class="tasbih-options" id="tasbih-custom-list"></ul>
+      </section>
+      <section class="settings-section" aria-labelledby="tasbih-new-title">
+        <h3 id="tasbih-new-title">عبارة جديدة</h3>
+        <form id="tasbih-custom-form">
+          <label class="settings-field" for="tasbih-custom-input"><span>اكتب الذكر</span></label>
+          <div class="location-row tasbih-input-row">
+            <input class="settings-select" id="tasbih-custom-input" type="text" dir="rtl" maxlength="60" autocomplete="off" enterkeyhint="done" placeholder="مثل: سبحان الله وبحمده" aria-describedby="tasbih-custom-note">
+            <button class="settings-action" id="tasbih-custom-add" type="submit" disabled>إضافة</button>
+          </div>
+          <p class="settings-note" id="tasbih-custom-note">تُحفظ العبارة على هذا الجهاز لتختارها لاحقًا.</p>
+        </form>
+        <p class="settings-note" id="tasbih-custom-limit" hidden>يمكن حفظ ٨ عبارات. احذف واحدة لإضافة غيرها.</p>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="tasbih-target-dialog" aria-labelledby="tasbih-target-title" aria-describedby="tasbih-target-copy">
+    <div class="dialog-body">
+      <h2 id="tasbih-target-title">الهدف</h2>
+      <p id="tasbih-target-copy">يتواصل العدّ بعد بلوغ الهدف.</p>
+      <div class="reset-options" id="tasbih-target-options">
+        <button class="reset-option tasbih-target-option" type="button" data-target="none" aria-pressed="false">
+          <strong>بلا هدف</strong>
+          <small>عدّ مفتوح دون حدّ</small>
+        </button>
+        <button class="reset-option tasbih-target-option" type="button" data-target="33" aria-pressed="false">
+          <strong>٣٣</strong>
+          <small>مثل التسبيح بعد الصلاة</small>
+        </button>
+        <button class="reset-option tasbih-target-option" type="button" data-target="100" aria-pressed="false">
+          <strong>١٠٠</strong>
+          <small>مئة مرة</small>
+        </button>
+        <button class="reset-option tasbih-target-option" type="button" data-target="custom" aria-pressed="false">
+          <strong>عدد آخر</strong>
+          <small>من ١ إلى ٩٩٩٩</small>
+        </button>
+      </div>
+      <form class="tasbih-target-form" id="tasbih-target-form" hidden novalidate>
+        <div class="location-row tasbih-input-row">
+          <input class="settings-select" id="tasbih-target-input" type="text" inputmode="numeric" dir="ltr" maxlength="4" autocomplete="off" enterkeyhint="done" placeholder="مثل ٢٥٠" aria-label="عدد آخر">
+          <button class="settings-action" type="submit">حفظ</button>
+        </div>
+        <p class="settings-note tasbih-error" id="tasbih-target-error" hidden>أدخل عددًا من ١ إلى ٩٩٩٩.</p>
+      </form>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-button" id="tasbih-target-cancel" type="button">إلغاء</button>
     </div>
   </dialog>
 
@@ -2020,7 +2395,7 @@
               </svg>
               <span>الاهتزاز عند إكمال الذكر</span>
             </strong>
-            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال الذكر.</small>
+            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال الذكر وعند بلوغ هدف المسبحة.</small>
           </span>
           <span class="toggle-switch">
             <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-describedby="haptics-note">
@@ -4927,10 +5302,32 @@
     };
 
     const collections = { morning: morningAthkar, evening: eveningAthkar };
-    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", suwar: "سور" };
+    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", suwar: "سور", tasbih: "مسبحة" };
     const suwarById = Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, sura]));
     const suwarStorageKey = "athkar-suwar-v1";
     const suwarHistoryDays = 7;
+    const tasbihStorageKey = "athkar-tasbih-v1";
+    // «مسبحة» presets, in picker order; the owner reviews this list, so it is the one place to edit it. `id` is stored
+    // in athkar-tasbih-v1 (counts and history) and must never change; `label` is shown with tashkeel, `short` is used
+    // in the history and in announcements.
+    const tasbihPresets = Object.freeze([
+      { id: "subhan", label: "سُبْحَانَ اللَّهِ", short: "سبحان الله" },
+      { id: "hamd", label: "الْحَمْدُ لِلَّهِ", short: "الحمد لله" },
+      { id: "takbir", label: "اللَّهُ أَكْبَرُ", short: "الله أكبر" },
+      { id: "tahlil", label: "لَا إِلَٰهَ إِلَّا اللَّهُ", short: "لا إله إلا الله" },
+      { id: "istighfar", label: "أَسْتَغْفِرُ اللَّهَ", short: "أستغفر الله" },
+      { id: "subhan-bihamdih", label: "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", short: "سبحان الله وبحمده" },
+      { id: "hawqala", label: "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", short: "لا حول ولا قوة إلا بالله" },
+      { id: "salawat", label: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ", short: "اللهم صل على محمد" }
+    ]);
+    const tasbihPresetById = Object.fromEntries(tasbihPresets.map(preset => [preset.id, preset]));
+    const tasbihDefaultTarget = 33;
+    const tasbihMaxTarget = 9999;
+    const tasbihMaxCount = 99999;
+    const tasbihMaxCustom = 8;
+    const tasbihMaxPhraseLength = 60;
+    const tasbihAnnounceDelayMs = 1000;
+    const tasbihArcLength = 2 * Math.PI * 46;
     const storageKey = "athkar-progress-v2";
     const legacyStorageKey = "athkar-progress-v1";
     const hapticsStorageKey = "athkar-haptics";
@@ -5019,6 +5416,36 @@
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
     const liveRegion = document.getElementById("live-region");
+    const skipLink = document.getElementById("skip-link");
+    const tasbihPanel = document.getElementById("tasbih-panel");
+    const tasbihPicker = document.getElementById("tasbih-picker");
+    const tasbihLabelButton = document.getElementById("tasbih-label-button");
+    const tasbihTargetButton = document.getElementById("tasbih-target-button");
+    const tasbihTargetChipText = document.getElementById("tasbih-target-chip-text");
+    const tasbihSurface = document.getElementById("tasbih-surface");
+    const tasbihLabelText = document.getElementById("tasbih-label-text");
+    const tasbihArc = document.getElementById("tasbih-arc");
+    const tasbihNumber = document.getElementById("tasbih-number");
+    const tasbihStatus = document.getElementById("tasbih-status");
+    const tasbihSrSummary = document.getElementById("tasbih-sr-summary");
+    const tasbihUndo = document.getElementById("tasbih-undo");
+    const tasbihTotalOutput = document.getElementById("tasbih-total");
+    const tasbihResetButton = document.getElementById("tasbih-reset");
+    const tasbihLabelDialog = document.getElementById("tasbih-label-dialog");
+    const tasbihLabelDialogClose = document.getElementById("tasbih-label-dialog-close");
+    const tasbihPresetList = document.getElementById("tasbih-preset-list");
+    const tasbihCustomSection = document.getElementById("tasbih-custom-section");
+    const tasbihCustomList = document.getElementById("tasbih-custom-list");
+    const tasbihCustomForm = document.getElementById("tasbih-custom-form");
+    const tasbihCustomInput = document.getElementById("tasbih-custom-input");
+    const tasbihCustomAdd = document.getElementById("tasbih-custom-add");
+    const tasbihCustomLimit = document.getElementById("tasbih-custom-limit");
+    const tasbihTargetDialog = document.getElementById("tasbih-target-dialog");
+    const tasbihTargetOptions = document.getElementById("tasbih-target-options");
+    const tasbihTargetForm = document.getElementById("tasbih-target-form");
+    const tasbihTargetInput = document.getElementById("tasbih-target-input");
+    const tasbihTargetError = document.getElementById("tasbih-target-error");
+    const tasbihTargetCancel = document.getElementById("tasbih-target-cancel");
     const dialog = document.getElementById("confirm-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogCopy = document.getElementById("dialog-copy");
@@ -5051,6 +5478,10 @@
     let reminderStatusOverride = "";
     let state = loadState();
     let suwarState = loadSuwarState();
+    let tasbihState = loadTasbihState();
+    let tasbihAnnounceTimer = null;
+    let tasbihCapAnnounced = false;
+    let hapticSwitchLabel = null;
     if (initialRoute.sura) suwarState.selected = initialRoute.sura;
     let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
@@ -5061,6 +5492,7 @@
     longOrderToggle.checked = longAdhkarLast;
     saveState();
     saveSuwarState();
+    saveTasbihState();
     saveReminderPreferences();
 
     function localDateKey(date = new Date()) {
@@ -5213,7 +5645,7 @@
       return normalized;
     }
 
-    function trimSuwarHistory(history) {
+    function trimDailyHistory(history) {
       const kept = Object.keys(history).sort().reverse().slice(0, suwarHistoryDays);
       return Object.fromEntries(kept.map(day => [day, history[day]]));
     }
@@ -5222,7 +5654,7 @@
       const completed = Object.fromEntries(Object.entries(candidate.completedAt).filter(([, at]) => at));
       const history = { ...candidate.history };
       if (Object.keys(completed).length) history[candidate.date] = completed;
-      return { ...emptySuwarState(nextDate, candidate.selected), history: trimSuwarHistory(history) };
+      return { ...emptySuwarState(nextDate, candidate.selected), history: trimDailyHistory(history) };
     }
 
     function loadSuwarState() {
@@ -5268,11 +5700,142 @@
       else for (const date of dates) delete suwarState.history[date];
     }
 
+    // athkar-tasbih-v1: the «مسبحة» tab, apart from the other stores and, like athkar-suwar-v1, outside the backup.
+    // `counts` (non-zero only) and `firstUse` (order of today's first taps, for history ties) are today's; a key is a
+    // preset id or "c:" + a saved phrase. `history` maps each earlier local date to that day's counts, newest seven.
+    // `selected`, `target` (null or 1…9999) and `custom` (newest first, at most eight) are preferences: resets keep them.
+    function emptyTasbihState(date = localDateKey()) {
+      return {
+        date,
+        selected: tasbihPresets[0].id,
+        target: tasbihDefaultTarget,
+        counts: {},
+        firstUse: [],
+        custom: [],
+        history: {}
+      };
+    }
+
+    function stripTashkeel(text) {
+      return text.replace(/[\u064B-\u065F\u0670]/g, "");
+    }
+
+    // Typed phrases are compared without tashkeel, with أ إ آ ٱ read as ا and ى as ي.
+    function tasbihMatchKey(text) {
+      return stripTashkeel(text).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي");
+    }
+
+    function cleanTasbihPhrase(text) {
+      return text.replace(/\s+/g, " ").trim().slice(0, tasbihMaxPhraseLength).trim();
+    }
+
+    function isTasbihKey(key) {
+      if (typeof key !== "string") return false;
+      if (Object.hasOwn(tasbihPresetById, key)) return true;
+      return key.startsWith("c:") && key.length > 2 && cleanTasbihPhrase(key.slice(2)) === key.slice(2);
+    }
+
+    // The preset or saved phrase a typed phrase stands for: its key, or null.
+    function findTasbihPhrase(text, custom = tasbihState.custom) {
+      const wanted = tasbihMatchKey(text);
+      const preset = tasbihPresets.find(candidate => tasbihMatchKey(candidate.label) === wanted);
+      if (preset) return preset.id;
+      const saved = custom.find(phrase => tasbihMatchKey(phrase) === wanted);
+      return saved === undefined ? null : `c:${saved}`;
+    }
+
+    function tasbihCounts(value) {
+      const counts = {};
+      if (!value || typeof value !== "object" || Array.isArray(value)) return counts;
+      for (const [key, count] of Object.entries(value)) {
+        if (isTasbihKey(key) && Number.isInteger(count) && count > 0) counts[key] = Math.min(count, tasbihMaxCount);
+      }
+      return counts;
+    }
+
+    function normalizeTasbihState(parsed) {
+      const date = typeof parsed.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) ? parsed.date : localDateKey();
+      const normalized = emptyTasbihState(date);
+      if (Object.hasOwn(parsed, "target")) {
+        const target = parsed.target;
+        normalized.target = target === null || (Number.isInteger(target) && target >= 1 && target <= tasbihMaxTarget)
+          ? target
+          : tasbihDefaultTarget;
+      }
+      for (const phrase of Array.isArray(parsed.custom) ? parsed.custom : []) {
+        if (normalized.custom.length >= tasbihMaxCustom) break;
+        const text = typeof phrase === "string" ? cleanTasbihPhrase(phrase) : "";
+        if (text && !findTasbihPhrase(text, normalized.custom)) normalized.custom.push(text);
+      }
+      const selected = parsed.selected;
+      if (isTasbihKey(selected) && (Object.hasOwn(tasbihPresetById, selected) || normalized.custom.includes(selected.slice(2)))) {
+        normalized.selected = selected;
+      }
+      normalized.counts = tasbihCounts(parsed.counts);
+      const firstUse = Array.isArray(parsed.firstUse)
+        ? parsed.firstUse.filter(key => typeof key === "string" && Object.hasOwn(normalized.counts, key))
+        : [];
+      normalized.firstUse = [...new Set([...firstUse, ...Object.keys(normalized.counts)])];
+      const history = parsed.history && typeof parsed.history === "object" && !Array.isArray(parsed.history) ? parsed.history : {};
+      for (const [day, entry] of Object.entries(history)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day >= date) continue;
+        const counts = tasbihCounts(entry);
+        if (Object.keys(counts).length) normalized.history[day] = counts;
+      }
+      normalized.history = trimDailyHistory(normalized.history);
+      return normalized;
+    }
+
+    // A day's counts in first-use order (the history breakdown breaks count ties by it).
+    function tasbihDayCounts(candidate = tasbihState) {
+      const keys = [...new Set([...candidate.firstUse, ...Object.keys(candidate.counts)])];
+      return Object.fromEntries(keys.filter(key => candidate.counts[key] > 0).map(key => [key, candidate.counts[key]]));
+    }
+
+    function rollTasbihStateToDate(candidate, nextDate) {
+      const history = { ...candidate.history };
+      const day = tasbihDayCounts(candidate);
+      if (candidate.date < nextDate && Object.keys(day).length) history[candidate.date] = day;
+      return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history) };
+    }
+
+    function loadTasbihState() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(tasbihStorageKey));
+        const normalized = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? normalizeTasbihState(parsed) : emptyTasbihState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollTasbihStateToDate(normalized, today);
+      } catch (_) {
+        return emptyTasbihState();
+      }
+    }
+
+    function saveTasbihState() {
+      try { localStorage.setItem(tasbihStorageKey, JSON.stringify(tasbihState)); } catch (_) {}
+    }
+
+    function tasbihHasResettableState() {
+      return Object.keys(tasbihState.counts).length > 0 || Object.keys(tasbihState.history).length > 0;
+    }
+
+    // Scoped reset: today's counts of every phrase; deleteTasbihHistory drops past days (all when null).
+    function resetTasbihProgress() {
+      tasbihState.counts = {};
+      tasbihState.firstUse = [];
+      saveTasbihState();
+    }
+
+    function deleteTasbihHistory(dates) {
+      if (dates === null) tasbihState.history = {};
+      else for (const date of dates) delete tasbihState.history[date];
+    }
+
     function ensureCurrentDay(refresh = true) {
       const today = localDateKey();
       const adhkarRolled = state.date !== today;
       const suwarRolled = suwarState.date !== today;
-      if (!adhkarRolled && !suwarRolled) return false;
+      const tasbihRolled = tasbihState.date !== today;
+      if (!adhkarRolled && !suwarRolled && !tasbihRolled) return false;
       if (adhkarRolled) {
         state = rollStateToDate(state, today);
         currentIndices.morning = null;
@@ -5284,6 +5847,10 @@
         suwarState = rollSuwarStateToDate(suwarState, today);
         for (const id of Object.keys(suwarIndices)) suwarIndices[id] = null;
         saveSuwarState();
+      }
+      if (tasbihRolled) {
+        tasbihState = rollTasbihStateToDate(tasbihState, today);
+        saveTasbihState();
       }
       if (refresh) {
         renderCards();
@@ -5905,6 +6472,10 @@
         renderSuraPages();
         return;
       }
+      if (activePeriod === "tasbih") {
+        renderTasbihPanel();
+        return;
+      }
       const items = deck(activePeriod);
       if (!Number.isInteger(currentIndices[activePeriod])) {
         currentIndices[activePeriod] = firstIncompleteIndex(activePeriod);
@@ -5962,10 +6533,28 @@
       updateSessionProgress();
     }
 
-    function triggerHaptic(duration) {
-      if (!hapticsEnabled || typeof navigator.vibrate !== "function") return false;
-      return navigator.vibrate(duration);
+    // The one haptic tick (adhkar completion, tasbih target). navigator.vibrate where it exists (Android); otherwise, on
+    // iOS 17.4+ (native switch support), a click on the label of a hidden `<input type="checkbox" switch>` inside the
+    // tap's user gesture plays WebKit's switch haptic (undocumented WebKit behaviour). «الاهتزاز» gates both paths.
+    function triggerHaptic(duration = hapticDurationMs) {
+      if (!hapticsEnabled) return false;
+      if (typeof navigator.vibrate === "function") return navigator.vibrate(duration);
+      if (!nativeSwitchSupported) return false;
+      if (!hapticSwitchLabel) {
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.setAttribute("switch", "");
+        input.tabIndex = -1;
+        hapticSwitchLabel = document.createElement("label");
+        hapticSwitchLabel.setAttribute("aria-hidden", "true");
+        hapticSwitchLabel.style.display = "none";
+        hapticSwitchLabel.append(input);
+        body.append(hapticSwitchLabel);
+      }
+      hapticSwitchLabel.click();
+      return true;
     }
+
     function syncCompletionState(period) {
       const countersComplete = periodCountersComplete(period);
       const manuallyComplete = periodIsManuallyComplete(period);
@@ -6041,6 +6630,11 @@
       document.querySelectorAll(".period-tab").forEach(tab => {
         const period = tab.dataset.period;
         if (!period) return;
+        // The tasbih is open-ended: its tab never shows a ✓.
+        if (period === "tasbih") {
+          tab.setAttribute("aria-label", sectionNames.tasbih);
+          return;
+        }
         const complete = period === "suwar" ? suwarContent.suwar.every(sura => suraIsComplete(sura)) : periodIsComplete(period);
         const status = tab.querySelector(".period-status");
         tab.classList.toggle("is-complete", complete);
@@ -6069,10 +6663,12 @@
     }
 
     // Same entries the backup carries: real calendar days before today, de-duplicated, newest first (backupHistory).
-    // The suras completed on a day (athkar-suwar-v1, not in the backup) are listed under its row.
+    // The suras completed on a day (athkar-suwar-v1) and its tasbih counts (athkar-tasbih-v1), neither in the backup,
+    // are listed under its row.
     function updateHistoryView() {
       const adhkarDays = new Map(backupHistory(state.history, state.date).map(entry => [entry.date, entry]));
-      const pastDates = [...new Set([...adhkarDays.keys(), ...Object.keys(suwarState.history).filter(date => date < state.date)])]
+      const localDays = [...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)].filter(date => date < state.date);
+      const pastDates = [...new Set([...adhkarDays.keys(), ...localDays])]
         .sort().reverse().slice(0, suwarHistoryDays);
       const todaySuwar = Object.fromEntries(suwarContent.suwar.filter(sura => suraIsComplete(sura)).map(sura => [sura.id, true]));
       const entries = [
@@ -6081,6 +6677,7 @@
           morning: periodIsComplete("morning"),
           evening: periodIsComplete("evening"),
           suwar: todaySuwar,
+          tasbih: tasbihDayCounts(),
           isToday: true
         },
         ...pastDates.map(date => ({
@@ -6088,6 +6685,7 @@
           morning: Boolean(adhkarDays.get(date)?.morning),
           evening: Boolean(adhkarDays.get(date)?.evening),
           suwar: suwarState.history[date] || {},
+          tasbih: tasbihState.history[date] || {},
           isToday: false
         }))
       ];
@@ -6099,9 +6697,323 @@
           ${historyStateMarkup("الصباح", entry.morning)}
           ${historyStateMarkup("المساء", entry.evening)}
           ${suwar.length ? `<span class="history-suwar">${suwar.map(sura => historyStateMarkup(suraShortName(sura), true)).join("")}</span>` : ""}
+          ${tasbihHistoryMarkup(entry.tasbih)}
         </li>
       `;
       }).join("");
+    }
+
+    function tasbihHistoryName(key) {
+      if (Object.hasOwn(tasbihPresetById, key)) return tasbihPresetById[key].short;
+      const text = stripTashkeel(key.slice(2));
+      return text.length > 20 ? `${text.slice(0, 20).trimEnd()}…` : text;
+    }
+
+    function tasbihOverflowLabel(count) {
+      if (count === 1) return "وذكر آخر";
+      if (count === 2) return "وذكران آخران";
+      if (count <= 10) return `و${formatNumber(count)} أذكار أخرى`;
+      return `و${formatNumber(count)} ذكرًا آخر`;
+    }
+
+    // «مسبحة: N» and the day's top three phrases, count descending; ties keep first-use order (the entry's key order).
+    function tasbihHistoryMarkup(counts) {
+      const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      const total = entries.reduce((sum, [, count]) => sum + count, 0);
+      if (!total) return "";
+      const parts = entries.slice(0, 3).map(([key, count]) => `${tasbihHistoryName(key)} ${formatNumber(count)}`);
+      if (entries.length > 3) parts.push(tasbihOverflowLabel(entries.length - 3));
+      return `<span class="history-tasbih"><strong>مسبحة: ${formatNumber(total)}</strong><span>${escapeHtml(parts.join("، "))}</span></span>`;
+    }
+
+    function tasbihPhrase(key) {
+      if (Object.hasOwn(tasbihPresetById, key)) return tasbihPresetById[key];
+      const text = key.slice(2);
+      return { label: text, short: stripTashkeel(text) };
+    }
+
+    function tasbihCount(key = tasbihState.selected) {
+      return Object.hasOwn(tasbihState.counts, key) ? tasbihState.counts[key] : 0;
+    }
+
+    function tasbihDayTotal() {
+      return Object.values(tasbihState.counts).reduce((sum, count) => sum + count, 0);
+    }
+
+    function setTasbihCount(key, count) {
+      if (count > 0) {
+        tasbihState.counts[key] = count;
+        if (!tasbihState.firstUse.includes(key)) tasbihState.firstUse.push(key);
+      } else {
+        delete tasbihState.counts[key];
+        tasbihState.firstUse = tasbihState.firstUse.filter(used => used !== key);
+      }
+      saveTasbihState();
+    }
+
+    // S1–S6. The state is a pure function of the count and the target (null: no target).
+    function tasbihStatusText(count, target) {
+      if (!target) return { text: "بلا هدف", check: false };
+      if (count === 0) return { text: `الهدف ${formatNumber(target)}`, check: false };
+      if (count < target) return { text: `${formatNumber(count)} من ${formatNumber(target)}`, check: false };
+      if (count === target) return { text: "بلغت الهدف", check: true };
+      const lap = Math.floor((count - 1) / target) + 1;
+      const rest = ((count - 1) % target) + 1;
+      if (rest === target) return { text: `اكتملت الدورة ${formatNumber(lap)}`, check: true };
+      return { text: `الدورة ${formatNumber(lap)}: ${formatNumber(rest)} من ${formatNumber(target)}`, check: false };
+    }
+
+    // arc: "step" animates the ring (160 ms); "jump" sets it at once, so the tap after a full lap never sweeps back;
+    // "reset" retracts it over 220 ms. `reached` (an upward crossing of a multiple of the target) plays the breath.
+    function renderTasbih({ arc = "step", reached = false } = {}) {
+      const key = tasbihState.selected;
+      const phrase = tasbihPhrase(key);
+      const count = tasbihCount(key);
+      const target = tasbihState.target;
+      const countText = formatNumber(count);
+      const targetText = target ? formatNumber(target) : "";
+      const fraction = !target || count === 0 ? 0 : (((count - 1) % target) + 1) / target;
+      const status = tasbihStatusText(count, target);
+
+      tasbihLabelText.textContent = phrase.label;
+      tasbihNumber.textContent = countText;
+      tasbihNumber.dataset.digits = String(String(count).length);
+      tasbihNumber.dataset.state = count === 0 ? "zero" : target && count % target === 0 ? "lap" : "";
+      tasbihArc.style.setProperty("--arc-duration", arc === "jump" ? "0ms" : arc === "reset" ? "220ms" : "160ms");
+      tasbihArc.style.strokeDasharray = `${(tasbihArcLength * fraction).toFixed(2)} ${tasbihArcLength.toFixed(2)}`;
+      tasbihArc.classList.toggle("is-empty", fraction === 0);
+      tasbihSurface.classList.toggle("is-complete", Boolean(target) && count >= target);
+      if (status.check) {
+        const check = document.createElement("span");
+        check.setAttribute("aria-hidden", "true");
+        check.textContent = "✓";
+        tasbihStatus.replaceChildren(check, ` ${status.text}`);
+      } else {
+        tasbihStatus.replaceChildren(status.text);
+      }
+      tasbihSrSummary.textContent = target
+        ? `${phrase.short}، ${countText} من ${targetText}`
+        : `${phrase.short}، ${countText}، بلا هدف`;
+      if (reached && !motionIsReduced.matches) {
+        tasbihNumber.classList.remove("is-breathing");
+        tasbihStatus.classList.remove("is-fresh");
+        void tasbihNumber.offsetWidth;
+        tasbihNumber.classList.add("is-breathing");
+        tasbihStatus.classList.add("is-fresh");
+      }
+
+      tasbihUndo.disabled = count === 0;
+      tasbihResetButton.disabled = count === 0;
+      tasbihResetButton.setAttribute("aria-label", `إعادة عدّ ${phrase.short} إلى الصفر`);
+      const total = formatNumber(tasbihDayTotal());
+      tasbihTotalOutput.textContent = `اليوم: ${total}`;
+      tasbihTotalOutput.setAttribute("aria-label", `مجموع المسبحة اليوم: ${total}`);
+      tasbihLabelButton.setAttribute("aria-label", `اختيار الذكر، الحالي: ${phrase.short}`);
+      tasbihTargetChipText.textContent = target ? `الهدف: ${targetText}` : "بلا هدف";
+      tasbihTargetButton.setAttribute("aria-label", `تغيير الهدف، الحالي: ${target ? targetText : "بلا هدف"}`);
+      if (count < tasbihMaxCount) tasbihCapAnnounced = false;
+      sessionReset.disabled = !hasResettableState();
+    }
+
+    function renderTasbihPanel() {
+      renderTasbih({ arc: "jump" });
+      tasbihPanel.classList.remove("is-entering");
+      requestAnimationFrame(() => tasbihPanel.classList.add("is-entering"));
+      updateSessionProgress();
+    }
+
+    // Cleared, then written on the next frame, so a repeated message (e.g. «٣٣» after an undo and a redo) is still
+    // spoken. Every immediate message cancels a pending count announcement.
+    function announceTasbih(text) {
+      clearTimeout(tasbihAnnounceTimer);
+      tasbihAnnounceTimer = null;
+      liveRegion.textContent = "";
+      requestAnimationFrame(() => { liveRegion.textContent = text; });
+    }
+
+    // A1, debounced: written once taps have paused for a second, so a burst of taps is one announcement.
+    function scheduleTasbihCountAnnouncement() {
+      clearTimeout(tasbihAnnounceTimer);
+      tasbihAnnounceTimer = setTimeout(() => {
+        const count = formatNumber(tasbihCount());
+        const target = tasbihState.target;
+        announceTasbih(target ? `${count} من ${formatNumber(target)}` : count);
+      }, tasbihAnnounceDelayMs);
+    }
+
+    function addTasbihCount() {
+      ensureCurrentDay();
+      const key = tasbihState.selected;
+      const before = tasbihCount(key);
+      if (before >= tasbihMaxCount) {
+        if (!tasbihCapAnnounced) announceTasbih("بلغت الحد الأقصى للعدّ");
+        tasbihCapAnnounced = true;
+        return;
+      }
+      const target = tasbihState.target;
+      const count = before + 1;
+      const reached = Boolean(target) && count % target === 0;
+      if (reached) triggerHaptic(hapticDurationMs);
+      setTasbihCount(key, count);
+      renderTasbih({ arc: target && before > 0 && before % target === 0 ? "jump" : "step", reached });
+      if (!reached) scheduleTasbihCountAnnouncement();
+      else if (count === target) announceTasbih(`بلغت الهدف: ${formatNumber(target)}، ${tasbihPhrase(key).short}`);
+      else announceTasbih(`اكتملت الدورة ${formatNumber(count / target)}`);
+    }
+
+    function undoTasbihCount() {
+      ensureCurrentDay();
+      const key = tasbihState.selected;
+      const before = tasbihCount(key);
+      if (before > 0) {
+        const target = tasbihState.target;
+        const count = before - 1;
+        setTasbihCount(key, count);
+        renderTasbih({ arc: target && count > 0 && count % target === 0 ? "jump" : "step" });
+        announceTasbih(`تراجع، العدد ${formatNumber(count)}`);
+      }
+      if (tasbihUndo.disabled) tasbihSurface.focus();
+    }
+
+    // Always confirmed: a tasbih count cannot be rebuilt, and undo already covers a slip.
+    function requestTasbihReset() {
+      ensureCurrentDay();
+      const key = tasbihState.selected;
+      const count = tasbihCount(key);
+      if (!count) {
+        tasbihSurface.focus();
+        return;
+      }
+      const name = tasbihPhrase(key).short;
+      openConfirmation(
+        `إعادة عدّ ${name}؟`,
+        `سيعود عدّ هذا الذكر اليوم من ${formatNumber(count)} إلى الصفر، ويُنقص من مجموع اليوم.`,
+        () => {
+          ensureCurrentDay();
+          setTasbihCount(key, 0);
+          renderTasbih({ arc: "reset" });
+          tasbihSurface.focus();
+          announceTasbih(`أُعيد عدّ ${name} إلى الصفر`);
+        }
+      );
+    }
+
+    function selectTasbihPhrase(key) {
+      tasbihState.selected = key;
+      saveTasbihState();
+      if (tasbihLabelDialog.open) tasbihLabelDialog.close();
+      renderTasbih();
+      announceTasbih(`الذكر: ${tasbihPhrase(key).short}، العدد ${formatNumber(tasbihCount(key))}`);
+    }
+
+    function tasbihOptionMarkup(key) {
+      const phrase = tasbihPhrase(key);
+      const count = tasbihCount(key);
+      const name = count ? `${phrase.short}، اليوم ${formatNumber(count)}` : phrase.short;
+      return `<button class="reset-option tasbih-option" type="button" data-key="${escapeHtml(key)}" aria-pressed="${key === tasbihState.selected}" aria-label="${escapeHtml(name)}">
+        <strong>${escapeHtml(phrase.label)}</strong>${count ? `<small>${formatNumber(count)}</small>` : ""}
+      </button>`;
+    }
+
+    function updateTasbihCustomAdd() {
+      tasbihCustomAdd.disabled = !cleanTasbihPhrase(tasbihCustomInput.value);
+    }
+
+    function renderTasbihPhraseSheet() {
+      tasbihPresetList.innerHTML = tasbihPresets.map(preset => `<li>${tasbihOptionMarkup(preset.id)}</li>`).join("");
+      tasbihCustomList.innerHTML = tasbihState.custom.map(text => `
+        <li class="tasbih-custom-row">
+          ${tasbihOptionMarkup(`c:${text}`)}
+          <button class="card-reset tasbih-option-delete" type="button" data-delete="${escapeHtml(text)}" aria-label="${escapeHtml(`حذف العبارة: ${stripTashkeel(text)}`)}"><span aria-hidden="true">×</span></button>
+        </li>
+      `).join("");
+      tasbihCustomSection.hidden = tasbihState.custom.length === 0;
+      const full = tasbihState.custom.length >= tasbihMaxCustom;
+      tasbihCustomForm.hidden = full;
+      tasbihCustomLimit.hidden = !full;
+      updateTasbihCustomAdd();
+    }
+
+    function openTasbihPhraseSheet() {
+      ensureCurrentDay();
+      renderTasbihPhraseSheet();
+      tasbihLabelDialog.showModal();
+      tasbihLabelDialog.querySelector('.tasbih-option[aria-pressed="true"]')?.focus();
+    }
+
+    function addTasbihPhrase(value) {
+      const text = cleanTasbihPhrase(value);
+      if (!text) return;
+      const known = findTasbihPhrase(text);
+      tasbihCustomInput.value = "";
+      if (known) {
+        selectTasbihPhrase(known);
+        return;
+      }
+      if (tasbihState.custom.length >= tasbihMaxCustom) return;
+      tasbihState.custom.unshift(text);
+      tasbihState.selected = `c:${text}`;
+      saveTasbihState();
+      tasbihLabelDialog.close();
+      renderTasbih();
+      announceTasbih(`أُضيفت العبارة: ${stripTashkeel(text)}`);
+    }
+
+    // Removes the phrase from the picker only: its counts today and in the history stay.
+    function deleteTasbihPhrase(text) {
+      const index = tasbihState.custom.indexOf(text);
+      if (index === -1) return;
+      tasbihState.custom.splice(index, 1);
+      if (tasbihState.selected === `c:${text}`) tasbihState.selected = tasbihPresets[0].id;
+      saveTasbihState();
+      renderTasbih();
+      renderTasbihPhraseSheet();
+      const options = tasbihCustomList.querySelectorAll(".tasbih-option");
+      (options[Math.min(index, options.length - 1)] ?? tasbihCustomInput).focus();
+      announceTasbih(`حُذفت العبارة: ${stripTashkeel(text)}`);
+    }
+
+    function isPresetTarget(target) {
+      return target === null || target === 33 || target === 100;
+    }
+
+    function clearTasbihTargetError() {
+      tasbihTargetInput.removeAttribute("aria-invalid");
+      tasbihTargetInput.removeAttribute("aria-describedby");
+      tasbihTargetError.hidden = true;
+    }
+
+    function openTasbihTargetDialog() {
+      const target = tasbihState.target;
+      tasbihTargetOptions.querySelectorAll("[data-target]").forEach(option => {
+        const value = option.dataset.target;
+        const pressed = value === "custom" ? !isPresetTarget(target) : value === "none" ? target === null : Number(value) === target;
+        option.setAttribute("aria-pressed", String(pressed));
+      });
+      tasbihTargetForm.hidden = isPresetTarget(target);
+      tasbihTargetInput.value = isPresetTarget(target) ? "" : formatNumber(target);
+      clearTasbihTargetError();
+      tasbihTargetDialog.showModal();
+      tasbihTargetOptions.querySelector('[aria-pressed="true"]')?.focus();
+    }
+
+    // Arabic-Indic (٠–٩), Persian (۰–۹) and Latin digits; an integer from 1 to 9999, or null.
+    function parseTasbihTarget(value) {
+      const digits = value.trim()
+        .replace(/[٠-٩]/g, digit => String(digit.charCodeAt(0) - 0x0660))
+        .replace(/[۰-۹]/g, digit => String(digit.charCodeAt(0) - 0x06f0));
+      if (!/^\d{1,4}$/.test(digits)) return null;
+      const target = Number(digits);
+      return target >= 1 && target <= tasbihMaxTarget ? target : null;
+    }
+
+    // Counts never change with the target; a count already at or past it shows the reached state, without a haptic.
+    function setTasbihTarget(target) {
+      tasbihState.target = target;
+      saveTasbihState();
+      if (tasbihTargetDialog.open) tasbihTargetDialog.close();
+      renderTasbih();
+      announceTasbih(target ? `الهدف: ${formatNumber(target)}` : "بلا هدف");
     }
 
 
@@ -6150,6 +7062,7 @@
 
     function updateSessionProgress() {
       if (activePeriod === "suwar") updateSuraProgress();
+      else if (activePeriod === "tasbih") sessionSummary.classList.remove("is-complete");
       else updateAdhkarProgress();
       sessionReset.disabled = !hasResettableState();
       updatePeriodTabs();
@@ -6183,12 +7096,17 @@
 
 
     function switchPeriod(period, updateHash = true) {
-      if (!collections[period] && period !== "suwar") return;
+      if (!collections[period] && period !== "suwar" && period !== "tasbih") return;
+      const tasbihActive = period === "tasbih";
       activePeriod = period;
       body.dataset.period = period;
       suraPicker.hidden = period !== "suwar";
+      tasbihPicker.hidden = !tasbihActive;
+      panel.hidden = tasbihActive;
+      tasbihPanel.hidden = !tasbihActive;
+      skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : "تخطَّ إلى الأذكار";
       sessionReset.setAttribute("aria-label", "خيارات الإعادة");
-      panel.setAttribute("aria-labelledby", `${period}-tab`);
+      if (!tasbihActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
       updateSessionTitle();
 
       document.querySelectorAll(".period-tab").forEach(tab => {
@@ -6210,11 +7128,12 @@
       document.title = `${title} — أذكار المسلم`;
     }
 
-    // `#suwar` opens the tab on the last sura read; `#kahf`, `#yasin`, `#saffat`, `#waqiah`, `#mulk` open that sura in it.
+    // `#morning`, `#evening`, `#suwar` and `#tasbih` name a tab. `#suwar` opens on the last sura read; `#kahf`, `#yasin`,
+    // `#saffat`, `#waqiah`, `#mulk` open that sura in it.
     // Anything else (e.g. #ruqyah from the removed tab) shows morning.
     function routeFromHash(hash = location.hash) {
       const name = hash.slice(1);
-      if (name === "morning" || name === "evening" || name === "suwar") return { period: name, sura: null };
+      if (["morning", "evening", "suwar", "tasbih"].includes(name)) return { period: name, sura: null };
       if (Object.hasOwn(suwarById, name)) return { period: "suwar", sura: name };
       return { period: "morning", sura: null };
     }
@@ -6224,7 +7143,7 @@
         collections[period].some(item => !item.review && countFor(item, period) > 0)
       );
       const anyManual = ["morning", "evening"].some(period => periodIsManuallyComplete(period));
-      return anyProgress || anyManual || state.history.length > 0 || suwarHasResettableState();
+      return anyProgress || anyManual || state.history.length > 0 || suwarHasResettableState() || tasbihHasResettableState();
     }
 
     function resetDayProgress(announce = true) {
@@ -6236,6 +7155,7 @@
       }
       saveState();
       resetSuwarProgress();
+      resetTasbihProgress();
       scheduleReminders();
       renderCards();
       if (announce) liveRegion.textContent = "أُعيدت عدادات اليوم";
@@ -6259,7 +7179,7 @@
 
     function resetWeek() {
       const dates = recentDates(7);
-      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history)]
+      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)]
         .filter(date => dates.includes(date))).size;
       openConfirmation(
         "حذف سجل هذا الأسبوع؟",
@@ -6267,6 +7187,7 @@
         () => {
           state.history = state.history.filter(entry => !dates.includes(entry.date));
           deleteSuwarHistory(dates);
+          deleteTasbihHistory(dates);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف سجل آخر سبعة أيام";
         }
@@ -6274,13 +7195,14 @@
     }
 
     function resetEverything() {
-      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history)]).size;
+      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)]).size;
       openConfirmation(
         "حذف كل شيء؟",
         `ستُعاد العدادات وسيُحذف السجل كاملًا${recorded ? ` (${dayCountLabel(recorded)})` : ""}. لا يمكن التراجع.`,
         () => {
           state.history = [];
           deleteSuwarHistory(null);
+          deleteTasbihHistory(null);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف السجل كاملًا";
         }
@@ -6796,13 +7718,13 @@
       }, delay);
     }
 
-    function applyLongOrder(enabled, focusItem = activePeriod === "suwar" ? null : deck(activePeriod)[currentIndices[activePeriod] ?? 0]) {
+    function applyLongOrder(enabled, focusItem = collections[activePeriod] ? deck(activePeriod)[currentIndices[activePeriod] ?? 0] : null) {
       longAdhkarLast = enabled;
       try { localStorage.setItem(longOrderStorageKey, enabled ? "last" : "original"); } catch (_) {}
       longOrderToggle.checked = enabled;
       invalidateDecks();
-      // The suwar pages have no long-order; both adhkar decks reopen at their first incomplete item.
-      if (activePeriod === "suwar") {
+      // The suwar pages and the tasbih have no long-order; both adhkar decks reopen at their first incomplete item.
+      if (!collections[activePeriod]) {
         currentIndices.morning = null;
         currentIndices.evening = null;
         return;
@@ -6878,7 +7800,7 @@
       // WAI-ARIA tabs: arrows cycle through the tabs in reading order (right to left, so ArrowLeft is the next tab),
       // Home/End go to the first/last.
       tab.addEventListener("keydown", event => {
-        const periods = ["morning", "evening", "suwar"];
+        const periods = ["morning", "evening", "suwar", "tasbih"];
         const steps = { ArrowLeft: 1, ArrowRight: -1 };
         let nextPeriod;
         if (event.key === "Home") nextPeriod = periods[0];
@@ -6895,6 +7817,78 @@
       chip.addEventListener("click", () => {
         if (chip.dataset.sura !== suwarState.selected) selectSura(chip.dataset.sura);
       });
+    });
+
+    // The skip link moves focus without following its href: a hash change would route the page away from the open tab.
+    skipLink.addEventListener("click", event => {
+      event.preventDefault();
+      if (activePeriod === "tasbih") {
+        tasbihSurface.focus();
+        return;
+      }
+      list.tabIndex = -1;
+      list.addEventListener("blur", () => list.removeAttribute("tabindex"), { once: true });
+      list.focus();
+    });
+
+    tasbihSurface.addEventListener("click", addTasbihCount);
+    // A held Enter repeats the button's activation; one press adds exactly one (Space already activates on key-up).
+    tasbihSurface.addEventListener("keydown", event => {
+      if (event.key === "Enter" && event.repeat) event.preventDefault();
+    });
+    tasbihNumber.addEventListener("animationend", () => tasbihNumber.classList.remove("is-breathing"));
+    tasbihStatus.addEventListener("animationend", () => tasbihStatus.classList.remove("is-fresh"));
+    tasbihUndo.addEventListener("click", undoTasbihCount);
+    tasbihResetButton.addEventListener("click", requestTasbihReset);
+    tasbihLabelButton.addEventListener("click", openTasbihPhraseSheet);
+    tasbihTargetButton.addEventListener("click", openTasbihTargetDialog);
+    tasbihLabelDialogClose.addEventListener("click", () => tasbihLabelDialog.close());
+    tasbihLabelDialog.addEventListener("click", event => {
+      if (event.target === tasbihLabelDialog) {
+        tasbihLabelDialog.close();
+        return;
+      }
+      const option = event.target.closest(".tasbih-option");
+      if (option) {
+        selectTasbihPhrase(option.dataset.key);
+        return;
+      }
+      const remove = event.target.closest("[data-delete]");
+      if (remove) deleteTasbihPhrase(remove.dataset.delete);
+    });
+    tasbihCustomInput.addEventListener("input", updateTasbihCustomAdd);
+    tasbihCustomForm.addEventListener("submit", event => {
+      event.preventDefault();
+      addTasbihPhrase(tasbihCustomInput.value);
+    });
+    tasbihTargetOptions.addEventListener("click", event => {
+      const option = event.target.closest("[data-target]");
+      if (!option) return;
+      const value = option.dataset.target;
+      if (value !== "custom") {
+        setTasbihTarget(value === "none" ? null : Number(value));
+        return;
+      }
+      tasbihTargetForm.hidden = false;
+      tasbihTargetInput.focus();
+      tasbihTargetInput.select();
+    });
+    tasbihTargetInput.addEventListener("input", clearTasbihTargetError);
+    tasbihTargetForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const target = parseTasbihTarget(tasbihTargetInput.value);
+      if (target !== null) {
+        setTasbihTarget(target);
+        return;
+      }
+      tasbihTargetInput.setAttribute("aria-invalid", "true");
+      tasbihTargetInput.setAttribute("aria-describedby", "tasbih-target-error");
+      tasbihTargetError.hidden = false;
+      tasbihTargetInput.focus();
+    });
+    tasbihTargetCancel.addEventListener("click", () => tasbihTargetDialog.close());
+    tasbihTargetDialog.addEventListener("click", event => {
+      if (event.target === tasbihTargetDialog) tasbihTargetDialog.close();
     });
 
     list.addEventListener("pointerdown", beginCardSwipe);
