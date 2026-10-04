@@ -23,11 +23,12 @@ A **card's number** is its 1-based position in content order, in Arabic-Indic di
 it. **Positions** («٢ من ٢٦») are 1-based positions in the deck as currently ordered.
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
-list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة); رقية القرين
-and أوقات الصلاة open, and the others are listed as «قريبًا». A deck row shows the deck's summary copy, and «✓»
-once today is complete; the أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض المواقيت». While a section is open, the header title is replaced by a back button with the section's
-title, and tapping أخرى again also returns to the list. The list has no summary and the reset button is disabled.
-The أخرى tab never shows «✓»; completion is shown per row. Each deck keeps its current card while another is shown.
+list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app opens
+رقية القرين and أوقات الصلاة, and lists the others as «قريبًا». A deck row shows the deck's summary copy and «✓»
+once today is complete. The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض المواقيت».
+When a section is open, the header replaces its title with a back button labeled with the section's title. Tapping
+أخرى again returns to the list. The list has no summary, and its reset button is disabled. The أخرى tab never shows
+«✓»; each row shows completion. Each deck keeps its current card while another deck is open.
 
 ### Adhkar item fields
 
@@ -73,8 +74,8 @@ Layout:
     the options, otherwise `defaultTarget`.
   - Otherwise the target is `count`, or 1 when `count` is absent or 0.
   - Chosen targets are stored per (date, period, item). A new day starts at the default target.
-- **Count.** The stored count, `floor`ed. It is 0 when not finite or negative. It is then clamped to
-  `min(count, target)`. Storage keeps raw values.
+- **Count.** Apply `floor` to the stored count. Use 0 when the result is not finite or is negative, then clamp it
+  to `min(count, target)`. Storage keeps the raw values.
 - **Complete item.** `count >= target`, or the item is a review item.
 - **Display.** Numeric when `count > 0` (the item field) or `targetOptions` is present (`isExplicitlyCounted`):
   «count/target», left to right, with «✓» when complete. Otherwise the phrase «اضغط بعد القراءة», which becomes
@@ -133,8 +134,8 @@ The setting is `long_order` (`last` | `original`; default `original`).
 
 ## 5. Tap to count
 
-The whole card is the tap target. The reset button, the target picker and the source link sit above it and
-receive their own taps.
+The whole card is the tap target. The reset button, the target picker and the source link sit above it and receive
+their own taps.
 
 A tap does nothing when:
 
@@ -295,11 +296,11 @@ The storage for all of this is in `spec/schema.md`.
   - «N من ٣٣ تكرارًا».
   - A second line: «رقية اليوم لم تكتمل بعد.», or «تمت رقية اليوم في h:mm.» once today is recorded.
 
-**Day rollover.** Runs at local midnight, on returning to the foreground, on a clock or time-zone change, and
-before each tap, card reset (including a confirmed one) and target change. When that check finds a new date, the
-tap, reset or target change is dropped: it belonged to the previous day's card.
+**Day rollover.** It runs at local midnight, when the app returns to the foreground, when the clock or time zone
+changes, and before each tap, card reset (including a confirmed one), and target change. When the check finds a
+new date, ignore the tap, reset, or target change because it belongs to the previous day's card.
 
-- A new local date loads that date's rows, and each deck opens on its first unread card.
+- When the local date changes, load its rows and open each deck on its first unread card.
 - Nothing is deleted. The previous day is already history.
 
 **Labels to speak.** These are the PWAs' live-region strings; announce them after the change.

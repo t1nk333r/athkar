@@ -4,32 +4,33 @@ The file both PWAs export so the native app can import a user's history (NATIVE_
 Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). Validate a file with
 `node tools/backup-validate.mjs <file>`. [`examples/`](examples/) holds real exports from each PWA.
 
-- One UTF-8 JSON document, file extension `.athkarbackup`, MIME `application/json`. The file name carries the
-  device's local date. Importers strip one leading BOM (files passed through Mail or Notes can gain one) and
-  reject any byte sequence that is not valid UTF-8. The document is read with `JSON.parse` semantics: a
-  duplicated key keeps its last value, numbers that underflow read as 0, lone surrogates in strings are kept.
+- The export is one UTF-8 JSON document with extension `.athkarbackup` and MIME type `application/json`. Its file
+  name carries the device's local date. Importers strip one leading BOM (files passed through Mail or Notes can
+  gain one) and reject any byte sequence that is not valid UTF-8. The document follows `JSON.parse` semantics: a
+  duplicated key keeps its last value, numbers that underflow read as 0, and lone surrogates in strings are kept.
 - Each PWA exports only its own sections. The athkar PWA writes `meta`, `adhkar`, `reminders`,
   `preferences`; the ruqyah PWA writes `meta`, `ruqyah`, `preferences`. An importer must accept either file,
   alone or both, in either order.
-- The export is taken after the PWA's own loader has normalised legacy keys (`athkar-progress-v1`,
-  `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`) and rolled the day, so it never contains
-  legacy shapes and `today.date` is the device's local date at export time.
-- The PWAs' loaders tolerate malformed stored values; the exporter does not pass them on. Dates that are not
-  real calendar days and instants that are not ISO-8601 UTC become `null` (or the whole history entry is
-  dropped when its own `date` is invalid); adhkar history is de-duplicated by date (first stored entry wins),
-  sorted newest first, limited to days before `today.date` and capped at 7; ruqyah history keeps days up to
-  `today.date` (today appears once it is completed), capped to the 365 newest. Instants must round-trip
-  through `Date` (so `2026-02-30T…` or `T24:00` are rejected rather than rolled over) and are written in
-  `toISOString()` form (millisecond precision, extra fraction digits truncated), as the native app writes them.
-  So every field below always satisfies the schema. The PWAs' settings history lists exactly the days the
-  export would carry.
-- Calendar checks apply to the schema's date and instant fields only (`meta.exportedAt`, every `date`,
-  `completedAt`, `morningAt`, `eveningAt`, `lastShown`, `location.updatedAt`, and the `ruqyah.history` keys):
-  a date is a real proleptic-Gregorian day for any year 0000–9999; an instant is such a date plus a real time
-  (hours 00–23, no leap second `:60`) with any number of fraction digits and an uppercase `Z`. Other
-  date-shaped strings (a `timeZone`, an item id) are not calendar-checked. Item and segment IDs
+- Each PWA exports after its loader normalises legacy keys (`athkar-progress-v1`, `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`) and rolls the day. The export contains no legacy shapes, and `today.date` is the device's local date at export time.
+- The PWAs' loaders tolerate malformed stored values, but the exporter does not pass them on.
+  It converts dates that are not real calendar days and instants that are not ISO-8601 UTC to `null`. If a
+  history entry's own `date` is invalid, the exporter drops the whole entry.
+  It de-duplicates adhkar history by date, keeping the first stored entry. It sorts entries newest first, includes
+  only days before `today.date`, and caps the history at 7 days.
+  The exporter keeps ruqyah history through `today.date` (today appears once it is completed) and caps it at the
+  365 newest days.
+  Instants must round-trip through `Date`, so `2026-02-30T…` or `T24:00` are rejected rather than rolled over.
+  The exporter writes instants in `toISOString()` form, with millisecond precision and extra fraction digits
+  truncated, as the native app does.
+  Every field below therefore satisfies the schema. The PWAs' settings history lists exactly the days the export
+  would carry.
+- Calendar checks apply only to the schema's date and instant fields: `meta.exportedAt`, every `date`,
+  `completedAt`, `morningAt`, `eveningAt`, `lastShown`, `location.updatedAt`, and the `ruqyah.history` keys.
+  A date is a real proleptic-Gregorian day for any year 0000–9999. An instant consists of such a date, a real
+  time (hours 00–23, no leap second `:60`), any number of fraction digits, and an uppercase `Z`.
+  Other date-shaped strings (a `timeZone`, an item id) are not calendar-checked. Item and segment IDs
   (`adhkar.today.progress`/`targets` keys, `ruqyah.today.counts` keys) must not contain U+0000.
-- Plaintext. Nothing leaves the device unless the user shares the file.
+  The file is plaintext. Nothing leaves the device unless the user shares it.
 
 ## Sections
 
@@ -58,16 +59,16 @@ Not exported: `athkar-install-onboarding-v1`.
 
 ## Import rules (native side)
 
-Restated from §6.4: each file merges into its own tables; preferences from the athkar file win over the ruqyah
-file; merge keys are `(local_date, period)`, `(local_date)`, `(local_date, segment_id)`; an existing non-empty
-native row wins, so re-import is idempotent; a native re-export of an imported file must equal it in every
-section it contained.
+These rules restate §6.4. Each file merges into its own tables. Preferences from the athkar file win over
+preferences from the ruqyah file. The merge keys are `(local_date, period)`, `(local_date)`,
+`(local_date, segment_id)`. An existing non-empty native row wins, so re-import is idempotent. A native re-export
+of an imported file must equal that file in every section it contained.
 
-The native importer rejects the whole file on exactly what `tools/backup-validate.mjs` rejects, including a count
-or target above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`), which cannot be stored as an exact integer
-(spec/schema.md "Backup import").
+The native importer rejects the whole file under exactly the same conditions as `tools/backup-validate.mjs`,
+including a count or target above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`), which cannot be stored as an exact
+integer (`spec/schema.md "Backup import"`).
 
-It then checks `today` against the installed content packs: an adhkar period is recorded complete only if
-`manualCompletion` is true or the counters complete it by the PWA's `periodCountersComplete` rule (a
-`completedAt` alone is not enough), and ruqyah counts are clamped to `repeat` with unknown segments dropped.
-History entries are trusted as written.
+It then checks `today` against the installed content packs. It records an adhkar period as complete only if
+`manualCompletion` is true or its counters satisfy the PWA's `periodCountersComplete` rule. A `completedAt` value
+alone is not enough. It clamps ruqyah counts to `repeat` and drops unknown segments. It trusts history entries
+as written.

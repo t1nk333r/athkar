@@ -1,13 +1,16 @@
 # Content review log
 
-Every text or order change to a pack needs a row here and a version bump (NATIVE_APP_PLAN.md 5.3).
-`manifest.json` points each pack at the row that covers its current version. Each row records the SHA-256 of
-the exact pack file it approved (`shasum -a 256 content/<pack>.v1.json`); `tools/content-validate.mjs` fails
-when the pack's SHA-256 differs from the one its row approved, and when a pack's rows do not bump its version,
-so an unreviewed change cannot ship. Rows are append-only and identified by a sequence id, not a date. The
-**Reviewer** column must name a person for any version after 1.0.0.
-Exception: the suwar pack has never been approved, so its later versions may also await review with a blank
-Reviewer until a suwar row first names one; from then on every suwar version needs a named reviewer.
+Add a row here and bump the pack version for every text or order change (see `NATIVE_APP_PLAN.md` 5.3).
+`manifest.json` points each pack to the row for its current version. Each row records the SHA-256 of the exact
+pack file it approved, calculated with `shasum -a 256 content/<pack>.v1.json`. `tools/content-validate.mjs`
+fails if the pack's SHA-256 differs from the recorded value or if the rows for a pack do not bump its version.
+This prevents unreviewed changes from shipping.
+
+Append rows only. Identify each row by a sequence ID, not a date. For every version after 1.0.0, the
+**Reviewer** column must name a person.
+
+The suwar pack is an exception. It has never been approved, so later versions may have a blank **Reviewer**
+until a suwar row first names one. From then on, every suwar version needs a named reviewer.
 
 | ID | Pack | Version | Pack SHA-256 | Reviewer | Scope | Outcome |
 | --- | --- | --- | --- | --- | --- | --- |

@@ -9,11 +9,11 @@ later) must pass them (NATIVE_APP_PLAN.md §4.3).
 node tools/fixtures-generate.mjs
 ```
 
-The script needs no npm packages. It cuts the real functions out of the application `<script>` in
-`index.html` and runs them in a `node:vm` context. Only UI side effects are stubbed: rendering, dialogs, and
-live-region text. `openConfirmation` is stubbed to accept the confirmation. The clock is fixed per case, and
-`TZ` is set per case to that case's `timeZone`. The output is byte-identical on every run, whatever the host
-time zone. Regenerate only after deliberately changing the PWA behaviour, and review the diff.
+The script needs no npm packages. It cuts the real functions out of the application `<script>` in `index.html`
+and runs them in a `node:vm` context. It stubs only UI side effects: rendering, dialogs, and live-region text.
+It also stubs `openConfirmation` to accept the confirmation.
+Each case fixes the clock and sets `TZ` to its `timeZone`.
+The output is byte-identical on every run, whatever the host time zone. Regenerate only after deliberately changing the PWA behaviour, and review the diff.
 
 ## Common shape (`spec/sessions/fixtures/*.json`, `spec/reminders/fixtures/*.json`)
 
@@ -29,9 +29,8 @@ time zone. Regenerate only after deliberately changing the PWA behaviour, and re
 
 - **Effective input** is `{ ...defaultInput, ...case.input }`, a shallow merge where the case wins.
 - **`collections`** lists the adhkar items with only the fields the rules read: `id`, `count`,
-  `targetOptions`, `defaultTarget`, and `review`. The default is the shipped content. Cases that need a
-  rule the shipped content does not trigger override it with synthetic items (`s-*`, `t-*`, `u-*`):
-  review items, the 9/10 long-item threshold, and decks shorter than three items.
+  `targetOptions`, `defaultTarget`, and `review`. The default is the shipped content. Cases that test a rule the shipped content does not trigger override it with synthetic items (`s-*`, `t-*`, `u-*`).
+  These cases cover review items, the 9/10 long-item threshold, and decks shorter than three items.
 - **`timeZone`** is an IANA zone. Local dates (`YYYY-MM-DD`) and local wall-clock times are interpreted in it.
 - **`now`** is an ISO-8601 UTC instant. `nowLocal` is the same instant written in `timeZone`, for readers only.
 - **`state`** is an `athkar-progress-v2` object:

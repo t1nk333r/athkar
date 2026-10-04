@@ -47,15 +47,16 @@ compares `maghrib` with the PWA's `sunset` directly.
 
 The PWA's `solarDay` puts local noon at 720 − 4 × longitude + offset minutes after local midnight. Where the offset
 is about a day from the longitude, that lands on another civil day, so the PWA's "today" is really tomorrow or
-yesterday. Checked by running the PWA's own functions for 2026-06-21:
+yesterday. Running the PWA's own functions for 2026-06-21 confirmed this:
 
 - Kiritimati, Apia, Chatham, Tonga, Tokelau and Kanton get the next day's times. For example, Kiritimati's
   sunrise comes out as 06:24 on 06-22.
 - Attu (172.9° E), which is on `America/Adak`, gets the previous day's times: sunrise 07:02 on 06-20.
 
-The native adapter is correct in all of these: every time falls on the requested date (P3 covers Kiritimati and
-Apia). PWA reminder users in these zones will see a one-day shift when they migrate. The wall-clock times move
-by one day's change, from seconds to a couple of minutes. `vectors.json` has no such zone, so P1 is unaffected.
+The native adapter returns every time on the requested date in all these zones (P3 covers Kiritimati and
+Apia). PWA reminder users in these zones will see a one-day shift when they migrate. The one-day date shift
+changes the wall-clock times by seconds to a couple of minutes. `vectors.json` has no such zone, so P1 is
+unaffected.
 
 ### Parameters per method
 
@@ -112,8 +113,8 @@ The PWA has one fixed rule: Fajr = max(angle Fajr, sunrise − night × fajrAngl
 Adhan's `.twilightAngle` uses the same portion. The difference is the night: the PWA measures it from the previous
 day's sunset to today's sunrise, and Adhan from today's sunset to tomorrow's sunrise.
 
-Measured over all 3600 vectors. Only Fajr depends on the rule. "Recommended" is Adhan's own default: `.seventhOfTheNight`
-above 48°, `.middleOfTheNight` otherwise.
+The measurements cover all 3600 vectors. Only Fajr depends on the rule. "Recommended" is Adhan's own default:
+`.seventhOfTheNight` above 48°, `.middleOfTheNight` otherwise.
 
 | Rule | Fajr outside 120 s (of 3580) | Night-fraction vectors outside (of 172) | Max \|Δ\| on those | Angle vectors outside (of 3408) | Max \|Δ\| on those |
 | --- | --- | --- | --- | --- | --- |
@@ -149,8 +150,8 @@ dateline date shift, P3 failed for Kiritimati and Apia.
 
 ### Results
 
-3600 vectors. For 20 of them (Tromsø at both solstices) neither side computes times: the PWA returned `null`, and
-the test asserts that Adhan returns six `nil`s. That leaves 3580 vectors × 4 times.
+There are 3600 vectors. For 20 of them (Tromsø at both solstices), neither side computes times: the PWA returned
+`null`, and the test asserts that Adhan returns six `nil`s. That leaves 3580 vectors × 4 times.
 
 | Time | Within 120 s | Max \|Δ\| within | Max \|Δ\| at this grid's locations below 59° |
 | --- | --- | --- | --- |
@@ -223,9 +224,9 @@ Berlin vectors:
 
 ### Classes
 
-Each class is a condition in the test, not a list of vectors. The mechanisms were first confirmed offline, by
-re-running the PWA's `solarTerms`/`solarDay` in Node with the changes listed below. `SolarReference` now carries
-the same check inside the test.
+Each class is a condition in the test, not a list of vectors. The mechanisms were first confirmed offline by
+rerunning the PWA's `solarTerms`/`solarDay` in Node with the changes listed below. `SolarReference` now performs
+the same check in the test.
 
 - **`clamp-night-span`**, Fajr. The PWA's clamp measures the night from the previous day's sunset.
   `.twilightAngle` measures it from today's sunset to tomorrow's sunrise. At 59–70° in spring and August the
@@ -240,19 +241,20 @@ the same check inside the test.
   the Sun's position to the event itself. Near the equinoxes that is a 0.1–0.2° difference in declination, and
   where the Sun crosses the event altitude at a shallow angle it moves the event by minutes. *Test condition:*
   Adhan agrees with `SolarReference` (Fajr ≤ 8 s, sunrise and sunset ≤ 4 s measured).
-- **`asr-shadow-declination`**, Asr. Same as above, plus Adhan takes the Asr shadow angle from
+- **`asr-shadow-declination`**, Asr. Adhan takes the Asr shadow angle from
   the declination at 0h UTC of the date, while the PWA takes it at local solar noon. Asr therefore comes later
   while the declination rises (January to June) and earlier while it falls. The data shows this sign pattern.
   *Test condition:* Adhan agrees with `SolarReference.asr`, which uses the same convention (≤ 29 s measured).
 - **`grazing-sun`**, sunrise, sunset and Fajr when the Sun's noon or midnight altitude is within 2° of the
-  −0.833° sunrise altitude; Asr when the noon altitude is. On Tromsø 2026-01-15 the noon Sun is about 0.7° below
-  the geometric horizon, just above the sunrise altitude. The PWA's day is 49 min and Adhan's is 64 min. The Asr
-  shadow altitude is itself below the horizon there. These times are ill-conditioned: even the event-time model
-  leaves 431 s, 464 s and 877 s, because Adhan applies a single Meeus correction step. *Test condition:* the
-  altitude alone; sunrise, sunset and Fajr must stay within 20 min, and Asr only inside (Dhuhr, Maghrib]. Near
-  grazing, Adhan's Asr (or the Maghrib that replaces it) is up to 84 min from the PWA and 60 min from the reference
-  (Inuvik 01-15), so no bound would be meaningful. The off-grid run also puts
-  the midnight side here: Murmansk and Inuvik on 05-20, where the midnight Sun is 1.0° and 1.5° below the horizon,
+  −0.833° sunrise altitude; Asr qualifies when the noon altitude is within 2° of that altitude. On Tromsø
+  2026-01-15 the noon Sun is about 0.7° below the geometric horizon, just above the sunrise altitude. The PWA's
+  day is 49 min and Adhan's is 64 min. The Asr shadow altitude is itself below the horizon there.
+  Small changes in the Sun's estimated position can shift these times substantially. Even the event-time model
+  leaves 431 s, 464 s and 877 s, because Adhan applies a single Meeus correction step.
+  *Test condition:* use the altitude alone. Sunrise, sunset and Fajr must stay within 20 min, and Asr only inside
+  (Dhuhr, Maghrib]. Near grazing, Adhan's Asr (or the Maghrib that replaces it) is up to 84 min from the PWA and
+  60 min from the reference (Inuvik 01-15), so no bound would be meaningful. The off-grid run also finds cases
+  on the midnight side: Murmansk and Inuvik on 05-20, where the midnight Sun is 1.0° and 1.5° below the horizon,
   have Fajr, sunrise and sunset up to 1104 s from the PWA. This condition replaces "the PWA's day is shorter than
   2 h", which missed Murmansk 01-15 (a day of 2.03 h) and every short night. On this grid both conditions select
   the same 30 times. With the margin set to 0, P1 fails on those 30. See P3 for Asr.
@@ -260,8 +262,8 @@ the same check inside the test.
 ### Asr near the polar night
 
 Where the noon Sun is within a few degrees of the horizon, Adhan 1.5.0 misplaces Asr. The Asr shadow altitude is
-then almost the noon altitude, and Adhan's single correction step diverges. Scanning every day of 2026 with default
-settings:
+then almost the noon altitude, and Adhan's single correction step diverges. A scan of every day of 2026 with
+default settings shows:
 
 - Entering the polar night, Asr comes *before* Dhuhr. It starts minutes early and grows to hours early. Near the
   last sunrise it is meaningless: Inuvik 11-30 is 16 days early. Examples: Tromsø 11-16..11-26, Murmansk
@@ -283,15 +285,15 @@ time. The same flag is set if user adjustments push Asr past Maghrib.
 
 ## P2: authority tables (pending)
 
-Blocked on open decision §11.6 (launch regions and their published tables). No reference tables have been chosen
-or invented. When §11.6 is decided, add each region's table here with its source and edition, compare all six
-times (2 min; 3 min for Fajr and Isha), and look for systematic offsets. Published tables are usually rounded to
-the minute, and the port returns seconds, so compare after the table's own rounding.
+This section is blocked until the decision in §11.6 settles launch regions and their published tables. No
+reference tables have been chosen or invented. When §11.6 is decided, add each region's table here with its source
+and edition, compare all six times (2 min; 3 min for Fajr and Isha), and look for systematic offsets. Published
+tables are usually rounded to the minute, and the port returns seconds, so compare after the table's own rounding.
 
 ## P3: edge cases
 
-`PrayerTimesEdgeCaseTests.swift`. The gate fails on a nil result, a negative night, or Fajr after sunrise. All
-cases pass. Documented behaviour is marked.
+`PrayerTimesEdgeCaseTests.swift` runs the gate. The gate fails on a nil result, a negative night, or Fajr after
+sunrise. All cases pass. The table marks documented behaviour.
 
 | Case | Place, dates | Asserted |
 | --- | --- | --- |
@@ -310,8 +312,8 @@ cases pass. Documented behaviour is marked.
 ## P4: cross-platform (Android, later)
 
 Android wraps `adhan-kotlin` behind the same port signature. It runs this same `vectors.json` with the same four
-classes, conditions and bounds, which are this grid's and hold to about 62° (see [Results](#results)). To make the
-platforms comparable, the Kotlin adapter must copy this configuration:
+classes, conditions and bounds. These come from this grid and hold to about 62° (see [Results](#results)). To
+make the platforms comparable, the Kotlin adapter must copy this configuration:
 
 - the explicit rule with `twilightAngle` as the default;
 - no rounding, except where a preset rounds up;
@@ -321,6 +323,6 @@ platforms comparable, the Kotlin adapter must copy this configuration:
 - all-or-nothing `null`s;
 - Asr outside (Dhuhr, Maghrib] replaced by Maghrib, flagged `asrClamped`.
 
-The gate allows 0 s difference between platforms for the same Adhan algorithm version and 1 min across versions. A
-change of the Swift pin re-runs P1 here first. If class counts or maxima move, this file is updated in the same
-change.
+The gate allows 0 s difference between platforms for the same Adhan algorithm version and 1 min across versions.
+When the Swift pin changes, rerun P1 here first. Update this file in the same change if class counts or maxima
+move.

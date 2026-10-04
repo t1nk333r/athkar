@@ -1,20 +1,22 @@
 # Athkar
 
-Arabic-first, offline-first PWA for morning and evening adhkar, published with GitHub Pages at
-https://t1nk333r.github.io/athkar/. The app is a single `index.html` plus `sw.js`, `manifest.webmanifest`,
-bundled icons, and the KFGQPC Uthman Taha Naskh font. There is no build step: editing `index.html`
-and bumping `CACHE_NAME` in `sw.js` is how a change ships.
+This Arabic-first, offline-first PWA for morning and evening adhkar is published with GitHub Pages at
+https://t1nk333r.github.io/athkar/. The app consists of a single `index.html`, `sw.js`, bundled icons, and the
+KFGQPC Uthman Taha Naskh font. The app has no build step. To ship a change, edit `index.html` and bump
+`CACHE_NAME` in `sw.js`.
 
-Content packs in `content/` are the source of truth for adhkar, ruqyah and suwar text (`suwar.v1.json`: al-Kahf,
-Ya-Sin, as-Saffat, al-Waqi'a, al-Mulk in pages for the «سور» tab; not in `manifest.json` until the iOS app bundles it). After changing
-adhkar or suwar data in `index.html` (or a pack), keep them in sync and run
-`node tools/content-validate.mjs` and `node tools/content-export-pwa.mjs --check --ruqyah ../ruqyah-al-qareen/content.js`.
-Behaviour fixtures in `spec/` are regenerated with `node tools/fixtures-generate.mjs`; see `spec/README.md`.
+Content packs in `content/` are the source of truth for adhkar, ruqyah, and suwar text. The `suwar.v1.json`
+pack contains al-Kahf, Ya-Sin, as-Saffat, al-Waqi'a, and al-Mulk in pages for the «سور» tab. The iOS app bundles
+it, so it is not in `manifest.json` until then. When you change adhkar or suwar data in `index.html` or a pack,
+keep the data in sync. Then run `node tools/content-validate.mjs` and
+`node tools/content-export-pwa.mjs --check --ruqyah ../ruqyah-al-qareen/content.js`.
+Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`. See `spec/README.md`.
 After changing the REVIEW.md rules in `tools/content-validate.mjs`, run `node tools/content-review-test.mjs`.
 
-Planning documents: [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) is the current stack and sequencing
-decision (Swift/SwiftUI iOS first, Kotlin/Compose later); [`MOBILE_APP_PLAN.md`](MOBILE_APP_PLAN.md)
-holds the domain, content-governance, privacy, and publisher-identity detail.
+The planning documents are [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) and
+[`MOBILE_APP_PLAN.md`](MOBILE_APP_PLAN.md). The first sets the current stack and sequencing decision
+(Swift/SwiftUI for iOS first, Kotlin/Compose later). The second covers domain, content-governance, privacy, and
+publisher-identity details.
 
 ## Agent skills
 

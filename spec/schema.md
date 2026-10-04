@@ -41,8 +41,8 @@ primary key below matches what migration `v1` creates. Update this file in the s
 
 ### `settings`
 
-Key/value settings. Holds appearance and deck preferences (mirrored in the backup envelope) and the calculation
-profile (`CalculationSettings`, spec/prayer-times/README.md).
+This table stores key/value settings for appearance and deck preferences (mirrored in the backup envelope) and
+for the calculation profile (`CalculationSettings`, spec/prayer-times/README.md).
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -66,12 +66,12 @@ profile (`CalculationSettings`, spec/prayer-times/README.md).
 | `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |
 | `hijri_offset` | integer days | `0` | none |
 
-Defaults are applied on read and never written. A row exists only once the user (or an import) sets a
-value, so an import at onboarding is not shadowed by rows the app invented.
+Apply defaults when reading settings, and never write them. A row exists only after the user or an import sets a
+value. This prevents an onboarding import from being shadowed by rows the app created.
 
 ### `content_installs`
 
-The installed version of each bundled content pack (§5.4).
+This table records the installed version of each bundled content pack (§5.4).
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -82,7 +82,8 @@ The installed version of each bundled content pack (§5.4).
 
 ### `adhkar_days`
 
-One row per (date, period) whose adhkar session is complete. Replaces the PWA's 7-entry `history`.
+This table stores one row per (date, period) whose adhkar session is complete. It replaces the PWA's 7-entry
+`history`.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -93,8 +94,8 @@ One row per (date, period) whose adhkar session is complete. Replaces the PWA's 
 
 ### `adhkar_item_progress`
 
-Tap counts and chosen targets per item, per (date, period). Today's rows are the live counters. Past days keep
-their rows, and are not collapsed to booleans as the PWA's `rollStateToDate` does.
+This table stores each item's tap counts and chosen targets for each (date, period). Today's rows hold the live
+counters. The PWA's `rollStateToDate` collapses past days to booleans; this table keeps their rows.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -112,7 +113,7 @@ maps. `target` is stored per day, so changing a target tomorrow does not rewrite
 
 ### `ruqyah_days`
 
-One row per local date on which every ruqyah segment was completed (`ruqyah-daily-v1.history`).
+This table stores one row per local date on which every ruqyah segment was completed (`ruqyah-daily-v1.history`).
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -161,7 +162,7 @@ The adhkar rules default to `fajr` + 60 and `asr` + 60, which reproduces the PWA
 
 ### `location_profiles`
 
-1.0 has at most one profile.
+Version 1.0 allows at most one profile.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -184,8 +185,8 @@ doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` →
 
 ## Invariants
 
-- An adhkar period is complete for a date if and only if an `adhkar_days` row exists. Writers keep the row in
-  step with the counters and with manual completion.
+- An adhkar period is complete for a date if and only if an `adhkar_days` row exists. Writers update the row to
+  match the counters and manual completion.
 - Readers clamp counters to the effective target, exactly as `countForState` does: floor, then
   `min(count, target)`. Storage keeps raw counts.
 - A `review`-kind item never takes part in completion (`periodCountersComplete`).
@@ -194,47 +195,47 @@ doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` →
 
 ## Session state bridge
 
-The session rules work on the PWA's `athkar-progress-v2` shape (`SessionState`). `AdhkarSessionStore` converts
-between it and the adhkar tables, so the rules and their fixtures stay the contract.
+The session rules use the PWA's `athkar-progress-v2` shape (`SessionState`). `AdhkarSessionStore` converts
+between that shape and the adhkar tables. The rules and their fixtures define the contract.
 
 **Load** (`load(date:)`) builds the state for one local date:
 
-- `progress[p]` / `targets[p]`: that date's `adhkar_item_progress` rows with a non-null `count` / `target`, as
-  numbers.
-- `completedAt[p]`: the `adhkar_days` row's `completed_at` (null without a row, or when the row has none).
-- `manualCompletion[p]`: true if and only if the row's `completion_origin` is not `counters`. An `import` row on
-  the loaded date comes from a file whose `today.date` was ahead of this device (exported just after midnight,
-  or in a zone further east). The file says only that the period was complete, which in the PWA's shape is a
-  manual completion. Loading it as incomplete would delete it on the next save.
-- `history`: the 7 newest earlier dates with an `adhkar_days` row, newest first. A period is `true` if and only
-  if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
+- `progress[p]` and `targets[p]` contain numbers from that date's `adhkar_item_progress` rows. Include only
+  non-null `count` values in `progress[p]` and non-null `target` values in `targets[p]`.
+- Set `completedAt[p]` to the row's `completed_at`. Use null when no row exists or its value is null.
+- `manualCompletion[p]` is true if and only if the row's `completion_origin` is not `counters`. An `import` row
+  on the loaded date comes from a file whose `today.date` was ahead of this device (exported just after midnight,
+  or in a zone further east). The file records only that the period was complete, which the PWA represents as a
+  manual completion. If the store loaded it as incomplete, the next save would delete it.
+- Set `history` to the 7 newest earlier dates with an `adhkar_days` row, newest first. A period is `true` if and
+  only if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
 
 **Save** (`save(_:)`) makes the rows for `state.date` match the state, in one transaction:
 
-- Item rows are upserted and deleted to match the union of `progress[p]` and `targets[p]`. Unchanged rows keep
-  their `updated_at`.
-- Each period has an `adhkar_days` row if and only if the rules call it complete (`isComplete`). The origin is
-  `counters` unless `manualCompletion`. A manual completion keeps an existing `import` origin, and is `manual`
-  otherwise.
-- `history` is not written. Earlier days' rows were written when those days were live.
+- Upsert or delete item rows to match the union of `progress[p]` and `targets[p]`. Unchanged rows keep their
+  `updated_at`.
+- Store an `adhkar_days` row for each period if and only if the rules call it complete (`isComplete`). Set its
+  origin to `counters` unless `manualCompletion` is true. A manual completion keeps an existing `import` origin;
+  otherwise, set the origin to `manual`.
+- Do not write `history`. The store wrote earlier days' rows when those dates were current.
 
-Save followed by load gives back the same state, except for these shapes, which the tables cannot hold. Each is
-reduced to what the rules read from it, so `count(for:)`, `target(for:)`, `isComplete`, and deck order do not
-change:
+Saving and then loading returns the same state except for the shapes below, which the tables cannot store. The
+store reduces each shape to the values the rules read, so `count(for:)`, `target(for:)`, `isComplete`, and deck
+order remain unchanged:
 
-- A counter that is not a non-negative integer number (a string, boolean, fraction, negative, or non-finite
-  value). It is stored as `floor(Number(value))`, and dropped when that is not a finite number ≥ 0. A counter
-  above 2^53 − 1 is stored as 2^53 − 1, far above every target.
-- A target that is not an integer number ≥ 0 after `Number()`. It is stored as that integer, or dropped: a
-  non-integer can never match a target option, so it already means the default.
-- `progress[p]` or `targets[p]` held as an array rather than an object. It has only index keys, which match no
-  content item ID, so it is stored as no entries.
-- A `completedAt[p]` on a period that is not complete (a stale stamp; syncing clears it). It is dropped. A
-  `completedAt[p]` that is not an ISO-8601 UTC instant is stored as null.
-- A history entry with `morning` and `evening` both false (the PWA rolls one over for a day with nothing
-  complete). It is not stored, so it is absent after load.
-- More than one history entry for a date, or history entries not newest-first. Load returns one entry per
-  date, newest first.
+- For a counter that is not a non-negative integer number (a string, boolean, fraction, negative, or non-finite
+  value), store `floor(Number(value))`. Drop it if the result is not a finite number ≥ 0. Store a counter above
+  2^53 − 1 as 2^53 − 1, far above every target.
+- After applying `Number()`, store a target if the result is an integer number ≥ 0. Otherwise, drop it. A
+  non-integer cannot match a target option, so it already means the default.
+- If `progress[p]` or `targets[p]` is an array rather than an object, it has only index keys, which match no
+  content item ID. Store no entries.
+- Drop `completedAt[p]` when its period is incomplete (a stale stamp; syncing clears it). Store it as null if it
+  is not an ISO-8601 UTC instant.
+- Do not store a history entry when `morning` and `evening` are both false (the PWA rolls one over for a day with
+  nothing complete). The entry is absent after load.
+- If history has more than one entry for a date or lists entries out of newest-first order, load returns one
+  entry per date, newest first.
 
 **Scoped reset** (`save(_:removing:)`) is the PWA's `resetWeek` / `resetEverything`. The caller first resets the
 state with `SessionState.resetWeek(now:timeZone:)` or `resetEverything()`. Then, in one transaction, the store
@@ -245,8 +246,8 @@ as `save(_:)` does:
   `.all` covers every date.
 - Both periods are reset together, as in the PWA. Earlier days lose all their rows in scope, including counts and
   chosen targets. Today keeps only its chosen targets, which `resetDay` does not clear.
-- Because deleting and re-saving happen in one transaction, history is never deleted while today's counters
-  survive, or the other way round.
+- The store deletes and re-saves rows in one transaction. It never deletes history while today's counters survive,
+  or today's counters while history survives.
 - The day reset (`resetDay`) is a plain `save(_:)`. It deletes no history.
 - The confirmation copy counts recorded days with `AdhkarRepository.completedDayCount(removal, before: today)`.
   That is the number of distinct earlier dates in scope with an `adhkar_days` row. Native history is unbounded,
@@ -260,32 +261,42 @@ it.
 The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repeat` on read) and today's
 `ruqyah_days` row.
 
-- **Counting.** `setCount(_:for:on:completingDayAt:)` upserts the segment row. When that reading completes
-  every segment, it also inserts today's `ruqyah_days` row with `completion_origin = counters`, in the same
-  transaction. An existing row is never replaced, so the first completion time is kept (the PWA's
-  `recordToday`). Resetting one segment writes `count = 0`.
+- **Counting.** `setCount(_:for:on:completingDayAt:)` upserts the segment row. When that reading completes every
+  segment, the method also inserts today's `ruqyah_days` row with `completion_origin = counters` in the same
+  transaction. The method never replaces an existing row, so it preserves the first completion time as in the
+  PWA's `recordToday`. Resetting one segment sets `count = 0`.
 - **Scoped reset.** `resetCounts(on:removing:)` runs in one transaction:
   - It sets every non-zero count of that date to 0 (`resetDayProgress`). The rows are kept.
   - With `.week(...)` or `.all`, it also deletes the `ruqyah_days` rows in scope, today included.
   - With no removal (تقدم اليوم, or «بدء رقية جديدة» in the completion dialog), today's `ruqyah_days` row
     stays. Today remains recorded complete.
-- **Confirmation copy.** It counts `dayCount(removal)`, today included, as in the PWA.
+- **Confirmation copy.** The confirmation copy uses `dayCount(removal)`, which counts days including today, as in
+  the PWA.
 
 ## Backup import (envelope v1)
 
-Import validates the whole file first. It rejects everything `spec/backup/envelope-v1.schema.json` and
-`tools/backup-validate.mjs` reject: a file that is not UTF-8 (one leading BOM is ignored) or not one JSON document,
-unknown keys at any depth, `null` for an optional section or key, sections not allowed for `meta.app`
-(athkar-pwa: `adhkar`, `reminders`, `preferences` required, no `ruqyah`; ruqyah-pwa: `ruqyah`, `preferences`
-required, no `adhkar` or `reminders`), `longOrder`/`longOrderPromptAnswered` present in a ruqyah file or missing
-from an athkar file, dates that are not calendar days (years 0000–9999, proleptic Gregorian), instants that are
-not real UTC times, adhkar history that is not strictly newest-first, has more than 7 entries, or has an entry on
-or after `adhkar.today.date`, more than 365 ruqyah history entries or any after `ruqyah.today.date`, item or
-segment IDs containing U+0000 (SQLite would store them truncated), and counts or targets that are negative,
-non-finite, or above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`). The JSON is read as `JSON.parse` reads it: a
-duplicate key keeps its last value, a number below the `Double` range is 0, and a lone surrogate escape is a
-string (U+FFFD in Swift). It then merges the file in one transaction, so a file that fails validation changes
-nothing. Imported rows get `updated_at = meta.exportedAt`, which makes import deterministic.
+Import validates the whole file first. It rejects everything that `spec/backup/envelope-v1.schema.json` and
+`tools/backup-validate.mjs` reject:
+
+- a file that is not UTF-8 (one leading BOM is ignored) or not one JSON document;
+- unknown keys at any depth;
+- `null` for an optional section or key;
+- sections not allowed for `meta.app`. An athkar-pwa file requires `adhkar`, `reminders` and `preferences` and
+  has no `ruqyah`. A ruqyah-pwa file requires `ruqyah` and `preferences` and has no `adhkar` or `reminders`;
+- `longOrder`/`longOrderPromptAnswered` present in a ruqyah file or missing from an athkar file;
+- dates that are not calendar days (years 0000–9999, proleptic Gregorian), and instants that are not real UTC
+  times;
+- adhkar history that is not strictly newest-first, has more than 7 entries, or has an entry on or after
+  `adhkar.today.date`;
+- more than 365 ruqyah history entries, or any entry after `ruqyah.today.date`;
+- item or segment IDs containing U+0000, which SQLite would store truncated;
+- counts or targets that are negative, non-finite, or above 2^53 − 1 (`Number.MAX_SAFE_INTEGER`).
+
+Import reads the JSON the way `JSON.parse` does. A duplicate key keeps its last value, a number below the
+`Double` range is 0, and a lone surrogate escape is a string (U+FFFD in Swift).
+
+Import then merges the file in one transaction, so a file that fails validation changes nothing. Imported rows
+get `updated_at = meta.exportedAt`, which makes import deterministic.
 
 ### Mapping
 

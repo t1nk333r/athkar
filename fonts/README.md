@@ -1,16 +1,18 @@
 # Fonts
 
-Both fonts are published by the King Fahd Glorious Quran Printing Complex (KFGQPC) and are bundled unmodified. Their
-end-user licence, embedded in each file (name record 13), grants free use, copying and distribution, and forbids
-selling, modifying, translating or reverse engineering the font software.
+The King Fahd Glorious Quran Printing Complex (KFGQPC) publishes both fonts. The app bundles them unmodified.
+The end-user licence in each file's name record 13 permits free use, copying, and distribution. It forbids
+selling, modifying, translating, or reverse engineering the font software.
 
 | File | Font | Source | Used for |
 |------|------|--------|----------|
 | `kfgqpc-uthman-taha-naskh.ttf` | KFGQPC Uthman Taha Naskh 2.0 | https://fonts.qurancomplex.gov.sa/ | Ayah markers ﴿ ﴾ (both PWAs, iOS) |
 | `kfgqpc-hafs-v30.ttf` | KFGQPC HAFS Uthmanic Script 3.0 (`KFGQPC Hafs V30.ttf` in `KFGQPC-Hafs-V30.zip`, SHA-256 `c9dd7e71…c47a`) | https://fonts.qurancomplex.gov.sa/hafs-reading/ | Quran text: ruqyah pages and the adhkar Quran cards (both PWAs, iOS) |
 
-Uthman Taha has no glyphs for several Uthmani marks the ruqyah text uses (ٱ, U+06ED, U+06E2, U+06E5, U+06E6, U+06DF,
-waqf signs). Core Text sets such a letter in a fallback font and breaks its join with the letter before, so the
-ruqyah pages and the adhkar Quran items (Uthmani since adhkar 1.1.0) use HAFS, converted to the Complex's encoding by `MushafEncoding.kfgqpc` (AthkarCore).
-`content/reference/kfgqpc-hafs.ruqyah.json` is the Complex's text of every ruqyah ayah, which that conversion is
-tested against.
+Uthman Taha lacks glyphs for the Uthmani marks used in the ruqyah text: ٱ, U+06ED, U+06E2, U+06E5, U+06E6,
+U+06DF, and waqf signs. Core Text uses a fallback font for a missing mark. This breaks its join with the preceding letter.
+The ruqyah pages and adhkar Quran items therefore use HAFS.
+The adhkar Quran items have used Uthmani text since adhkar 1.1.0. The app converts HAFS to the Complex's
+encoding with `MushafEncoding.kfgqpc` (AthkarCore).
+The Complex's text of every ruqyah ayah is in `content/reference/kfgqpc-hafs.ruqyah.json`. Tests compare
+that conversion against this file.

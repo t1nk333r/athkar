@@ -1,8 +1,8 @@
-# Domain Docs
+# Domain docs
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+Use this guidance when engineering skills explore the codebase's domain documentation.
 
-This repo is **single-context**: one `CONTEXT.md` and one `docs/adr/` at the repo root. Neither exists yet.
+This repo is single-context. It has one `CONTEXT.md` and one `docs/adr/` at the repo root. Neither exists yet.
 
 ## Before exploring, read these
 
@@ -28,12 +28,12 @@ If this ever becomes a multi-package repo, re-run the setup skill to switch to a
 
 ## Use the glossary's vocabulary
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+When your output names a domain concept in an issue title, refactor proposal, hypothesis, or test name, use the
+term defined in `CONTEXT.md`. Do not replace glossary terms with synonyms that it explicitly avoids.
 
-If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+If you are inventing a term the project does not use, reconsider it. If the glossary has a real gap, note it for
+`/domain-modeling`.
 
-## Flag ADR conflicts
-
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
+If your output contradicts an existing ADR, state that directly instead of overriding it silently:
 
 > _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
