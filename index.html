@@ -2142,7 +2142,7 @@
         </button>
         <div class="deck-navigation" role="group" aria-label="أدوات المسبحة">
           <button class="deck-button" id="tasbih-undo" type="button" aria-label="تراجع عن العدّة الأخيرة" disabled>تراجع</button>
-          <output class="card-position" id="tasbih-total">اليوم: ٠</output>
+          <output class="card-position" id="tasbih-total" aria-live="off">اليوم: ٠</output>
           <button class="deck-button" id="tasbih-reset" type="button" disabled>
             <span aria-hidden="true">↻</span><span>إعادة</span>
           </button>
@@ -5735,15 +5735,15 @@
       return text.replace(/[\u064B-\u065F\u0670]/g, "");
     }
 
-    // Tatweel and invisible format characters (ZWSP, ZWNJ, ZWJ, LRM, RLM, ALM) are dropped from typed phrases, and
-    // Urdu heh goal (ہ) is read as heh (ه).
+    // Tatweel and invisible format characters (ZWSP, ZWJ, LRM, RLM, ALM) are dropped from typed phrases, ZWNJ (a soft
+    // space on Persian-style keyboards) reads as a space, and Urdu heh goal (ہ) as heh (ه).
     function stripTasbihInvisibles(text) {
-      return text.replace(/[\u0640\u200B-\u200F\u061C]/g, "").replace(/\u06C1/g, "\u0647");
+      return text.replace(/\u200C/g, " ").replace(/[\u0640\u200B\u200D-\u200F\u061C]/g, "").replace(/\u06C1/g, "\u0647");
     }
 
-    // Typed phrases are compared without tashkeel, with أ إ آ ٱ read as ا and ى as ي.
+    // Typed phrases are compared without tashkeel, with أ إ آ ٱ read as ا and ى as ي, and runs of spaces as one.
     function tasbihMatchKey(text) {
-      return stripTashkeel(stripTasbihInvisibles(text)).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي");
+      return stripTashkeel(stripTasbihInvisibles(text)).replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/\s+/g, " ").trim();
     }
 
     // The saved form of a typed phrase, or "" when nothing is left once marks and invisible characters are removed.
@@ -5760,10 +5760,16 @@
       return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
     }
 
-    function isTasbihKey(key) {
-      if (typeof key !== "string") return false;
-      if (Object.hasOwn(tasbihPresetById, key)) return true;
-      return key.startsWith("c:") && key.length > 2 && cleanTasbihPhrase(key.slice(2)) === key.slice(2);
+    // The key a stored key stands for today: a preset id, or "c:" + the cleaned spelling of a saved phrase it matches,
+    // or of itself. Keys written before the current cleaning (tatweel, ہ, invisible characters) thus migrate to the
+    // spelling now saved. A key with nothing left once cleaned keeps its original form, so its counts are not lost.
+    function canonicalTasbihKey(key, custom) {
+      if (typeof key !== "string") return null;
+      if (Object.hasOwn(tasbihPresetById, key)) return key;
+      if (!key.startsWith("c:") || key.length > 2 + 4 * tasbihMaxPhraseLength) return null;
+      const cleaned = cleanTasbihPhrase(key.slice(2));
+      if (!cleaned) return key.slice(2).trim() ? key : null;
+      return findTasbihPhrase(cleaned, custom) ?? `c:${cleaned}`;
     }
 
     // The preset or saved phrase a typed phrase stands for: its key, or null.
@@ -5775,11 +5781,14 @@
       return saved === undefined ? null : `c:${saved}`;
     }
 
-    function tasbihCounts(value) {
+    // Counts keyed by canonical key; old keys that now converge on one key are summed (first occurrence keeps its
+    // place), then capped.
+    function tasbihCounts(value, custom) {
       const counts = {};
       if (!value || typeof value !== "object" || Array.isArray(value)) return counts;
       for (const [key, count] of Object.entries(value)) {
-        if (isTasbihKey(key) && Number.isInteger(count) && count > 0) counts[key] = Math.min(count, tasbihMaxCount);
+        const canonical = canonicalTasbihKey(key, custom);
+        if (canonical && Number.isInteger(count) && count > 0) counts[canonical] = Math.min((counts[canonical] ?? 0) + count, tasbihMaxCount);
       }
       return counts;
     }
@@ -5798,19 +5807,19 @@
         const text = typeof phrase === "string" ? cleanTasbihPhrase(phrase) : "";
         if (text && !findTasbihPhrase(text, normalized.custom)) normalized.custom.push(text);
       }
-      const selected = parsed.selected;
-      if (isTasbihKey(selected) && (Object.hasOwn(tasbihPresetById, selected) || normalized.custom.includes(selected.slice(2)))) {
+      const selected = canonicalTasbihKey(parsed.selected, normalized.custom);
+      if (selected && (Object.hasOwn(tasbihPresetById, selected) || normalized.custom.includes(selected.slice(2)))) {
         normalized.selected = selected;
       }
-      normalized.counts = tasbihCounts(parsed.counts);
+      normalized.counts = tasbihCounts(parsed.counts, normalized.custom);
       const firstUse = Array.isArray(parsed.firstUse)
-        ? parsed.firstUse.filter(key => typeof key === "string" && Object.hasOwn(normalized.counts, key))
+        ? parsed.firstUse.map(key => canonicalTasbihKey(key, normalized.custom)).filter(key => key && Object.hasOwn(normalized.counts, key))
         : [];
       normalized.firstUse = [...new Set([...firstUse, ...Object.keys(normalized.counts)])];
       const history = parsed.history && typeof parsed.history === "object" && !Array.isArray(parsed.history) ? parsed.history : {};
       for (const [day, entry] of Object.entries(history)) {
         if (!isRealDateKey(day) || day >= date) continue;
-        const counts = tasbihCounts(entry);
+        const counts = tasbihCounts(entry, normalized.custom);
         if (Object.keys(counts).length) normalized.history[day] = counts;
       }
       normalized.history = trimDailyHistory(normalized.history);
@@ -6147,6 +6156,8 @@
 
 
     function updateDeckNavigation() {
+      // The tasbih has no deck; its own controls are drawn by renderTasbih.
+      if (activePeriod === "tasbih") return;
       const items = activeItems();
       const index = activeIndex();
       const item = items[index];
@@ -7882,10 +7893,11 @@
     });
 
     // Touch and pen count on each finger lift on the card, so overlapping taps of two thumbs count twice; a lift after
-    // the pointer moved (a drag) or a pointercancel (a scroll) does not count, and the click a touch then synthesises is
-    // ignored. Mouse counts once per click, and the keyboard (Enter, Space) through the button's own click (detail 0).
+    // the pointer moved (a drag) or a pointercancel (a scroll) does not count. The compatibility click a touch then
+    // produces is ignored: by its pointerType where click is a PointerEvent, otherwise as the one click that follows a
+    // lift within 800 ms and 30 px. Mouse counts once per click, the keyboard (Enter, Space) through the button's click.
     const tasbihTouches = new Map();
-    let tasbihTouchCountedAt = -Infinity;
+    let tasbihLastLift = null;
     tasbihSurface.addEventListener("pointerdown", event => {
       if (event.pointerType === "mouse") return;
       tasbihTouches.set(event.pointerId, { x: event.clientX, y: event.clientY, moved: false });
@@ -7899,13 +7911,20 @@
       const touch = tasbihTouches.get(event.pointerId);
       tasbihTouches.delete(event.pointerId);
       if (!touch) return;
-      tasbihTouchCountedAt = performance.now();
+      tasbihLastLift = { at: performance.now(), x: event.clientX, y: event.clientY };
       const rect = tasbihSurface.getBoundingClientRect();
       const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
       if (!touch.moved && inside) addTasbihCount();
     });
     tasbihSurface.addEventListener("click", event => {
-      if (event.detail !== 0 && performance.now() - tasbihTouchCountedAt < 800) return;
+      if (event.pointerType === "touch" || event.pointerType === "pen") return;
+      if (!event.pointerType && event.detail !== 0 && tasbihLastLift) {
+        const lift = tasbihLastLift;
+        if (performance.now() - lift.at < 800 && Math.hypot(event.clientX - lift.x, event.clientY - lift.y) <= 30) {
+          tasbihLastLift = null;
+          return;
+        }
+      }
       addTasbihCount();
     });
     // A held Enter repeats the button's activation; one press adds exactly one (Space already activates on key-up).
