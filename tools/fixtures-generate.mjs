@@ -1800,6 +1800,7 @@ function transferPropertyCases() {
 
 function applyCase(name, local, incoming, { fault, stuck, change, memoryMode, nextDay } = {}) {
   prepareTransfer();
+  api.setTransferJournal(null);
   const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
   loadStorage(local);
   const stored = fn.transferLocalFromStorage(fn.readTransferStorage());
@@ -1818,10 +1819,23 @@ function applyCase(name, local, incoming, { fault, stuck, change, memoryMode, ne
   const after = storageMap();
   const unchanged = change ? { ...local, [change[0]]: change[1] } : local;
   let nextStart;
+  let sessionAfter;
   if (stuck) {
     // The rollback could not restore a key: the record is marked, and the next start puts every key back.
     const record = JSON.parse(after["athkar-transfer-pending-v1"] ?? "null");
     if (!record?.rollback) throw new Error(`${name}: the pending record is not marked for rollback`);
+    // The rest of this session: the record's keys are held, so a save and a second transfer write nothing.
+    const held = storageMap();
+    if (!api.getTransferJournal()) throw new Error(`${name}: the session does not hold the record`);
+    fn.saveState();
+    fn.saveSuwarState();
+    fn.saveTasbihState();
+    const secondTransfer = plain(fn.applyTransfer(intoContext(plan)));
+    if (secondTransfer.ok || JSON.stringify(storageMap()) !== JSON.stringify(held)) throw new Error(`${name}: the session wrote held keys`);
+    sessionAfter = { saves: "nothing written", secondTransfer };
+    // The next start, storage working again.
+    api.setTransferJournal(null);
+    api.setTasbihStorageWorks(true);
     const recovered = plain(fn.recoverTransferPending());
     nextStart = { recovered, storage: storageMap() };
     if (JSON.stringify(sortDeep(nextStart.storage)) !== JSON.stringify(sortDeep(unchanged))) throw new Error(`${name}: the next start did not restore storage`);
@@ -1838,7 +1852,7 @@ function applyCase(name, local, incoming, { fault, stuck, change, memoryMode, ne
       ...(stuck ? { stuckKeys: stuck } : {}), ...(memoryMode ? { tasbihMemoryMode: true } : {}),
       ...(nextDay ? { now: new Date(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30)).toISOString() } : {}), writes: plan.writes
     },
-    expected: { result, storage: after, ...(reapplied ? { sameAgain: reapplied } : {}), ...(nextStart ? { nextStart } : {}) }
+    expected: { result, storage: after, ...(reapplied ? { sameAgain: reapplied } : {}), ...(sessionAfter ? { sessionAfter } : {}), ...(nextStart ? { nextStart } : {}) }
   };
 }
 
@@ -1851,7 +1865,7 @@ function transferApplyCases() {
     applyCase("all writes land; the same plan again is refused (changed): it was planned on other values", s.join, s.history),
     applyCase("the write-ahead record cannot be written: nothing is written (write)", s.join, s.history, { fault: 0 }),
     applyCase("the second write fails: the first is rolled back and the record removed, storage is byte-identical (write)", s.join, s.history, { fault: 2 }),
-    applyCase("the second write fails and the rollback of the first fails too: the record is marked rollback, and the next start restores every key (write)", s.join, s.history, { fault: 2, stuck: [firstKey] }),
+    applyCase("the second write fails and the rollback of the first fails too: the record is marked rollback, the rest of the session holds its keys (a save and a second transfer write nothing), and the next start restores every key (write)", s.join, s.history, { fault: 2, stuck: [firstKey] }),
     applyCase("storage cannot be read: nothing is written (write)", s.join, s.history, { fault: "read" }),
     applyCase("tasbih memory mode: nothing is written (write)", s.join, s.history, { memoryMode: true }),
     applyCase("another tab wrote after the plan: nothing is written (changed)", s.join, s.history, { change: ["athkar-tasbih-v1", JSON.stringify({ ...tasbihStored(), counts: { subhan: 11 } })] }),

@@ -215,6 +215,9 @@
       width: min(100%, var(--content-width));
       margin-inline: auto;
       padding: max(1rem, env(safe-area-inset-top)) clamp(0.75rem, 3.5vw, 1.5rem) max(2rem, env(safe-area-inset-bottom));
+      /* The card-enter slide (translateX ±1rem) moves a card past the edge for a moment; in RTL that is the scrollable
+         side, so the page would gain a few px of sideways scroll. clip (not hidden) makes no scroll container. */
+      overflow-x: clip;
     }
 
     .app-header { margin-block-end: 1.15rem; }
@@ -9812,6 +9815,12 @@
     // (recoverTransferPending), so storage ends with all of the plan's writes or none.
     function applyTransfer(plan) {
       if (transferJournal || !tasbihStorageWorks) return { ok: false, error: "write" };
+      // Never start over (or overwrite) another transfer's write-ahead record, held here or not.
+      try {
+        if (localStorage.getItem(transferPendingKey) !== null) return { ok: false, error: "write" };
+      } catch (_) {
+        return { ok: false, error: "write" };
+      }
       if (plan.today !== localDateKey()) return { ok: false, error: "changed" };
       const current = readTransferStorage();
       if (!current) return { ok: false, error: "write" };
@@ -9847,6 +9856,13 @@
           if (restored) localStorage.removeItem(transferPendingKey);
           else localStorage.setItem(transferPendingKey, JSON.stringify({ ...record, rollback: true }));
         } catch (_) {}
+        if (!restored) {
+          // The rest of this session holds the record's keys (memory mode, no saves, no transfer); the next start
+          // rolls them back.
+          transferJournal = { ...record, rollback: true };
+          tasbihStorageWorks = false;
+          if (activePeriod === "tasbih") renderTasbih({ arc: "jump" });
+        }
         return { ok: false, error: "write" };
       }
       try {

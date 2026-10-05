@@ -242,7 +242,8 @@ the receiver's clock the clock check (§4) and the merge use. A refused code giv
      `setItem`. If that fails, nothing is written (`write`).
   2. Each key of `plan.writes` is written; then the record is removed.
   3. When a key write throws, the keys before it are restored from `plan.before` and the record is removed (`write`).
-     If a restore throws too, the record is kept with `rollback: true`.
+     If a restore throws too, the record is kept with `rollback: true`, and the rest of that session holds its keys as
+     step 4 describes. A transfer never starts while any record is stored (`write`), so no record is overwritten.
   4. At startup, before the stores load, `recoverTransferPending` finishes an interrupted transfer (a closed or crashed
      tab, or step 3's marked record). If every key still holds its planned-on or its new value, all keys get the new
      values (the user confirmed them), or the planned-on ones for a `rollback` record; then the record goes. If any key
