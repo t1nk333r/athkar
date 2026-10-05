@@ -81,7 +81,7 @@ const functions = [
   // athkar-tasbih-v1 load: normalisation (phrase-key migration) and rollover
   "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
   "canonicalTasbihKey", "findTasbihPhrase", "tasbihCounts", "normalizeTasbihState", "tasbihDayCounts",
-  "rollTasbihStateToDate", "loadTasbihState",
+  "rollTasbihStateToDate", "readTasbihState", "loadTasbihState",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",

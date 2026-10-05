@@ -5521,7 +5521,7 @@
     let state = loadState();
     let suwarState = loadSuwarState();
     let tasbihState = loadTasbihState();
-    // False once athkar-tasbih-v1 cannot be written: the session then counts in memory and stops rereading storage.
+    // False once athkar-tasbih-v1 cannot be read or written: the session then counts in memory and stops rereading it.
     let tasbihStorageWorks = true;
     let tasbihAnnounceTimer = null;
     let tasbihCapAnnounced = false;
@@ -5912,9 +5912,13 @@
       return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history) };
     }
 
-    function loadTasbihState() {
+    // The stored state rolled to today's date, or null when storage cannot be read at all. A missing or malformed value
+    // gives the defaults; a read that throws must not, or a reread would replace this tab's counts with zeros.
+    function readTasbihState() {
+      let raw;
+      try { raw = localStorage.getItem(tasbihStorageKey); } catch (_) { return null; }
       try {
-        const parsed = JSON.parse(localStorage.getItem(tasbihStorageKey));
+        const parsed = JSON.parse(raw);
         const normalized = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? normalizeTasbihState(parsed) : emptyTasbihState();
         const today = localDateKey();
         return normalized.date === today ? normalized : rollTasbihStateToDate(normalized, today);
@@ -5923,19 +5927,26 @@
       }
     }
 
+    function loadTasbihState() {
+      return readTasbihState() ?? emptyTasbihState();
+    }
+
     function saveTasbihState() {
       try {
         localStorage.setItem(tasbihStorageKey, JSON.stringify(tasbihState));
-        tasbihStorageWorks = true;
       } catch (_) {
         tasbihStorageWorks = false;
       }
     }
 
     // Every change rereads athkar-tasbih-v1 first, applies itself to what is stored, and saves at once: another tab's
-    // newer counts, resets and settings are never written over by this tab's older copy.
+    // newer counts, resets and settings are never written over by this tab's older copy. A read that throws keeps this
+    // tab's state and leaves it in memory mode for the rest of the session.
     function refreshTasbihState() {
-      if (tasbihStorageWorks) tasbihState = loadTasbihState();
+      if (!tasbihStorageWorks) return;
+      const stored = readTasbihState();
+      if (stored) tasbihState = stored;
+      else tasbihStorageWorks = false;
     }
 
     function tasbihHasResettableState() {
@@ -7047,8 +7058,8 @@
 
     // Shows what another tab saved (a storage event), or what it may have saved while this one was hidden.
     function showStoredTasbihState() {
+      refreshTasbihState();
       if (!tasbihStorageWorks) return;
-      tasbihState = loadTasbihState();
       if (activePeriod === "tasbih") renderTasbih({ arc: "jump" });
       else sessionReset.disabled = !hasResettableState();
       if (tasbihLabelDialog.open) refreshTasbihPhraseSheet();
