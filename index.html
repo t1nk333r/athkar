@@ -1019,6 +1019,27 @@
     .card-tap-target[aria-disabled="true"] { cursor: default; }
     .dhikr-card:has(.card-tap-target[aria-disabled="true"]) { cursor: default; }
 
+    /* The armed haptic switch (see syncHapticArm): an invisible real switch over the tap area for the one tap that
+       completes. Above the card's content (z-index 1), under its controls (z-index 3). */
+    .haptic-arm {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      inline-size: 100%;
+      block-size: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      opacity: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .haptic-arm[hidden] { display: none; }
+
     .card-content,
     .requirement-row { position: relative; }
 
@@ -1578,6 +1599,7 @@
       padding-inline: 0.8rem;
     }
 
+    #tasbih-panel { position: relative; }
     #tasbih-panel.is-entering { animation: section-in 180ms ease both; }
 
     .tasbih-card {
@@ -1600,7 +1622,8 @@
     }
 
     .tasbih-card:focus-visible { outline: none; }
-    .tasbih-card:active { transform: scale(0.993); }
+    .tasbih-card:active,
+    .tasbih-card.is-armed-press { transform: scale(0.993); }
 
     .tasbih-label {
       display: -webkit-box;
@@ -1996,7 +2019,8 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
-      .tasbih-card:active { transform: translateZ(0); }
+      .tasbih-card:active,
+      .tasbih-card.is-armed-press { transform: translateZ(0); }
     }
 
     @media (prefers-contrast: more) {
@@ -5498,7 +5522,21 @@
     let tasbihState = loadTasbihState();
     let tasbihAnnounceTimer = null;
     let tasbihCapAnnounced = false;
-    let hapticSwitchLabel = null;
+    // The armed haptic switch (syncHapticArm); armed only where it can play the iOS switch haptic: no navigator.vibrate,
+    // the native switch supported, and a touch screen (desktop Safari has the switch but no haptic).
+    const hapticArmAvailable = nativeSwitchSupported && typeof navigator.vibrate !== "function" && navigator.maxTouchPoints > 0;
+    const hapticArm = document.createElement("input");
+    hapticArm.type = "checkbox";
+    hapticArm.setAttribute("switch", "");
+    hapticArm.className = "haptic-arm";
+    hapticArm.tabIndex = -1;
+    hapticArm.setAttribute("aria-hidden", "true");
+    hapticArm.hidden = true;
+    let hapticArmHost = null;
+    const hapticArmTouches = new Map();
+    let hapticArmVerdict = null;
+    const hapticArmDeferMs = 300;
+    let hapticArmDeferTimer = null;
     if (initialRoute.sura) suwarState.selected = initialRoute.sura;
     let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
@@ -6158,6 +6196,8 @@
 
 
     function updateDeckNavigation() {
+      // Every change to the card on screen or its count ends here, so the armed haptic switch follows it.
+      syncHapticArm();
       // The tasbih has no deck; its own controls are drawn by renderTasbih.
       if (activePeriod === "tasbih") return;
       const items = activeItems();
@@ -6252,7 +6292,7 @@
 
     function beginCardSwipe(event) {
       if (!event.isPrimary || event.pointerType === "mouse") return;
-      if (event.target.closest(".card-reset, .target-control, .source-button, select, input, label")) return;
+      if (event.target.closest(".card-reset, .target-control, .source-button, select, input:not(.haptic-arm), label")) return;
 
       const item = list.querySelector("li:not([hidden])");
       if (!item) return;
@@ -6581,34 +6621,84 @@
       updateSessionProgress();
     }
 
-    // The one haptic tick (adhkar completion, tasbih target). navigator.vibrate where it exists (Android); otherwise, on
-    // iOS 17.4+ (native switch support), a click on the label of a hidden `<input type="checkbox" switch>` inside the
-    // tap's user gesture plays WebKit's switch haptic (undocumented WebKit behaviour). «الاهتزاز» gates both paths.
+    // The one haptic tick (adhkar completion, a sura page read, tasbih target) where navigator.vibrate exists (Android).
+    // iOS has no navigator.vibrate: there the tick is the armed switch's own haptic, played by the tap itself
+    // (syncHapticArm), so this does nothing. «الاهتزاز» gates both.
     function triggerHaptic(duration = hapticDurationMs) {
-      if (!hapticsEnabled) return false;
-      if (typeof navigator.vibrate === "function") return navigator.vibrate(duration);
-      if (!nativeSwitchSupported) return false;
-      if (!hapticSwitchLabel) {
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.setAttribute("switch", "");
-        input.tabIndex = -1;
-        hapticSwitchLabel = document.createElement("label");
-        hapticSwitchLabel.setAttribute("aria-hidden", "true");
-        // Kept in the render tree (a display:none control is the riskiest case of this undocumented behaviour) but
-        // off-screen, invisible and inert: fixed positioning keeps it out of layout and scrolling, tabindex -1 out of focus.
-        hapticSwitchLabel.style.cssText = "position:fixed;inset-block-start:-100px;inset-inline-start:0;opacity:0;pointer-events:none";
-        hapticSwitchLabel.append(input);
-        body.append(hapticSwitchLabel);
+      if (!hapticsEnabled || typeof navigator.vibrate !== "function") return false;
+      return navigator.vibrate(duration);
+    }
+
+    // iOS haptic. WebKit plays its switch haptic only when a trusted tap toggles a real `<input type="checkbox" switch>`
+    // inside a user gesture (CheckboxInputType::willDispatchClick); since iOS 26.5 (WebKit bug 309082) a scripted click,
+    // even on the switch's label, no longer plays it. So while the NEXT tap on the surface on screen is the one that
+    // completes (tasbih: count + 1 is a multiple of the target; a dhikr card: its count is target − 1; a sura page: unread),
+    // an invisible switch lies over that surface's tap area and the user's own tap lands on it. Its change event runs the
+    // surface's normal action once (runHapticArmAction); every redraw calls this again, which re-arms or disarms it.
+    // - opacity 0 and appearance none: WebKit needs the switch rendered (it checks for a renderer), not painted; appearance
+    //   none lets it fill the tap area (a native switch keeps its own size) and only skips the thumb animation, which
+    //   WebKit runs separately from the haptic.
+    // - aria-hidden, tabindex -1, never focused (WebKit does not focus a checkbox on a tap), and never inside the control
+    //   that VoiceOver activates: AccessibilityObject::press presses a hit-tested descendant of that control, so a VoiceOver
+    //   double-tap still activates the card or the tasbih button itself, as Enter and Space do. On a card the switch is a
+    //   sibling of .card-tap-target inside the card; on the tasbih it is a sibling of the button, laid over it by
+    //   placeTasbihHapticArm. Either way it is laid out with the surface, so a scroll carries it along.
+    // - WebKit bug 321591: a touch that starts on a switch does not scroll, and its touchend always clicks the switch, even
+    //   after a drag or a lift outside. hapticArmTouches cancels that click, so it does not count, but WebKit may already
+    //   have played the haptic. A pan that starts on the armed surface does not scroll the page (only the completing tap
+    //   is armed); on a card, whose text may overflow and which stays armed while it needs a single tap, the text is
+    //   scrolled by hand (without momentum).
+    function hapticArmTarget() {
+      if (!hapticArmAvailable || !hapticsEnabled || document.visibilityState !== "visible") return null;
+      if (activePeriod === "tasbih") {
+        const target = tasbihState.target;
+        const count = tasbihCount();
+        return target && count < tasbihMaxCount && (count + 1) % target === 0 ? tasbihSurface : null;
       }
-      // Clicking the label focuses its input; give focus back so Enter/Space keep acting on the control in use.
-      const focused = document.activeElement;
-      hapticSwitchLabel.click();
-      if (document.activeElement !== focused) {
-        if (focused instanceof HTMLElement && focused !== body) focused.focus({ preventScroll: true });
-        else document.activeElement?.blur();
+      const item = activeItems()[activeIndex()];
+      if (!item || item.review) return null;
+      const card = document.getElementById(activePeriod === "suwar" ? `page-${item.id}` : item.id);
+      if (!card || card.closest("li")?.hidden) return null;
+      if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
+      return countFor(item) === targetFor(item) - 1 ? card : null;
+    }
+
+    // offset* are whole pixels; a 1 px inset keeps the switch inside the button whatever the rounding.
+    function placeTasbihHapticArm() {
+      hapticArm.style.cssText = `inset:auto;top:${tasbihSurface.offsetTop + 1}px;left:${tasbihSurface.offsetLeft + 1}px;`
+        + `width:${tasbihSurface.offsetWidth - 2}px;height:${tasbihSurface.offsetHeight - 2}px`;
+    }
+
+    // The tasbih counts on the finger's lift, and that lift's compatibility click follows at the same point: it must
+    // not land on a switch armed by that count. So the switch waits until tasbihSurface's click handler has consumed the
+    // lift (it re-syncs), or for hapticArmDeferMs where no click comes.
+    function syncHapticArm() {
+      clearTimeout(hapticArmDeferTimer);
+      let host = hapticArmTarget();
+      if (host === tasbihSurface) {
+        const now = performance.now();
+        if (tasbihPendingLifts.some(lift => now - lift.at < hapticArmDeferMs)) {
+          hapticArmDeferTimer = setTimeout(syncHapticArm, hapticArmDeferMs);
+          host = null;
+        }
       }
-      return true;
+      hapticArmHost = host;
+      hapticArm.checked = false;
+      if (!host) {
+        hapticArm.hidden = true;
+        return;
+      }
+      const container = host === tasbihSurface ? tasbihPanel : host;
+      if (hapticArm.parentNode !== container) container.append(hapticArm);
+      if (host === tasbihSurface) placeTasbihHapticArm();
+      else hapticArm.removeAttribute("style");
+      hapticArm.hidden = false;
+    }
+
+    // The same path as a tap on the surface: a lift on the tasbih, a click on the card's tap target.
+    function runHapticArmAction(host) {
+      if (host === tasbihSurface) addTasbihCount();
+      else host.querySelector(".card-tap-target").click();
     }
 
     function syncCompletionState(period) {
@@ -6869,6 +6959,7 @@
       tasbihTargetButton.setAttribute("aria-label", `تغيير الهدف، الحالي: ${target ? targetText : "بلا هدف"}`);
       if (count < tasbihMaxCount) tasbihCapAnnounced = false;
       sessionReset.disabled = !hasResettableState();
+      syncHapticArm();
     }
 
     function renderTasbihPanel() {
@@ -7940,6 +8031,7 @@
         const byId = tasbihPendingLifts.findIndex(lift => lift.pointerId === event.pointerId);
         if (byId !== -1) {
           tasbihPendingLifts.splice(byId, 1);
+          syncHapticArm();
           return;
         }
       }
@@ -7956,6 +8048,7 @@
         });
         if (nearest !== -1) {
           tasbihPendingLifts.splice(nearest, 1);
+          syncHapticArm();
           return;
         }
         if (touchTyped) return;
@@ -7971,6 +8064,70 @@
     });
     tasbihNumber.addEventListener("animationend", () => tasbihNumber.classList.remove("is-breathing"));
     tasbihStatus.addEventListener("animationend", () => tasbihStatus.classList.remove("is-fresh"));
+    // Touch tracking on the armed haptic switch (WebKit bug 321591, see syncHapticArm). A touch that moved more than
+    // 10 px, was cancelled, or lifted outside the surface does not count: its click on the switch is cancelled
+    // (preventDefault keeps the switch unchecked and fires no change), though WebKit may have played the haptic already.
+    // A finger still down when an earlier lift disarmed the switch gets no click from WebKit (a hidden switch has no
+    // renderer), so its lift runs the action itself, as a lift on the surface would.
+    hapticArm.addEventListener("touchstart", event => {
+      hapticArmVerdict = null;
+      for (const touch of event.changedTouches) {
+        hapticArmTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY, lastY: touch.clientY, moved: false, host: hapticArmHost });
+      }
+      hapticArmHost?.classList.add("is-armed-press");
+    }, { passive: true });
+    hapticArm.addEventListener("touchmove", event => {
+      for (const touch of event.changedTouches) {
+        const record = hapticArmTouches.get(touch.identifier);
+        if (!record) continue;
+        const deltaX = touch.clientX - record.x;
+        const deltaY = touch.clientY - record.y;
+        if (Math.hypot(deltaX, deltaY) > 10) record.moved = true;
+        if (record.moved && record.host && record.host !== tasbihSurface && Math.abs(deltaY) > Math.abs(deltaX)) {
+          const content = record.host.querySelector(".card-content");
+          if (content) content.scrollTop += record.lastY - touch.clientY;
+        }
+        record.lastY = touch.clientY;
+      }
+    }, { passive: true });
+    function endHapticArmTouches(event) {
+      for (const touch of event.changedTouches) {
+        const record = hapticArmTouches.get(touch.identifier);
+        hapticArmTouches.delete(touch.identifier);
+        if (!record?.host) {
+          hapticArmVerdict = "reject";
+          continue;
+        }
+        record.host.classList.remove("is-armed-press");
+        const rect = record.host.getBoundingClientRect();
+        const inside = touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+        const counts = event.type === "touchend" && !record.moved && inside;
+        if (!hapticArm.hidden) hapticArmVerdict = counts && record.host === hapticArmHost ? "count" : "reject";
+        else if (counts && record.host.isConnected && (record.host === tasbihSurface ? activePeriod === "tasbih" : !record.host.closest("li").hidden)) {
+          runHapticArmAction(record.host);
+        }
+      }
+    }
+    hapticArm.addEventListener("touchend", endHapticArmTouches);
+    hapticArm.addEventListener("touchcancel", endHapticArmTouches);
+    // The switch's click is its own: the card's click handlers never see it. A click without a touch (a trackpad) counts.
+    hapticArm.addEventListener("click", event => {
+      event.stopPropagation();
+      const verdict = hapticArmVerdict;
+      hapticArmVerdict = null;
+      if (verdict === "reject") event.preventDefault();
+    });
+    hapticArm.addEventListener("change", () => {
+      const host = hapticArmHost;
+      hapticArmHost = null;
+      hapticArm.checked = false;
+      hapticArm.hidden = true;
+      if (host) runHapticArmAction(host);
+      syncHapticArm();
+    });
+    new ResizeObserver(() => {
+      if (hapticArmHost === tasbihSurface) placeTasbihHapticArm();
+    }).observe(tasbihSurface);
     tasbihUndo.addEventListener("click", undoTasbihCount);
     tasbihResetButton.addEventListener("click", requestTasbihReset);
     tasbihLabelButton.addEventListener("click", openTasbihPhraseSheet);
@@ -8306,6 +8463,7 @@
       hapticsEnabled = hapticsToggle.checked;
       try { localStorage.setItem(hapticsStorageKey, hapticsEnabled ? "on" : "off"); } catch (_) {}
       liveRegion.textContent = hapticsEnabled ? "تم تشغيل الاهتزاز" : "تم إيقاف الاهتزاز";
+      syncHapticArm();
     });
 
     longOrderToggle.addEventListener("change", () => {
@@ -8344,6 +8502,7 @@
       else if (period !== activePeriod) switchPeriod(period, false);
     });
     document.addEventListener("visibilitychange", () => {
+      syncHapticArm();
       if (document.visibilityState !== "visible") return;
       ensureCurrentDay();
       updateReminderControls();
