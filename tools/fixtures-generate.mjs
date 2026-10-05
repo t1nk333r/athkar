@@ -85,7 +85,7 @@ const transferFunctions = [
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
   "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending", "journalHolds",
-  "transferTasbihIdentity", "transferHistoryList",
+  "transferTasbihIdentity", "transferHistoryList", "transferRawTasbihKey",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
   "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
@@ -1678,6 +1678,14 @@ function mergeScenarios() {
     orphanB: device({ tasbih: tasbih({ "c:يَا رَبّ": 2 }) }),
     savedC: device({ tasbih: tasbih({}, { custom: ["يا رب"] }) }),
     orphanReset: device({ tasbih: tasbih({}, { resets: { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00") } }) }),
+    // Two equivalent keys on one side with different epochs: the alias reset later takes the unit whole (2, not 10).
+    aliasEpochs: device({ tasbih: tasbih({ "c:يا رب": 10, "c:يَا رَبّ": 2 }, { resets: { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00") },
+      history: { [YESTERDAY]: { "c:يا رب": 40, "c:يَا رَبّ": 3 } } }) }),
+    // The same in a store whose saved spelling would make the app's own load sum the two keys (a legacy upgrade).
+    aliasLegacy: device({ tasbih: tasbih({ "c:يا رب": 10, "c:يَا رَبّ": 2 }, { custom: ["يا رب"], resets: { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00") } }) }),
+    // An alias with only a reset, newer than the count of the other spelling on the same side: the unit is reset.
+    aliasResetOnly: device({ tasbih: tasbih({ "c:يا رب": 10 }, { resets: { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00"), [`${YESTERDAY}|c:يَا رَبّ`]: at(YESTERDAY, "04:00") },
+      history: { [YESTERDAY]: { "c:يا رب": 5 } } }) }),
     // History over the 31-day window: a full week, two older days, and day tombstones on that week (truncation + tombstones).
     weekTombstone: device({ progress: { resets: Object.fromEntries(daysBack(7).map(day => [day, at(TRANSFER_TODAY, "04:00")])) } }),
     // Reset epochs only (a reset that leaves nothing behind), one store each.
@@ -1774,6 +1782,9 @@ async function transferMergeCases() {
     mergeCase("equivalent unsaved spellings are one unit: max, never the sum", s.orphanA, s.orphanB),
     mergeCase("a saved spelling arriving later names the unit; its count is not added to the orphan's", received(s.orphanA, s.orphanB), s.savedC),
     mergeCase("a reset of one spelling resets the equivalent unit", s.orphanA, s.orphanReset),
+    mergeCase("equivalent keys on one side with different epochs reduce as (epoch, count): the later reset takes the unit (2, not 10), today and in history", device(), s.aliasEpochs),
+    mergeCase("the same from a store whose saved spelling the app's load would sum: the transfer reduces, never sums (2, not 12)", device(), s.aliasLegacy),
+    mergeCase("an alias holding only a newer reset takes part with count 0: the unit is reset, today and in history", device(), s.aliasResetOnly),
     mergeCase("nothing new: an empty plan", s.join, s.join),
     mergeCase("reset epochs before the 31-day window are dropped", s.oldEpochs, s.join),
     mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup }),
@@ -1789,6 +1800,7 @@ function transferPropertyCases() {
     join: s.join, joinOther: s.joinOther, history: s.history, stale: s.stale, resetRecount: s.resetRecount, tombstone: s.tombstone,
     cardReset: s.cardReset, cardFull: s.cardFull, suwarA: s.suwarA, suwarB: s.suwarB, phraseReset: s.phraseReset, phraseOther: s.phraseOther,
     orphanA: s.orphanA, orphanB: s.orphanB, savedC: s.savedC, orphanReset: s.orphanReset,
+    aliasEpochs: s.aliasEpochs, aliasLegacy: s.aliasLegacy, aliasResetOnly: s.aliasResetOnly,
     fullWeek: s.fullWeek, olderDays: s.olderDays, weekTombstone: s.weekTombstone,
     epochTasbih: s.epochTasbih, beforeEpochs: s.beforeEpochs
   };
@@ -1818,7 +1830,8 @@ function transferPropertyCases() {
     ["suwarA", "suwarB", "join"], ["phraseReset", "phraseOther", "stale"], ["tombstone", "history", "resetRecount"],
     // The final review's counterexamples: equivalent spellings with a saved one, and history truncation with tombstones.
     ["orphanA", "orphanB", "savedC"], ["orphanB", "savedC", "orphanReset"], ["fullWeek", "olderDays", "weekTombstone"],
-    ["weekTombstone", "fullWeek", "olderDays"], ["beforeEpochs", "epochTasbih", "join"]].map(([a, b, c]) => {
+    ["weekTombstone", "fullWeek", "olderDays"], ["beforeEpochs", "epochTasbih", "join"],
+    ["aliasEpochs", "orphanA", "savedC"], ["orphanA", "aliasResetOnly", "orphanB"], ["aliasLegacy", "orphanB", "aliasEpochs"]].map(([a, b, c]) => {
     prepareTransfer();
     const left = received(received(devices[a], devices[b]), devices[c]);
     const right = received(devices[a], received(devices[b], devices[c]));

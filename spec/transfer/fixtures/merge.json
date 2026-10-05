@@ -4339,6 +4339,462 @@
       }
     },
     {
+      "name": "equivalent keys on one side with different epochs reduce as (epoch, count): the later reset takes the unit (2, not 10), today and in history",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:يا رب": 10,
+                  "c:يَا رَبّ": 2
+                },
+                "firstUse": [
+                  "c:يا رب",
+                  "c:يَا رَبّ"
+                ],
+                "custom": [],
+                "history": {
+                  "2026-10-03": {
+                    "c:يا رب": 40,
+                    "c:يَا رَبّ": 3
+                  }
+                },
+                "resets": {
+                  "2026-10-04|c:يَا رَبّ": "2026-10-04T04:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "c:يا رب",
+              "before": 0,
+              "after": 2
+            },
+            {
+              "store": "tasbih",
+              "date": "2026-10-03",
+              "unit": "c:يا رب",
+              "before": 0,
+              "after": 40
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:يا رب\":40}},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:يا رب\":40}},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
+      "name": "the same from a store whose saved spelling the app's load would sum: the transfer reduces, never sums (2, not 12)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:يا رب": 10,
+                  "c:يَا رَبّ": 2
+                },
+                "firstUse": [
+                  "c:يا رب",
+                  "c:يَا رَبّ"
+                ],
+                "custom": [
+                  "يا رب"
+                ],
+                "history": {},
+                "resets": {
+                  "2026-10-04|c:يَا رَبّ": "2026-10-04T04:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "c:يا رب",
+              "before": 0,
+              "after": 2
+            },
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "custom",
+              "before": [],
+              "after": [
+                "يا رب"
+              ]
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
+      "name": "an alias holding only a newer reset takes part with count 0: the unit is reset, today and in history",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:يا رب": 10
+                },
+                "firstUse": [
+                  "c:يا رب"
+                ],
+                "custom": [],
+                "history": {
+                  "2026-10-03": {
+                    "c:يا رب": 5
+                  }
+                },
+                "resets": {
+                  "2026-10-04|c:يَا رَبّ": "2026-10-04T04:00:00.000Z",
+                  "2026-10-03|c:يَا رَبّ": "2026-10-03T04:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\",\"2026-10-03|c:يا رب\":\"2026-10-03T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\",\"2026-10-03|c:يا رب\":\"2026-10-03T04:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
       "name": "nothing new: an empty plan",
       "input": {
         "storage": {

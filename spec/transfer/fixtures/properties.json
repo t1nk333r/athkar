@@ -88,6 +88,21 @@
       "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
       "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|c:يَا رَبّ\":\"2026-10-04T04:00:00.000Z\"}}"
     },
+    "aliasEpochs": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:يا رب\":40,\"c:يَا رَبّ\":3}},\"resets\":{\"2026-10-04|c:يَا رَبّ\":\"2026-10-04T04:00:00.000Z\"}}"
+    },
+    "aliasLegacy": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{\"2026-10-04|c:يَا رَبّ\":\"2026-10-04T04:00:00.000Z\"}}"
+    },
+    "aliasResetOnly": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:يا رب\":5}},\"resets\":{\"2026-10-04|c:يَا رَبّ\":\"2026-10-04T04:00:00.000Z\",\"2026-10-03|c:يَا رَبّ\":\"2026-10-03T04:00:00.000Z\"}}"
+    },
     "fullWeek": {
       "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-01\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-01T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-30\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-30T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-29\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-29T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-28\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-28T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-27\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-27T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
       "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
@@ -237,6 +252,30 @@
     },
     {
       "local": "join",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "join",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "join",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "join",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -397,6 +436,30 @@
     },
     {
       "local": "joinOther",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "joinOther",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -557,6 +620,30 @@
     },
     {
       "local": "history",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "history",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "history",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "history",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -717,6 +804,30 @@
     },
     {
       "local": "stale",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "stale",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "stale",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "stale",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -877,6 +988,30 @@
     },
     {
       "local": "resetRecount",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "resetRecount",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1037,6 +1172,30 @@
     },
     {
       "local": "tombstone",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "tombstone",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1197,6 +1356,30 @@
     },
     {
       "local": "cardReset",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardReset",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1357,6 +1540,30 @@
     },
     {
       "local": "cardFull",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "cardFull",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1517,6 +1724,30 @@
     },
     {
       "local": "suwarA",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarA",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1677,6 +1908,30 @@
     },
     {
       "local": "suwarB",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "suwarB",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1837,6 +2092,30 @@
     },
     {
       "local": "phraseReset",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseReset",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -1997,6 +2276,30 @@
     },
     {
       "local": "phraseOther",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "phraseOther",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -2157,6 +2460,30 @@
     },
     {
       "local": "orphanA",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanA",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanA",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanA",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -2317,6 +2644,30 @@
     },
     {
       "local": "orphanB",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanB",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanB",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanB",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -2477,6 +2828,30 @@
     },
     {
       "local": "savedC",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "savedC",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "savedC",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "savedC",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -2637,6 +3012,30 @@
     },
     {
       "local": "orphanReset",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanReset",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanReset",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "orphanReset",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -2676,6 +3075,558 @@
       "settled": true
     },
     {
+      "local": "aliasEpochs",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "orphanA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "orphanB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "savedC",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "fullWeek",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "olderDays",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "weekTombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "epochTasbih",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasEpochs",
+      "incoming": "beforeEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "orphanA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "orphanB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "savedC",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "fullWeek",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "olderDays",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "weekTombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "epochTasbih",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasLegacy",
+      "incoming": "beforeEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "orphanA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "orphanB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "savedC",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "fullWeek",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "olderDays",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "weekTombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "epochTasbih",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "aliasResetOnly",
+      "incoming": "beforeEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
       "local": "fullWeek",
       "incoming": "join",
       "idempotent": true,
@@ -2798,6 +3749,30 @@
     {
       "local": "fullWeek",
       "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "fullWeek",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "fullWeek",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "fullWeek",
+      "incoming": "aliasResetOnly",
       "idempotent": true,
       "commutative": true,
       "converges": true,
@@ -2965,6 +3940,30 @@
     },
     {
       "local": "olderDays",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "olderDays",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "olderDays",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "olderDays",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -3118,6 +4117,30 @@
     {
       "local": "weekTombstone",
       "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "weekTombstone",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "weekTombstone",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "weekTombstone",
+      "incoming": "aliasResetOnly",
       "idempotent": true,
       "commutative": true,
       "converges": true,
@@ -3285,6 +4308,30 @@
     },
     {
       "local": "epochTasbih",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "epochTasbih",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "epochTasbih",
+      "incoming": "aliasResetOnly",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "epochTasbih",
       "incoming": "fullWeek",
       "idempotent": true,
       "commutative": true,
@@ -3438,6 +4485,30 @@
     {
       "local": "beforeEpochs",
       "incoming": "orphanReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "beforeEpochs",
+      "incoming": "aliasEpochs",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "beforeEpochs",
+      "incoming": "aliasLegacy",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true,
+      "settled": true
+    },
+    {
+      "local": "beforeEpochs",
+      "incoming": "aliasResetOnly",
       "idempotent": true,
       "commutative": true,
       "converges": true,
@@ -3572,6 +4643,33 @@
         "beforeEpochs",
         "epochTasbih",
         "join"
+      ],
+      "associative": true,
+      "repeated": true
+    },
+    {
+      "devices": [
+        "aliasEpochs",
+        "orphanA",
+        "savedC"
+      ],
+      "associative": true,
+      "repeated": true
+    },
+    {
+      "devices": [
+        "orphanA",
+        "aliasResetOnly",
+        "orphanB"
+      ],
+      "associative": true,
+      "repeated": true
+    },
+    {
+      "devices": [
+        "aliasLegacy",
+        "orphanB",
+        "aliasEpochs"
       ],
       "associative": true,
       "repeated": true

@@ -197,10 +197,13 @@ when it has none. History: union per (date, sura) inside the window. `selected` 
 **`athkar-tasbih-v1`.** Saved phrases: the receiver's, then the incoming phrases that `findTasbihPhrase` does not
 match, up to 8. **An incoming phrase that does not fit is dropped with its counts and epochs, today and in history;
 its counts are never folded into another key** (`tasbih-cap` warning listing the phrases). A unit's phrase is
-identified by its preset ID or its match key (`tasbihMatchKey`), whatever either side has saved: spellings that
-match are one unit, and equivalent keys on one side join by max under their epochs. They are **never summed** (summing
-converging keys is only the stored store's own migration, `tasbihCounts`), so the result does not depend on which
-device saved which spelling first. A unit is stored under its preset ID, the merged saved spelling, else the
+identified by its preset ID or its match key (`tasbihMatchKey`), whatever either side has saved. The merge reads each
+side's keys as stored (only cleaned, never mapped onto a saved phrase), and first reduces the equivalent keys of one
+side and day as **(epoch, count) pairs**, each key with its own epoch: the later epoch takes the whole value, equal
+epochs the larger count; a key with only a reset that day counts as 0, so its reset can win. Only then do the two
+sides join per identity. Counts are **never summed** (summing converging keys is only the stored store's own
+migration on load, `tasbihCounts`), so the result does not depend on which device saved which spelling first. A unit
+is stored under its preset ID, the merged saved spelling, else the
 receiver's spelling, else the incoming one (receiver-owned). `firstUse`:
 the receiver's order, then the incoming one, then any remaining key. `selected` and `target` stay the receiver's.
 
@@ -215,8 +218,8 @@ switches, `lastShown` and location never transfer: notification permission is pe
 targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases and of unsaved
 phrase keys (spellings that `tasbihMatchKey` equates keep the receiver's), first-use order, settings, and the phrases a
 cap overflow drops. `spec/transfer/fixtures/properties.json` checks idempotence (and that a second receipt of a code
-has nothing to commit), commutativity and convergence for every ordered pair of 21 devices, and associativity and
-repeated receipt for 11 triples, among them equivalent phrase spellings and history with tombstones; generation fails
+has nothing to commit), commutativity and convergence for every ordered pair of 24 devices, and associativity and
+repeated receipt for 14 triples, among them equivalent phrase spellings (across and within a side) and history with tombstones; generation fails
 if any check fails.
 
 ### 5.5 History window
