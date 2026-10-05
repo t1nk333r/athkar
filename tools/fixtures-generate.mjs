@@ -85,7 +85,8 @@ const transferFunctions = [
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
   "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending", "journalHolds",
-  "transferTasbihIdentity", "transferHistoryList", "transferRawTasbihKey",
+  "transferTasbihIdentity", "transferHistoryList", "transferTasbihView", "transferStoredValue", "transferTasbihStore",
+  "transferContainerNow",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
   "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
@@ -1326,14 +1327,15 @@ function localOf(map) {
 // What encodeTransfer would put in the code for a device (before compression), checked by the PWA's own validator.
 function containerOf(map) {
   const local = localOf(map);
-  api.setStores({ state: local.progress, suwarState: local.suwar, tasbihState: local.tasbih });
+  api.setStores({ state: local.progress, suwarState: local.suwar, tasbihState: fn.parseStoredTasbihState(map["athkar-tasbih-v1"] ?? null) });
   api.setReminderPreferences(fn.loadReminderPreferences());
   api.setLongAdhkarLast(map["athkar-long-order-v1"] === "last");
   api.setPreferences({
     dataset: { theme: map["athkar-theme"] ?? "system", textSize: map["athkar-reading-text-size"] ?? "medium", lineSpacing: map["athkar-line-spacing"] ?? "comfortable" },
     haptics: map["athkar-haptics"] !== "off"
   });
-  const container = fn.buildTransferContainer(fn.buildBackup(false), local.progress, local.suwar, local.tasbih);
+  // The container encodeTransfer builds (transferContainerNow: the stores as stored, the tasbih keys with their epochs).
+  const container = fn.transferContainerNow();
   const checked = plain(fn.validateTransferValue(container, "code"));
   if (!checked.ok) throw new Error(`the encoder's container is rejected: ${JSON.stringify(checked)}`);
   return plain(container);
@@ -1367,6 +1369,7 @@ function sortDeep(value) {
 // (targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases, first-use order).
 function convergent(map) {
   const local = plain(localOf(map));
+  const tasbih = plain(fn.parseStoredTasbihState(map["athkar-tasbih-v1"] ?? null));
   const key = value => (value.startsWith("c:") ? `c:${fn.tasbihMatchKey(value.slice(2))}` : value);
   const rekey = counts => Object.fromEntries(Object.entries(counts).map(([name, count]) => [key(name), count]));
   const resetKey = name => (name.length > 10 ? `${name.slice(0, 11)}${key(name.slice(11))}` : name);
@@ -1376,10 +1379,10 @@ function convergent(map) {
     progress,
     suwar,
     tasbih: {
-      counts: rekey(local.tasbih.counts),
-      history: Object.fromEntries(Object.entries(local.tasbih.history).map(([day, counts]) => [day, rekey(counts)])),
-      resets: Object.fromEntries(Object.entries(local.tasbih.resets).map(([name, at]) => [resetKey(name), at])),
-      custom: local.tasbih.custom.map(phrase => fn.tasbihMatchKey(phrase)).sort()
+      counts: rekey(tasbih.counts),
+      history: Object.fromEntries(Object.entries(tasbih.history).map(([day, counts]) => [day, rekey(counts)])),
+      resets: Object.fromEntries(Object.entries(tasbih.resets).map(([name, at]) => [resetKey(name), at])),
+      custom: tasbih.custom.map(phrase => fn.tasbihMatchKey(phrase)).sort()
     }
   }));
 }
@@ -1852,7 +1855,7 @@ function applyCase(name, local, incoming, { fault, stuck, change, memoryMode, ne
   const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
   loadStorage(local);
   const stored = fn.transferLocalFromStorage(fn.readTransferStorage());
-  api.setStores({ state: stored.progress, suwarState: stored.suwar, tasbihState: stored.tasbih });
+  api.setStores({ state: stored.progress, suwarState: stored.suwar, tasbihState: fn.parseStoredTasbihState(local["athkar-tasbih-v1"] ?? null) });
   api.setReminderPreferences(fn.loadReminderPreferences());
   if (change) storage.set(...change);
   if (memoryMode) api.setTasbihStorageWorks(false);
@@ -2001,6 +2004,69 @@ function transferRecoverCases() {
   ];
 }
 
+// ---- the real path: encodeTransfer on the sender, decodeTransfer, planTransfer on the receiver ----
+
+// Equivalent stored tasbih keys with their own epochs, as the app can hold them (a saved spelling whose load would sum
+// the keys, or a key with tatweel that cleans to another key), today or on yesterday's history.
+function aliasStore(variant, day) {
+  const unit = key => `${day}|${key}`;
+  const epoch = at(day, "04:00");
+  const values = variant === "legacy" ? { "c:يا رب": 10, "c:يَا رَبّ": 2 }
+    : variant === "tatweel" ? { "c:يا رب": 10, "c:يا ربـ": 2 } : { "c:يا رب": 10 };
+  const newer = variant === "legacy" ? "c:يَا رَبّ" : "c:يا ربـ";
+  const today = day === TRANSFER_TODAY;
+  return device({
+    tasbih: {
+      custom: variant === "legacy" ? ["يا رب"] : [],
+      counts: today ? values : {},
+      firstUse: today ? Object.keys(values) : [],
+      history: today ? {} : { [day]: values },
+      resets: { [unit(newer)]: epoch }
+    }
+  });
+}
+
+async function realPathCase(name, sender, receiver, day, expected) {
+  prepareTransfer();
+  loadStorage(sender);
+  const stored = fn.transferLocalFromStorage(fn.readTransferStorage());
+  api.setStores({ state: stored.progress, suwarState: stored.suwar, tasbihState: fn.parseStoredTasbihState(sender["athkar-tasbih-v1"] ?? null) });
+  api.setReminderPreferences(fn.loadReminderPreferences());
+  const encoded = await fn.encodeTransfer("REAL");
+  if (!encoded.ok) throw new Error(`${name}: encodeTransfer failed`);
+  const decoded = await fn.decodeTransfer(encoded.code);
+  if (!decoded.ok) throw new Error(`${name}: decodeTransfer refused the code: ${JSON.stringify(plain(decoded))}`);
+  loadStorage(receiver);
+  const plan = plain(fn.planTransfer(fn.transferLocalFromStorage(fn.readTransferStorage()), decoded, TRANSFER_NOW));
+  const storage = withWrites(receiver, plan);
+  const tasbih = JSON.parse(storage["athkar-tasbih-v1"]);
+  const values = day === TRANSFER_TODAY ? tasbih.counts : tasbih.history[day] ?? {};
+  const unit = Object.entries(values).filter(([key]) => key.startsWith("c:") && fn.tasbihMatchKey(key.slice(2)) === "يا رب");
+  const count = unit.reduce((total, [, value]) => total + value, 0);
+  if (unit.length > 1 || count !== expected) throw new Error(`${name}: expected ${expected}, got ${JSON.stringify(values)}`);
+  return {
+    name,
+    input: { sender, receiver },
+    expected: { codeTasbih: plain(decoded).container.athkar.tasbih, storedTasbih: { counts: tasbih.counts, history: tasbih.history, resets: tasbih.resets }, count }
+  };
+}
+
+async function transferRealPathCases() {
+  const cases = [];
+  for (const [variant, expected, about] of [
+    ["legacy", 2, "two stored spellings of a saved phrase (the app's load would sum them to 12); the newer epoch takes the unit: 2"],
+    ["tatweel", 2, "a tatweel key that cleans to the other key, with the newer epoch: 2"],
+    ["reset-only", 0, "a tatweel key holding only a newer reset: the unit is reset, 0"]
+  ]) {
+    for (const day of [TRANSFER_TODAY, YESTERDAY]) {
+      const when = day === TRANSFER_TODAY ? "today" : "in history";
+      cases.push(await realPathCase(`sender holds ${about} (${when})`, aliasStore(variant, day), device(), day, expected));
+      cases.push(await realPathCase(`receiver holds ${about} (${when})`, device(), aliasStore(variant, day), day, expected));
+    }
+  }
+  return cases;
+}
+
 // ---------------------------------------------------------------------------------------------------
 // Write everything
 // ---------------------------------------------------------------------------------------------------
@@ -2117,6 +2183,10 @@ written.push({
   }),
   count: properties.pairs.length + properties.triples.length
 });
+writeCases("spec/transfer/fixtures/real-path.json",
+  sessionMeta("The tasbih through the real path: encodeTransfer on the sender (its stored keys with their own epochs), decodeTransfer, then planTransfer on the receiver; the storage after the plan's writes. Equivalent keys are reduced once per side and day as (epoch, count), never summed. `codeTasbih`: the tasbih part of the decoded code; `count`: the unit «يا رب» after the transfer.",
+    "encodeTransfer, transferContainerNow, transferTasbihView, decodeTransfer, planTransfer, mergeTransferTasbih"),
+  { ...transferDefaults, collections: realCollections }, await transferRealPathCases());
 writeCases("spec/transfer/fixtures/apply.json",
   sessionMeta("applyTransfer commits exactly a plan: every stored value must still be what the plan was made on; the write-ahead record athkar-transfer-pending-v1 is written first and removed last; a failed write rolls the earlier ones back (a rollback that fails too leaves the record marked `rollback` for the next start); a tab in tasbih memory mode or with unreadable storage writes nothing. `fault` n: the (n+1)th setItem fails once, the record's write counting as the first; `stuckKeys`: then every setItem of these keys fails.",
     "applyTransfer, readTransferStorage, recoverTransferPending"),
