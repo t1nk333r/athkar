@@ -5537,6 +5537,9 @@
     let hapticArmVerdict = null;
     const hapticArmDeferMs = 300;
     let hapticArmDeferTimer = null;
+    let hapticArmObservedCard = null;
+    const hapticArmContentObserver = new ResizeObserver(() => syncHapticArm());
+    let hapticArmRestAt = 0;
     if (initialRoute.sura) suwarState.selected = initialRoute.sura;
     let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
@@ -6192,6 +6195,7 @@
 
     function fitVisibleCard() {
       fitCardContent(list.querySelector("li:not([hidden]) .dhikr-card"));
+      syncHapticArm();
     }
 
 
@@ -6644,10 +6648,12 @@
     //   sibling of .card-tap-target inside the card; on the tasbih it is a sibling of the button, laid over it by
     //   placeTasbihHapticArm. Either way it is laid out with the surface, so a scroll carries it along.
     // - WebKit bug 321591: a touch that starts on a switch does not scroll, and its touchend always clicks the switch, even
-    //   after a drag or a lift outside. hapticArmTouches cancels that click, so it does not count, but WebKit may already
-    //   have played the haptic. A pan that starts on the armed surface does not scroll the page (only the completing tap
-    //   is armed); on a card, whose text may overflow and which stays armed while it needs a single tap, the text is
-    //   scrolled by hand (without momentum).
+    //   after a drag or a lift outside. hapticArmTouches cancels that touchend (preventDefault, before WebKit makes the
+    //   click and plays the haptic), so a rejected gesture neither counts nor ticks. A pan that starts on the armed surface
+    //   does not scroll the page (only the completing tap is armed).
+    // - A card whose text overflows (.card-content scrolls) is never armed: it would lose native scrolling for as long as
+    //   it needs one tap (a whole target-1 card). It completes without the iPhone haptic. hapticArmContentObserver and
+    //   fitVisibleCard re-check this when the layout, text size or line spacing changes.
     function hapticArmTarget() {
       if (!hapticArmAvailable || !hapticsEnabled || document.visibilityState !== "visible") return null;
       if (activePeriod === "tasbih") {
@@ -6659,8 +6665,22 @@
       if (!item || item.review) return null;
       const card = document.getElementById(activePeriod === "suwar" ? `page-${item.id}` : item.id);
       if (!card || card.closest("li")?.hidden) return null;
+      observeHapticArmContent(card);
+      const content = card.querySelector(".card-content");
+      if (content && content.scrollHeight > content.clientHeight + 1) return null;
       if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
       return countFor(item) === targetFor(item) - 1 ? card : null;
+    }
+
+    // Watches the text of the card on screen (its box and its children), so a change of fit re-arms or disarms.
+    function observeHapticArmContent(card) {
+      if (hapticArmObservedCard === card) return;
+      hapticArmObservedCard = card;
+      hapticArmContentObserver.disconnect();
+      const content = card.querySelector(".card-content");
+      if (!content) return;
+      hapticArmContentObserver.observe(content);
+      for (const child of content.children) hapticArmContentObserver.observe(child);
     }
 
     // offset* are whole pixels; a 1 px inset keeps the switch inside the button whatever the rounding.
@@ -6671,16 +6691,18 @@
 
     // The tasbih counts on the finger's lift, and that lift's compatibility click follows at the same point: it must
     // not land on a switch armed by that count. So the switch waits until tasbihSurface's click handler has consumed the
-    // lift (it re-syncs), or for hapticArmDeferMs where no click comes.
+    // lift (it re-syncs), or for hapticArmDeferMs where no click comes. After a rejected gesture it waits until
+    // hapticArmRestAt (rejectHapticArmGesture).
     function syncHapticArm() {
       clearTimeout(hapticArmDeferTimer);
       let host = hapticArmTarget();
-      if (host === tasbihSurface) {
-        const now = performance.now();
-        if (tasbihPendingLifts.some(lift => now - lift.at < hapticArmDeferMs)) {
-          hapticArmDeferTimer = setTimeout(syncHapticArm, hapticArmDeferMs);
-          host = null;
-        }
+      const now = performance.now();
+      if (host && now < hapticArmRestAt) {
+        hapticArmDeferTimer = setTimeout(syncHapticArm, hapticArmRestAt - now);
+        host = null;
+      } else if (host === tasbihSurface && tasbihPendingLifts.some(lift => now - lift.at < hapticArmDeferMs)) {
+        hapticArmDeferTimer = setTimeout(syncHapticArm, hapticArmDeferMs);
+        host = null;
       }
       hapticArmHost = host;
       hapticArm.checked = false;
@@ -8065,29 +8087,33 @@
     tasbihNumber.addEventListener("animationend", () => tasbihNumber.classList.remove("is-breathing"));
     tasbihStatus.addEventListener("animationend", () => tasbihStatus.classList.remove("is-fresh"));
     // Touch tracking on the armed haptic switch (WebKit bug 321591, see syncHapticArm). A touch that moved more than
-    // 10 px, was cancelled, or lifted outside the surface does not count: its click on the switch is cancelled
-    // (preventDefault keeps the switch unchecked and fires no change), though WebKit may have played the haptic already.
+    // 10 px, was cancelled, lifted outside the surface, or began before the switch moved to another surface does not
+    // count. Its switch is removed from the render tree (hidden, then a forced layout) before WebKit's own touchend
+    // handling, which then finds no renderer: it makes no click, plays no haptic, and drops its pointer tracking and
+    // held timer (a preventDefault would skip that clean-up and leave the switch capturing mouse events). The switch
+    // stays out until hapticArmRestAt, past WebKit's 200 ms held timer, then syncHapticArm re-arms it.
     // A finger still down when an earlier lift disarmed the switch gets no click from WebKit (a hidden switch has no
     // renderer), so its lift runs the action itself, as a lift on the surface would.
+    function rejectHapticArmGesture() {
+      hapticArmVerdict = "reject";
+      hapticArmRestAt = performance.now() + 250;
+      syncHapticArm();
+      void hapticArm.offsetWidth;
+    }
     hapticArm.addEventListener("touchstart", event => {
       hapticArmVerdict = null;
       for (const touch of event.changedTouches) {
-        hapticArmTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY, lastY: touch.clientY, moved: false, host: hapticArmHost });
+        hapticArmTouches.set(touch.identifier, { x: touch.clientX, y: touch.clientY, moved: false, host: hapticArmHost });
       }
       hapticArmHost?.classList.add("is-armed-press");
     }, { passive: true });
     hapticArm.addEventListener("touchmove", event => {
       for (const touch of event.changedTouches) {
         const record = hapticArmTouches.get(touch.identifier);
-        if (!record) continue;
-        const deltaX = touch.clientX - record.x;
-        const deltaY = touch.clientY - record.y;
-        if (Math.hypot(deltaX, deltaY) > 10) record.moved = true;
-        if (record.moved && record.host && record.host !== tasbihSurface && Math.abs(deltaY) > Math.abs(deltaX)) {
-          const content = record.host.querySelector(".card-content");
-          if (content) content.scrollTop += record.lastY - touch.clientY;
-        }
-        record.lastY = touch.clientY;
+        if (!record || record.moved || Math.hypot(touch.clientX - record.x, touch.clientY - record.y) <= 10) continue;
+        record.moved = true;
+        record.host?.classList.remove("is-armed-press");
+        rejectHapticArmGesture();
       }
     }, { passive: true });
     function endHapticArmTouches(event) {
@@ -8095,22 +8121,25 @@
         const record = hapticArmTouches.get(touch.identifier);
         hapticArmTouches.delete(touch.identifier);
         if (!record?.host) {
-          hapticArmVerdict = "reject";
+          rejectHapticArmGesture();
           continue;
         }
         record.host.classList.remove("is-armed-press");
         const rect = record.host.getBoundingClientRect();
         const inside = touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom;
         const counts = event.type === "touchend" && !record.moved && inside;
-        if (!hapticArm.hidden) hapticArmVerdict = counts && record.host === hapticArmHost ? "count" : "reject";
-        else if (counts && record.host.isConnected && (record.host === tasbihSurface ? activePeriod === "tasbih" : !record.host.closest("li").hidden)) {
+        if (!hapticArm.hidden) {
+          if (counts && record.host === hapticArmHost) hapticArmVerdict = "count";
+          else rejectHapticArmGesture();
+        } else if (counts && record.host.isConnected && (record.host === tasbihSurface ? activePeriod === "tasbih" : !record.host.closest("li").hidden)) {
           runHapticArmAction(record.host);
         }
       }
     }
-    hapticArm.addEventListener("touchend", endHapticArmTouches);
-    hapticArm.addEventListener("touchcancel", endHapticArmTouches);
-    // The switch's click is its own: the card's click handlers never see it. A click without a touch (a trackpad) counts.
+    hapticArm.addEventListener("touchend", endHapticArmTouches, { passive: false });
+    hapticArm.addEventListener("touchcancel", endHapticArmTouches, { passive: false });
+    // The switch's click is its own: the card's click handlers never see it. A click without a touch (a trackpad) counts;
+    // a click after a rejected gesture is cancelled (a backstop: the rejection normally leaves WebKit nothing to click).
     hapticArm.addEventListener("click", event => {
       event.stopPropagation();
       const verdict = hapticArmVerdict;
