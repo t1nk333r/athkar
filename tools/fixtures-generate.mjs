@@ -85,7 +85,7 @@ const transferFunctions = [
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
   "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending", "journalHolds",
-  "transferTasbihIdentity", "transferHistoryList", "transferTasbihView", "transferStoredValue", "transferTasbihStore",
+  "tasbihIdentity", "canonicalTasbihDays", "transferHistoryList", "transferTasbihView", "transferStoredValue", "transferTasbihStore",
   "transferContainerNow",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
@@ -110,7 +110,7 @@ const functions = [
   "resetTasbihProgress", "deleteTasbihHistory",
   // athkar-tasbih-v1 load: normalisation (phrase-key migration) and rollover
   "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
-  "canonicalTasbihKey", "findTasbihPhrase", "tasbihCounts", "normalizeTasbihState", "tasbihDayCounts",
+  "canonicalTasbihKey", "findTasbihPhrase", "normalizeTasbihState", "tasbihDayCounts",
   "rollTasbihStateToDate", "readTasbihState", "loadTasbihState",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
@@ -1785,9 +1785,9 @@ async function transferMergeCases() {
     mergeCase("equivalent unsaved spellings are one unit: max, never the sum", s.orphanA, s.orphanB),
     mergeCase("a saved spelling arriving later names the unit; its count is not added to the orphan's", received(s.orphanA, s.orphanB), s.savedC),
     mergeCase("a reset of one spelling resets the equivalent unit", s.orphanA, s.orphanReset),
-    mergeCase("equivalent keys on one side with different epochs reduce as (epoch, count): the later reset takes the unit (2, not 10), today and in history", device(), s.aliasEpochs),
-    mergeCase("the same from a store whose saved spelling the app's load would sum: the transfer reduces, never sums (2, not 12)", device(), s.aliasLegacy),
-    mergeCase("an alias holding only a newer reset takes part with count 0: the unit is reset, today and in history", device(), s.aliasResetOnly),
+    mergeCase("one device's equivalent keys: only those with the latest epoch count, summed (today 2, not 10 or 12; history, no epochs: 40 + 3 = 43)", device(), s.aliasEpochs),
+    mergeCase("the same with the spelling saved: 2, as the app's own load shows it", device(), s.aliasLegacy),
+    mergeCase("an alias holding only a newer reset counts 0 at its epoch: the unit is reset, today and in history", device(), s.aliasResetOnly),
     mergeCase("nothing new: an empty plan", s.join, s.join),
     mergeCase("reset epochs before the 31-day window are dropped", s.oldEpochs, s.join),
     mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup }),
@@ -2011,17 +2011,17 @@ function transferRecoverCases() {
 function aliasStore(variant, day) {
   const unit = key => `${day}|${key}`;
   const epoch = at(day, "04:00");
-  const values = variant === "legacy" ? { "c:يا رب": 10, "c:يَا رَبّ": 2 }
+  const values = variant === "legacy" || variant === "equal" ? { "c:يا رب": 10, "c:يَا رَبّ": 2 }
     : variant === "tatweel" ? { "c:يا رب": 10, "c:يا ربـ": 2 } : { "c:يا رب": 10 };
   const newer = variant === "legacy" ? "c:يَا رَبّ" : "c:يا ربـ";
   const today = day === TRANSFER_TODAY;
   return device({
     tasbih: {
-      custom: variant === "legacy" ? ["يا رب"] : [],
+      custom: variant === "legacy" || variant === "equal" ? ["يا رب"] : [],
       counts: today ? values : {},
       firstUse: today ? Object.keys(values) : [],
       history: today ? {} : { [day]: values },
-      resets: { [unit(newer)]: epoch }
+      resets: variant === "equal" ? {} : { [unit(newer)]: epoch }
     }
   });
 }
@@ -2054,7 +2054,8 @@ async function realPathCase(name, sender, receiver, day, expected) {
 async function transferRealPathCases() {
   const cases = [];
   for (const [variant, expected, about] of [
-    ["legacy", 2, "two stored spellings of a saved phrase (the app's load would sum them to 12); the newer epoch takes the unit: 2"],
+    ["equal", 12, "two stored spellings of a saved phrase with equal epochs: summed, as on that device: 12"],
+    ["legacy", 2, "two stored spellings of a saved phrase, one reset later: only the later counts: 2"],
     ["tatweel", 2, "a tatweel key that cleans to the other key, with the newer epoch: 2"],
     ["reset-only", 0, "a tatweel key holding only a newer reset: the unit is reset, 0"]
   ]) {
@@ -2109,7 +2110,7 @@ writeCases("spec/sessions/fixtures/scoped-reset.json",
   sessionDefaultInput, scopedResetCases());
 writeCases("spec/sessions/fixtures/tasbih-load-state.json",
   sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
-    "loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate"),
+    "loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, canonicalTasbihDays, rollTasbihStateToDate"),
   { timeZone: SESSION_ZONE }, tasbihLoadCases());
 writeCases("spec/reminders/fixtures/next-reminder-time.json",
   {
@@ -2184,7 +2185,7 @@ written.push({
   count: properties.pairs.length + properties.triples.length
 });
 writeCases("spec/transfer/fixtures/real-path.json",
-  sessionMeta("The tasbih through the real path: encodeTransfer on the sender (its stored keys with their own epochs), decodeTransfer, then planTransfer on the receiver; the storage after the plan's writes. Equivalent keys are reduced once per side and day as (epoch, count), never summed. `codeTasbih`: the tasbih part of the decoded code; `count`: the unit «يا رب» after the transfer.",
+  sessionMeta("The tasbih through the real path: encodeTransfer on the sender (its stored keys with their own epochs), decodeTransfer, then planTransfer on the receiver; the storage after the plan's writes. One device's equivalent keys are canonicalised as its own load does (only the latest epoch counts, those summed); across devices the later epoch wins, equal epochs take the max. `codeTasbih`: the tasbih part of the decoded code; `count`: the unit «يا رب» after the transfer.",
     "encodeTransfer, transferContainerNow, transferTasbihView, decodeTransfer, planTransfer, mergeTransferTasbih"),
   { ...transferDefaults, collections: realCollections }, await transferRealPathCases());
 writeCases("spec/transfer/fixtures/apply.json",

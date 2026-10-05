@@ -6111,16 +6111,81 @@
       return saved === undefined ? null : `c:${saved}`;
     }
 
-    // Counts keyed by canonical key; old keys that now converge on one key are summed (first occurrence keeps its
-    // place), then capped.
-    function tasbihCounts(value, custom) {
-      const counts = {};
-      if (!value || typeof value !== "object" || Array.isArray(value)) return counts;
-      for (const [key, count] of Object.entries(value)) {
+    // The unit a stored tasbih key counts for, whatever is saved: a preset ID, or "m:" + the phrase's match key. Keys
+    // that differ only in spelling (tashkeel, tatweel, hamza forms, spacing) are one unit.
+    function tasbihIdentity(key) {
+      if (Object.hasOwn(tasbihPresetById, key)) return key;
+      const text = key.slice(2);
+      const preset = findTasbihPhrase(text, []);
+      if (preset) return preset;
+      const match = tasbihMatchKey(text);
+      return match ? `m:${match}` : key;
+    }
+
+    // Counts, history and reset epochs of a stored tasbih value, one key per unit (tasbihIdentity) and day. The keys of
+    // one unit on one day are its aliases (spellings typed apart, or keys a newly saved phrase now names); each has its
+    // own epoch (the day's reset or its own). Only the aliases with the latest epoch count (older ones were reset),
+    // and their counts are summed; an alias with only a reset counts 0 at its epoch. The unit is kept under its
+    // canonical key (canonicalTasbihKey; of several unsaved spellings, the first in code order) with the latest of its
+    // aliases' own reset epochs.
+    function canonicalTasbihDays(parsed, date, custom) {
+      const resets = normalizeResets(parsed.resets, date, sub => (canonicalTasbihKey(sub, custom) ? sub : null));
+      const units = new Map();
+      const counted = new Set();
+      const consider = (day, key, count) => {
         const canonical = canonicalTasbihKey(key, custom);
-        if (canonical && Number.isInteger(count) && count > 0) counts[canonical] = Math.min((counts[canonical] ?? 0) + count, tasbihMaxCount);
+        if (!canonical) return;
+        const name = `${day}|${tasbihIdentity(canonical)}`;
+        const epoch = resetEpoch(resets, day, key);
+        const unit = units.get(name) ?? { day, epoch, count: 0, keys: [], aliases: [] };
+        if (epoch > unit.epoch) {
+          unit.epoch = epoch;
+          unit.count = 0;
+        }
+        if (epoch === unit.epoch) unit.count = Math.min(unit.count + count, tasbihMaxCount);
+        unit.keys.push(canonical);
+        unit.aliases.push(key);
+        units.set(name, unit);
+      };
+      const valid = value => value && typeof value === "object" && !Array.isArray(value);
+      for (const [key, count] of Object.entries(valid(parsed.counts) ? parsed.counts : {})) {
+        if (Number.isInteger(count) && count > 0) {
+          consider(date, key, count);
+          counted.add(`${date}|${key}`);
+        }
       }
-      return counts;
+      for (const [day, entry] of Object.entries(valid(parsed.history) ? parsed.history : {})) {
+        if (!isRealDateKey(day) || day >= date || !valid(entry)) continue;
+        for (const [key, count] of Object.entries(entry)) {
+          if (Number.isInteger(count) && count > 0) {
+            consider(day, key, count);
+            counted.add(`${day}|${key}`);
+          }
+        }
+      }
+      for (const name of Object.keys(resets)) {
+        const separator = name.indexOf("|");
+        if (separator !== -1 && !counted.has(name)) consider(name.slice(0, separator), name.slice(separator + 1), 0);
+      }
+      const counts = {};
+      const history = {};
+      const unitResets = Object.fromEntries(Object.entries(resets).filter(([name]) => !name.includes("|")));
+      const keyOf = new Map();
+      for (const [name, unit] of units) {
+        const key = [...unit.keys].sort()[0];
+        keyOf.set(name, key);
+        if (unit.count > 0) {
+          if (unit.day === date) counts[key] = unit.count;
+          else (history[unit.day] ??= {})[key] = unit.count;
+        }
+        for (const alias of unit.aliases) {
+          const at = resets[`${unit.day}|${alias}`];
+          const target = `${unit.day}|${key}`;
+          if (at && (!Object.hasOwn(unitResets, target) || unitResets[target] < at)) unitResets[target] = at;
+        }
+      }
+      // Keys in sorted order, so a store reads back byte-identical however its aliases arrived.
+      return { counts, history, resets: Object.fromEntries(Object.entries(unitResets).sort(([a], [b]) => a.localeCompare(b))), keyOf };
     }
 
     function normalizeTasbihState(parsed) {
@@ -6141,19 +6206,17 @@
       if (selected && (Object.hasOwn(tasbihPresetById, selected) || normalized.custom.includes(selected.slice(2)))) {
         normalized.selected = selected;
       }
-      normalized.counts = tasbihCounts(parsed.counts, normalized.custom);
+      const days = canonicalTasbihDays(parsed, date, normalized.custom);
+      normalized.counts = days.counts;
       const firstUse = Array.isArray(parsed.firstUse)
-        ? parsed.firstUse.map(key => canonicalTasbihKey(key, normalized.custom)).filter(key => key && Object.hasOwn(normalized.counts, key))
+        ? parsed.firstUse.map(key => {
+          const canonical = canonicalTasbihKey(key, normalized.custom);
+          return canonical && days.keyOf.get(`${date}|${tasbihIdentity(canonical)}`);
+        }).filter(key => key && Object.hasOwn(normalized.counts, key))
         : [];
       normalized.firstUse = [...new Set([...firstUse, ...Object.keys(normalized.counts)])];
-      const history = parsed.history && typeof parsed.history === "object" && !Array.isArray(parsed.history) ? parsed.history : {};
-      for (const [day, entry] of Object.entries(history)) {
-        if (!isRealDateKey(day) || day >= date) continue;
-        const counts = tasbihCounts(entry, normalized.custom);
-        if (Object.keys(counts).length) normalized.history[day] = counts;
-      }
-      normalized.history = trimDailyHistory(normalized.history, date);
-      normalized.resets = normalizeResets(parsed.resets, date, sub => canonicalTasbihKey(sub, normalized.custom));
+      normalized.history = trimDailyHistory(days.history, date);
+      normalized.resets = days.resets;
       return normalized;
     }
 
@@ -6213,11 +6276,20 @@
       return parseStoredTasbihState(raw);
     }
 
-    // The startup load: a read that throws starts the session in memory mode with the defaults.
+    // The startup load: a read that throws starts the session in memory mode with the defaults. A stored value with
+    // aliases (canonicalTasbihDays) is saved back in its canonical form, once.
     function loadTasbihState() {
       const stored = readTasbihState();
-      if (!stored) tasbihStorageWorks = false;
-      return stored ?? emptyTasbihState();
+      if (!stored) {
+        tasbihStorageWorks = false;
+        return emptyTasbihState();
+      }
+      try {
+        const raw = localStorage.getItem(tasbihStorageKey);
+        const canonical = JSON.stringify(stored);
+        if (raw !== null && raw !== canonical && !journalHolds(tasbihStorageKey)) localStorage.setItem(tasbihStorageKey, canonical);
+      } catch (_) {}
+      return stored;
     }
 
     function saveTasbihState() {
@@ -9261,39 +9333,34 @@
       }).slice(0, 512));
     }
 
-    // The transfer's view of a tasbih store (as stored, as received, or this tab's in memory): one tuple per key exactly
-    // as stored, {date, key, identity, epoch, count}, plus count-0 tuples for keys that have only a reset that day. Keys
-    // are never merged or mapped here (the app's load sums keys that converge; the transfer never does): `identity`
-    // (transferTasbihIdentity) only names the unit, and `epoch` is looked up by the stored key itself. Days are kept in
-    // the reset window ending on `today`. `later`: "drop" ignores days at or after `today` (a code from a device whose
-    // date is ahead), "today" counts days after `today` as today's (this device's clock moved back).
+    // The transfer's view of a tasbih store (as stored, as received, or this tab's in memory): the app's own canonical
+    // form (normalizeTasbihState: one key per unit and day, aliases already reduced by the epoch rule), as tuples
+    // {date, key, identity, epoch, count}, plus count-0 tuples for units that have only a reset that day. Days are kept
+    // in the reset window ending on `today`. `later`: "drop" ignores days at or after `today` (a code from a device
+    // whose date is ahead), "today" counts days after `today` as today's (this device's clock moved back).
     function transferTasbihView(store, today, later = "today") {
       const value = store && typeof store === "object" && !Array.isArray(store) ? store : {};
-      const normalized = normalizeTasbihState(value);
-      const date = isRealDateKey(value.date) ? value.date : today;
+      const canonical = normalizeTasbihState(value);
+      const date = canonical.date;
       const cutoff = resetCutoff(today);
       const place = day => (day < cutoff ? null : day < today ? day : later === "drop" ? null : today);
       const resets = {};
-      for (const [key, at] of Object.entries(value.resets && typeof value.resets === "object" ? value.resets : {})) {
+      for (const [key, at] of Object.entries(canonical.resets)) {
         const separator = key.indexOf("|");
         const day = place(separator === -1 ? key : key.slice(0, separator));
         const unit = separator === -1 ? null : key.slice(separator + 1);
-        if (day === null || !isRealDateKey(key.slice(0, 10)) || backupInstant(at) === null || (unit !== null && !transferTasbihKeyIsValid(unit))) continue;
+        if (day === null || backupInstant(at) === null || (unit !== null && !transferTasbihKeyIsValid(unit))) continue;
         const name = unit === null ? day : `${day}|${unit}`;
         if (!Object.hasOwn(resets, name) || resets[name] < at) resets[name] = at;
       }
-      const epoch = (day, key) => resetEpoch(resets, day, key);
       const tuples = [];
       const add = (day, key, count) => {
         const placed = place(day);
-        if (placed === null || !transferTasbihKeyIsValid(key) || !Number.isInteger(count) || count < 0) return;
-        tuples.push({ date: placed, key, identity: transferTasbihIdentity(key), epoch: epoch(placed, key), count: Math.min(count, tasbihMaxCount) });
+        if (placed === null || !transferTasbihKeyIsValid(key)) return;
+        tuples.push({ date: placed, key, identity: tasbihIdentity(key), epoch: resetEpoch(resets, placed, key), count });
       };
-      for (const [key, count] of Object.entries(value.counts && typeof value.counts === "object" ? value.counts : {})) if (count > 0) add(date, key, count);
-      for (const [day, entry] of Object.entries(value.history && typeof value.history === "object" ? value.history : {})) {
-        if (!isRealDateKey(day) || day >= date || !entry || typeof entry !== "object") continue;
-        for (const [key, count] of Object.entries(entry)) if (count > 0) add(day, key, count);
-      }
+      for (const [key, count] of Object.entries(canonical.counts)) add(date, key, count);
+      for (const [day, entry] of Object.entries(canonical.history)) for (const [key, count] of Object.entries(entry)) add(day, key, count);
       for (const name of Object.keys(resets)) {
         const separator = name.indexOf("|");
         if (separator === -1) continue;
@@ -9301,8 +9368,8 @@
         const key = name.slice(separator + 1);
         if (!tuples.some(tuple => tuple.date === day && tuple.key === key)) add(day, key, 0);
       }
-      const firstUse = (Array.isArray(value.firstUse) ? value.firstUse : []).filter(key => transferTasbihKeyIsValid(key));
-      return { date: today, selected: normalized.selected, target: normalized.target, custom: normalized.custom, firstUse, tuples, resets };
+      const firstUse = canonical.firstUse.filter(key => transferTasbihKeyIsValid(key));
+      return { date: today, selected: canonical.selected, target: canonical.target, custom: canonical.custom, firstUse, tuples, resets };
     }
 
     // A stored JSON object, or null when absent or malformed.
@@ -9629,21 +9696,10 @@
       return merged;
     }
 
-    // A tasbih unit's identity in a transfer: a preset ID, or "m:" + the phrase's match key (tasbihMatchKey), whatever
-    // either side has saved. Spellings that match are one unit and join by max under their epochs; they are never
-    // summed (summing converging keys is only the stored store's migration, tasbihCounts).
-    function transferTasbihIdentity(key) {
-      if (Object.hasOwn(tasbihPresetById, key)) return key;
-      const text = key.slice(2);
-      const preset = findTasbihPhrase(text, []);
-      if (preset) return preset;
-      const match = tasbihMatchKey(text);
-      return match ? `m:${match}` : key;
-    }
-
-    // athkar-tasbih-v1, from two tuple views (transferTasbihView). Units: (date, phrase identity). Each side's tuples
-    // are reduced once per (date, identity) as (epoch, count) pairs: the later epoch takes the whole pair, equal epochs
-    // the larger count. Then the sides join per unit the same way, and only then is the stored spelling chosen: the
+    // athkar-tasbih-v1, from two tuple views (transferTasbihView): each side is already in the app's canonical form, so
+    // one device's aliases were reduced by its own rule (canonicalTasbihDays). Units: (date, phrase identity). Across the
+    // devices the later epoch takes the whole unit and equal epochs the larger count (never a sum: a sum would count a
+    // repeated transfer twice); only then is the stored spelling chosen: the
     // preset ID, else the merged saved spelling, else the receiver's, else the incoming one. Saved phrases: the
     // receiver's, then the incoming ones it lacks, up to tasbihMaxCustom; an incoming phrase that does not fit is
     // dropped with its counts and epochs, never folded into another key. `selected` and `target` stay the receiver's.
@@ -9656,12 +9712,12 @@
         if (custom.length < tasbihMaxCustom) custom.push(phrase);
         else dropped.push(phrase);
       }
-      const droppedIds = new Set(dropped.map(phrase => transferTasbihIdentity(`c:${phrase}`)));
+      const droppedIds = new Set(dropped.map(phrase => tasbihIdentity(`c:${phrase}`)));
       const spellings = new Map();
       const spell = (key, side) => {
-        const known = spellings.get(transferTasbihIdentity(key)) ?? {};
+        const known = spellings.get(tasbihIdentity(key)) ?? {};
         if (known[side] === undefined || key < known[side]) known[side] = key;
-        spellings.set(transferTasbihIdentity(key), known);
+        spellings.set(tasbihIdentity(key), known);
       };
       const later = (first, second) => (!first || second.epoch > first.epoch || (second.epoch === first.epoch && second.count > first.count) ? second : first);
       const reduce = (view, side) => {
@@ -9677,7 +9733,7 @@
       const mine = reduce(local, "mine");
       const theirs = reduce(incoming, "theirs");
       for (const key of local.firstUse) spell(key, "mine");
-      for (const key of incoming.firstUse) if (!droppedIds.has(transferTasbihIdentity(key))) spell(key, "theirs");
+      for (const key of incoming.firstUse) if (!droppedIds.has(tasbihIdentity(key))) spell(key, "theirs");
       const keyOf = id => {
         if (Object.hasOwn(tasbihPresetById, id)) return id;
         if (id.startsWith("m:")) {
@@ -9711,14 +9767,14 @@
           const separator = name.indexOf("|");
           let target = name;
           if (separator !== -1) {
-            const id = transferTasbihIdentity(name.slice(separator + 1));
+            const id = tasbihIdentity(name.slice(separator + 1));
             if (side === "theirs" && droppedIds.has(id)) continue;
             target = `${name.slice(0, separator)}|${keyOf(id)}`;
           }
           if (!Object.hasOwn(resets, target) || resets[target] < at) resets[target] = at;
         }
       }
-      const firstUse = [...local.firstUse, ...incoming.firstUse].map(key => keyOf(transferTasbihIdentity(key)));
+      const firstUse = [...local.firstUse, ...incoming.firstUse].map(key => keyOf(tasbihIdentity(key)));
       return {
         tasbih: {
           date: today,
@@ -9728,7 +9784,7 @@
           firstUse: [...new Set([...firstUse, ...Object.keys(counts)])].filter(key => key && Object.hasOwn(counts, key)),
           custom,
           history: trimDailyHistory(Object.fromEntries(Object.keys(history).sort().reverse().map(day => [day, history[day]])), today),
-          resets: normalizeResets(resets, today)
+          resets: Object.fromEntries(Object.entries(normalizeResets(resets, today)).sort(([a], [b]) => a.localeCompare(b)))
         },
         added: custom.slice(local.custom.length),
         dropped

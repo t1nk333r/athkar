@@ -1,6 +1,6 @@
 {
   "about": "athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
-  "source": "index.html: loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate",
+  "source": "index.html: loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, canonicalTasbihDays, rollTasbihStateToDate",
   "generator": "tools/fixtures-generate.mjs",
   "defaultInput": {
     "timeZone": "Asia/Riyadh"

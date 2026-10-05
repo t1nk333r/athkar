@@ -37,7 +37,7 @@ The code carries one UTF-8 JSON document:
 | `athkar.adhkar.resets` | The reset epochs of `athkar-progress-v2` (§5.1); units `morning`, `evening`. |
 | `athkar.adhkar.history` | The progress history of the whole reset window (envelope-v1 history entries, newest first, every day of the 31 ending on the code's date, today excluded). `envelope.adhkar.history` keeps envelope v1's newest seven; a code's receiver merges this list instead. |
 | `athkar.suwar` | `athkar-suwar-v1` as stored, normalized: `read` holds only `true` marks of known pages, `completedAt` only for complete suras, `history` only valid instants. Units of `resets` are sura IDs. |
-| `athkar.tasbih` | `athkar-tasbih-v1` with every count and reset key **exactly as stored** (only malformed keys and days outside the window are left out), so each count travels with its own epoch: the app's own load would sum keys that converge, the code never does. `custom`, `selected` and `target` normalized; units of `resets` are phrase keys (a preset ID or `c:` + phrase). |
+| `athkar.tasbih` | `athkar-tasbih-v1` in the app's canonical form (§5.4: one key per unit and day, aliases already canonicalised by the epoch rule the app's load uses), normalized; units of `resets` are phrase keys (a preset ID or `c:` + phrase). |
 
 `envelope.adhkar.today.date`, `athkar.suwar.date` and `athkar.tasbih.date` are the same local date: the encoder rolls
 every store to today first.
@@ -197,13 +197,19 @@ when it has none. History: union per (date, sura) inside the window. `selected` 
 **`athkar-tasbih-v1`.** Saved phrases: the receiver's, then the incoming phrases that `findTasbihPhrase` does not
 match, up to 8. **An incoming phrase that does not fit is dropped with its counts and epochs, today and in history;
 its counts are never folded into another key** (`tasbih-cap` warning listing the phrases). A unit's phrase is
-identified by its preset ID or its match key (`tasbihMatchKey`), whatever either side has saved. The merge reads each
-side's keys exactly as stored (`transferTasbihView`: one tuple per stored key and day, plus a count-0 tuple for a key
-that has only a reset that day; cleaning and matching only name the unit), and first reduces the equivalent keys of one
-side and day as **(epoch, count) pairs**, each key with its own epoch: the later epoch takes the whole value, equal
-epochs the larger count; a key with only a reset that day counts as 0, so its reset can win. Only then do the two
-sides join per identity. Counts are **never summed** (summing converging keys is only the stored store's own
-migration on load, `tasbihCounts`), so the result does not depend on which device saved which spelling first. A unit
+identified by its preset ID or its match key (`tasbihMatchKey`), whatever either side has saved.
+
+*One device's aliases* (keys of one unit on one day: spellings typed apart, or keys a newly saved phrase now names)
+are canonicalised by one rule, `canonicalTasbihDays`, which the app's own load and the transfer share: each stored key
+has its own epoch (its day's reset or its own); only the keys with the unit's latest epoch count, and their counts
+are **summed**; a key with only a reset counts 0 at its epoch. The unit is kept under one key with the latest of its
+keys' reset epochs. The app saves a store it loaded with aliases back in this form, once. So the app shows what the
+transfer sends: two spellings with equal epochs show and send their sum, and a later reset of one spelling leaves
+only what was counted after it.
+
+*Across devices* the merge reads both sides in that canonical form (`transferTasbihView`, which also canonicalises a
+code from an older version that still carries aliases) and joins per unit: the later epoch takes the unit whole, equal
+epochs the larger count. Counts are never summed across devices: a sum would count a repeated transfer twice. A unit
 is stored under its preset ID, the merged saved spelling, else the
 receiver's spelling, else the incoming one (receiver-owned). `firstUse`:
 the receiver's order, then the incoming one, then any remaining key. `selected` and `target` stay the receiver's.
@@ -218,8 +224,9 @@ switches, `lastShown` and location never transfer: notification permission is pe
 **Laws and their exceptions.** Commutativity and convergence hold for everything except receiver-owned fields:
 targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases and of unsaved
 phrase keys (spellings that `tasbihMatchKey` equates keep the receiver's), first-use order, settings, and the phrases a
-cap overflow drops. `spec/transfer/fixtures/real-path.json` runs equivalent keys through `encodeTransfer`,
-`decodeTransfer` and `planTransfer`, on the sender and on the receiver, today and in history. `spec/transfer/fixtures/properties.json` checks idempotence (and that a second receipt of a code
+cap overflow drops. `spec/transfer/fixtures/real-path.json` runs one device's aliases through `encodeTransfer`,
+`decodeTransfer` and `planTransfer`, on the sender and on the receiver, today and in history, with equal and with
+different epochs. `spec/transfer/fixtures/properties.json` checks idempotence (and that a second receipt of a code
 has nothing to commit), commutativity and convergence for every ordered pair of 24 devices, and associativity and
 repeated receipt for 14 triples, among them equivalent phrase spellings (across and within a side) and history with tombstones; generation fails
 if any check fails.
