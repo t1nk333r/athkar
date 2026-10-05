@@ -3528,6 +3528,1684 @@
           "athkar-theme": "dark"
         }
       }
+    },
+    {
+      "name": "a reset epoch years ahead of this clock: refused before planning (clock), storage untouched",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {
+                  "2026-10-04": "9999-12-31T23:59:59.999Z"
+                }
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {
+                  "2026-10-04": "9999-12-31T23:59:59.999Z"
+                }
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {
+                  "2026-10-04": "9999-12-31T23:59:59.999Z",
+                  "2026-10-03": "9999-12-31T23:59:59.999Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "error": "clock"
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "a completion instant more than a day ahead of this clock: refused (clock)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {
+                      "morning-01": 1,
+                      "morning-02": 3,
+                      "morning-03": 3,
+                      "morning-04": 3,
+                      "morning-05": 1,
+                      "morning-06": 1,
+                      "morning-07": 1,
+                      "morning-08": 4,
+                      "morning-09": 1,
+                      "morning-10": 3,
+                      "morning-11": 1,
+                      "morning-12": 7,
+                      "morning-13": 1,
+                      "morning-14": 1,
+                      "morning-15": 3,
+                      "morning-16": 3,
+                      "morning-17": 1,
+                      "morning-18": 1,
+                      "morning-19": 1,
+                      "morning-20": 100,
+                      "morning-21": 100,
+                      "morning-22": 3,
+                      "morning-23": 1,
+                      "morning-24": 100,
+                      "morning-26": 1
+                    },
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": "2026-10-05T07:00:00.000Z",
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {}
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "error": "clock"
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "exportedAt before 2020: refused (clock)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2019-12-31T23:59:59.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {
+                      "morning-01": 1,
+                      "morning-02": 1
+                    },
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-03T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {}
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {
+                    "mulk-1-4": true,
+                    "mulk-5-8": true,
+                    "mulk-9-13": true,
+                    "mulk-14-17": true
+                  }
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "subhan": 10,
+                  "hamd": 3
+                },
+                "firstUse": [
+                  "subhan",
+                  "hamd"
+                ],
+                "custom": [],
+                "history": {
+                  "2026-10-03": {
+                    "subhan": 33
+                  }
+                },
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "error": "clock"
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "a reset epoch less than a day ahead of this clock (skew between devices): accepted",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-10-04T03:00:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":70},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {
+                      "morning-01": 1
+                    },
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {
+                  "2026-10-04": "2026-10-04T04:00:00.000Z"
+                }
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "subhan": 5
+                },
+                "firstUse": [
+                  "subhan"
+                ],
+                "custom": [],
+                "history": {},
+                "resets": {
+                  "2026-10-04": "2026-10-05T05:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [
+            {
+              "store": "adhkar",
+              "date": "2026-10-04",
+              "unit": "morning",
+              "before": {
+                "progress": {
+                  "morning-01": 1,
+                  "morning-02": 3,
+                  "morning-03": 3,
+                  "morning-04": 3,
+                  "morning-05": 1,
+                  "morning-06": 1,
+                  "morning-07": 1,
+                  "morning-08": 4,
+                  "morning-09": 1,
+                  "morning-10": 3,
+                  "morning-11": 1,
+                  "morning-12": 7,
+                  "morning-13": 1,
+                  "morning-14": 1,
+                  "morning-15": 3,
+                  "morning-16": 3,
+                  "morning-17": 1,
+                  "morning-18": 1,
+                  "morning-19": 1,
+                  "morning-20": 100,
+                  "morning-21": 100,
+                  "morning-22": 3,
+                  "morning-23": 1,
+                  "morning-24": 100,
+                  "morning-26": 1,
+                  "morning-25": 10
+                },
+                "manualCompletion": false,
+                "completedAt": "2026-10-04T03:00:00.000Z"
+              },
+              "after": {
+                "progress": {
+                  "morning-01": 1
+                },
+                "manualCompletion": false,
+                "completedAt": null
+              }
+            },
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "subhan",
+              "before": 70,
+              "after": 5
+            }
+          ],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "empty": false,
+          "writes": {
+            "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":5},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04\":\"2026-10-05T05:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":5},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04\":\"2026-10-05T05:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
+      "name": "adhkar item IDs this version does not have are dropped before merging (progress and targets)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {
+                      "morning-01": 3,
+                      "zz-unknown-item": 5
+                    },
+                    "evening": {
+                      "zz-other": 1
+                    }
+                  },
+                  "targets": {
+                    "morning": {
+                      "zz-unknown-item": 9
+                    },
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {}
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "adhkar",
+              "date": "2026-10-04",
+              "unit": "morning",
+              "before": {
+                "progress": {
+                  "morning-01": 1,
+                  "morning-02": 1
+                },
+                "manualCompletion": false,
+                "completedAt": null
+              },
+              "after": {
+                "progress": {
+                  "morning-01": 3,
+                  "morning-02": 1
+                },
+                "manualCompletion": false,
+                "completedAt": null
+              }
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "empty": false,
+          "writes": {
+            "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":3,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":3,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "the merged tasbih day would hold more than 256 phrase keys: refused whole (too-big), existing counts untouched",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:ذكر ١\":1,\"c:ذكر ٢\":1,\"c:ذكر ٣\":1,\"c:ذكر ٤\":1,\"c:ذكر ٥\":1,\"c:ذكر ٦\":1,\"c:ذكر ٧\":1,\"c:ذكر ٨\":1,\"c:ذكر ٩\":1,\"c:ذكر ١٠\":1,\"c:ذكر ١١\":1,\"c:ذكر ١٢\":1,\"c:ذكر ١٣\":1,\"c:ذكر ١٤\":1,\"c:ذكر ١٥\":1,\"c:ذكر ١٦\":1,\"c:ذكر ١٧\":1,\"c:ذكر ١٨\":1,\"c:ذكر ١٩\":1,\"c:ذكر ٢٠\":1,\"c:ذكر ٢١\":1,\"c:ذكر ٢٢\":1,\"c:ذكر ٢٣\":1,\"c:ذكر ٢٤\":1,\"c:ذكر ٢٥\":1,\"c:ذكر ٢٦\":1,\"c:ذكر ٢٧\":1,\"c:ذكر ٢٨\":1,\"c:ذكر ٢٩\":1,\"c:ذكر ٣٠\":1,\"c:ذكر ٣١\":1,\"c:ذكر ٣٢\":1,\"c:ذكر ٣٣\":1,\"c:ذكر ٣٤\":1,\"c:ذكر ٣٥\":1,\"c:ذكر ٣٦\":1,\"c:ذكر ٣٧\":1,\"c:ذكر ٣٨\":1,\"c:ذكر ٣٩\":1,\"c:ذكر ٤٠\":1,\"c:ذكر ٤١\":1,\"c:ذكر ٤٢\":1,\"c:ذكر ٤٣\":1,\"c:ذكر ٤٤\":1,\"c:ذكر ٤٥\":1,\"c:ذكر ٤٦\":1,\"c:ذكر ٤٧\":1,\"c:ذكر ٤٨\":1,\"c:ذكر ٤٩\":1,\"c:ذكر ٥٠\":1,\"c:ذكر ٥١\":1,\"c:ذكر ٥٢\":1,\"c:ذكر ٥٣\":1,\"c:ذكر ٥٤\":1,\"c:ذكر ٥٥\":1,\"c:ذكر ٥٦\":1,\"c:ذكر ٥٧\":1,\"c:ذكر ٥٨\":1,\"c:ذكر ٥٩\":1,\"c:ذكر ٦٠\":1,\"c:ذكر ٦١\":1,\"c:ذكر ٦٢\":1,\"c:ذكر ٦٣\":1,\"c:ذكر ٦٤\":1,\"c:ذكر ٦٥\":1,\"c:ذكر ٦٦\":1,\"c:ذكر ٦٧\":1,\"c:ذكر ٦٨\":1,\"c:ذكر ٦٩\":1,\"c:ذكر ٧٠\":1,\"c:ذكر ٧١\":1,\"c:ذكر ٧٢\":1,\"c:ذكر ٧٣\":1,\"c:ذكر ٧٤\":1,\"c:ذكر ٧٥\":1,\"c:ذكر ٧٦\":1,\"c:ذكر ٧٧\":1,\"c:ذكر ٧٨\":1,\"c:ذكر ٧٩\":1,\"c:ذكر ٨٠\":1,\"c:ذكر ٨١\":1,\"c:ذكر ٨٢\":1,\"c:ذكر ٨٣\":1,\"c:ذكر ٨٤\":1,\"c:ذكر ٨٥\":1,\"c:ذكر ٨٦\":1,\"c:ذكر ٨٧\":1,\"c:ذكر ٨٨\":1,\"c:ذكر ٨٩\":1,\"c:ذكر ٩٠\":1,\"c:ذكر ٩١\":1,\"c:ذكر ٩٢\":1,\"c:ذكر ٩٣\":1,\"c:ذكر ٩٤\":1,\"c:ذكر ٩٥\":1,\"c:ذكر ٩٦\":1,\"c:ذكر ٩٧\":1,\"c:ذكر ٩٨\":1,\"c:ذكر ٩٩\":1,\"c:ذكر ١٠٠\":1,\"c:ذكر ١٠١\":1,\"c:ذكر ١٠٢\":1,\"c:ذكر ١٠٣\":1,\"c:ذكر ١٠٤\":1,\"c:ذكر ١٠٥\":1,\"c:ذكر ١٠٦\":1,\"c:ذكر ١٠٧\":1,\"c:ذكر ١٠٨\":1,\"c:ذكر ١٠٩\":1,\"c:ذكر ١١٠\":1,\"c:ذكر ١١١\":1,\"c:ذكر ١١٢\":1,\"c:ذكر ١١٣\":1,\"c:ذكر ١١٤\":1,\"c:ذكر ١١٥\":1,\"c:ذكر ١١٦\":1,\"c:ذكر ١١٧\":1,\"c:ذكر ١١٨\":1,\"c:ذكر ١١٩\":1,\"c:ذكر ١٢٠\":1,\"c:ذكر ١٢١\":1,\"c:ذكر ١٢٢\":1,\"c:ذكر ١٢٣\":1,\"c:ذكر ١٢٤\":1,\"c:ذكر ١٢٥\":1,\"c:ذكر ١٢٦\":1,\"c:ذكر ١٢٧\":1,\"c:ذكر ١٢٨\":1,\"c:ذكر ١٢٩\":1,\"c:ذكر ١٣٠\":1,\"c:ذكر ١٣١\":1,\"c:ذكر ١٣٢\":1,\"c:ذكر ١٣٣\":1,\"c:ذكر ١٣٤\":1,\"c:ذكر ١٣٥\":1,\"c:ذكر ١٣٦\":1,\"c:ذكر ١٣٧\":1,\"c:ذكر ١٣٨\":1,\"c:ذكر ١٣٩\":1,\"c:ذكر ١٤٠\":1,\"c:ذكر ١٤١\":1,\"c:ذكر ١٤٢\":1,\"c:ذكر ١٤٣\":1,\"c:ذكر ١٤٤\":1,\"c:ذكر ١٤٥\":1,\"c:ذكر ١٤٦\":1,\"c:ذكر ١٤٧\":1,\"c:ذكر ١٤٨\":1,\"c:ذكر ١٤٩\":1,\"c:ذكر ١٥٠\":1,\"c:ذكر ١٥١\":1,\"c:ذكر ١٥٢\":1,\"c:ذكر ١٥٣\":1,\"c:ذكر ١٥٤\":1,\"c:ذكر ١٥٥\":1,\"c:ذكر ١٥٦\":1,\"c:ذكر ١٥٧\":1,\"c:ذكر ١٥٨\":1,\"c:ذكر ١٥٩\":1,\"c:ذكر ١٦٠\":1,\"c:ذكر ١٦١\":1,\"c:ذكر ١٦٢\":1,\"c:ذكر ١٦٣\":1,\"c:ذكر ١٦٤\":1,\"c:ذكر ١٦٥\":1,\"c:ذكر ١٦٦\":1,\"c:ذكر ١٦٧\":1,\"c:ذكر ١٦٨\":1,\"c:ذكر ١٦٩\":1,\"c:ذكر ١٧٠\":1,\"c:ذكر ١٧١\":1,\"c:ذكر ١٧٢\":1,\"c:ذكر ١٧٣\":1,\"c:ذكر ١٧٤\":1,\"c:ذكر ١٧٥\":1,\"c:ذكر ١٧٦\":1,\"c:ذكر ١٧٧\":1,\"c:ذكر ١٧٨\":1,\"c:ذكر ١٧٩\":1,\"c:ذكر ١٨٠\":1,\"c:ذكر ١٨١\":1,\"c:ذكر ١٨٢\":1,\"c:ذكر ١٨٣\":1,\"c:ذكر ١٨٤\":1,\"c:ذكر ١٨٥\":1,\"c:ذكر ١٨٦\":1,\"c:ذكر ١٨٧\":1,\"c:ذكر ١٨٨\":1,\"c:ذكر ١٨٩\":1,\"c:ذكر ١٩٠\":1,\"c:ذكر ١٩١\":1,\"c:ذكر ١٩٢\":1,\"c:ذكر ١٩٣\":1,\"c:ذكر ١٩٤\":1,\"c:ذكر ١٩٥\":1,\"c:ذكر ١٩٦\":1,\"c:ذكر ١٩٧\":1,\"c:ذكر ١٩٨\":1,\"c:ذكر ١٩٩\":1,\"c:ذكر ٢٠٠\":1},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {}
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:تسبيح ١": 1,
+                  "c:تسبيح ٢": 1,
+                  "c:تسبيح ٣": 1,
+                  "c:تسبيح ٤": 1,
+                  "c:تسبيح ٥": 1,
+                  "c:تسبيح ٦": 1,
+                  "c:تسبيح ٧": 1,
+                  "c:تسبيح ٨": 1,
+                  "c:تسبيح ٩": 1,
+                  "c:تسبيح ١٠": 1,
+                  "c:تسبيح ١١": 1,
+                  "c:تسبيح ١٢": 1,
+                  "c:تسبيح ١٣": 1,
+                  "c:تسبيح ١٤": 1,
+                  "c:تسبيح ١٥": 1,
+                  "c:تسبيح ١٦": 1,
+                  "c:تسبيح ١٧": 1,
+                  "c:تسبيح ١٨": 1,
+                  "c:تسبيح ١٩": 1,
+                  "c:تسبيح ٢٠": 1,
+                  "c:تسبيح ٢١": 1,
+                  "c:تسبيح ٢٢": 1,
+                  "c:تسبيح ٢٣": 1,
+                  "c:تسبيح ٢٤": 1,
+                  "c:تسبيح ٢٥": 1,
+                  "c:تسبيح ٢٦": 1,
+                  "c:تسبيح ٢٧": 1,
+                  "c:تسبيح ٢٨": 1,
+                  "c:تسبيح ٢٩": 1,
+                  "c:تسبيح ٣٠": 1,
+                  "c:تسبيح ٣١": 1,
+                  "c:تسبيح ٣٢": 1,
+                  "c:تسبيح ٣٣": 1,
+                  "c:تسبيح ٣٤": 1,
+                  "c:تسبيح ٣٥": 1,
+                  "c:تسبيح ٣٦": 1,
+                  "c:تسبيح ٣٧": 1,
+                  "c:تسبيح ٣٨": 1,
+                  "c:تسبيح ٣٩": 1,
+                  "c:تسبيح ٤٠": 1,
+                  "c:تسبيح ٤١": 1,
+                  "c:تسبيح ٤٢": 1,
+                  "c:تسبيح ٤٣": 1,
+                  "c:تسبيح ٤٤": 1,
+                  "c:تسبيح ٤٥": 1,
+                  "c:تسبيح ٤٦": 1,
+                  "c:تسبيح ٤٧": 1,
+                  "c:تسبيح ٤٨": 1,
+                  "c:تسبيح ٤٩": 1,
+                  "c:تسبيح ٥٠": 1,
+                  "c:تسبيح ٥١": 1,
+                  "c:تسبيح ٥٢": 1,
+                  "c:تسبيح ٥٣": 1,
+                  "c:تسبيح ٥٤": 1,
+                  "c:تسبيح ٥٥": 1,
+                  "c:تسبيح ٥٦": 1,
+                  "c:تسبيح ٥٧": 1,
+                  "c:تسبيح ٥٨": 1,
+                  "c:تسبيح ٥٩": 1,
+                  "c:تسبيح ٦٠": 1,
+                  "c:تسبيح ٦١": 1,
+                  "c:تسبيح ٦٢": 1,
+                  "c:تسبيح ٦٣": 1,
+                  "c:تسبيح ٦٤": 1,
+                  "c:تسبيح ٦٥": 1,
+                  "c:تسبيح ٦٦": 1,
+                  "c:تسبيح ٦٧": 1,
+                  "c:تسبيح ٦٨": 1,
+                  "c:تسبيح ٦٩": 1,
+                  "c:تسبيح ٧٠": 1,
+                  "c:تسبيح ٧١": 1,
+                  "c:تسبيح ٧٢": 1,
+                  "c:تسبيح ٧٣": 1,
+                  "c:تسبيح ٧٤": 1,
+                  "c:تسبيح ٧٥": 1,
+                  "c:تسبيح ٧٦": 1,
+                  "c:تسبيح ٧٧": 1,
+                  "c:تسبيح ٧٨": 1,
+                  "c:تسبيح ٧٩": 1,
+                  "c:تسبيح ٨٠": 1,
+                  "c:تسبيح ٨١": 1,
+                  "c:تسبيح ٨٢": 1,
+                  "c:تسبيح ٨٣": 1,
+                  "c:تسبيح ٨٤": 1,
+                  "c:تسبيح ٨٥": 1,
+                  "c:تسبيح ٨٦": 1,
+                  "c:تسبيح ٨٧": 1,
+                  "c:تسبيح ٨٨": 1,
+                  "c:تسبيح ٨٩": 1,
+                  "c:تسبيح ٩٠": 1,
+                  "c:تسبيح ٩١": 1,
+                  "c:تسبيح ٩٢": 1,
+                  "c:تسبيح ٩٣": 1,
+                  "c:تسبيح ٩٤": 1,
+                  "c:تسبيح ٩٥": 1,
+                  "c:تسبيح ٩٦": 1,
+                  "c:تسبيح ٩٧": 1,
+                  "c:تسبيح ٩٨": 1,
+                  "c:تسبيح ٩٩": 1,
+                  "c:تسبيح ١٠٠": 1,
+                  "c:تسبيح ١٠١": 1,
+                  "c:تسبيح ١٠٢": 1,
+                  "c:تسبيح ١٠٣": 1,
+                  "c:تسبيح ١٠٤": 1,
+                  "c:تسبيح ١٠٥": 1,
+                  "c:تسبيح ١٠٦": 1,
+                  "c:تسبيح ١٠٧": 1,
+                  "c:تسبيح ١٠٨": 1,
+                  "c:تسبيح ١٠٩": 1,
+                  "c:تسبيح ١١٠": 1,
+                  "c:تسبيح ١١١": 1,
+                  "c:تسبيح ١١٢": 1,
+                  "c:تسبيح ١١٣": 1,
+                  "c:تسبيح ١١٤": 1,
+                  "c:تسبيح ١١٥": 1,
+                  "c:تسبيح ١١٦": 1,
+                  "c:تسبيح ١١٧": 1,
+                  "c:تسبيح ١١٨": 1,
+                  "c:تسبيح ١١٩": 1,
+                  "c:تسبيح ١٢٠": 1,
+                  "c:تسبيح ١٢١": 1,
+                  "c:تسبيح ١٢٢": 1,
+                  "c:تسبيح ١٢٣": 1,
+                  "c:تسبيح ١٢٤": 1,
+                  "c:تسبيح ١٢٥": 1,
+                  "c:تسبيح ١٢٦": 1,
+                  "c:تسبيح ١٢٧": 1,
+                  "c:تسبيح ١٢٨": 1,
+                  "c:تسبيح ١٢٩": 1,
+                  "c:تسبيح ١٣٠": 1,
+                  "c:تسبيح ١٣١": 1,
+                  "c:تسبيح ١٣٢": 1,
+                  "c:تسبيح ١٣٣": 1,
+                  "c:تسبيح ١٣٤": 1,
+                  "c:تسبيح ١٣٥": 1,
+                  "c:تسبيح ١٣٦": 1,
+                  "c:تسبيح ١٣٧": 1,
+                  "c:تسبيح ١٣٨": 1,
+                  "c:تسبيح ١٣٩": 1,
+                  "c:تسبيح ١٤٠": 1,
+                  "c:تسبيح ١٤١": 1,
+                  "c:تسبيح ١٤٢": 1,
+                  "c:تسبيح ١٤٣": 1,
+                  "c:تسبيح ١٤٤": 1,
+                  "c:تسبيح ١٤٥": 1,
+                  "c:تسبيح ١٤٦": 1,
+                  "c:تسبيح ١٤٧": 1,
+                  "c:تسبيح ١٤٨": 1,
+                  "c:تسبيح ١٤٩": 1,
+                  "c:تسبيح ١٥٠": 1,
+                  "c:تسبيح ١٥١": 1,
+                  "c:تسبيح ١٥٢": 1,
+                  "c:تسبيح ١٥٣": 1,
+                  "c:تسبيح ١٥٤": 1,
+                  "c:تسبيح ١٥٥": 1,
+                  "c:تسبيح ١٥٦": 1,
+                  "c:تسبيح ١٥٧": 1,
+                  "c:تسبيح ١٥٨": 1,
+                  "c:تسبيح ١٥٩": 1,
+                  "c:تسبيح ١٦٠": 1,
+                  "c:تسبيح ١٦١": 1,
+                  "c:تسبيح ١٦٢": 1,
+                  "c:تسبيح ١٦٣": 1,
+                  "c:تسبيح ١٦٤": 1,
+                  "c:تسبيح ١٦٥": 1,
+                  "c:تسبيح ١٦٦": 1,
+                  "c:تسبيح ١٦٧": 1,
+                  "c:تسبيح ١٦٨": 1,
+                  "c:تسبيح ١٦٩": 1,
+                  "c:تسبيح ١٧٠": 1,
+                  "c:تسبيح ١٧١": 1,
+                  "c:تسبيح ١٧٢": 1,
+                  "c:تسبيح ١٧٣": 1,
+                  "c:تسبيح ١٧٤": 1,
+                  "c:تسبيح ١٧٥": 1,
+                  "c:تسبيح ١٧٦": 1,
+                  "c:تسبيح ١٧٧": 1,
+                  "c:تسبيح ١٧٨": 1,
+                  "c:تسبيح ١٧٩": 1,
+                  "c:تسبيح ١٨٠": 1,
+                  "c:تسبيح ١٨١": 1,
+                  "c:تسبيح ١٨٢": 1,
+                  "c:تسبيح ١٨٣": 1,
+                  "c:تسبيح ١٨٤": 1,
+                  "c:تسبيح ١٨٥": 1,
+                  "c:تسبيح ١٨٦": 1,
+                  "c:تسبيح ١٨٧": 1,
+                  "c:تسبيح ١٨٨": 1,
+                  "c:تسبيح ١٨٩": 1,
+                  "c:تسبيح ١٩٠": 1,
+                  "c:تسبيح ١٩١": 1,
+                  "c:تسبيح ١٩٢": 1,
+                  "c:تسبيح ١٩٣": 1,
+                  "c:تسبيح ١٩٤": 1,
+                  "c:تسبيح ١٩٥": 1,
+                  "c:تسبيح ١٩٦": 1,
+                  "c:تسبيح ١٩٧": 1,
+                  "c:تسبيح ١٩٨": 1,
+                  "c:تسبيح ١٩٩": 1,
+                  "c:تسبيح ٢٠٠": 1
+                },
+                "firstUse": [
+                  "c:تسبيح ١",
+                  "c:تسبيح ٢",
+                  "c:تسبيح ٣",
+                  "c:تسبيح ٤",
+                  "c:تسبيح ٥",
+                  "c:تسبيح ٦",
+                  "c:تسبيح ٧",
+                  "c:تسبيح ٨",
+                  "c:تسبيح ٩",
+                  "c:تسبيح ١٠",
+                  "c:تسبيح ١١",
+                  "c:تسبيح ١٢",
+                  "c:تسبيح ١٣",
+                  "c:تسبيح ١٤",
+                  "c:تسبيح ١٥",
+                  "c:تسبيح ١٦",
+                  "c:تسبيح ١٧",
+                  "c:تسبيح ١٨",
+                  "c:تسبيح ١٩",
+                  "c:تسبيح ٢٠",
+                  "c:تسبيح ٢١",
+                  "c:تسبيح ٢٢",
+                  "c:تسبيح ٢٣",
+                  "c:تسبيح ٢٤",
+                  "c:تسبيح ٢٥",
+                  "c:تسبيح ٢٦",
+                  "c:تسبيح ٢٧",
+                  "c:تسبيح ٢٨",
+                  "c:تسبيح ٢٩",
+                  "c:تسبيح ٣٠",
+                  "c:تسبيح ٣١",
+                  "c:تسبيح ٣٢",
+                  "c:تسبيح ٣٣",
+                  "c:تسبيح ٣٤",
+                  "c:تسبيح ٣٥",
+                  "c:تسبيح ٣٦",
+                  "c:تسبيح ٣٧",
+                  "c:تسبيح ٣٨",
+                  "c:تسبيح ٣٩",
+                  "c:تسبيح ٤٠",
+                  "c:تسبيح ٤١",
+                  "c:تسبيح ٤٢",
+                  "c:تسبيح ٤٣",
+                  "c:تسبيح ٤٤",
+                  "c:تسبيح ٤٥",
+                  "c:تسبيح ٤٦",
+                  "c:تسبيح ٤٧",
+                  "c:تسبيح ٤٨",
+                  "c:تسبيح ٤٩",
+                  "c:تسبيح ٥٠",
+                  "c:تسبيح ٥١",
+                  "c:تسبيح ٥٢",
+                  "c:تسبيح ٥٣",
+                  "c:تسبيح ٥٤",
+                  "c:تسبيح ٥٥",
+                  "c:تسبيح ٥٦",
+                  "c:تسبيح ٥٧",
+                  "c:تسبيح ٥٨",
+                  "c:تسبيح ٥٩",
+                  "c:تسبيح ٦٠",
+                  "c:تسبيح ٦١",
+                  "c:تسبيح ٦٢",
+                  "c:تسبيح ٦٣",
+                  "c:تسبيح ٦٤",
+                  "c:تسبيح ٦٥",
+                  "c:تسبيح ٦٦",
+                  "c:تسبيح ٦٧",
+                  "c:تسبيح ٦٨",
+                  "c:تسبيح ٦٩",
+                  "c:تسبيح ٧٠",
+                  "c:تسبيح ٧١",
+                  "c:تسبيح ٧٢",
+                  "c:تسبيح ٧٣",
+                  "c:تسبيح ٧٤",
+                  "c:تسبيح ٧٥",
+                  "c:تسبيح ٧٦",
+                  "c:تسبيح ٧٧",
+                  "c:تسبيح ٧٨",
+                  "c:تسبيح ٧٩",
+                  "c:تسبيح ٨٠",
+                  "c:تسبيح ٨١",
+                  "c:تسبيح ٨٢",
+                  "c:تسبيح ٨٣",
+                  "c:تسبيح ٨٤",
+                  "c:تسبيح ٨٥",
+                  "c:تسبيح ٨٦",
+                  "c:تسبيح ٨٧",
+                  "c:تسبيح ٨٨",
+                  "c:تسبيح ٨٩",
+                  "c:تسبيح ٩٠",
+                  "c:تسبيح ٩١",
+                  "c:تسبيح ٩٢",
+                  "c:تسبيح ٩٣",
+                  "c:تسبيح ٩٤",
+                  "c:تسبيح ٩٥",
+                  "c:تسبيح ٩٦",
+                  "c:تسبيح ٩٧",
+                  "c:تسبيح ٩٨",
+                  "c:تسبيح ٩٩",
+                  "c:تسبيح ١٠٠",
+                  "c:تسبيح ١٠١",
+                  "c:تسبيح ١٠٢",
+                  "c:تسبيح ١٠٣",
+                  "c:تسبيح ١٠٤",
+                  "c:تسبيح ١٠٥",
+                  "c:تسبيح ١٠٦",
+                  "c:تسبيح ١٠٧",
+                  "c:تسبيح ١٠٨",
+                  "c:تسبيح ١٠٩",
+                  "c:تسبيح ١١٠",
+                  "c:تسبيح ١١١",
+                  "c:تسبيح ١١٢",
+                  "c:تسبيح ١١٣",
+                  "c:تسبيح ١١٤",
+                  "c:تسبيح ١١٥",
+                  "c:تسبيح ١١٦",
+                  "c:تسبيح ١١٧",
+                  "c:تسبيح ١١٨",
+                  "c:تسبيح ١١٩",
+                  "c:تسبيح ١٢٠",
+                  "c:تسبيح ١٢١",
+                  "c:تسبيح ١٢٢",
+                  "c:تسبيح ١٢٣",
+                  "c:تسبيح ١٢٤",
+                  "c:تسبيح ١٢٥",
+                  "c:تسبيح ١٢٦",
+                  "c:تسبيح ١٢٧",
+                  "c:تسبيح ١٢٨",
+                  "c:تسبيح ١٢٩",
+                  "c:تسبيح ١٣٠",
+                  "c:تسبيح ١٣١",
+                  "c:تسبيح ١٣٢",
+                  "c:تسبيح ١٣٣",
+                  "c:تسبيح ١٣٤",
+                  "c:تسبيح ١٣٥",
+                  "c:تسبيح ١٣٦",
+                  "c:تسبيح ١٣٧",
+                  "c:تسبيح ١٣٨",
+                  "c:تسبيح ١٣٩",
+                  "c:تسبيح ١٤٠",
+                  "c:تسبيح ١٤١",
+                  "c:تسبيح ١٤٢",
+                  "c:تسبيح ١٤٣",
+                  "c:تسبيح ١٤٤",
+                  "c:تسبيح ١٤٥",
+                  "c:تسبيح ١٤٦",
+                  "c:تسبيح ١٤٧",
+                  "c:تسبيح ١٤٨",
+                  "c:تسبيح ١٤٩",
+                  "c:تسبيح ١٥٠",
+                  "c:تسبيح ١٥١",
+                  "c:تسبيح ١٥٢",
+                  "c:تسبيح ١٥٣",
+                  "c:تسبيح ١٥٤",
+                  "c:تسبيح ١٥٥",
+                  "c:تسبيح ١٥٦",
+                  "c:تسبيح ١٥٧",
+                  "c:تسبيح ١٥٨",
+                  "c:تسبيح ١٥٩",
+                  "c:تسبيح ١٦٠",
+                  "c:تسبيح ١٦١",
+                  "c:تسبيح ١٦٢",
+                  "c:تسبيح ١٦٣",
+                  "c:تسبيح ١٦٤",
+                  "c:تسبيح ١٦٥",
+                  "c:تسبيح ١٦٦",
+                  "c:تسبيح ١٦٧",
+                  "c:تسبيح ١٦٨",
+                  "c:تسبيح ١٦٩",
+                  "c:تسبيح ١٧٠",
+                  "c:تسبيح ١٧١",
+                  "c:تسبيح ١٧٢",
+                  "c:تسبيح ١٧٣",
+                  "c:تسبيح ١٧٤",
+                  "c:تسبيح ١٧٥",
+                  "c:تسبيح ١٧٦",
+                  "c:تسبيح ١٧٧",
+                  "c:تسبيح ١٧٨",
+                  "c:تسبيح ١٧٩",
+                  "c:تسبيح ١٨٠",
+                  "c:تسبيح ١٨١",
+                  "c:تسبيح ١٨٢",
+                  "c:تسبيح ١٨٣",
+                  "c:تسبيح ١٨٤",
+                  "c:تسبيح ١٨٥",
+                  "c:تسبيح ١٨٦",
+                  "c:تسبيح ١٨٧",
+                  "c:تسبيح ١٨٨",
+                  "c:تسبيح ١٨٩",
+                  "c:تسبيح ١٩٠",
+                  "c:تسبيح ١٩١",
+                  "c:تسبيح ١٩٢",
+                  "c:تسبيح ١٩٣",
+                  "c:تسبيح ١٩٤",
+                  "c:تسبيح ١٩٥",
+                  "c:تسبيح ١٩٦",
+                  "c:تسبيح ١٩٧",
+                  "c:تسبيح ١٩٨",
+                  "c:تسبيح ١٩٩",
+                  "c:تسبيح ٢٠٠"
+                ],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "error": "too-big"
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:ذكر ١\":1,\"c:ذكر ٢\":1,\"c:ذكر ٣\":1,\"c:ذكر ٤\":1,\"c:ذكر ٥\":1,\"c:ذكر ٦\":1,\"c:ذكر ٧\":1,\"c:ذكر ٨\":1,\"c:ذكر ٩\":1,\"c:ذكر ١٠\":1,\"c:ذكر ١١\":1,\"c:ذكر ١٢\":1,\"c:ذكر ١٣\":1,\"c:ذكر ١٤\":1,\"c:ذكر ١٥\":1,\"c:ذكر ١٦\":1,\"c:ذكر ١٧\":1,\"c:ذكر ١٨\":1,\"c:ذكر ١٩\":1,\"c:ذكر ٢٠\":1,\"c:ذكر ٢١\":1,\"c:ذكر ٢٢\":1,\"c:ذكر ٢٣\":1,\"c:ذكر ٢٤\":1,\"c:ذكر ٢٥\":1,\"c:ذكر ٢٦\":1,\"c:ذكر ٢٧\":1,\"c:ذكر ٢٨\":1,\"c:ذكر ٢٩\":1,\"c:ذكر ٣٠\":1,\"c:ذكر ٣١\":1,\"c:ذكر ٣٢\":1,\"c:ذكر ٣٣\":1,\"c:ذكر ٣٤\":1,\"c:ذكر ٣٥\":1,\"c:ذكر ٣٦\":1,\"c:ذكر ٣٧\":1,\"c:ذكر ٣٨\":1,\"c:ذكر ٣٩\":1,\"c:ذكر ٤٠\":1,\"c:ذكر ٤١\":1,\"c:ذكر ٤٢\":1,\"c:ذكر ٤٣\":1,\"c:ذكر ٤٤\":1,\"c:ذكر ٤٥\":1,\"c:ذكر ٤٦\":1,\"c:ذكر ٤٧\":1,\"c:ذكر ٤٨\":1,\"c:ذكر ٤٩\":1,\"c:ذكر ٥٠\":1,\"c:ذكر ٥١\":1,\"c:ذكر ٥٢\":1,\"c:ذكر ٥٣\":1,\"c:ذكر ٥٤\":1,\"c:ذكر ٥٥\":1,\"c:ذكر ٥٦\":1,\"c:ذكر ٥٧\":1,\"c:ذكر ٥٨\":1,\"c:ذكر ٥٩\":1,\"c:ذكر ٦٠\":1,\"c:ذكر ٦١\":1,\"c:ذكر ٦٢\":1,\"c:ذكر ٦٣\":1,\"c:ذكر ٦٤\":1,\"c:ذكر ٦٥\":1,\"c:ذكر ٦٦\":1,\"c:ذكر ٦٧\":1,\"c:ذكر ٦٨\":1,\"c:ذكر ٦٩\":1,\"c:ذكر ٧٠\":1,\"c:ذكر ٧١\":1,\"c:ذكر ٧٢\":1,\"c:ذكر ٧٣\":1,\"c:ذكر ٧٤\":1,\"c:ذكر ٧٥\":1,\"c:ذكر ٧٦\":1,\"c:ذكر ٧٧\":1,\"c:ذكر ٧٨\":1,\"c:ذكر ٧٩\":1,\"c:ذكر ٨٠\":1,\"c:ذكر ٨١\":1,\"c:ذكر ٨٢\":1,\"c:ذكر ٨٣\":1,\"c:ذكر ٨٤\":1,\"c:ذكر ٨٥\":1,\"c:ذكر ٨٦\":1,\"c:ذكر ٨٧\":1,\"c:ذكر ٨٨\":1,\"c:ذكر ٨٩\":1,\"c:ذكر ٩٠\":1,\"c:ذكر ٩١\":1,\"c:ذكر ٩٢\":1,\"c:ذكر ٩٣\":1,\"c:ذكر ٩٤\":1,\"c:ذكر ٩٥\":1,\"c:ذكر ٩٦\":1,\"c:ذكر ٩٧\":1,\"c:ذكر ٩٨\":1,\"c:ذكر ٩٩\":1,\"c:ذكر ١٠٠\":1,\"c:ذكر ١٠١\":1,\"c:ذكر ١٠٢\":1,\"c:ذكر ١٠٣\":1,\"c:ذكر ١٠٤\":1,\"c:ذكر ١٠٥\":1,\"c:ذكر ١٠٦\":1,\"c:ذكر ١٠٧\":1,\"c:ذكر ١٠٨\":1,\"c:ذكر ١٠٩\":1,\"c:ذكر ١١٠\":1,\"c:ذكر ١١١\":1,\"c:ذكر ١١٢\":1,\"c:ذكر ١١٣\":1,\"c:ذكر ١١٤\":1,\"c:ذكر ١١٥\":1,\"c:ذكر ١١٦\":1,\"c:ذكر ١١٧\":1,\"c:ذكر ١١٨\":1,\"c:ذكر ١١٩\":1,\"c:ذكر ١٢٠\":1,\"c:ذكر ١٢١\":1,\"c:ذكر ١٢٢\":1,\"c:ذكر ١٢٣\":1,\"c:ذكر ١٢٤\":1,\"c:ذكر ١٢٥\":1,\"c:ذكر ١٢٦\":1,\"c:ذكر ١٢٧\":1,\"c:ذكر ١٢٨\":1,\"c:ذكر ١٢٩\":1,\"c:ذكر ١٣٠\":1,\"c:ذكر ١٣١\":1,\"c:ذكر ١٣٢\":1,\"c:ذكر ١٣٣\":1,\"c:ذكر ١٣٤\":1,\"c:ذكر ١٣٥\":1,\"c:ذكر ١٣٦\":1,\"c:ذكر ١٣٧\":1,\"c:ذكر ١٣٨\":1,\"c:ذكر ١٣٩\":1,\"c:ذكر ١٤٠\":1,\"c:ذكر ١٤١\":1,\"c:ذكر ١٤٢\":1,\"c:ذكر ١٤٣\":1,\"c:ذكر ١٤٤\":1,\"c:ذكر ١٤٥\":1,\"c:ذكر ١٤٦\":1,\"c:ذكر ١٤٧\":1,\"c:ذكر ١٤٨\":1,\"c:ذكر ١٤٩\":1,\"c:ذكر ١٥٠\":1,\"c:ذكر ١٥١\":1,\"c:ذكر ١٥٢\":1,\"c:ذكر ١٥٣\":1,\"c:ذكر ١٥٤\":1,\"c:ذكر ١٥٥\":1,\"c:ذكر ١٥٦\":1,\"c:ذكر ١٥٧\":1,\"c:ذكر ١٥٨\":1,\"c:ذكر ١٥٩\":1,\"c:ذكر ١٦٠\":1,\"c:ذكر ١٦١\":1,\"c:ذكر ١٦٢\":1,\"c:ذكر ١٦٣\":1,\"c:ذكر ١٦٤\":1,\"c:ذكر ١٦٥\":1,\"c:ذكر ١٦٦\":1,\"c:ذكر ١٦٧\":1,\"c:ذكر ١٦٨\":1,\"c:ذكر ١٦٩\":1,\"c:ذكر ١٧٠\":1,\"c:ذكر ١٧١\":1,\"c:ذكر ١٧٢\":1,\"c:ذكر ١٧٣\":1,\"c:ذكر ١٧٤\":1,\"c:ذكر ١٧٥\":1,\"c:ذكر ١٧٦\":1,\"c:ذكر ١٧٧\":1,\"c:ذكر ١٧٨\":1,\"c:ذكر ١٧٩\":1,\"c:ذكر ١٨٠\":1,\"c:ذكر ١٨١\":1,\"c:ذكر ١٨٢\":1,\"c:ذكر ١٨٣\":1,\"c:ذكر ١٨٤\":1,\"c:ذكر ١٨٥\":1,\"c:ذكر ١٨٦\":1,\"c:ذكر ١٨٧\":1,\"c:ذكر ١٨٨\":1,\"c:ذكر ١٨٩\":1,\"c:ذكر ١٩٠\":1,\"c:ذكر ١٩١\":1,\"c:ذكر ١٩٢\":1,\"c:ذكر ١٩٣\":1,\"c:ذكر ١٩٤\":1,\"c:ذكر ١٩٥\":1,\"c:ذكر ١٩٦\":1,\"c:ذكر ١٩٧\":1,\"c:ذكر ١٩٨\":1,\"c:ذكر ١٩٩\":1,\"c:ذكر ٢٠٠\":1},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "the merged tasbih store would hold more than 512 phrase keys in all: refused (too-big)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:ذكر ١\":1,\"c:ذكر ٢\":1,\"c:ذكر ٣\":1,\"c:ذكر ٤\":1,\"c:ذكر ٥\":1,\"c:ذكر ٦\":1,\"c:ذكر ٧\":1,\"c:ذكر ٨\":1,\"c:ذكر ٩\":1,\"c:ذكر ١٠\":1,\"c:ذكر ١١\":1,\"c:ذكر ١٢\":1,\"c:ذكر ١٣\":1,\"c:ذكر ١٤\":1,\"c:ذكر ١٥\":1,\"c:ذكر ١٦\":1,\"c:ذكر ١٧\":1,\"c:ذكر ١٨\":1,\"c:ذكر ١٩\":1,\"c:ذكر ٢٠\":1,\"c:ذكر ٢١\":1,\"c:ذكر ٢٢\":1,\"c:ذكر ٢٣\":1,\"c:ذكر ٢٤\":1,\"c:ذكر ٢٥\":1,\"c:ذكر ٢٦\":1,\"c:ذكر ٢٧\":1,\"c:ذكر ٢٨\":1,\"c:ذكر ٢٩\":1,\"c:ذكر ٣٠\":1,\"c:ذكر ٣١\":1,\"c:ذكر ٣٢\":1,\"c:ذكر ٣٣\":1,\"c:ذكر ٣٤\":1,\"c:ذكر ٣٥\":1,\"c:ذكر ٣٦\":1,\"c:ذكر ٣٧\":1,\"c:ذكر ٣٨\":1,\"c:ذكر ٣٩\":1,\"c:ذكر ٤٠\":1,\"c:ذكر ٤١\":1,\"c:ذكر ٤٢\":1,\"c:ذكر ٤٣\":1,\"c:ذكر ٤٤\":1,\"c:ذكر ٤٥\":1,\"c:ذكر ٤٦\":1,\"c:ذكر ٤٧\":1,\"c:ذكر ٤٨\":1,\"c:ذكر ٤٩\":1,\"c:ذكر ٥٠\":1,\"c:ذكر ٥١\":1,\"c:ذكر ٥٢\":1,\"c:ذكر ٥٣\":1,\"c:ذكر ٥٤\":1,\"c:ذكر ٥٥\":1,\"c:ذكر ٥٦\":1,\"c:ذكر ٥٧\":1,\"c:ذكر ٥٨\":1,\"c:ذكر ٥٩\":1,\"c:ذكر ٦٠\":1,\"c:ذكر ٦١\":1,\"c:ذكر ٦٢\":1,\"c:ذكر ٦٣\":1,\"c:ذكر ٦٤\":1,\"c:ذكر ٦٥\":1,\"c:ذكر ٦٦\":1,\"c:ذكر ٦٧\":1,\"c:ذكر ٦٨\":1,\"c:ذكر ٦٩\":1,\"c:ذكر ٧٠\":1,\"c:ذكر ٧١\":1,\"c:ذكر ٧٢\":1,\"c:ذكر ٧٣\":1,\"c:ذكر ٧٤\":1,\"c:ذكر ٧٥\":1,\"c:ذكر ٧٦\":1,\"c:ذكر ٧٧\":1,\"c:ذكر ٧٨\":1,\"c:ذكر ٧٩\":1,\"c:ذكر ٨٠\":1,\"c:ذكر ٨١\":1,\"c:ذكر ٨٢\":1,\"c:ذكر ٨٣\":1,\"c:ذكر ٨٤\":1,\"c:ذكر ٨٥\":1,\"c:ذكر ٨٦\":1,\"c:ذكر ٨٧\":1,\"c:ذكر ٨٨\":1,\"c:ذكر ٨٩\":1,\"c:ذكر ٩٠\":1,\"c:ذكر ٩١\":1,\"c:ذكر ٩٢\":1,\"c:ذكر ٩٣\":1,\"c:ذكر ٩٤\":1,\"c:ذكر ٩٥\":1,\"c:ذكر ٩٦\":1,\"c:ذكر ٩٧\":1,\"c:ذكر ٩٨\":1,\"c:ذكر ٩٩\":1,\"c:ذكر ١٠٠\":1,\"c:ذكر ١٠١\":1,\"c:ذكر ١٠٢\":1,\"c:ذكر ١٠٣\":1,\"c:ذكر ١٠٤\":1,\"c:ذكر ١٠٥\":1,\"c:ذكر ١٠٦\":1,\"c:ذكر ١٠٧\":1,\"c:ذكر ١٠٨\":1,\"c:ذكر ١٠٩\":1,\"c:ذكر ١١٠\":1,\"c:ذكر ١١١\":1,\"c:ذكر ١١٢\":1,\"c:ذكر ١١٣\":1,\"c:ذكر ١١٤\":1,\"c:ذكر ١١٥\":1,\"c:ذكر ١١٦\":1,\"c:ذكر ١١٧\":1,\"c:ذكر ١١٨\":1,\"c:ذكر ١١٩\":1,\"c:ذكر ١٢٠\":1,\"c:ذكر ١٢١\":1,\"c:ذكر ١٢٢\":1,\"c:ذكر ١٢٣\":1,\"c:ذكر ١٢٤\":1,\"c:ذكر ١٢٥\":1,\"c:ذكر ١٢٦\":1,\"c:ذكر ١٢٧\":1,\"c:ذكر ١٢٨\":1,\"c:ذكر ١٢٩\":1,\"c:ذكر ١٣٠\":1,\"c:ذكر ١٣١\":1,\"c:ذكر ١٣٢\":1,\"c:ذكر ١٣٣\":1,\"c:ذكر ١٣٤\":1,\"c:ذكر ١٣٥\":1,\"c:ذكر ١٣٦\":1,\"c:ذكر ١٣٧\":1,\"c:ذكر ١٣٨\":1,\"c:ذكر ١٣٩\":1,\"c:ذكر ١٤٠\":1,\"c:ذكر ١٤١\":1,\"c:ذكر ١٤٢\":1,\"c:ذكر ١٤٣\":1,\"c:ذكر ١٤٤\":1,\"c:ذكر ١٤٥\":1,\"c:ذكر ١٤٦\":1,\"c:ذكر ١٤٧\":1,\"c:ذكر ١٤٨\":1,\"c:ذكر ١٤٩\":1,\"c:ذكر ١٥٠\":1,\"c:ذكر ١٥١\":1,\"c:ذكر ١٥٢\":1,\"c:ذكر ١٥٣\":1,\"c:ذكر ١٥٤\":1,\"c:ذكر ١٥٥\":1,\"c:ذكر ١٥٦\":1,\"c:ذكر ١٥٧\":1,\"c:ذكر ١٥٨\":1,\"c:ذكر ١٥٩\":1,\"c:ذكر ١٦٠\":1,\"c:ذكر ١٦١\":1,\"c:ذكر ١٦٢\":1,\"c:ذكر ١٦٣\":1,\"c:ذكر ١٦٤\":1,\"c:ذكر ١٦٥\":1,\"c:ذكر ١٦٦\":1,\"c:ذكر ١٦٧\":1,\"c:ذكر ١٦٨\":1,\"c:ذكر ١٦٩\":1,\"c:ذكر ١٧٠\":1,\"c:ذكر ١٧١\":1,\"c:ذكر ١٧٢\":1,\"c:ذكر ١٧٣\":1,\"c:ذكر ١٧٤\":1,\"c:ذكر ١٧٥\":1,\"c:ذكر ١٧٦\":1,\"c:ذكر ١٧٧\":1,\"c:ذكر ١٧٨\":1,\"c:ذكر ١٧٩\":1,\"c:ذكر ١٨٠\":1,\"c:ذكر ١٨١\":1,\"c:ذكر ١٨٢\":1,\"c:ذكر ١٨٣\":1,\"c:ذكر ١٨٤\":1,\"c:ذكر ١٨٥\":1,\"c:ذكر ١٨٦\":1,\"c:ذكر ١٨٧\":1,\"c:ذكر ١٨٨\":1,\"c:ذكر ١٨٩\":1,\"c:ذكر ١٩٠\":1,\"c:ذكر ١٩١\":1,\"c:ذكر ١٩٢\":1,\"c:ذكر ١٩٣\":1,\"c:ذكر ١٩٤\":1,\"c:ذكر ١٩٥\":1,\"c:ذكر ١٩٦\":1,\"c:ذكر ١٩٧\":1,\"c:ذكر ١٩٨\":1,\"c:ذكر ١٩٩\":1,\"c:ذكر ٢٠٠\":1},\"firstUse\":[],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:حمد ١\":1,\"c:حمد ٢\":1,\"c:حمد ٣\":1,\"c:حمد ٤\":1,\"c:حمد ٥\":1,\"c:حمد ٦\":1,\"c:حمد ٧\":1,\"c:حمد ٨\":1,\"c:حمد ٩\":1,\"c:حمد ١٠\":1,\"c:حمد ١١\":1,\"c:حمد ١٢\":1,\"c:حمد ١٣\":1,\"c:حمد ١٤\":1,\"c:حمد ١٥\":1,\"c:حمد ١٦\":1,\"c:حمد ١٧\":1,\"c:حمد ١٨\":1,\"c:حمد ١٩\":1,\"c:حمد ٢٠\":1,\"c:حمد ٢١\":1,\"c:حمد ٢٢\":1,\"c:حمد ٢٣\":1,\"c:حمد ٢٤\":1,\"c:حمد ٢٥\":1,\"c:حمد ٢٦\":1,\"c:حمد ٢٧\":1,\"c:حمد ٢٨\":1,\"c:حمد ٢٩\":1,\"c:حمد ٣٠\":1,\"c:حمد ٣١\":1,\"c:حمد ٣٢\":1,\"c:حمد ٣٣\":1,\"c:حمد ٣٤\":1,\"c:حمد ٣٥\":1,\"c:حمد ٣٦\":1,\"c:حمد ٣٧\":1,\"c:حمد ٣٨\":1,\"c:حمد ٣٩\":1,\"c:حمد ٤٠\":1,\"c:حمد ٤١\":1,\"c:حمد ٤٢\":1,\"c:حمد ٤٣\":1,\"c:حمد ٤٤\":1,\"c:حمد ٤٥\":1,\"c:حمد ٤٦\":1,\"c:حمد ٤٧\":1,\"c:حمد ٤٨\":1,\"c:حمد ٤٩\":1,\"c:حمد ٥٠\":1,\"c:حمد ٥١\":1,\"c:حمد ٥٢\":1,\"c:حمد ٥٣\":1,\"c:حمد ٥٤\":1,\"c:حمد ٥٥\":1,\"c:حمد ٥٦\":1,\"c:حمد ٥٧\":1,\"c:حمد ٥٨\":1,\"c:حمد ٥٩\":1,\"c:حمد ٦٠\":1,\"c:حمد ٦١\":1,\"c:حمد ٦٢\":1,\"c:حمد ٦٣\":1,\"c:حمد ٦٤\":1,\"c:حمد ٦٥\":1,\"c:حمد ٦٦\":1,\"c:حمد ٦٧\":1,\"c:حمد ٦٨\":1,\"c:حمد ٦٩\":1,\"c:حمد ٧٠\":1,\"c:حمد ٧١\":1,\"c:حمد ٧٢\":1,\"c:حمد ٧٣\":1,\"c:حمد ٧٤\":1,\"c:حمد ٧٥\":1,\"c:حمد ٧٦\":1,\"c:حمد ٧٧\":1,\"c:حمد ٧٨\":1,\"c:حمد ٧٩\":1,\"c:حمد ٨٠\":1,\"c:حمد ٨١\":1,\"c:حمد ٨٢\":1,\"c:حمد ٨٣\":1,\"c:حمد ٨٤\":1,\"c:حمد ٨٥\":1,\"c:حمد ٨٦\":1,\"c:حمد ٨٧\":1,\"c:حمد ٨٨\":1,\"c:حمد ٨٩\":1,\"c:حمد ٩٠\":1,\"c:حمد ٩١\":1,\"c:حمد ٩٢\":1,\"c:حمد ٩٣\":1,\"c:حمد ٩٤\":1,\"c:حمد ٩٥\":1,\"c:حمد ٩٦\":1,\"c:حمد ٩٧\":1,\"c:حمد ٩٨\":1,\"c:حمد ٩٩\":1,\"c:حمد ١٠٠\":1,\"c:حمد ١٠١\":1,\"c:حمد ١٠٢\":1,\"c:حمد ١٠٣\":1,\"c:حمد ١٠٤\":1,\"c:حمد ١٠٥\":1,\"c:حمد ١٠٦\":1,\"c:حمد ١٠٧\":1,\"c:حمد ١٠٨\":1,\"c:حمد ١٠٩\":1,\"c:حمد ١١٠\":1,\"c:حمد ١١١\":1,\"c:حمد ١١٢\":1,\"c:حمد ١١٣\":1,\"c:حمد ١١٤\":1,\"c:حمد ١١٥\":1,\"c:حمد ١١٦\":1,\"c:حمد ١١٧\":1,\"c:حمد ١١٨\":1,\"c:حمد ١١٩\":1,\"c:حمد ١٢٠\":1,\"c:حمد ١٢١\":1,\"c:حمد ١٢٢\":1,\"c:حمد ١٢٣\":1,\"c:حمد ١٢٤\":1,\"c:حمد ١٢٥\":1,\"c:حمد ١٢٦\":1,\"c:حمد ١٢٧\":1,\"c:حمد ١٢٨\":1,\"c:حمد ١٢٩\":1,\"c:حمد ١٣٠\":1,\"c:حمد ١٣١\":1,\"c:حمد ١٣٢\":1,\"c:حمد ١٣٣\":1,\"c:حمد ١٣٤\":1,\"c:حمد ١٣٥\":1,\"c:حمد ١٣٦\":1,\"c:حمد ١٣٧\":1,\"c:حمد ١٣٨\":1,\"c:حمد ١٣٩\":1,\"c:حمد ١٤٠\":1,\"c:حمد ١٤١\":1,\"c:حمد ١٤٢\":1,\"c:حمد ١٤٣\":1,\"c:حمد ١٤٤\":1,\"c:حمد ١٤٥\":1,\"c:حمد ١٤٦\":1,\"c:حمد ١٤٧\":1,\"c:حمد ١٤٨\":1,\"c:حمد ١٤٩\":1,\"c:حمد ١٥٠\":1,\"c:حمد ١٥١\":1,\"c:حمد ١٥٢\":1,\"c:حمد ١٥٣\":1,\"c:حمد ١٥٤\":1,\"c:حمد ١٥٥\":1,\"c:حمد ١٥٦\":1,\"c:حمد ١٥٧\":1,\"c:حمد ١٥٨\":1,\"c:حمد ١٥٩\":1,\"c:حمد ١٦٠\":1,\"c:حمد ١٦١\":1,\"c:حمد ١٦٢\":1,\"c:حمد ١٦٣\":1,\"c:حمد ١٦٤\":1,\"c:حمد ١٦٥\":1,\"c:حمد ١٦٦\":1,\"c:حمد ١٦٧\":1,\"c:حمد ١٦٨\":1,\"c:حمد ١٦٩\":1,\"c:حمد ١٧٠\":1,\"c:حمد ١٧١\":1,\"c:حمد ١٧٢\":1,\"c:حمد ١٧٣\":1,\"c:حمد ١٧٤\":1,\"c:حمد ١٧٥\":1,\"c:حمد ١٧٦\":1,\"c:حمد ١٧٧\":1,\"c:حمد ١٧٨\":1,\"c:حمد ١٧٩\":1,\"c:حمد ١٨٠\":1,\"c:حمد ١٨١\":1,\"c:حمد ١٨٢\":1,\"c:حمد ١٨٣\":1,\"c:حمد ١٨٤\":1,\"c:حمد ١٨٥\":1,\"c:حمد ١٨٦\":1,\"c:حمد ١٨٧\":1,\"c:حمد ١٨٨\":1,\"c:حمد ١٨٩\":1,\"c:حمد ١٩٠\":1,\"c:حمد ١٩١\":1,\"c:حمد ١٩٢\":1,\"c:حمد ١٩٣\":1,\"c:حمد ١٩٤\":1,\"c:حمد ١٩٥\":1,\"c:حمد ١٩٦\":1,\"c:حمد ١٩٧\":1,\"c:حمد ١٩٨\":1,\"c:حمد ١٩٩\":1,\"c:حمد ٢٠٠\":1}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {}
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:تسبيح ١": 1,
+                  "c:تسبيح ٢": 1,
+                  "c:تسبيح ٣": 1,
+                  "c:تسبيح ٤": 1,
+                  "c:تسبيح ٥": 1,
+                  "c:تسبيح ٦": 1,
+                  "c:تسبيح ٧": 1,
+                  "c:تسبيح ٨": 1,
+                  "c:تسبيح ٩": 1,
+                  "c:تسبيح ١٠": 1,
+                  "c:تسبيح ١١": 1,
+                  "c:تسبيح ١٢": 1,
+                  "c:تسبيح ١٣": 1,
+                  "c:تسبيح ١٤": 1,
+                  "c:تسبيح ١٥": 1,
+                  "c:تسبيح ١٦": 1,
+                  "c:تسبيح ١٧": 1,
+                  "c:تسبيح ١٨": 1,
+                  "c:تسبيح ١٩": 1,
+                  "c:تسبيح ٢٠": 1,
+                  "c:تسبيح ٢١": 1,
+                  "c:تسبيح ٢٢": 1,
+                  "c:تسبيح ٢٣": 1,
+                  "c:تسبيح ٢٤": 1,
+                  "c:تسبيح ٢٥": 1,
+                  "c:تسبيح ٢٦": 1,
+                  "c:تسبيح ٢٧": 1,
+                  "c:تسبيح ٢٨": 1,
+                  "c:تسبيح ٢٩": 1,
+                  "c:تسبيح ٣٠": 1,
+                  "c:تسبيح ٣١": 1,
+                  "c:تسبيح ٣٢": 1,
+                  "c:تسبيح ٣٣": 1,
+                  "c:تسبيح ٣٤": 1,
+                  "c:تسبيح ٣٥": 1,
+                  "c:تسبيح ٣٦": 1,
+                  "c:تسبيح ٣٧": 1,
+                  "c:تسبيح ٣٨": 1,
+                  "c:تسبيح ٣٩": 1,
+                  "c:تسبيح ٤٠": 1,
+                  "c:تسبيح ٤١": 1,
+                  "c:تسبيح ٤٢": 1,
+                  "c:تسبيح ٤٣": 1,
+                  "c:تسبيح ٤٤": 1,
+                  "c:تسبيح ٤٥": 1,
+                  "c:تسبيح ٤٦": 1,
+                  "c:تسبيح ٤٧": 1,
+                  "c:تسبيح ٤٨": 1,
+                  "c:تسبيح ٤٩": 1,
+                  "c:تسبيح ٥٠": 1
+                },
+                "firstUse": [
+                  "c:تسبيح ١",
+                  "c:تسبيح ٢",
+                  "c:تسبيح ٣",
+                  "c:تسبيح ٤",
+                  "c:تسبيح ٥",
+                  "c:تسبيح ٦",
+                  "c:تسبيح ٧",
+                  "c:تسبيح ٨",
+                  "c:تسبيح ٩",
+                  "c:تسبيح ١٠",
+                  "c:تسبيح ١١",
+                  "c:تسبيح ١٢",
+                  "c:تسبيح ١٣",
+                  "c:تسبيح ١٤",
+                  "c:تسبيح ١٥",
+                  "c:تسبيح ١٦",
+                  "c:تسبيح ١٧",
+                  "c:تسبيح ١٨",
+                  "c:تسبيح ١٩",
+                  "c:تسبيح ٢٠",
+                  "c:تسبيح ٢١",
+                  "c:تسبيح ٢٢",
+                  "c:تسبيح ٢٣",
+                  "c:تسبيح ٢٤",
+                  "c:تسبيح ٢٥",
+                  "c:تسبيح ٢٦",
+                  "c:تسبيح ٢٧",
+                  "c:تسبيح ٢٨",
+                  "c:تسبيح ٢٩",
+                  "c:تسبيح ٣٠",
+                  "c:تسبيح ٣١",
+                  "c:تسبيح ٣٢",
+                  "c:تسبيح ٣٣",
+                  "c:تسبيح ٣٤",
+                  "c:تسبيح ٣٥",
+                  "c:تسبيح ٣٦",
+                  "c:تسبيح ٣٧",
+                  "c:تسبيح ٣٨",
+                  "c:تسبيح ٣٩",
+                  "c:تسبيح ٤٠",
+                  "c:تسبيح ٤١",
+                  "c:تسبيح ٤٢",
+                  "c:تسبيح ٤٣",
+                  "c:تسبيح ٤٤",
+                  "c:تسبيح ٤٥",
+                  "c:تسبيح ٤٦",
+                  "c:تسبيح ٤٧",
+                  "c:تسبيح ٤٨",
+                  "c:تسبيح ٤٩",
+                  "c:تسبيح ٥٠"
+                ],
+                "custom": [],
+                "history": {
+                  "2026-10-02": {
+                    "c:شكر ١": 1,
+                    "c:شكر ٢": 1,
+                    "c:شكر ٣": 1,
+                    "c:شكر ٤": 1,
+                    "c:شكر ٥": 1,
+                    "c:شكر ٦": 1,
+                    "c:شكر ٧": 1,
+                    "c:شكر ٨": 1,
+                    "c:شكر ٩": 1,
+                    "c:شكر ١٠": 1,
+                    "c:شكر ١١": 1,
+                    "c:شكر ١٢": 1,
+                    "c:شكر ١٣": 1,
+                    "c:شكر ١٤": 1,
+                    "c:شكر ١٥": 1,
+                    "c:شكر ١٦": 1,
+                    "c:شكر ١٧": 1,
+                    "c:شكر ١٨": 1,
+                    "c:شكر ١٩": 1,
+                    "c:شكر ٢٠": 1,
+                    "c:شكر ٢١": 1,
+                    "c:شكر ٢٢": 1,
+                    "c:شكر ٢٣": 1,
+                    "c:شكر ٢٤": 1,
+                    "c:شكر ٢٥": 1,
+                    "c:شكر ٢٦": 1,
+                    "c:شكر ٢٧": 1,
+                    "c:شكر ٢٨": 1,
+                    "c:شكر ٢٩": 1,
+                    "c:شكر ٣٠": 1,
+                    "c:شكر ٣١": 1,
+                    "c:شكر ٣٢": 1,
+                    "c:شكر ٣٣": 1,
+                    "c:شكر ٣٤": 1,
+                    "c:شكر ٣٥": 1,
+                    "c:شكر ٣٦": 1,
+                    "c:شكر ٣٧": 1,
+                    "c:شكر ٣٨": 1,
+                    "c:شكر ٣٩": 1,
+                    "c:شكر ٤٠": 1,
+                    "c:شكر ٤١": 1,
+                    "c:شكر ٤٢": 1,
+                    "c:شكر ٤٣": 1,
+                    "c:شكر ٤٤": 1,
+                    "c:شكر ٤٥": 1,
+                    "c:شكر ٤٦": 1,
+                    "c:شكر ٤٧": 1,
+                    "c:شكر ٤٨": 1,
+                    "c:شكر ٤٩": 1,
+                    "c:شكر ٥٠": 1,
+                    "c:شكر ٥١": 1,
+                    "c:شكر ٥٢": 1,
+                    "c:شكر ٥٣": 1,
+                    "c:شكر ٥٤": 1,
+                    "c:شكر ٥٥": 1,
+                    "c:شكر ٥٦": 1,
+                    "c:شكر ٥٧": 1,
+                    "c:شكر ٥٨": 1,
+                    "c:شكر ٥٩": 1,
+                    "c:شكر ٦٠": 1,
+                    "c:شكر ٦١": 1,
+                    "c:شكر ٦٢": 1,
+                    "c:شكر ٦٣": 1,
+                    "c:شكر ٦٤": 1,
+                    "c:شكر ٦٥": 1,
+                    "c:شكر ٦٦": 1,
+                    "c:شكر ٦٧": 1,
+                    "c:شكر ٦٨": 1,
+                    "c:شكر ٦٩": 1,
+                    "c:شكر ٧٠": 1,
+                    "c:شكر ٧١": 1,
+                    "c:شكر ٧٢": 1,
+                    "c:شكر ٧٣": 1,
+                    "c:شكر ٧٤": 1,
+                    "c:شكر ٧٥": 1,
+                    "c:شكر ٧٦": 1,
+                    "c:شكر ٧٧": 1,
+                    "c:شكر ٧٨": 1,
+                    "c:شكر ٧٩": 1,
+                    "c:شكر ٨٠": 1,
+                    "c:شكر ٨١": 1,
+                    "c:شكر ٨٢": 1,
+                    "c:شكر ٨٣": 1,
+                    "c:شكر ٨٤": 1,
+                    "c:شكر ٨٥": 1,
+                    "c:شكر ٨٦": 1,
+                    "c:شكر ٨٧": 1,
+                    "c:شكر ٨٨": 1,
+                    "c:شكر ٨٩": 1,
+                    "c:شكر ٩٠": 1,
+                    "c:شكر ٩١": 1,
+                    "c:شكر ٩٢": 1,
+                    "c:شكر ٩٣": 1,
+                    "c:شكر ٩٤": 1,
+                    "c:شكر ٩٥": 1,
+                    "c:شكر ٩٦": 1,
+                    "c:شكر ٩٧": 1,
+                    "c:شكر ٩٨": 1,
+                    "c:شكر ٩٩": 1,
+                    "c:شكر ١٠٠": 1,
+                    "c:شكر ١٠١": 1,
+                    "c:شكر ١٠٢": 1,
+                    "c:شكر ١٠٣": 1,
+                    "c:شكر ١٠٤": 1,
+                    "c:شكر ١٠٥": 1,
+                    "c:شكر ١٠٦": 1,
+                    "c:شكر ١٠٧": 1,
+                    "c:شكر ١٠٨": 1,
+                    "c:شكر ١٠٩": 1,
+                    "c:شكر ١١٠": 1,
+                    "c:شكر ١١١": 1,
+                    "c:شكر ١١٢": 1,
+                    "c:شكر ١١٣": 1,
+                    "c:شكر ١١٤": 1,
+                    "c:شكر ١١٥": 1,
+                    "c:شكر ١١٦": 1,
+                    "c:شكر ١١٧": 1,
+                    "c:شكر ١١٨": 1,
+                    "c:شكر ١١٩": 1,
+                    "c:شكر ١٢٠": 1,
+                    "c:شكر ١٢١": 1,
+                    "c:شكر ١٢٢": 1,
+                    "c:شكر ١٢٣": 1,
+                    "c:شكر ١٢٤": 1,
+                    "c:شكر ١٢٥": 1,
+                    "c:شكر ١٢٦": 1,
+                    "c:شكر ١٢٧": 1,
+                    "c:شكر ١٢٨": 1,
+                    "c:شكر ١٢٩": 1,
+                    "c:شكر ١٣٠": 1,
+                    "c:شكر ١٣١": 1,
+                    "c:شكر ١٣٢": 1,
+                    "c:شكر ١٣٣": 1,
+                    "c:شكر ١٣٤": 1,
+                    "c:شكر ١٣٥": 1,
+                    "c:شكر ١٣٦": 1,
+                    "c:شكر ١٣٧": 1,
+                    "c:شكر ١٣٨": 1,
+                    "c:شكر ١٣٩": 1,
+                    "c:شكر ١٤٠": 1,
+                    "c:شكر ١٤١": 1,
+                    "c:شكر ١٤٢": 1,
+                    "c:شكر ١٤٣": 1,
+                    "c:شكر ١٤٤": 1,
+                    "c:شكر ١٤٥": 1,
+                    "c:شكر ١٤٦": 1,
+                    "c:شكر ١٤٧": 1,
+                    "c:شكر ١٤٨": 1,
+                    "c:شكر ١٤٩": 1,
+                    "c:شكر ١٥٠": 1,
+                    "c:شكر ١٥١": 1,
+                    "c:شكر ١٥٢": 1,
+                    "c:شكر ١٥٣": 1,
+                    "c:شكر ١٥٤": 1,
+                    "c:شكر ١٥٥": 1,
+                    "c:شكر ١٥٦": 1,
+                    "c:شكر ١٥٧": 1,
+                    "c:شكر ١٥٨": 1,
+                    "c:شكر ١٥٩": 1,
+                    "c:شكر ١٦٠": 1,
+                    "c:شكر ١٦١": 1,
+                    "c:شكر ١٦٢": 1,
+                    "c:شكر ١٦٣": 1,
+                    "c:شكر ١٦٤": 1,
+                    "c:شكر ١٦٥": 1,
+                    "c:شكر ١٦٦": 1,
+                    "c:شكر ١٦٧": 1,
+                    "c:شكر ١٦٨": 1,
+                    "c:شكر ١٦٩": 1,
+                    "c:شكر ١٧٠": 1,
+                    "c:شكر ١٧١": 1,
+                    "c:شكر ١٧٢": 1,
+                    "c:شكر ١٧٣": 1,
+                    "c:شكر ١٧٤": 1,
+                    "c:شكر ١٧٥": 1,
+                    "c:شكر ١٧٦": 1,
+                    "c:شكر ١٧٧": 1,
+                    "c:شكر ١٧٨": 1,
+                    "c:شكر ١٧٩": 1,
+                    "c:شكر ١٨٠": 1,
+                    "c:شكر ١٨١": 1,
+                    "c:شكر ١٨٢": 1,
+                    "c:شكر ١٨٣": 1,
+                    "c:شكر ١٨٤": 1,
+                    "c:شكر ١٨٥": 1,
+                    "c:شكر ١٨٦": 1,
+                    "c:شكر ١٨٧": 1,
+                    "c:شكر ١٨٨": 1,
+                    "c:شكر ١٨٩": 1,
+                    "c:شكر ١٩٠": 1,
+                    "c:شكر ١٩١": 1,
+                    "c:شكر ١٩٢": 1,
+                    "c:شكر ١٩٣": 1,
+                    "c:شكر ١٩٤": 1,
+                    "c:شكر ١٩٥": 1,
+                    "c:شكر ١٩٦": 1,
+                    "c:شكر ١٩٧": 1,
+                    "c:شكر ١٩٨": 1,
+                    "c:شكر ١٩٩": 1,
+                    "c:شكر ٢٠٠": 1
+                  }
+                },
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "error": "too-big"
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:ذكر ١\":1,\"c:ذكر ٢\":1,\"c:ذكر ٣\":1,\"c:ذكر ٤\":1,\"c:ذكر ٥\":1,\"c:ذكر ٦\":1,\"c:ذكر ٧\":1,\"c:ذكر ٨\":1,\"c:ذكر ٩\":1,\"c:ذكر ١٠\":1,\"c:ذكر ١١\":1,\"c:ذكر ١٢\":1,\"c:ذكر ١٣\":1,\"c:ذكر ١٤\":1,\"c:ذكر ١٥\":1,\"c:ذكر ١٦\":1,\"c:ذكر ١٧\":1,\"c:ذكر ١٨\":1,\"c:ذكر ١٩\":1,\"c:ذكر ٢٠\":1,\"c:ذكر ٢١\":1,\"c:ذكر ٢٢\":1,\"c:ذكر ٢٣\":1,\"c:ذكر ٢٤\":1,\"c:ذكر ٢٥\":1,\"c:ذكر ٢٦\":1,\"c:ذكر ٢٧\":1,\"c:ذكر ٢٨\":1,\"c:ذكر ٢٩\":1,\"c:ذكر ٣٠\":1,\"c:ذكر ٣١\":1,\"c:ذكر ٣٢\":1,\"c:ذكر ٣٣\":1,\"c:ذكر ٣٤\":1,\"c:ذكر ٣٥\":1,\"c:ذكر ٣٦\":1,\"c:ذكر ٣٧\":1,\"c:ذكر ٣٨\":1,\"c:ذكر ٣٩\":1,\"c:ذكر ٤٠\":1,\"c:ذكر ٤١\":1,\"c:ذكر ٤٢\":1,\"c:ذكر ٤٣\":1,\"c:ذكر ٤٤\":1,\"c:ذكر ٤٥\":1,\"c:ذكر ٤٦\":1,\"c:ذكر ٤٧\":1,\"c:ذكر ٤٨\":1,\"c:ذكر ٤٩\":1,\"c:ذكر ٥٠\":1,\"c:ذكر ٥١\":1,\"c:ذكر ٥٢\":1,\"c:ذكر ٥٣\":1,\"c:ذكر ٥٤\":1,\"c:ذكر ٥٥\":1,\"c:ذكر ٥٦\":1,\"c:ذكر ٥٧\":1,\"c:ذكر ٥٨\":1,\"c:ذكر ٥٩\":1,\"c:ذكر ٦٠\":1,\"c:ذكر ٦١\":1,\"c:ذكر ٦٢\":1,\"c:ذكر ٦٣\":1,\"c:ذكر ٦٤\":1,\"c:ذكر ٦٥\":1,\"c:ذكر ٦٦\":1,\"c:ذكر ٦٧\":1,\"c:ذكر ٦٨\":1,\"c:ذكر ٦٩\":1,\"c:ذكر ٧٠\":1,\"c:ذكر ٧١\":1,\"c:ذكر ٧٢\":1,\"c:ذكر ٧٣\":1,\"c:ذكر ٧٤\":1,\"c:ذكر ٧٥\":1,\"c:ذكر ٧٦\":1,\"c:ذكر ٧٧\":1,\"c:ذكر ٧٨\":1,\"c:ذكر ٧٩\":1,\"c:ذكر ٨٠\":1,\"c:ذكر ٨١\":1,\"c:ذكر ٨٢\":1,\"c:ذكر ٨٣\":1,\"c:ذكر ٨٤\":1,\"c:ذكر ٨٥\":1,\"c:ذكر ٨٦\":1,\"c:ذكر ٨٧\":1,\"c:ذكر ٨٨\":1,\"c:ذكر ٨٩\":1,\"c:ذكر ٩٠\":1,\"c:ذكر ٩١\":1,\"c:ذكر ٩٢\":1,\"c:ذكر ٩٣\":1,\"c:ذكر ٩٤\":1,\"c:ذكر ٩٥\":1,\"c:ذكر ٩٦\":1,\"c:ذكر ٩٧\":1,\"c:ذكر ٩٨\":1,\"c:ذكر ٩٩\":1,\"c:ذكر ١٠٠\":1,\"c:ذكر ١٠١\":1,\"c:ذكر ١٠٢\":1,\"c:ذكر ١٠٣\":1,\"c:ذكر ١٠٤\":1,\"c:ذكر ١٠٥\":1,\"c:ذكر ١٠٦\":1,\"c:ذكر ١٠٧\":1,\"c:ذكر ١٠٨\":1,\"c:ذكر ١٠٩\":1,\"c:ذكر ١١٠\":1,\"c:ذكر ١١١\":1,\"c:ذكر ١١٢\":1,\"c:ذكر ١١٣\":1,\"c:ذكر ١١٤\":1,\"c:ذكر ١١٥\":1,\"c:ذكر ١١٦\":1,\"c:ذكر ١١٧\":1,\"c:ذكر ١١٨\":1,\"c:ذكر ١١٩\":1,\"c:ذكر ١٢٠\":1,\"c:ذكر ١٢١\":1,\"c:ذكر ١٢٢\":1,\"c:ذكر ١٢٣\":1,\"c:ذكر ١٢٤\":1,\"c:ذكر ١٢٥\":1,\"c:ذكر ١٢٦\":1,\"c:ذكر ١٢٧\":1,\"c:ذكر ١٢٨\":1,\"c:ذكر ١٢٩\":1,\"c:ذكر ١٣٠\":1,\"c:ذكر ١٣١\":1,\"c:ذكر ١٣٢\":1,\"c:ذكر ١٣٣\":1,\"c:ذكر ١٣٤\":1,\"c:ذكر ١٣٥\":1,\"c:ذكر ١٣٦\":1,\"c:ذكر ١٣٧\":1,\"c:ذكر ١٣٨\":1,\"c:ذكر ١٣٩\":1,\"c:ذكر ١٤٠\":1,\"c:ذكر ١٤١\":1,\"c:ذكر ١٤٢\":1,\"c:ذكر ١٤٣\":1,\"c:ذكر ١٤٤\":1,\"c:ذكر ١٤٥\":1,\"c:ذكر ١٤٦\":1,\"c:ذكر ١٤٧\":1,\"c:ذكر ١٤٨\":1,\"c:ذكر ١٤٩\":1,\"c:ذكر ١٥٠\":1,\"c:ذكر ١٥١\":1,\"c:ذكر ١٥٢\":1,\"c:ذكر ١٥٣\":1,\"c:ذكر ١٥٤\":1,\"c:ذكر ١٥٥\":1,\"c:ذكر ١٥٦\":1,\"c:ذكر ١٥٧\":1,\"c:ذكر ١٥٨\":1,\"c:ذكر ١٥٩\":1,\"c:ذكر ١٦٠\":1,\"c:ذكر ١٦١\":1,\"c:ذكر ١٦٢\":1,\"c:ذكر ١٦٣\":1,\"c:ذكر ١٦٤\":1,\"c:ذكر ١٦٥\":1,\"c:ذكر ١٦٦\":1,\"c:ذكر ١٦٧\":1,\"c:ذكر ١٦٨\":1,\"c:ذكر ١٦٩\":1,\"c:ذكر ١٧٠\":1,\"c:ذكر ١٧١\":1,\"c:ذكر ١٧٢\":1,\"c:ذكر ١٧٣\":1,\"c:ذكر ١٧٤\":1,\"c:ذكر ١٧٥\":1,\"c:ذكر ١٧٦\":1,\"c:ذكر ١٧٧\":1,\"c:ذكر ١٧٨\":1,\"c:ذكر ١٧٩\":1,\"c:ذكر ١٨٠\":1,\"c:ذكر ١٨١\":1,\"c:ذكر ١٨٢\":1,\"c:ذكر ١٨٣\":1,\"c:ذكر ١٨٤\":1,\"c:ذكر ١٨٥\":1,\"c:ذكر ١٨٦\":1,\"c:ذكر ١٨٧\":1,\"c:ذكر ١٨٨\":1,\"c:ذكر ١٨٩\":1,\"c:ذكر ١٩٠\":1,\"c:ذكر ١٩١\":1,\"c:ذكر ١٩٢\":1,\"c:ذكر ١٩٣\":1,\"c:ذكر ١٩٤\":1,\"c:ذكر ١٩٥\":1,\"c:ذكر ١٩٦\":1,\"c:ذكر ١٩٧\":1,\"c:ذكر ١٩٨\":1,\"c:ذكر ١٩٩\":1,\"c:ذكر ٢٠٠\":1},\"firstUse\":[],\"custom\":[],\"history\":{\"2026-10-03\":{\"c:حمد ١\":1,\"c:حمد ٢\":1,\"c:حمد ٣\":1,\"c:حمد ٤\":1,\"c:حمد ٥\":1,\"c:حمد ٦\":1,\"c:حمد ٧\":1,\"c:حمد ٨\":1,\"c:حمد ٩\":1,\"c:حمد ١٠\":1,\"c:حمد ١١\":1,\"c:حمد ١٢\":1,\"c:حمد ١٣\":1,\"c:حمد ١٤\":1,\"c:حمد ١٥\":1,\"c:حمد ١٦\":1,\"c:حمد ١٧\":1,\"c:حمد ١٨\":1,\"c:حمد ١٩\":1,\"c:حمد ٢٠\":1,\"c:حمد ٢١\":1,\"c:حمد ٢٢\":1,\"c:حمد ٢٣\":1,\"c:حمد ٢٤\":1,\"c:حمد ٢٥\":1,\"c:حمد ٢٦\":1,\"c:حمد ٢٧\":1,\"c:حمد ٢٨\":1,\"c:حمد ٢٩\":1,\"c:حمد ٣٠\":1,\"c:حمد ٣١\":1,\"c:حمد ٣٢\":1,\"c:حمد ٣٣\":1,\"c:حمد ٣٤\":1,\"c:حمد ٣٥\":1,\"c:حمد ٣٦\":1,\"c:حمد ٣٧\":1,\"c:حمد ٣٨\":1,\"c:حمد ٣٩\":1,\"c:حمد ٤٠\":1,\"c:حمد ٤١\":1,\"c:حمد ٤٢\":1,\"c:حمد ٤٣\":1,\"c:حمد ٤٤\":1,\"c:حمد ٤٥\":1,\"c:حمد ٤٦\":1,\"c:حمد ٤٧\":1,\"c:حمد ٤٨\":1,\"c:حمد ٤٩\":1,\"c:حمد ٥٠\":1,\"c:حمد ٥١\":1,\"c:حمد ٥٢\":1,\"c:حمد ٥٣\":1,\"c:حمد ٥٤\":1,\"c:حمد ٥٥\":1,\"c:حمد ٥٦\":1,\"c:حمد ٥٧\":1,\"c:حمد ٥٨\":1,\"c:حمد ٥٩\":1,\"c:حمد ٦٠\":1,\"c:حمد ٦١\":1,\"c:حمد ٦٢\":1,\"c:حمد ٦٣\":1,\"c:حمد ٦٤\":1,\"c:حمد ٦٥\":1,\"c:حمد ٦٦\":1,\"c:حمد ٦٧\":1,\"c:حمد ٦٨\":1,\"c:حمد ٦٩\":1,\"c:حمد ٧٠\":1,\"c:حمد ٧١\":1,\"c:حمد ٧٢\":1,\"c:حمد ٧٣\":1,\"c:حمد ٧٤\":1,\"c:حمد ٧٥\":1,\"c:حمد ٧٦\":1,\"c:حمد ٧٧\":1,\"c:حمد ٧٨\":1,\"c:حمد ٧٩\":1,\"c:حمد ٨٠\":1,\"c:حمد ٨١\":1,\"c:حمد ٨٢\":1,\"c:حمد ٨٣\":1,\"c:حمد ٨٤\":1,\"c:حمد ٨٥\":1,\"c:حمد ٨٦\":1,\"c:حمد ٨٧\":1,\"c:حمد ٨٨\":1,\"c:حمد ٨٩\":1,\"c:حمد ٩٠\":1,\"c:حمد ٩١\":1,\"c:حمد ٩٢\":1,\"c:حمد ٩٣\":1,\"c:حمد ٩٤\":1,\"c:حمد ٩٥\":1,\"c:حمد ٩٦\":1,\"c:حمد ٩٧\":1,\"c:حمد ٩٨\":1,\"c:حمد ٩٩\":1,\"c:حمد ١٠٠\":1,\"c:حمد ١٠١\":1,\"c:حمد ١٠٢\":1,\"c:حمد ١٠٣\":1,\"c:حمد ١٠٤\":1,\"c:حمد ١٠٥\":1,\"c:حمد ١٠٦\":1,\"c:حمد ١٠٧\":1,\"c:حمد ١٠٨\":1,\"c:حمد ١٠٩\":1,\"c:حمد ١١٠\":1,\"c:حمد ١١١\":1,\"c:حمد ١١٢\":1,\"c:حمد ١١٣\":1,\"c:حمد ١١٤\":1,\"c:حمد ١١٥\":1,\"c:حمد ١١٦\":1,\"c:حمد ١١٧\":1,\"c:حمد ١١٨\":1,\"c:حمد ١١٩\":1,\"c:حمد ١٢٠\":1,\"c:حمد ١٢١\":1,\"c:حمد ١٢٢\":1,\"c:حمد ١٢٣\":1,\"c:حمد ١٢٤\":1,\"c:حمد ١٢٥\":1,\"c:حمد ١٢٦\":1,\"c:حمد ١٢٧\":1,\"c:حمد ١٢٨\":1,\"c:حمد ١٢٩\":1,\"c:حمد ١٣٠\":1,\"c:حمد ١٣١\":1,\"c:حمد ١٣٢\":1,\"c:حمد ١٣٣\":1,\"c:حمد ١٣٤\":1,\"c:حمد ١٣٥\":1,\"c:حمد ١٣٦\":1,\"c:حمد ١٣٧\":1,\"c:حمد ١٣٨\":1,\"c:حمد ١٣٩\":1,\"c:حمد ١٤٠\":1,\"c:حمد ١٤١\":1,\"c:حمد ١٤٢\":1,\"c:حمد ١٤٣\":1,\"c:حمد ١٤٤\":1,\"c:حمد ١٤٥\":1,\"c:حمد ١٤٦\":1,\"c:حمد ١٤٧\":1,\"c:حمد ١٤٨\":1,\"c:حمد ١٤٩\":1,\"c:حمد ١٥٠\":1,\"c:حمد ١٥١\":1,\"c:حمد ١٥٢\":1,\"c:حمد ١٥٣\":1,\"c:حمد ١٥٤\":1,\"c:حمد ١٥٥\":1,\"c:حمد ١٥٦\":1,\"c:حمد ١٥٧\":1,\"c:حمد ١٥٨\":1,\"c:حمد ١٥٩\":1,\"c:حمد ١٦٠\":1,\"c:حمد ١٦١\":1,\"c:حمد ١٦٢\":1,\"c:حمد ١٦٣\":1,\"c:حمد ١٦٤\":1,\"c:حمد ١٦٥\":1,\"c:حمد ١٦٦\":1,\"c:حمد ١٦٧\":1,\"c:حمد ١٦٨\":1,\"c:حمد ١٦٩\":1,\"c:حمد ١٧٠\":1,\"c:حمد ١٧١\":1,\"c:حمد ١٧٢\":1,\"c:حمد ١٧٣\":1,\"c:حمد ١٧٤\":1,\"c:حمد ١٧٥\":1,\"c:حمد ١٧٦\":1,\"c:حمد ١٧٧\":1,\"c:حمد ١٧٨\":1,\"c:حمد ١٧٩\":1,\"c:حمد ١٨٠\":1,\"c:حمد ١٨١\":1,\"c:حمد ١٨٢\":1,\"c:حمد ١٨٣\":1,\"c:حمد ١٨٤\":1,\"c:حمد ١٨٥\":1,\"c:حمد ١٨٦\":1,\"c:حمد ١٨٧\":1,\"c:حمد ١٨٨\":1,\"c:حمد ١٨٩\":1,\"c:حمد ١٩٠\":1,\"c:حمد ١٩١\":1,\"c:حمد ١٩٢\":1,\"c:حمد ١٩٣\":1,\"c:حمد ١٩٤\":1,\"c:حمد ١٩٥\":1,\"c:حمد ١٩٦\":1,\"c:حمد ١٩٧\":1,\"c:حمد ١٩٨\":1,\"c:حمد ١٩٩\":1,\"c:حمد ٢٠٠\":1}},\"resets\":{}}"
+        }
+      }
     }
   ]
 }

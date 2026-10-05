@@ -68,7 +68,8 @@ const constants = [
   "longOrderPromptStorageKey", "resetEpochDays", "backupDatePattern", "backupInstantPattern", "transferVersion",
   "transferApp", "transferMaxTextLength", "transferMaxInflatedBytes", "transferMaxFrames", "transferFrameChunk",
   "transferBase45", "transferFramePattern", "transferItemIdPattern", "transferSlugPattern", "transferTimeZonePattern",
-  "transferForbiddenKeys", "transferStoreKeys", "transferSettingKeys"
+  "transferForbiddenKeys", "transferStoreKeys", "transferSettingKeys", "transferClockSkewMs", "transferEarliestExport",
+  "transferMaxTasbihKeysPerDay", "transferMaxTasbihKeys", "transferMaxResets", "transferPendingKey"
 ];
 
 const transferFunctions = [
@@ -82,6 +83,7 @@ const transferFunctions = [
   "transferIncomingProgress", "transferIncomingSuwar", "transferIncomingTasbih", "transferResetsBefore",
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
+  "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
   "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
@@ -178,18 +180,22 @@ globalThis.__api = {
 
 const storage = new Map();
 // Fault injection for applyTransfer's storage rules: `read` makes getItem throw; `writesLeft` lets that many setItem
-// calls succeed, fails the next one once (as a full quota would), and then lets writes through again (null: never).
-const storageFault = { read: false, writesLeft: null };
+// calls succeed, fails the next one once (as a full quota would), and then lets writes through again (null: never);
+// `stuckKeys` keys then keep failing every setItem (a rollback that cannot restore them).
+const storageFault = { read: false, writesLeft: null, stuckKeys: [] };
 const timers = [];
 const firedReminders = [];
+// console.warn calls of the code under test (recoverTransferPending logs a conflict).
+const warnings = [];
 const sandbox = {
-  console,
+  console: { ...console, warn: (...args) => { warnings.push(args.join(" ")); } },
   localStorage: {
     getItem: key => {
       if (storageFault.read) throw new Error("storage read fault");
       return storage.has(key) ? storage.get(key) : null;
     },
     setItem: (key, value) => {
+      if (storageFault.writesLeft === null && storageFault.stuckKeys.includes(key)) throw new Error("storage write fault");
       if (storageFault.writesLeft !== null && storageFault.writesLeft-- <= 0) {
         storageFault.writesLeft = null;
         throw new Error("storage write fault");
@@ -1625,9 +1631,54 @@ function mergeCase(name, local, incoming, { source = "code", decoded } = {}) {
   prepareTransfer();
   const input = decoded ?? { ok: true, source, container: containerOf(incoming) };
   const plan = planOf(local, input);
+  if (plan.error) {
+    // A refused code: no plan, and storage is untouched.
+    return { name, input: { storage: local, incoming: { source: input.source, container: input.container } }, expected: { plan, storage: local } };
+  }
   const { before, ...shown } = plan;
   if (JSON.stringify(before) !== JSON.stringify(plain(fn.readTransferStorage()))) throw new Error(`${name}: plan.before is not the stored values`);
   return { name, input: { storage: local, incoming: { source: input.source, container: input.container } }, expected: { plan: shown, storage: withWrites(local, plan) } };
+}
+
+// A container from `map` changed by `edit`, which must still pass the validator (only planTransfer refuses it).
+function editedContainer(map, edit) {
+  const container = containerOf(map);
+  edit(container);
+  const checked = plain(fn.validateTransferValue(intoContext(container), "code"));
+  if (!checked.ok) throw new Error(`edited container rejected by the validator: ${JSON.stringify(checked)}`);
+  return { ok: true, source: "code", container };
+}
+
+// `count` distinct saved-phrase-shaped keys (not saved on either side: orphan counts, which the normalizers keep).
+const orphanCounts = (prefix, count) => Object.fromEntries(Array.from({ length: count }, (_, index) => [`c:${prefix} ${(index + 1).toLocaleString("ar-EG", { useGrouping: false })}`, 1]));
+
+function transferRefusalCases(s) {
+  const later = hours => new Date(transferNowMs + hours * 3600000).toISOString();
+  const farFuture = "9999-12-31T23:59:59.999Z";
+  return [
+    mergeCase("a reset epoch years ahead of this clock: refused before planning (clock), storage untouched", s.join, null, {
+      decoded: editedContainer(device(), container => {
+        container.athkar.adhkar.resets = { [TRANSFER_TODAY]: farFuture };
+        container.athkar.suwar.resets = { [TRANSFER_TODAY]: farFuture };
+        container.athkar.tasbih.resets = { [TRANSFER_TODAY]: farFuture, [YESTERDAY]: farFuture };
+      })
+    }),
+    mergeCase("a completion instant more than a day ahead of this clock: refused (clock)", s.join, null, {
+      decoded: editedContainer(s.completes, container => { container.envelope.adhkar.today.completedAt.morning = later(25); })
+    }),
+    mergeCase("exportedAt before 2020: refused (clock)", s.join, null, {
+      decoded: editedContainer(s.join, container => { container.envelope.meta.exportedAt = "2019-12-31T23:59:59.000Z"; })
+    }),
+    mergeCase("a reset epoch less than a day ahead of this clock (skew between devices): accepted", s.stale, null, {
+      decoded: editedContainer(s.resetRecount, container => { container.athkar.tasbih.resets = { [TRANSFER_TODAY]: later(23) }; })
+    }),
+    mergeCase("adhkar item IDs this version does not have are dropped before merging (progress and targets)", s.join,
+      device({ progress: { progress: { morning: { [morningIds[0]]: 3, "zz-unknown-item": 5 }, evening: { "zz-other": 1 } }, targets: { morning: { "zz-unknown-item": 9 }, evening: {} } } })),
+    mergeCase("the merged tasbih day would hold more than 256 phrase keys: refused whole (too-big), existing counts untouched", device({ tasbih: { counts: orphanCounts("ذكر", 200), firstUse: [] } }), device({ tasbih: { counts: orphanCounts("تسبيح", 200), firstUse: [] } })),
+    mergeCase("the merged tasbih store would hold more than 512 phrase keys in all: refused (too-big)",
+      device({ tasbih: { counts: orphanCounts("ذكر", 200), firstUse: [], history: { [YESTERDAY]: orphanCounts("حمد", 200) } } }),
+      device({ tasbih: { counts: orphanCounts("تسبيح", 50), firstUse: [], history: { [TWO_DAYS_AGO]: orphanCounts("شكر", 200) } } }))
+  ];
 }
 
 async function transferMergeCases() {
@@ -1652,7 +1703,8 @@ async function transferMergeCases() {
     mergeCase("only the newest 7 history days are kept (trimmed warning)", s.fullWeek, s.olderDays),
     mergeCase("nothing new: an empty plan", s.join, s.join),
     mergeCase("reset epochs before the 31-day window are dropped", s.oldEpochs, s.join),
-    mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup })
+    mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup }),
+    ...transferRefusalCases(s)
   ];
 }
 
@@ -1698,7 +1750,7 @@ function transferPropertyCases() {
 
 // ---- apply ----
 
-function applyCase(name, local, incoming, { fault, change, memoryMode, nextDay } = {}) {
+function applyCase(name, local, incoming, { fault, stuck, change, memoryMode, nextDay } = {}) {
   prepareTransfer();
   const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
   loadStorage(local);
@@ -1709,19 +1761,36 @@ function applyCase(name, local, incoming, { fault, change, memoryMode, nextDay }
   if (memoryMode) api.setTasbihStorageWorks(false);
   if (fault === "read") storageFault.read = true;
   if (typeof fault === "number") storageFault.writesLeft = fault;
+  if (stuck) storageFault.stuckKeys = stuck;
   if (nextDay) setNow(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30));
   const result = plain(fn.applyTransfer(intoContext(plan)));
   storageFault.read = false;
   storageFault.writesLeft = null;
+  storageFault.stuckKeys = [];
   const after = storageMap();
-  const expectedAfter = result.ok ? withWrites(local, plan) : change ? { ...local, [change[0]]: change[1] } : local;
-  if (JSON.stringify(sortDeep(after)) !== JSON.stringify(sortDeep(expectedAfter))) throw new Error(`${name}: storage is not ${result.ok ? "the plan's writes" : "unchanged"}`);
+  const unchanged = change ? { ...local, [change[0]]: change[1] } : local;
+  let nextStart;
+  if (stuck) {
+    // The rollback could not restore a key: the record is marked, and the next start puts every key back.
+    const record = JSON.parse(after["athkar-transfer-pending-v1"] ?? "null");
+    if (!record?.rollback) throw new Error(`${name}: the pending record is not marked for rollback`);
+    const recovered = plain(fn.recoverTransferPending());
+    nextStart = { recovered, storage: storageMap() };
+    if (JSON.stringify(sortDeep(nextStart.storage)) !== JSON.stringify(sortDeep(unchanged))) throw new Error(`${name}: the next start did not restore storage`);
+  } else {
+    const expectedAfter = result.ok ? withWrites(local, plan) : unchanged;
+    if (JSON.stringify(sortDeep(after)) !== JSON.stringify(sortDeep(expectedAfter))) throw new Error(`${name}: storage is not ${result.ok ? "the plan's writes" : "unchanged"}`);
+  }
   let reapplied;
   if (result.ok) reapplied = plain(fn.applyTransfer(intoContext(plan)));
   return {
     name,
-    input: { storage: local, ...(change ? { changedBeforeApply: { [change[0]]: change[1] } } : {}), ...(fault !== undefined ? { fault } : {}), ...(memoryMode ? { tasbihMemoryMode: true } : {}), ...(nextDay ? { now: new Date(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30)).toISOString() } : {}), writes: plan.writes },
-    expected: { result, storage: after, ...(reapplied ? { sameAgain: reapplied } : {}) }
+    input: {
+      storage: local, ...(change ? { changedBeforeApply: { [change[0]]: change[1] } } : {}), ...(fault !== undefined ? { fault } : {}),
+      ...(stuck ? { stuckKeys: stuck } : {}), ...(memoryMode ? { tasbihMemoryMode: true } : {}),
+      ...(nextDay ? { now: new Date(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30)).toISOString() } : {}), writes: plan.writes
+    },
+    expected: { result, storage: after, ...(reapplied ? { sameAgain: reapplied } : {}), ...(nextStart ? { nextStart } : {}) }
   };
 }
 
@@ -1729,13 +1798,52 @@ function transferApplyCases() {
   const s = mergeScenarios();
   const writes = planOf(s.join, { ok: true, source: "code", container: containerOf(s.history) }).writes;
   if (Object.keys(writes).length < 3) throw new Error("the apply cases need a plan with at least three writes");
+  const [firstKey] = Object.keys(writes);
   return [
     applyCase("all writes land; the same plan again is refused (changed): it was planned on other values", s.join, s.history),
-    applyCase("the second write fails: the first is rolled back, storage is byte-identical (write)", s.join, s.history, { fault: 1 }),
+    applyCase("the write-ahead record cannot be written: nothing is written (write)", s.join, s.history, { fault: 0 }),
+    applyCase("the second write fails: the first is rolled back and the record removed, storage is byte-identical (write)", s.join, s.history, { fault: 2 }),
+    applyCase("the second write fails and the rollback of the first fails too: the record is marked rollback, and the next start restores every key (write)", s.join, s.history, { fault: 2, stuck: [firstKey] }),
     applyCase("storage cannot be read: nothing is written (write)", s.join, s.history, { fault: "read" }),
     applyCase("tasbih memory mode: nothing is written (write)", s.join, s.history, { memoryMode: true }),
     applyCase("another tab wrote after the plan: nothing is written (changed)", s.join, s.history, { change: ["athkar-tasbih-v1", JSON.stringify({ ...tasbihStored(), counts: { subhan: 11 } })] }),
     applyCase("midnight passed after the plan: nothing is written (changed)", s.join, s.history, { nextDay: true })
+  ];
+}
+
+// A start that finds athkar-transfer-pending-v1: the tab closed (or crashed) after `landed` of the plan's writes.
+function recoverCase(name, local, incoming, { landed, rollback = false, change, record } = {}) {
+  prepareTransfer();
+  const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
+  loadStorage(local);
+  const pending = record ?? JSON.stringify({ id: "TEST", before: plan.before, after: plan.writes, ...(rollback ? { rollback: true } : {}) });
+  storage.set("athkar-transfer-pending-v1", pending);
+  for (const [key, value] of Object.entries(plan.writes).slice(0, landed ?? 0)) {
+    if (value === null) storage.delete(key);
+    else storage.set(key, value);
+  }
+  if (change) storage.set(...change);
+  const start = storageMap();
+  warnings.length = 0;
+  const recovered = plain(fn.recoverTransferPending());
+  const after = storageMap();
+  const expected = recovered === "forward" ? withWrites(local, plan) : recovered === "back" ? local : { ...start };
+  if (recovered === "conflict" || recovered === "invalid") delete expected["athkar-transfer-pending-v1"];
+  if (JSON.stringify(sortDeep(after)) !== JSON.stringify(sortDeep(expected))) throw new Error(`${name}: storage after recovery is not as expected (${recovered})`);
+  return { name, input: { storage: start }, expected: { recovered, logged: warnings.length > 0, storage: after } };
+}
+
+function transferRecoverCases() {
+  const s = mergeScenarios();
+  const count = Object.keys(planOf(s.join, { ok: true, source: "code", container: containerOf(s.history) }).writes).length;
+  return [
+    recoverCase("closed before the first write: the next start writes the plan (forward; the user confirmed it)", s.join, s.history, { landed: 0 }),
+    recoverCase("closed after the first write: the next start writes the rest (forward)", s.join, s.history, { landed: 1 }),
+    recoverCase("closed after every write, before the record was removed: only the record goes (forward)", s.join, s.history, { landed: count }),
+    recoverCase("a record marked rollback (its rollback failed): the next start restores every key (back)", s.join, s.history, { landed: 1, rollback: true }),
+    recoverCase("another tab wrote a key meanwhile: storage is left as it is, the record dropped and the conflict logged (conflict)", s.join, s.history,
+      { landed: 1, change: ["athkar-tasbih-v1", JSON.stringify({ ...tasbihStored(), counts: { subhan: 11 } })] }),
+    recoverCase("an unreadable record is dropped and nothing else changes (invalid)", s.join, s.history, { landed: 0, record: "{not json" })
   ];
 }
 
@@ -1838,8 +1946,12 @@ written.push({
   count: properties.pairs.length + properties.triples.length
 });
 writeCases("spec/transfer/fixtures/apply.json",
-  sessionMeta("applyTransfer commits exactly a plan: every stored value must still be what the plan was made on, writes land all or none (a failed write rolls back the earlier ones), and a tab in tasbih memory mode or with unreadable storage writes nothing.",
-    "applyTransfer, readTransferStorage"),
+  sessionMeta("applyTransfer commits exactly a plan: every stored value must still be what the plan was made on; the write-ahead record athkar-transfer-pending-v1 is written first and removed last; a failed write rolls the earlier ones back (a rollback that fails too leaves the record marked `rollback` for the next start); a tab in tasbih memory mode or with unreadable storage writes nothing. `fault` n: the (n+1)th setItem fails once, the record's write counting as the first; `stuckKeys`: then every setItem of these keys fails.",
+    "applyTransfer, readTransferStorage, recoverTransferPending"),
   { ...transferDefaults, collections: realCollections }, transferApplyCases());
+writeCases("spec/transfer/fixtures/recover.json",
+  sessionMeta("recoverTransferPending at startup, before the stores load: storage holds a write-ahead record (athkar-transfer-pending-v1) left by a transfer interrupted after some of its writes. `recovered`: forward (every key now holds the plan's value), back (a record marked rollback: every key holds the planned-on value), conflict (a key holds neither: left as stored, record dropped, logged), invalid (unreadable record dropped).",
+    "recoverTransferPending"),
+  { ...transferDefaults, collections: realCollections }, transferRecoverCases());
 
 for (const { path, count } of written) console.log(`${path}: ${count}`);

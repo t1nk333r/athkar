@@ -1351,6 +1351,57 @@
       margin-block-start: 0;
     }
 
+    /* «نقل التقدّم»: the entry in Settings and #transfer-dialog with its views (send, qr, receive, scan, preview, result). */
+    .transfer-entry { display: flex; flex-wrap: wrap; gap: 0.65rem; }
+    #transfer-dialog [hidden] { display: none !important; }
+    #transfer-dialog .sheet-close { min-height: 2.75rem; }
+    .transfer-header-start { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+    .transfer-header-start h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .transfer-header-start h2:focus { outline: none; }
+    .transfer-back { flex: none; }
+    .transfer-view { display: grid; gap: 0.85rem; padding-block: 1.1rem 0; align-content: start; }
+    .transfer-view h3 { margin: 0; font-size: 1rem; }
+    .transfer-view h3:focus { outline: none; }
+    .transfer-view .settings-note { margin: 0; }
+    .transfer-lead { margin: 0; font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.86rem; font-weight: 700; line-height: 1.7; }
+    .transfer-code { min-height: 6.6rem; resize: none; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 1rem; font-weight: 500; line-height: 1.45; direction: ltr; text-align: left; overflow-wrap: anywhere; word-break: break-all; }
+    .transfer-code[aria-invalid="true"] { border-color: var(--warning); }
+    .transfer-buttons { display: grid; gap: 0.6rem; }
+    .transfer-buttons.is-pair { grid-template-columns: 1fr 1fr; }
+    .transfer-buttons .dialog-button, .transfer-view > .dialog-button { width: 100%; padding-inline: 0.6rem; }
+    #transfer-dialog .dialog-button:disabled { opacity: 0.55; cursor: default; }
+    .transfer-error { margin: 0; color: var(--warning); font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.76rem; font-weight: 750; line-height: 1.6; }
+    .transfer-tip, .transfer-assure, .transfer-warning { margin: 0; padding: 0.7rem 0.85rem; border: 1px solid; border-radius: 0.8rem; color: var(--text-primary); font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.78rem; font-weight: 600; line-height: 1.7; }
+    .transfer-tip { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); }
+    .transfer-tip strong { display: block; font-size: 0.82rem; font-weight: 800; }
+    .transfer-assure { border-color: color-mix(in srgb, var(--completed) 45%, var(--border)); background: var(--completed-soft); }
+    .transfer-warning { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); background: var(--warning-soft); }
+    .transfer-qr { justify-self: center; line-height: 0; border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden; background: #fff; }
+    .transfer-qr canvas { display: block; image-rendering: pixelated; }
+    .transfer-frame { justify-self: center; margin: 0; color: var(--text-secondary); font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .transfer-stepper { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 0.5rem; }
+    .transfer-stepper .dialog-button { padding-inline: 0.4rem; white-space: nowrap; font-size: 0.85rem; }
+    .transfer-camera { position: relative; justify-self: center; width: min(100%, 22rem); aspect-ratio: 1; overflow: hidden; border-radius: 1rem; background: #000; }
+    .transfer-camera video { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .transfer-camera::after { content: ""; position: absolute; inset: 12%; border: 3px solid rgba(255, 255, 255, 0.92); border-radius: 0.75rem; box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35); }
+    .transfer-progress { display: grid; grid-template-columns: repeat(var(--frames, 1), minmax(0, 1fr)); gap: 0.3rem; }
+    .transfer-progress span { height: 0.5rem; border-radius: 999px; background: var(--border); }
+    .transfer-progress span.is-read { background: var(--completed); }
+    .transfer-progress-label { justify-self: center; margin: 0; font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.86rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .transfer-link { justify-self: center; min-height: 2.75rem; padding: 0.4rem 0.6rem; border: 0; background: none; color: var(--accent-strong); font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; font-size: 0.8rem; font-weight: 800; text-decoration: underline; text-underline-offset: 0.25em; cursor: pointer; }
+    .transfer-changes { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+    .transfer-change { display: grid; gap: 0.15rem; padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--surface); font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif; }
+    .transfer-change strong { font-size: 0.88rem; }
+    .transfer-change small { color: var(--text-secondary); font-size: 0.74rem; font-weight: 600; line-height: 1.6; }
+    .transfer-change .is-complete { color: var(--completed); font-weight: 850; }
+    .transfer-change.is-reset { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); background: var(--warning-soft); }
+    .transfer-change.is-reset small { color: var(--text-primary); }
+    .transfer-dates { display: grid; gap: 0.1rem; margin: 0.25rem 0 0; padding: 0; list-style: none; color: var(--text-secondary); font-size: 0.74rem; font-weight: 600; }
+    .transfer-footer { position: sticky; inset-block-end: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-inline: -1.2rem; padding: 0.75rem 1.2rem; border-block-start: 1px solid var(--border); background: var(--surface-raised); }
+    .transfer-result { margin: 0; text-align: center; }
+    .transfer-result .completion-mark { margin-block-start: 0.4rem; }
+    .completion-mark.is-error { background: var(--warning-soft); color: var(--warning); }
+
     .history-list {
       display: grid;
       gap: 0.5rem;
@@ -1928,6 +1979,11 @@
       }
 
       .settings-grid { grid-template-columns: 1fr; }
+      #transfer-dialog[open] { height: 88svh; }
+      .transfer-footer {
+        margin-block-end: calc(-1 * max(1.2rem, env(safe-area-inset-bottom)));
+        padding-block-end: max(0.75rem, env(safe-area-inset-bottom));
+      }
 
       .app-footer { gap: 0.35rem; }
 
@@ -2023,6 +2079,8 @@
       .session-summary { padding-inline: 0.65rem; }
       .dhikr-card { border-radius: 1.4rem; }
       .requirement-row { align-items: flex-start; }
+      #transfer-dialog .sheet-header { gap: 0.5rem; }
+      #transfer-dialog .sheet-header h2 { font-size: 1.1rem; }
     }
 
     /* Four tabs on one row: up to 40rem the tabs drop their icons and show the short labels («الصباح», «المساء»), so a
@@ -2483,6 +2541,16 @@
         <p class="settings-note" id="visit-count-note">تُحصى مرات فتح التطبيق على خادم المطوّر الخاص. يتلقى الخادم عنوان IP ومعرّف المتصفح مؤقتًا لإجراء العدّ، ثم يحتفظ بأرقام إجمالية: المتصفح والنظام وعرض الشاشة والبلد. إذا بدا الطلب آليًا يُحفظ معرّف المتصفح مدة قصيرة لتصفيته ثم يُحذف، عادةً خلال ساعة. لا يُرسل شيء عن قراءتك أو تقدّمك أو سجلك أو موقعك، ولا تُستخدم ملفات تعريف الارتباط.</p>
       </section>
 
+      <section class="settings-section" aria-labelledby="transfer-settings-title">
+        <h3 id="transfer-settings-title">نقل التقدّم إلى جهاز آخر</h3>
+        <p class="settings-note" id="transfer-note">انقل تقدّم اليوم وسجل آخر سبعة أيام، ومعهما قراءة السور والمسبحة، إلى جهاز آخر أو من سفاري إلى التطبيق المثبّت على الجهاز نفسه. يُنشأ الرمز على جهازك ولا يُرسل إلى أي خادم. من يرى الرمز أو ينسخه يستطيع قراءة تقدّمك.</p>
+        <p class="settings-note" id="transfer-unsupported" hidden>لا يدعم هذا المتصفح نقل التقدّم. حدّث النظام أو المتصفح؛ يحتاج آيفون وآيباد إلى الإصدار ١٦٫٤ أو أحدث.</p>
+        <div class="transfer-entry">
+          <button class="settings-action" id="transfer-send-open" type="button" aria-describedby="transfer-note">إرسال التقدّم</button>
+          <button class="settings-action" id="transfer-receive-open" type="button" aria-describedby="transfer-note">استلام التقدّم</button>
+        </div>
+      </section>
+
       <section class="settings-section" aria-labelledby="backup-settings-title">
         <h3 id="backup-settings-title">النسخة الاحتياطية</h3>
         <p class="settings-note" id="backup-note">احفظ تقدّم أذكار اليوم وسجل إكمالها والإعدادات في ملف يمكن استيراده في تطبيق الجوال. لا تشمل النسخة عدّ المسبحة ولا قراءة السور. يُنشأ الملف على جهازك، ولا يُرسل هو ولا محتواه إلى أي خادم.</p>
@@ -2505,6 +2573,91 @@
         <h3 id="history-title">سجل الإكمال</h3>
         <ol class="history-list" id="history-list"></ol>
       </section>
+    </div>
+  </dialog>
+
+  <dialog class="sheet-dialog" id="transfer-dialog" aria-labelledby="transfer-title">
+    <div class="sheet-header">
+      <div class="transfer-header-start">
+        <button class="sheet-close transfer-back" id="transfer-back" type="button" hidden><span aria-hidden="true">→</span> رجوع</button>
+        <h2 id="transfer-title" tabindex="-1">إرسال التقدّم</h2>
+      </div>
+      <button class="sheet-close" id="transfer-close" type="button">إغلاق</button>
+    </div>
+    <div class="sheet-body" id="transfer-body">
+      <p class="sr-only" id="transfer-live" aria-live="polite" aria-atomic="true"></p>
+
+      <div class="transfer-view" id="transfer-view-send">
+        <p class="transfer-lead" id="transfer-send-summary"></p>
+        <p class="settings-note">لا يحمل الموقع ولا التذكيرات.</p>
+        <label class="settings-field" for="transfer-code-out"><span>رمز النقل</span></label>
+        <textarea class="settings-select transfer-code" id="transfer-code-out" readonly rows="4" dir="ltr" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+        <button class="dialog-button primary" id="transfer-copy" type="button">نسخ الرمز</button>
+        <div class="transfer-buttons is-pair">
+          <button class="dialog-button" id="transfer-share-file" type="button">مشاركة كملف</button>
+          <button class="dialog-button" id="transfer-show-qr" type="button">عرض رمز QR</button>
+        </div>
+        <p class="settings-note" id="transfer-send-status" hidden></p>
+        <p class="transfer-tip" id="transfer-send-tip" hidden><strong>على الجهاز نفسه</strong><span></span></p>
+        <p class="settings-note">يُنشأ الرمز على جهازك ولا يُرسل إلى أي خادم. من يرى الرمز أو ينسخه يستطيع قراءة تقدّمك.</p>
+      </div>
+
+      <div class="transfer-view" id="transfer-view-qr" hidden>
+        <div class="transfer-qr" id="transfer-qr" role="img" aria-label="رمز QR للنقل"><canvas id="transfer-qr-canvas" width="1" height="1"></canvas></div>
+        <p class="transfer-frame" id="transfer-qr-frame" aria-hidden="true" hidden></p>
+        <div class="transfer-stepper" id="transfer-qr-stepper" hidden>
+          <button class="dialog-button" id="transfer-qr-prev" type="button" aria-label="الجزء السابق"><span aria-hidden="true">→</span> السابق</button>
+          <button class="dialog-button primary" id="transfer-qr-play" type="button" aria-pressed="false">إيقاف مؤقت</button>
+          <button class="dialog-button" id="transfer-qr-next" type="button" aria-label="الجزء التالي">التالي <span aria-hidden="true">←</span></button>
+        </div>
+        <p class="settings-note" id="transfer-qr-reduced" hidden>الحركة مخفّضة على جهازك، فالرمز متوقف. انتقل بين الأجزاء بزر «التالي» حتى تكتمل القراءة على الجهاز الآخر، أو اضغط «تشغيل».</p>
+        <p class="transfer-error" id="transfer-qr-error" hidden>تعذّر تجهيز الرمز. أغلق النافذة وأعد المحاولة.</p>
+        <p class="settings-note" id="transfer-qr-hint"></p>
+        <p class="settings-note">إن تعذّرت القراءة فارفع سطوع هذه الشاشة، وقرّب الجهازين أو باعد بينهما قليلًا.</p>
+      </div>
+
+      <div class="transfer-view" id="transfer-view-receive" hidden>
+        <p class="transfer-lead">اختر الطريقة المتاحة على الجهاز الآخر.</p>
+        <p class="transfer-tip" id="transfer-receive-tip" hidden><strong>على الجهاز نفسه</strong><span></span></p>
+        <h3 id="transfer-paste-heading" tabindex="-1">لصق الرمز</h3>
+        <label class="settings-field" for="transfer-code-in"><span>الصق رمز النقل هنا</span></label>
+        <textarea class="settings-select transfer-code" id="transfer-code-in" rows="4" dir="ltr" placeholder="AQ1:A:…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby="transfer-paste-error"></textarea>
+        <p class="transfer-error" id="transfer-paste-error" hidden></p>
+        <div class="transfer-buttons is-pair" id="transfer-paste-buttons">
+          <button class="dialog-button" id="transfer-paste" type="button">لصق</button>
+          <button class="dialog-button primary" id="transfer-continue" type="button" disabled>متابعة</button>
+        </div>
+        <h3>ملف</h3>
+        <button class="dialog-button" id="transfer-file-pick" type="button" aria-describedby="transfer-file-error">اختيار ملف</button>
+        <input class="sr-only" id="transfer-file" type="file" accept=".txt,.athkarbackup,text/plain,application/json" tabindex="-1" aria-hidden="true">
+        <p class="transfer-error" id="transfer-file-error" hidden></p>
+        <p class="settings-note">ملف رمز النقل (‎.txt) أو نسخة احتياطية (‎.athkarbackup).</p>
+        <h3>الكاميرا</h3>
+        <button class="dialog-button" id="transfer-scan-open" type="button">مسح رمز QR</button>
+        <p class="settings-note" id="transfer-scan-unavailable" hidden>المسح بالكاميرا غير متاح في هذا المتصفح. الصق الرمز أو اختر ملفًا.</p>
+      </div>
+
+      <div class="transfer-view" id="transfer-view-scan" hidden>
+        <p class="transfer-lead">وجّه الكاميرا إلى رمز QR الظاهر على الجهاز الآخر.</p>
+        <p class="settings-note" id="transfer-cam-explain" hidden>سيطلب المتصفح الإذن باستخدام الكاميرا. تُستخدم لقراءة الرمز فقط على هذا الجهاز؛ لا تُحفظ الصور ولا تُرسل.</p>
+        <button class="dialog-button primary" id="transfer-cam-start" type="button" hidden>تشغيل الكاميرا</button>
+        <p class="settings-note" id="transfer-cam-status" hidden></p>
+        <button class="dialog-button primary" id="transfer-scan-resume" type="button" hidden>استئناف المسح</button>
+        <div class="transfer-camera" id="transfer-camera" hidden><video id="transfer-video" muted playsinline autoplay></video></div>
+        <p class="transfer-warning" id="transfer-cam-error" hidden></p>
+        <div class="transfer-buttons" id="transfer-cam-error-actions" hidden>
+          <button class="dialog-button primary" id="transfer-cam-to-paste" type="button">لصق الرمز أو اختيار ملف</button>
+          <button class="dialog-button" id="transfer-cam-retry" type="button" hidden>المحاولة مرة أخرى</button>
+        </div>
+        <div class="transfer-progress" id="transfer-scan-progress" role="progressbar" aria-valuemin="0" hidden></div>
+        <p class="transfer-progress-label" id="transfer-scan-label">لم يُقرأ شيء بعد</p>
+        <p class="settings-note" id="transfer-scan-hint" hidden></p>
+        <button class="dialog-button" id="transfer-scan-stop" type="button">إيقاف المسح</button>
+        <button class="transfer-link" id="transfer-scan-fallback" type="button">اللصق أو اختيار ملف بدلًا من ذلك</button>
+      </div>
+
+      <div class="transfer-view" id="transfer-view-preview" hidden></div>
+      <div class="transfer-view" id="transfer-view-result" hidden></div>
     </div>
   </dialog>
 
@@ -5552,6 +5705,8 @@
     let reloadingForUpdate = false;
     let prayerLocationRequest = null;
     let reminderStatusOverride = "";
+    const transferPendingKey = "athkar-transfer-pending-v1";
+    recoverTransferPending();
     let state = loadState();
     let suwarState = loadSuwarState();
     // False once athkar-tasbih-v1 cannot be read or written (at startup too): the session then counts in memory and
@@ -8582,9 +8737,9 @@
       };
     }
 
-    async function deliverBackupFile(envelope, baseName) {
-      const name = `${baseName}-${localDateKey()}.athkarbackup`;
-      const file = new File([JSON.stringify(envelope, null, 2)], name, { type: "application/json" });
+    // The share sheet where files can be shared (iOS, Android), else a download. "shared", "cancelled" or "downloaded".
+    async function deliverFile(contents, name, type) {
+      const file = new File([contents], name, { type });
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: name });
@@ -8615,7 +8770,7 @@
       backupExportButton.disabled = true;
       backupStatus.textContent = "";
       try {
-        const outcome = await deliverBackupFile(buildBackup(backupIncludeLocation.checked), "athkar-backup");
+        const outcome = await deliverFile(JSON.stringify(buildBackup(backupIncludeLocation.checked), null, 2), `athkar-backup-${localDateKey()}.athkarbackup`, "application/json");
         if (outcome !== "cancelled") backupStatus.textContent = "جُهّز ملف النسخة الاحتياطية.";
       } catch (_) {
         backupStatus.textContent = "تعذّر تصدير النسخة الاحتياطية. حاول مرة أخرى.";
@@ -8645,6 +8800,13 @@
       "athkar-theme", textSizeStorageKey, "athkar-text-size", lineSpacingStorageKey, hapticsStorageKey, longOrderStorageKey,
       longOrderPromptStorageKey, remindersStorageKey, legacyRemindersStorageKey
     ]);
+    // An instant may be at most this far past the receiver's clock (clock skew between devices); exportedAt no earlier.
+    const transferClockSkewMs = 86400000;
+    const transferEarliestExport = "2020-01-01T00:00:00.000Z";
+    // The merged stores' budget: far above real use (the presets plus 8 saved phrases), finite against repeated codes.
+    const transferMaxTasbihKeysPerDay = 256;
+    const transferMaxTasbihKeys = 512;
+    const transferMaxResets = 1024;
 
     // CompressionStream and DecompressionStream ("deflate"): iOS/Safari 16.4+, Chrome 80+, Firefox 113+.
     function transferSupported() {
@@ -9154,9 +9316,24 @@
       return mine === theirs ? 0 : mine > theirs ? -1 : 1;
     }
 
+    // Item IDs this version does not have are dropped before merging, so repeated codes cannot grow the store.
+    function transferKnownItems(maps) {
+      const known = period => new Set(collections[period].map(item => item.id));
+      return Object.fromEntries(["morning", "evening"].map(period => {
+        const ids = known(period);
+        return [period, Object.fromEntries(Object.entries(maps[period]).filter(([id]) => ids.has(id)))];
+      }));
+    }
+
     function transferIncomingProgress(container, today) {
       const { adhkar } = container.envelope;
-      const candidate = normalizeState({ ...adhkar.today, history: adhkar.history, resets: container.athkar?.adhkar.resets ?? {} });
+      const candidate = normalizeState({
+        ...adhkar.today,
+        progress: transferKnownItems(adhkar.today.progress),
+        targets: transferKnownItems(adhkar.today.targets),
+        history: adhkar.history,
+        resets: container.athkar?.adhkar.resets ?? {}
+      });
       if (candidate.date === today) return candidate;
       if (candidate.date < today) return rollStateToDate(candidate, today);
       return { ...emptyState(today), history: candidate.history.filter(entry => entry.date < today), resets: transferResetsBefore(candidate.resets, today) };
@@ -9398,13 +9575,48 @@
       return !before.complete || after.complete;
     }
 
+    // Every instant a code carries (exportedAt, completions, history instants, reset epochs). Backup files' location
+    // `updatedAt` is never imported and is not among them.
+    function transferInstants(container) {
+      const { envelope, athkar } = container;
+      const { today, history } = envelope.adhkar;
+      const instants = [envelope.meta.exportedAt, today.completedAt.morning, today.completedAt.evening];
+      for (const entry of history) instants.push(entry.morningAt, entry.eveningAt);
+      if (athkar) {
+        instants.push(...Object.values(athkar.adhkar.resets), ...Object.values(athkar.suwar.completedAt),
+          ...Object.values(athkar.suwar.resets), ...Object.values(athkar.tasbih.resets));
+        for (const day of Object.values(athkar.suwar.history)) instants.push(...Object.values(day));
+      }
+      return instants.filter(value => typeof value === "string");
+    }
+
+    // A code with an instant later than the receiver's clock plus a day (or exported before 2020) is refused before
+    // planning: a far-future reset epoch would replace units here and outrank every later local reset for 31 days.
+    function transferClockIsPlausible(container, now) {
+      const latest = Date.parse(now) + transferClockSkewMs;
+      const exportedAt = Date.parse(container.envelope.meta.exportedAt);
+      return exportedAt >= Date.parse(transferEarliestExport) && transferInstants(container).every(value => Date.parse(value) <= latest);
+    }
+
+    // The merged stores' budget (spec §4): tasbih count keys per day and in all, and reset entries per store. A merge
+    // past it is refused whole, so existing counts are never dropped to make room.
+    function transferWithinBudget(merged) {
+      const days = [merged.tasbih.counts, ...Object.values(merged.tasbih.history)];
+      const keys = new Set(days.flatMap(day => Object.keys(day)));
+      return days.every(day => Object.keys(day).length <= transferMaxTasbihKeysPerDay) && keys.size <= transferMaxTasbihKeys &&
+        [merged.progress.resets, merged.suwar.resets, merged.tasbih.resets].every(resets => Object.keys(resets).length <= transferMaxResets);
+    }
+
     // The dry run the preview shows (nothing is written): `additions`, `resets` (the other device's later reset replaces
     // a unit here; before/after), `keptLocal` (this device's later reset; the incoming copy is ignored), `settings`,
     // `warnings`, `empty`, and for applyTransfer the exact `writes` and the stored values they were planned on (`before`).
+    // A refused code is { error: "clock" } (implausible instants) or { error: "too-big" } (past the budget).
     function planTransfer(local, decoded, now = new Date().toISOString()) {
       const { container, source } = decoded;
+      if (!transferClockIsPlausible(container, now)) return { error: "clock" };
       const today = local.progress.date;
       const merged = mergeTransfer(local, container, now);
+      if (!transferWithinBudget(merged)) return { error: "too-big" };
       const kept = {
         adhkar: new Set(merged.progress.history.map(entry => entry.date)),
         suwar: new Set(Object.keys(merged.suwar.history)),
@@ -9464,13 +9676,76 @@
       };
     }
 
-    // Commits exactly `plan`: only if every stored value is still what it was planned on (else "changed": plan again),
-    // all writes or none (a failed write rolls back the ones before it), then this tab shows the result.
+    // At startup, before the stores load: a transfer interrupted between its writes (athkar-transfer-pending-v1 still
+    // there) finishes. If every key holds its planned-on or its new value, all keys get the new values (the user
+    // confirmed them), or the planned-on ones when the record is marked `rollback`. A key that holds anything else was
+    // written by something else meanwhile: storage is left as it is and the record dropped. Returns what happened:
+    // null (no record), "forward", "back", "conflict", "invalid" or "failed" (the record stays for the next start).
+    function recoverTransferPending() {
+      let record;
+      try {
+        const raw = localStorage.getItem(transferPendingKey);
+        if (raw === null) return null;
+        record = JSON.parse(raw);
+      } catch (_) {
+        record = null;
+      }
+      const values = map => map !== null && typeof map === "object" && !Array.isArray(map) &&
+        Object.values(map).every(value => value === null || typeof value === "string");
+      const drop = outcome => {
+        try {
+          localStorage.removeItem(transferPendingKey);
+        } catch (_) {}
+        return outcome;
+      };
+      if (!record || !values(record.before) || !values(record.after) ||
+        Object.keys(record.after).some(key => !Object.hasOwn(record.before, key))) {
+        return drop("invalid");
+      }
+      let consistent;
+      try {
+        consistent = Object.entries(record.before).every(([key, before]) => {
+          const stored = localStorage.getItem(key);
+          return stored === before || (Object.hasOwn(record.after, key) && stored === record.after[key]);
+        });
+      } catch (_) {
+        return "failed";
+      }
+      if (!consistent) {
+        console.warn("athkar: an interrupted transfer was left as stored, because another write changed its keys meanwhile");
+        return drop("conflict");
+      }
+      const target = record.rollback === true ? record.before : record.after;
+      try {
+        for (const key of Object.keys(record.after)) {
+          if (target[key] === null) localStorage.removeItem(key);
+          else localStorage.setItem(key, target[key]);
+        }
+      } catch (_) {
+        return "failed";
+      }
+      return drop(record.rollback === true ? "back" : "forward");
+    }
+
+    // Commits exactly `plan`: only if every stored value is still what it was planned on (else "changed": plan again).
+    // A write-ahead record (athkar-transfer-pending-v1: every planned-on value and every new one) goes first; then the
+    // keys; then the record goes. A failed write rolls the written keys back and drops the record; if the rollback fails
+    // too, the record is marked so the next start rolls back. A tab closed mid-way finishes at the next start
+    // (recoverTransferPending), so storage ends with all of the plan's writes or none.
     function applyTransfer(plan) {
       if (!tasbihStorageWorks || plan.today !== localDateKey()) return { ok: false, error: tasbihStorageWorks ? "changed" : "write" };
       const current = readTransferStorage();
       if (!current) return { ok: false, error: "write" };
       if (Object.keys(plan.before).some(key => current[key] !== plan.before[key])) return { ok: false, error: "changed" };
+      const record = { id: transferMessageId(), before: { ...plan.before }, after: { ...plan.writes } };
+      const hasWrites = Object.keys(plan.writes).length > 0;
+      if (hasWrites) {
+        try {
+          localStorage.setItem(transferPendingKey, JSON.stringify(record));
+        } catch (_) {
+          return { ok: false, error: "write" };
+        }
+      }
       const written = [];
       try {
         for (const [key, value] of Object.entries(plan.writes)) {
@@ -9479,16 +9754,25 @@
           else localStorage.setItem(key, value);
         }
       } catch (_) {
+        let restored = true;
         for (const key of written.reverse()) {
           try {
             if (plan.before[key] === null) localStorage.removeItem(key);
             else localStorage.setItem(key, plan.before[key]);
           } catch (_) {
+            restored = false;
             if (key === tasbihStorageKey) tasbihStorageWorks = false;
           }
         }
+        try {
+          if (restored) localStorage.removeItem(transferPendingKey);
+          else localStorage.setItem(transferPendingKey, JSON.stringify({ ...record, rollback: true }));
+        } catch (_) {}
         return { ok: false, error: "write" };
       }
+      try {
+        localStorage.removeItem(transferPendingKey);
+      } catch (_) {}
       showStoredProgressState();
       showStoredSuwarState();
       showStoredTasbihState();
@@ -9533,6 +9817,1191 @@
       updateHistoryView();
     }
 
+    // «نقل التقدّم» (spec/transfer/transfer-v1.md): #transfer-dialog opens over Settings in send mode (send → qr) or
+    // receive mode (receive → scan → preview → result). The QR libraries in vendor/ load only when a QR view opens.
+    const transferDialog = document.getElementById("transfer-dialog");
+    const transferTitle = document.getElementById("transfer-title");
+    const transferBack = document.getElementById("transfer-back");
+    const transferBody = document.getElementById("transfer-body");
+    const transferLive = document.getElementById("transfer-live");
+    const transferViews = Object.fromEntries(["send", "qr", "receive", "scan", "preview", "result"]
+      .map(name => [name, document.getElementById(`transfer-view-${name}`)]));
+    const transferSendOpen = document.getElementById("transfer-send-open");
+    const transferReceiveOpen = document.getElementById("transfer-receive-open");
+    const transferUnsupported = document.getElementById("transfer-unsupported");
+    const transferSendSummary = document.getElementById("transfer-send-summary");
+    const transferCodeOut = document.getElementById("transfer-code-out");
+    const transferCopy = document.getElementById("transfer-copy");
+    const transferShareFile = document.getElementById("transfer-share-file");
+    const transferShowQr = document.getElementById("transfer-show-qr");
+    const transferSendStatus = document.getElementById("transfer-send-status");
+    const transferSendTip = document.getElementById("transfer-send-tip");
+    const transferQrPlate = document.getElementById("transfer-qr");
+    const transferQrCanvas = document.getElementById("transfer-qr-canvas");
+    const transferQrFrame = document.getElementById("transfer-qr-frame");
+    const transferQrStepper = document.getElementById("transfer-qr-stepper");
+    const transferQrPrev = document.getElementById("transfer-qr-prev");
+    const transferQrPlay = document.getElementById("transfer-qr-play");
+    const transferQrNext = document.getElementById("transfer-qr-next");
+    const transferQrReduced = document.getElementById("transfer-qr-reduced");
+    const transferQrError = document.getElementById("transfer-qr-error");
+    const transferQrHint = document.getElementById("transfer-qr-hint");
+    const transferReceiveTip = document.getElementById("transfer-receive-tip");
+    const transferPasteHeading = document.getElementById("transfer-paste-heading");
+    const transferCodeIn = document.getElementById("transfer-code-in");
+    const transferPasteError = document.getElementById("transfer-paste-error");
+    const transferPasteButtons = document.getElementById("transfer-paste-buttons");
+    const transferPaste = document.getElementById("transfer-paste");
+    const transferContinue = document.getElementById("transfer-continue");
+    const transferFilePick = document.getElementById("transfer-file-pick");
+    const transferFileInput = document.getElementById("transfer-file");
+    const transferFileError = document.getElementById("transfer-file-error");
+    const transferScanOpen = document.getElementById("transfer-scan-open");
+    const transferScanUnavailable = document.getElementById("transfer-scan-unavailable");
+    const transferCamExplain = document.getElementById("transfer-cam-explain");
+    const transferCamStart = document.getElementById("transfer-cam-start");
+    const transferCamStatus = document.getElementById("transfer-cam-status");
+    const transferScanResume = document.getElementById("transfer-scan-resume");
+    const transferCamera = document.getElementById("transfer-camera");
+    const transferVideo = document.getElementById("transfer-video");
+    const transferCamError = document.getElementById("transfer-cam-error");
+    const transferCamErrorActions = document.getElementById("transfer-cam-error-actions");
+    const transferCamToPaste = document.getElementById("transfer-cam-to-paste");
+    const transferCamRetry = document.getElementById("transfer-cam-retry");
+    const transferScanProgress = document.getElementById("transfer-scan-progress");
+    const transferScanLabel = document.getElementById("transfer-scan-label");
+    const transferScanHint = document.getElementById("transfer-scan-hint");
+    const transferScanStop = document.getElementById("transfer-scan-stop");
+    const transferScanFallback = document.getElementById("transfer-scan-fallback");
+
+    const transferTitles = {
+      send: "إرسال التقدّم", qr: "رمز QR", receive: "استلام التقدّم", scan: "مسح رمز QR",
+      preview: "المراجعة", success: "تمّ النقل", error: "تعذّر النقل"
+    };
+    const transferBackTo = { qr: "send", scan: "receive", preview: "receive", error: "receive" };
+    const transferUnsupportedText = "لا يدعم هذا المتصفح نقل التقدّم. حدّث النظام أو المتصفح؛ يحتاج آيفون وآيباد إلى الإصدار ١٦٫٤ أو أحدث.";
+    const transferCorruptText = "الرمز تالف أو ناقص. انسخه كاملًا من الجهاز الآخر وأعد المحاولة؛ بعض تطبيقات المراسلة تغيّر المسافات داخل الرمز، فالمشاركة كملف أضمن.";
+    // spec §7 error → [result title, message]. `incomplete` and `mixed` read as a damaged code.
+    const transferErrorCopy = {
+      "not-code": ["ليس رمز نقل", "هذا ليس رمز نقل من «أذكار المسلم». تأكد أنك نسخت الرمز من «إرسال التقدّم»."],
+      "too-long": ["ليس رمز نقل", "النص أطول من أي رمز نقل. تأكد أنك لصقت الرمز وحده."],
+      "one-frame": ["رمز ناقص", "هذا جزء واحد من رمز QR متعدد الأجزاء. انسخ الرمز كاملًا من «نسخ الرمز»."],
+      "wrong-app": ["رمز تطبيق آخر", "هذا رمز من تطبيق «رقية القرين». افتح «رقية القرين» على هذا الجهاز واستلمه هناك."],
+      newer: ["إصدار أحدث", "أُنشئ هذا الرمز بإصدار أحدث من التطبيق. حدّث التطبيق على هذا الجهاز ثم أعد المحاولة: أغلقه تمامًا وافتحه وأنت متصل بالإنترنت."],
+      corrupt: ["رمز تالف", transferCorruptText],
+      clock: ["رمز غير صالح", "رمز غير صالح أو ساعة الجهاز غير مضبوطة: في الرمز أوقات لاحقة لساعة هذا الجهاز. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر."],
+      "too-big": ["يتجاوز ما يتسع له التطبيق", "لا يتسع التطبيق لكل ما في الرمز من عبارات المسبحة وسجلها مع ما على هذا الجهاز، فلم يُنقل شيء ولم يتغيّر تقدّمك."],
+      "file-read": ["تعذّرت قراءة الملف", "تعذّرت قراءة الملف. اختر ملف رمز النقل أو ملف نسخة احتياطية من «أذكار المسلم»."],
+      unsupported: ["غير مدعوم", transferUnsupportedText],
+      write: ["تعذّر الحفظ", "لم يُحفظ شيء ولم يتغيّر تقدّمك. تأكد من وجود مساحة كافية على الجهاز وأنك لا تستخدم التصفح الخاص، ثم أعد المحاولة."]
+    };
+    const transferPeriodNames = { morning: "الصباح", evening: "المساء" };
+    const transferSettingNames = {
+      "athkar-theme": "المظهر", [textSizeStorageKey]: "حجم نص الأذكار", [lineSpacingStorageKey]: "تباعد السطور",
+      [hapticsStorageKey]: "الاهتزاز", [longOrderStorageKey]: "ترتيب الأذكار الطويلة", [remindersStorageKey]: "طريقة حساب المواقيت"
+    };
+    const transferQrFrameMs = 250;
+    const arabicPluralRules = new Intl.PluralRules("ar");
+
+    let transferView = null;
+    let transferOpener = null;
+    let transferWrote = false;
+    let transferWriting = false;
+    let transferSendRun = 0;
+    let transferEncoded = null;
+    let transferDecoded = null;
+    let transferPlan = null;
+    let transferPlanRefreshed = false;
+    let transferAnnouncedAt = 0;
+    let transferAnnounceTimer = null;
+    let transferCopyTimer = null;
+    let transferQrMatrices = null;
+    let transferQrIndex = 0;
+    let transferQrPlaying = false;
+    let transferQrTimer = null;
+    let transferWakeLock = null;
+    let qrGeneratorPromise = null;
+    let qrScannerPromise = null;
+    let transferScanRun = 0;
+    let transferScanStream = null;
+    let transferScanTimer = null;
+    let transferScanDecoder = null;
+    let transferScanFrames = new Map();
+    let transferScanMsg = null;
+    let transferScanCount = 0;
+    let transferScanStartedAt = 0;
+    let transferScanLastFrameAt = 0;
+    let transferScanStallShown = false;
+    let transferScanPaused = false;
+    const transferScanForeign = new Map();
+
+    function transferErrorText(error, surface) {
+      if (error === "corrupt" && surface === "scan") return "الرمز تالف أو ناقص. أعد المسح من البداية.";
+      return (transferErrorCopy[transferErrorKind(error)] ?? transferErrorCopy["not-code"])[1];
+    }
+
+    function transferErrorKind(error) {
+      return error === "incomplete" || error === "mixed" ? "corrupt" : transferErrorCopy[error] ? error : "not-code";
+    }
+
+    function transferList(parts) {
+      return typeof Intl.ListFormat === "function" ? new Intl.ListFormat("ar", { type: "conjunction" }).format(parts) : parts.join("، ");
+    }
+
+    function transferDays(count) {
+      const forms = { one: "يوم واحد", two: "يومان", few: `${formatNumber(count)} أيام`, many: `${formatNumber(count)} يومًا` };
+      return forms[arabicPluralRules.select(count)] ?? `${formatNumber(count)} يوم`;
+    }
+
+    function transferNewPages(count) {
+      const forms = {
+        one: "صفحة واحدة مقروءة جديدة", two: "صفحتان مقروءتان جديدتان",
+        few: `${formatNumber(count)} صفحات مقروءة جديدة`, many: `${formatNumber(count)} صفحةً مقروءةً جديدةً`
+      };
+      return forms[arabicPluralRules.select(count)] ?? `${formatNumber(count)} صفحة مقروءة جديدة`;
+    }
+
+    function transferLostPages(count) {
+      const forms = { one: "صفحة واحدة", two: "صفحتين", few: `${formatNumber(count)} صفحات`, many: `${formatNumber(count)} صفحةً` };
+      return forms[arabicPluralRules.select(count)] ?? `${formatNumber(count)} صفحة`;
+    }
+
+    // Every status of this flow goes to the live region inside the dialog (the page's #live-region is inert behind the
+    // modal). `throttle`: scan announcements are at least 2 s apart.
+    function announceTransfer(text, throttle = false) {
+      clearTimeout(transferAnnounceTimer);
+      const say = () => {
+        transferAnnouncedAt = Date.now();
+        transferLive.textContent = "";
+        requestAnimationFrame(() => { transferLive.textContent = text; });
+      };
+      const wait = throttle ? transferAnnouncedAt + 2000 - Date.now() : 0;
+      if (wait > 0) transferAnnounceTimer = setTimeout(say, wait);
+      else say();
+    }
+
+    function setTransferNote(element, text, announce = true) {
+      element.textContent = text;
+      element.hidden = !text;
+      if (text && announce) announceTransfer(text);
+    }
+
+    function updateTransferEntry() {
+      const supported = transferSupported();
+      transferSendOpen.disabled = !supported;
+      transferReceiveOpen.disabled = !supported;
+      transferUnsupported.hidden = supported;
+    }
+
+    function showTransferView(view, focusTarget = transferTitle) {
+      if (transferView === "qr" && view !== "qr") leaveTransferQr();
+      if (transferView === "scan" && view !== "scan") leaveTransferScan();
+      transferView = view;
+      const panel = view === "success" || view === "error" ? "result" : view;
+      for (const [name, element] of Object.entries(transferViews)) element.hidden = name !== panel;
+      transferTitle.textContent = transferTitles[view];
+      transferBack.hidden = !transferBackTo[view];
+      transferBody.scrollTop = 0;
+      focusTarget.focus();
+    }
+
+    function openTransfer(mode, opener) {
+      transferOpener = opener;
+      transferWrote = false;
+      transferLive.textContent = "";
+      transferCodeIn.value = "";
+      transferDialog.showModal();
+      if (mode === "send") openTransferSend();
+      else showTransferReceive();
+    }
+
+    function transferTip(element, text) {
+      element.hidden = !text;
+      element.querySelector("span").textContent = text;
+    }
+
+    // ---- Send ----
+
+    function setTransferSendButtons(enabled) {
+      for (const button of [transferCopy, transferShareFile, transferShowQr]) button.disabled = !enabled;
+    }
+
+    function transferSendSummaryText(container) {
+      const { today, history } = container.envelope.adhkar;
+      const { suwar, tasbih } = container.athkar;
+      const parts = [];
+      if (["morning", "evening"].some(period => today.manualCompletion[period] || Object.values(today.progress[period]).some(count => count > 0))) {
+        parts.push("تقدّم أذكار اليوم");
+      }
+      if (Object.values(suwar.read).some(pages => Object.values(pages).some(Boolean))) parts.push("قراءة السور اليوم");
+      if (Object.values(tasbih.counts).some(count => count > 0)) parts.push("عدّ المسبحة اليوم");
+      const days = new Set([...history.map(entry => entry.date), ...Object.keys(suwar.history), ...Object.keys(tasbih.history)]).size;
+      if (days) parts.push(`سجل ${transferDays(days)}`);
+      if (!parts.length) return "لا يوجد تقدّم مسجّل على هذا الجهاز بعد، فسيحمل الرمز الإعدادات فقط.";
+      parts.push("الإعدادات");
+      return `يحمل الرمز: ${transferList(parts)}.`;
+    }
+
+    // Every opening builds a new code with a new `msg`, so a stale QR on another screen is recognisably different.
+    async function openTransferSend() {
+      const run = ++transferSendRun;
+      transferEncoded = null;
+      transferCodeOut.value = "";
+      transferSendSummary.textContent = "";
+      clearTimeout(transferCopyTimer);
+      transferCopy.textContent = "نسخ الرمز";
+      setTransferNote(transferSendStatus, "", false);
+      setTransferSendButtons(true);
+      transferTip(transferSendTip, !isIosDevice() ? "" : isInstalled()
+        ? "لنقل التقدّم إلى سفاري على الجهاز نفسه: انسخ الرمز، ثم افتح الموقع في سفاري واذهب إلى الإعدادات ← «استلام التقدّم» والصقه. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه."
+        : "لنقل التقدّم إلى التطبيق المثبّت على الشاشة الرئيسية: انسخ الرمز، ثم افتح التطبيق واذهب إلى الإعدادات ← «استلام التقدّم» والصقه. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه.");
+      showTransferView("send");
+      // Only a slow build shows «يُجهَّز الرمز…»; a fast one does not flash it.
+      const slow = setTimeout(() => {
+        if (run !== transferSendRun || transferEncoded) return;
+        setTransferSendButtons(false);
+        setTransferNote(transferSendStatus, "يُجهَّز الرمز…");
+      }, 300);
+      let encoded;
+      try {
+        encoded = await encodeTransfer();
+      } catch (_) {
+        encoded = { ok: false, error: "write" };
+      }
+      clearTimeout(slow);
+      if (run !== transferSendRun || !transferDialog.open) return;
+      if (!encoded.ok) {
+        setTransferSendButtons(false);
+        setTransferNote(transferSendStatus, encoded.error === "unsupported" ? transferUnsupportedText : "تعذّر تجهيز الرمز. أغلق النافذة وأعد المحاولة.");
+        return;
+      }
+      transferEncoded = encoded;
+      transferCodeOut.value = encoded.code;
+      transferSendSummary.textContent = transferSendSummaryText(encoded.container);
+      setTransferSendButtons(true);
+      if (transferSendStatus.textContent === "يُجهَّز الرمز…") setTransferNote(transferSendStatus, "", false);
+    }
+
+    async function copyTransferCode() {
+      if (!transferEncoded) return;
+      try {
+        await navigator.clipboard.writeText(transferEncoded.code);
+        transferCopy.textContent = "نُسخ ✓";
+        clearTimeout(transferCopyTimer);
+        transferCopyTimer = setTimeout(() => { transferCopy.textContent = "نسخ الرمز"; }, 2000);
+        setTransferNote(transferSendStatus, "نُسخ الرمز. على الجهاز الآخر افتح «استلام التقدّم» والصقه.");
+      } catch (_) {
+        transferCodeOut.focus();
+        transferCodeOut.select();
+        setTransferNote(transferSendStatus, "تعذّر النسخ تلقائيًا. حُدّد الرمز، فانسخه من قائمة النظام.");
+      }
+    }
+
+    async function shareTransferFile() {
+      if (!transferEncoded) return;
+      setTransferNote(transferSendStatus, "", false);
+      try {
+        const outcome = await deliverFile(`${transferEncoded.code}\n`, `athkar-transfer-${localDateKey()}.txt`, "text/plain");
+        if (outcome === "shared") setTransferNote(transferSendStatus, "جُهّز ملف الرمز. على الجهاز الآخر افتح «استلام التقدّم» واختر «اختيار ملف».");
+        else if (outcome === "downloaded") setTransferNote(transferSendStatus, "حُفظ ملف الرمز. على الجهاز الآخر افتح «استلام التقدّم» واختر «اختيار ملف».");
+      } catch (_) {
+        setTransferNote(transferSendStatus, "تعذّرت مشاركة الملف. انسخ الرمز بدلًا من ذلك.");
+      }
+    }
+
+    // ---- QR (vendor/qrcode.js) ----
+
+    function loadQrGenerator() {
+      qrGeneratorPromise ??= new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "vendor/qrcode.js";
+        script.onload = () => (typeof window.qrcode === "function" ? resolve(window.qrcode) : reject(new Error("qrcode")));
+        script.onerror = () => reject(new Error("qrcode"));
+        document.head.append(script);
+      }).catch(error => {
+        qrGeneratorPromise = null;
+        throw error;
+      });
+      return qrGeneratorPromise;
+    }
+
+    // Level M, alphanumeric mode. Every frame uses the version that fits frame 1 (the longest), so the size never jumps.
+    function buildTransferQrMatrices(qrcode, frames) {
+      const make = (text, version) => {
+        const qr = qrcode(version, "M");
+        qr.addData(text, "Alphanumeric");
+        qr.make();
+        return qr;
+      };
+      const first = make(frames[0], 0);
+      const version = (first.getModuleCount() - 17) / 4;
+      return frames.map((text, index) => {
+        const qr = index ? make(text, version) : first;
+        const size = qr.getModuleCount();
+        return Array.from({ length: size }, (_, row) => Array.from({ length: size }, (_, column) => qr.isDark(row, column)));
+      });
+    }
+
+    // Integer device pixels per module, a 4-module white quiet zone, black on white in both themes.
+    function drawTransferQr() {
+      if (!transferQrMatrices) return;
+      const matrix = transferQrMatrices[transferQrIndex];
+      const modules = matrix.length + 8;
+      const rem = parseFloat(getComputedStyle(root).fontSize) || 16;
+      const target = Math.min(transferViews.qr.clientWidth || 22 * rem, 22 * rem);
+      const ratio = devicePixelRatio || 1;
+      const unit = Math.max(1, Math.floor(target * ratio / modules));
+      const size = unit * modules;
+      if (transferQrCanvas.width !== size) {
+        transferQrCanvas.width = size;
+        transferQrCanvas.height = size;
+        transferQrCanvas.style.width = `${size / ratio}px`;
+        transferQrCanvas.style.height = `${size / ratio}px`;
+      }
+      const context = transferQrCanvas.getContext("2d");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, size, size);
+      context.fillStyle = "#000000";
+      matrix.forEach((row, y) => row.forEach((dark, x) => {
+        if (dark) context.fillRect((x + 4) * unit, (y + 4) * unit, unit, unit);
+      }));
+      transferQrFrame.textContent = `الجزء ${formatNumber(transferQrIndex + 1)} من ${formatNumber(transferQrMatrices.length)}`;
+    }
+
+    // The plate's name changes only on play/pause or a manual step, never with the timer.
+    function updateTransferQrControls() {
+      const count = transferQrMatrices?.length ?? 1;
+      transferQrPlate.setAttribute("aria-label", count === 1 ? "رمز QR للنقل" : transferQrPlaying
+        ? `رمز QR للنقل من ${formatNumber(count)} أجزاء يتبدّل تلقائيًا`
+        : `رمز QR للنقل، متوقف عند الجزء ${formatNumber(transferQrIndex + 1)} من ${formatNumber(count)}`);
+      transferQrPlay.textContent = transferQrPlaying ? "إيقاف مؤقت" : "تشغيل";
+      transferQrPlay.setAttribute("aria-pressed", String(!transferQrPlaying));
+    }
+
+    function syncTransferQrTimer() {
+      clearInterval(transferQrTimer);
+      transferQrTimer = null;
+      if (!transferQrPlaying || !transferQrMatrices) return;
+      transferQrTimer = setInterval(() => {
+        transferQrIndex = (transferQrIndex + 1) % transferQrMatrices.length;
+        drawTransferQr();
+      }, transferQrFrameMs);
+    }
+
+    function stepTransferQr(delta) {
+      if (!transferQrMatrices) return;
+      transferQrPlaying = false;
+      syncTransferQrTimer();
+      transferQrIndex = (transferQrIndex + delta + transferQrMatrices.length) % transferQrMatrices.length;
+      drawTransferQr();
+      updateTransferQrControls();
+    }
+
+    async function requestTransferWakeLock() {
+      if (transferView !== "qr" || transferWakeLock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+        if (transferView !== "qr" || !transferDialog.open || transferWakeLock) {
+          lock.release().catch(() => {});
+          return;
+        }
+        transferWakeLock = lock;
+        lock.addEventListener("release", () => {
+          if (transferWakeLock === lock) transferWakeLock = null;
+        });
+      } catch (_) {}
+    }
+
+    function releaseTransferWakeLock() {
+      const lock = transferWakeLock;
+      transferWakeLock = null;
+      lock?.release().catch(() => {});
+    }
+
+    async function openTransferQr() {
+      if (!transferEncoded) return;
+      const frames = transferEncoded.frames;
+      transferQrMatrices = null;
+      transferQrError.hidden = true;
+      transferQrStepper.hidden = frames.length < 2;
+      transferQrFrame.hidden = frames.length < 2;
+      transferQrReduced.hidden = frames.length < 2 || !motionIsReduced.matches;
+      transferQrHint.textContent = frames.length < 2
+        ? "على الجهاز الآخر افتح «استلام التقدّم» واختر «مسح رمز QR»، ثم وجّه الكاميرا إلى هذه الشاشة."
+        : "على الجهاز الآخر افتح «استلام التقدّم» واختر «مسح رمز QR»، ثم وجّه الكاميرا إلى هذه الشاشة. تُقرأ الأجزاء بأي ترتيب.";
+      showTransferView("qr");
+      requestTransferWakeLock();
+      let matrices;
+      try {
+        matrices = buildTransferQrMatrices(await loadQrGenerator(), frames);
+      } catch (_) {
+        if (transferView === "qr") setTransferNote(transferQrError, "تعذّر تجهيز الرمز. أغلق النافذة وأعد المحاولة.");
+        return;
+      }
+      if (transferView !== "qr" || transferEncoded?.frames !== frames) return;
+      transferQrMatrices = matrices;
+      transferQrIndex = 0;
+      // Reduced motion: start paused on frame 1; «التالي» steps and «تشغيل» stays available.
+      transferQrPlaying = matrices.length > 1 && !motionIsReduced.matches;
+      drawTransferQr();
+      updateTransferQrControls();
+      syncTransferQrTimer();
+    }
+
+    function leaveTransferQr() {
+      transferQrPlaying = false;
+      syncTransferQrTimer();
+      releaseTransferWakeLock();
+    }
+
+    // ---- Receive: paste and file ----
+
+    function showTransferReceive(focusTarget) {
+      transferDecoded = null;
+      transferPlan = null;
+      clearTransferPasteError();
+      setTransferNote(transferFileError, "", false);
+      transferContinue.disabled = !transferCodeIn.value.trim();
+      const canPaste = typeof navigator.clipboard?.readText === "function";
+      transferPaste.hidden = !canPaste;
+      transferPasteButtons.classList.toggle("is-pair", canPaste);
+      const canScan = typeof navigator.mediaDevices?.getUserMedia === "function";
+      transferScanOpen.hidden = !canScan;
+      transferScanUnavailable.hidden = canScan;
+      transferTip(transferReceiveTip, !isIosDevice() ? "" : isInstalled()
+        ? "إن كان تقدّمك في سفاري على هذا الجهاز: افتح الموقع في سفاري، واذهب إلى الإعدادات ← «إرسال التقدّم» ← «نسخ الرمز»، ثم عُد إلى هنا والصقه. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف»."
+        : "إن كان تقدّمك في التطبيق المثبّت على هذا الجهاز: افتحه، واذهب إلى الإعدادات ← «إرسال التقدّم» ← «نسخ الرمز»، ثم عُد إلى سفاري والصقه هنا. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف».");
+      showTransferView("receive", focusTarget);
+    }
+
+    function clearTransferPasteError() {
+      transferPasteError.textContent = "";
+      transferPasteError.hidden = true;
+      transferCodeIn.removeAttribute("aria-invalid");
+    }
+
+    function showTransferPasteError(text, invalid = true) {
+      setTransferNote(transferPasteError, text);
+      if (invalid) transferCodeIn.setAttribute("aria-invalid", "true");
+      transferCodeIn.focus();
+    }
+
+    async function continueTransferPaste() {
+      if (!transferCodeIn.value.trim() || transferContinue.dataset.busy) return;
+      transferContinue.dataset.busy = "1";
+      transferContinue.disabled = true;
+      try {
+        // decodeTransfer drops line breaks and the ends' whitespace only; interior spaces are base45 data.
+        const decoded = await decodeTransfer(transferCodeIn.value);
+        if (transferView !== "receive") return;
+        if (decoded.ok) openTransferPreview(decoded);
+        else showTransferPasteError(transferErrorText(decoded.error, "paste"));
+      } finally {
+        delete transferContinue.dataset.busy;
+        transferContinue.disabled = !transferCodeIn.value.trim();
+      }
+    }
+
+    async function pasteTransferCode() {
+      try {
+        const text = await navigator.clipboard.readText();
+        transferCodeIn.value = text;
+        clearTransferPasteError();
+        transferContinue.disabled = !text.trim();
+        await continueTransferPaste();
+      } catch (_) {
+        showTransferPasteError("اضغط مطولًا داخل الحقل واختر «لصق».", false);
+      }
+    }
+
+    async function readTransferFile() {
+      const file = transferFileInput.files?.[0];
+      transferFileInput.value = "";
+      if (!file) return;
+      setTransferNote(transferFileError, "", false);
+      let decoded;
+      // Bounded before reading: no code or backup is anywhere near 256 KB.
+      if (file.size > transferMaxTextLength * 4) decoded = { ok: false, error: "too-long" };
+      else {
+        let text = null;
+        try {
+          text = await file.text();
+        } catch (_) {}
+        decoded = text === null ? { ok: false, error: "file-read" } : await decodeTransferFile(text);
+      }
+      if (transferView !== "receive") return;
+      if (decoded.ok) openTransferPreview(decoded);
+      else {
+        setTransferNote(transferFileError, transferErrorText(decoded.error, "file"));
+        transferFilePick.focus();
+      }
+    }
+
+    // ---- Scan (BarcodeDetector, else vendor/qr-scanner.min.js) ----
+
+    function loadQrScanner() {
+      qrScannerPromise ??= import("./vendor/qr-scanner.min.js").then(module => module.default).catch(error => {
+        qrScannerPromise = null;
+        throw error;
+      });
+      return qrScannerPromise;
+    }
+
+    async function loadTransferScanDecoder() {
+      if (transferScanDecoder) return transferScanDecoder;
+      let native = null;
+      try {
+        if (typeof BarcodeDetector === "function" && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
+          native = new BarcodeDetector({ formats: ["qr_code"] });
+        }
+      } catch (_) {}
+      if (native) {
+        transferScanDecoder = { detect: async source => (await native.detect(source)).map(code => code.rawValue), close() {} };
+        return transferScanDecoder;
+      }
+      const QrScanner = await loadQrScanner();
+      const engine = await QrScanner.createQrEngine();
+      const canvas = document.createElement("canvas");
+      transferScanDecoder = {
+        async detect(video) {
+          // The centred square, scaled to at most 800 px: a V20 code filling the viewfinder keeps ≥ 4 px per module.
+          const side = Math.min(video.videoWidth, video.videoHeight);
+          const scaled = Math.min(side, 800);
+          try {
+            const result = await QrScanner.scanImage(video, {
+              qrEngine: engine,
+              canvas,
+              scanRegion: { x: (video.videoWidth - side) / 2, y: (video.videoHeight - side) / 2, width: side, height: side, downScaledWidth: scaled, downScaledHeight: scaled },
+              returnDetailedScanResult: true
+            });
+            return [result.data];
+          } catch (_) {
+            return [];
+          }
+        },
+        close() {
+          if (engine instanceof Worker) engine.terminate();
+        }
+      };
+      return transferScanDecoder;
+    }
+
+    function resetTransferScanState() {
+      transferScanFrames = new Map();
+      transferScanMsg = null;
+      transferScanCount = 0;
+      transferScanStallShown = false;
+      transferScanPaused = false;
+      transferScanForeign.clear();
+      transferScanProgress.hidden = true;
+      transferScanProgress.replaceChildren();
+      transferScanLabel.textContent = "لم يُقرأ شيء بعد";
+      setTransferNote(transferScanHint, "", false);
+    }
+
+    function hideTransferScanSteps() {
+      transferCamExplain.hidden = true;
+      transferCamStart.hidden = true;
+      transferScanResume.hidden = true;
+      transferCamera.hidden = true;
+      transferCamError.hidden = true;
+      transferCamErrorActions.hidden = true;
+      setTransferNote(transferCamStatus, "", false);
+    }
+
+    // getUserMedia runs only after the explanation (or when permission is already granted).
+    async function openTransferScan() {
+      const run = ++transferScanRun;
+      resetTransferScanState();
+      hideTransferScanSteps();
+      showTransferView("scan");
+      loadTransferScanDecoder().catch(() => {});
+      let granted = false;
+      try {
+        granted = (await navigator.permissions?.query({ name: "camera" }))?.state === "granted";
+      } catch (_) {}
+      if (run !== transferScanRun) return;
+      if (granted) startTransferCamera();
+      else {
+        transferCamExplain.hidden = false;
+        transferCamStart.hidden = false;
+      }
+    }
+
+    function transferCameraError(name) {
+      if (name === "NotAllowedError" || name === "SecurityError") return "لم يُسمح باستخدام الكاميرا. يمكنك لصق الرمز أو اختيار ملف، أو السماح بالكاميرا من إعدادات المتصفح ثم المحاولة مرة أخرى.";
+      if (name === "NotFoundError" || name === "OverconstrainedError") return "لا تتوفر كاميرا على هذا الجهاز. الصق الرمز أو اختر ملفًا.";
+      if (name === "NotReadableError" || name === "AbortError") return "الكاميرا مشغولة بتطبيق آخر. أغلقه ثم حاول مرة أخرى، أو الصق الرمز.";
+      return "تعذّر تشغيل قارئ الرمز. الصق الرمز أو اختر ملفًا.";
+    }
+
+    function showTransferCameraError(name) {
+      stopTransferCamera();
+      hideTransferScanSteps();
+      setTransferNote(transferCamError, transferCameraError(name));
+      transferCamErrorActions.hidden = false;
+      transferCamRetry.hidden = name !== "NotAllowedError";
+    }
+
+    async function startTransferCamera() {
+      const run = transferScanRun;
+      hideTransferScanSteps();
+      transferScanPaused = false;
+      setTransferNote(transferCamStatus, "تُشغَّل الكاميرا…");
+      try {
+        await loadTransferScanDecoder();
+      } catch (_) {
+        if (run === transferScanRun) showTransferCameraError("decoder");
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+      } catch (error) {
+        if (run === transferScanRun) showTransferCameraError(error?.name);
+        return;
+      }
+      // Left the view (or the page) while the prompt was up: never keep the camera.
+      if (run !== transferScanRun || transferView !== "scan" || document.visibilityState !== "visible") {
+        for (const track of stream.getTracks()) track.stop();
+        return;
+      }
+      transferScanStream = stream;
+      transferVideo.srcObject = stream;
+      transferCamera.hidden = false;
+      try {
+        await transferVideo.play();
+      } catch (_) {}
+      if (run !== transferScanRun) return;
+      setTransferNote(transferCamStatus, "", false);
+      transferScanStartedAt = Date.now();
+      transferScanLastFrameAt = transferScanStartedAt;
+      scheduleTransferScan();
+    }
+
+    function stopTransferCamera() {
+      clearTimeout(transferScanTimer);
+      transferScanTimer = null;
+      for (const track of transferScanStream?.getTracks() ?? []) track.stop();
+      transferScanStream = null;
+      transferVideo.srcObject = null;
+    }
+
+    function leaveTransferScan() {
+      transferScanRun += 1;
+      stopTransferCamera();
+      transferScanDecoder?.close();
+      transferScanDecoder = null;
+      resetTransferScanState();
+    }
+
+    function scheduleTransferScan() {
+      clearTimeout(transferScanTimer);
+      transferScanTimer = setTimeout(transferScanTick, 120);
+    }
+
+    async function transferScanTick() {
+      const run = transferScanRun;
+      if (!transferScanStream || !transferScanDecoder) return;
+      let texts = [];
+      if (transferVideo.readyState >= 2 && transferVideo.videoWidth) {
+        try {
+          texts = await transferScanDecoder.detect(transferVideo);
+        } catch (_) {}
+      }
+      if (run !== transferScanRun || !transferScanStream) return;
+      for (const text of texts) {
+        if (handleTransferScanText(text)) return;
+      }
+      const now = Date.now();
+      const stalled = transferScanFrames.size ? now - transferScanLastFrameAt > 8000 : now - transferScanStartedAt > 15000;
+      if (stalled && !transferScanStallShown) {
+        transferScanStallShown = true;
+        transferScanHint.textContent = "لم تكتمل القراءة بعد. ارفع سطوع الشاشة الأخرى، وقرّب الجهاز أو أبعده قليلًا.";
+        transferScanHint.hidden = false;
+        announceTransfer(transferScanHint.textContent, true);
+      }
+      scheduleTransferScan();
+    }
+
+    function renderTransferScanProgress() {
+      const count = transferScanCount;
+      const read = transferScanFrames.size;
+      const text = `قُرئ ${formatNumber(read)} من ${formatNumber(count)}`;
+      transferScanProgress.hidden = false;
+      transferScanProgress.style.setProperty("--frames", count);
+      transferScanProgress.replaceChildren(...Array.from({ length: count }, (_, index) => {
+        const segment = document.createElement("span");
+        if (transferScanFrames.has(index + 1)) segment.className = "is-read";
+        return segment;
+      }));
+      transferScanProgress.setAttribute("aria-valuemax", String(count));
+      transferScanProgress.setAttribute("aria-valuenow", String(read));
+      transferScanProgress.setAttribute("aria-valuetext", text);
+      transferScanLabel.textContent = text;
+    }
+
+    function showTransferScanForeign(text) {
+      const now = Date.now();
+      if (now - (transferScanForeign.get(text) ?? -Infinity) < 5000) return;
+      transferScanForeign.set(text, now);
+      setTransferNote(transferScanHint, "هذا رمز QR آخر. وجّه الكاميرا إلى رمز النقل في «إرسال التقدّم».", false);
+    }
+
+    // One decoded QR text. True when scanning ends (all frames read, or a code that can never be read here).
+    function handleTransferScanText(text) {
+      if (typeof text !== "string") return false;
+      const clean = text.trim();
+      if (!clean.startsWith("AQ")) {
+        showTransferScanForeign(clean);
+        return false;
+      }
+      const frame = parseTransferFrame(clean);
+      if (frame.error === "wrong-app" || frame.error === "newer" || frame.error === "corrupt") {
+        stopTransferCamera();
+        showTransferResultError(frame.error, "scan");
+        return true;
+      }
+      if (frame.error) {
+        showTransferScanForeign(clean);
+        return false;
+      }
+      if (transferScanMsg && (frame.msg !== transferScanMsg || frame.count !== transferScanCount)) {
+        transferScanFrames = new Map();
+        setTransferNote(transferScanHint, "تغيّر الرمز على الجهاز الآخر، فبدأت القراءة من جديد.", false);
+        announceTransfer(transferScanHint.textContent, true);
+      }
+      const first = !transferScanMsg;
+      transferScanMsg = frame.msg;
+      transferScanCount = frame.count;
+      if (transferScanFrames.has(frame.index)) return false;
+      transferScanFrames.set(frame.index, clean);
+      transferScanLastFrameAt = Date.now();
+      transferScanStallShown = false;
+      if (transferScanHint.textContent.startsWith("لم تكتمل")) setTransferNote(transferScanHint, "", false);
+      renderTransferScanProgress();
+      if (first) announceTransfer(`بدأت القراءة: قُرئ ١ من ${formatNumber(frame.count)}.`, true);
+      if (transferScanFrames.size < transferScanCount) return false;
+      finishTransferScan([...transferScanFrames.values()]);
+      return true;
+    }
+
+    // The camera stops before the preview.
+    async function finishTransferScan(texts) {
+      stopTransferCamera();
+      transferScanRun += 1;
+      announceTransfer("اكتملت القراءة.", true);
+      const decoded = await decodeTransferFrames(texts);
+      if (transferView !== "scan") return;
+      if (decoded.ok) openTransferPreview(decoded);
+      else showTransferResultError(decoded.error, "scan");
+    }
+
+    // ---- Preview, confirm, result ----
+
+    function transferDayLabel(date, today) {
+      return historyDateLabel(date, date === today);
+    }
+
+    function transferAdhkarDone(period, unit) {
+      const candidate = { progress: { [period]: unit.progress }, targets: state.targets };
+      const items = collections[period].filter(item => !item.review);
+      return {
+        done: items.filter(item => countForState(item, period, candidate) >= targetForState(item, period, candidate)).length,
+        total: items.length,
+        complete: periodCountersComplete(period, candidate),
+        candidate
+      };
+    }
+
+    function transferChange(title, detail, className = "") {
+      return `<li class="transfer-change${className}"><strong>${escapeHtml(title)}</strong>${detail}</li>`;
+    }
+
+    function transferSmall(text, className = "") {
+      return `<small${className ? ` class="${className}"` : ""}>${escapeHtml(text)}</small>`;
+    }
+
+    function transferAdhkarAddition(row) {
+      const { unit: period, before, after } = row;
+      const was = transferAdhkarDone(period, before);
+      const now = transferAdhkarDone(period, after);
+      const title = `أذكار ${transferPeriodNames[period]} — اليوم`;
+      if (!(was.complete || before.manualCompletion) && (now.complete || after.manualCompletion)) {
+        return transferChange(title, now.complete ? transferSmall("يكتمل الورد ✓", "is-complete") : transferSmall("يُسجَّل الورد مكتملًا"));
+      }
+      const parts = [];
+      if (now.done > was.done) parts.push(`يصبح المكتمل ${formatNumber(now.done)} من ${formatNumber(now.total)} بعد ${formatNumber(was.done)}`);
+      const target = item => targetForState(item, period, now.candidate);
+      const rose = collections[period].filter(item => !item.review &&
+        countForState(item, period, now.candidate) > countForState(item, period, was.candidate) &&
+        !(countForState(item, period, now.candidate) >= target(item) && countForState(item, period, was.candidate) < target(item))).length;
+      if (rose) parts.push(`يزيد عدّ ${formatNumber(rose)} من الأذكار`);
+      return parts.length ? transferChange(title, transferSmall(parts.join("، و"))) : "";
+    }
+
+    function transferUnitTitle(row, today) {
+      const day = transferDayLabel(row.date, today);
+      if (row.store === "adhkar") return row.date < today ? `السجل — ${day}` : `أذكار ${transferPeriodNames[row.unit]} — ${day}`;
+      if (row.store === "suwar") return row.date < today ? `السجل — ${day}` : `${suwarById[row.unit]?.surah ?? row.unit} — ${day}`;
+      return `المسبحة — ${day}`;
+    }
+
+    function transferHistoryTag(row) {
+      if (row.store === "adhkar") return transferPeriodNames[row.unit];
+      if (row.store === "suwar") return suwarById[row.unit]?.surah ?? row.unit;
+      return "المسبحة";
+    }
+
+    // Groups rows by date (newest first) with their tags, each tag once.
+    function transferTagsByDate(rows) {
+      const days = new Map();
+      for (const row of rows) {
+        const tags = days.get(row.date) ?? [];
+        const tag = transferHistoryTag(row);
+        if (!tags.includes(tag)) tags.push(tag);
+        days.set(row.date, tags);
+      }
+      return [...days].sort((a, b) => b[0].localeCompare(a[0]));
+    }
+
+    function transferResetRows(plan) {
+      const { today } = plan;
+      const because = "لأن إعادة الضبط على الجهاز الآخر أحدث.";
+      const rows = [];
+      const history = plan.resets.filter(row => row.store !== "tasbih" && row.date < today);
+      for (const row of plan.resets) {
+        if (row.store === "adhkar" && row.date === today) {
+          const p = transferPeriodNames[row.unit];
+          const was = transferAdhkarDone(row.unit, row.before);
+          const now = transferAdhkarDone(row.unit, row.after);
+          rows.push(transferChange(`أذكار ${p} — اليوم`, transferSmall(`سيُعاد ضبط تقدّم أذكار ${p} اليوم ${because} يصبح المكتمل ${formatNumber(now.done)} من ${formatNumber(now.total)} بدل ${formatNumber(was.done)}.`), " is-reset"));
+        } else if (row.store === "suwar" && row.date === today) {
+          const name = suwarById[row.unit]?.surah ?? row.unit;
+          const lost = row.before.pages.filter(page => !row.after.pages.includes(page)).length;
+          rows.push(transferChange(`${name} — اليوم`, transferSmall(`سيُعاد ضبط علامات قراءة ${name} اليوم ${because} تُزال العلامة عن ${transferLostPages(lost)}.`), " is-reset"));
+        }
+      }
+      const tasbihDays = new Map();
+      for (const row of plan.resets.filter(row => row.store === "tasbih")) {
+        const day = tasbihDays.get(row.date) ?? { before: 0, after: 0 };
+        day.before += row.before;
+        day.after += row.after;
+        tasbihDays.set(row.date, day);
+      }
+      for (const [date, day] of [...tasbihDays].sort((a, b) => b[0].localeCompare(a[0]))) {
+        const label = transferDayLabel(date, today);
+        rows.push(transferChange(`المسبحة — ${label}`, transferSmall(`سيُعاد ضبط عدّ المسبحة ${label} ${because} ينقص المجموع من ${formatNumber(day.before)} إلى ${formatNumber(day.after)}.`), " is-reset"));
+      }
+      for (const [date, tags] of transferTagsByDate(history)) {
+        const label = transferDayLabel(date, today);
+        rows.push(transferChange(`السجل — ${label}`, transferSmall(`سيُحذف ${label} من سجل الإكمال ${because} يُزال: ${tags.join("، ")}.`), " is-reset"));
+      }
+      return rows;
+    }
+
+    function transferAdditionRows(plan) {
+      const { today } = plan;
+      const todayRows = plan.additions.filter(row => row.date === today);
+      const rows = [];
+      for (const period of ["morning", "evening"]) {
+        const row = todayRows.find(item => item.store === "adhkar" && item.unit === period);
+        if (row) rows.push(transferAdhkarAddition(row));
+      }
+      const suwar = todayRows.filter(row => row.store === "suwar");
+      if (suwar.length) {
+        const pages = suwar.reduce((sum, row) => sum + row.after.pages.filter(page => !row.before.pages.includes(page)).length, 0);
+        const completed = suwar.filter(row => row.after.completedAt && !row.before.completedAt).map(row => suwarById[row.unit]?.surah ?? row.unit);
+        const parts = [];
+        if (pages) parts.push(transferNewPages(pages));
+        if (completed.length) parts.push(`${pages ? "وتكتمل" : "تكتمل"} ${transferList(completed)}`);
+        if (parts.length) rows.push(transferChange("قراءة السور — اليوم", transferSmall(parts.join("، "))));
+      }
+      const raised = todayRows.filter(row => row.store === "tasbih" && row.unit !== "custom" && row.after > row.before).length;
+      const custom = todayRows.find(row => row.store === "tasbih" && row.unit === "custom");
+      const phrases = custom ? custom.after.length - custom.before.length : 0;
+      if (raised || phrases) {
+        const added = `تُضاف ${formatNumber(phrases)} من العبارات إلى «عباراتك»`;
+        const text = raised ? `يرتفع العدّ في ${formatNumber(raised)} من الأذكار${phrases ? `، و${added}` : ""}` : added;
+        rows.push(transferChange("المسبحة — اليوم", transferSmall(text)));
+      }
+      const history = transferTagsByDate(plan.additions.filter(row => row.date < today));
+      if (history.length) {
+        const dates = history.map(([date, tags]) => `<li>${escapeHtml(`${historyDateLabel(date)}: ${tags.join("، ")}`)}</li>`).join("");
+        rows.push(transferChange("السجل", `${transferSmall(transferDays(history.length))}<ul class="transfer-dates">${dates}</ul>`));
+      }
+      const settings = plan.settings.map(({ key }) => transferSettingNames[key]).filter(Boolean);
+      if (settings.length) rows.push(transferChange("الإعدادات", transferSmall(`تُطبَّق: ${settings.join("، ")}`)));
+      return rows.filter(Boolean);
+    }
+
+    function transferKeptRows(plan) {
+      const titles = [...new Set(plan.keptLocal.map(row => transferUnitTitle(row, plan.today)))];
+      return titles.map(title => transferChange(title, transferSmall("لن يُنقل هذا من الجهاز الآخر لأن إعادة الضبط على هذا الجهاز أحدث.")));
+    }
+
+    function transferDayDistance(from, to) {
+      const parse = date => Date.UTC(...date.split("-").map((part, index) => Number(part) - (index === 1 ? 1 : 0)));
+      return Math.round((parse(to) - parse(from)) / 86400000);
+    }
+
+    function transferWarnings(plan) {
+      return plan.warnings.map(warning => {
+        if (warning.kind === "backup") return "هذا ملف نسخة احتياطية، فيه أذكار الصباح والمساء وسجلها فقط، وليس فيه المسبحة ولا قراءة السور.";
+        if (warning.kind === "future") return "تاريخ «اليوم» في الرمز لاحق لتاريخ هذا الجهاز، فلن يُنقل تقدّم ذلك اليوم. تحقّق من التاريخ والمنطقة الزمنية على الجهازين.";
+        if (warning.kind === "trimmed") return "يحفظ التطبيق آخر سبعة أيام فقط، فلن تُضاف الأيام الأقدم من ذلك.";
+        if (warning.kind === "tasbih-cap") {
+          return `لا تتسع «عباراتك» لأكثر من ٨ عبارات، فلن تُضاف هذه العبارات ولا عدّها: ${warning.phrases.map(phrase => `«${phrase}»`).join("، ")}.`;
+        }
+        if (warning.kind === "stale") {
+          const days = transferDayDistance(warning.date, plan.today);
+          const when = new Intl.RelativeTimeFormat("ar-EG", { numeric: "auto" }).format(-days, "day");
+          return `أُنشئ هذا الرمز ${when}، فلا يحمل ما سُجّل على الجهاز الآخر بعد ذلك.`;
+        }
+        return "";
+      }).filter(Boolean).map(text => `<p class="transfer-warning">${escapeHtml(text)}</p>`).join("");
+    }
+
+    // The preview of `plan`. Every value from the code (phrases, ids) goes through escapeHtml.
+    function transferPreviewMarkup(plan) {
+      const created = new Date(plan.createdAt);
+      const createdLine = Number.isNaN(created.getTime()) ? "" :
+        `<p class="settings-note">${escapeHtml(`أُنشئ الرمز: ${historyDateFormatter.format(created)}، ${timeFormatter.format(created)}`)}</p>`;
+      const refreshed = transferPlanRefreshed
+        ? `<p class="transfer-warning">${escapeHtml("تغيّر التقدّم على هذا الجهاز أثناء المراجعة، فحُدّثت القائمة. راجعها ثم أكّد.")}</p>`
+        : "";
+      const kept = transferKeptRows(plan);
+      if (plan.empty) {
+        return `${refreshed}<h3>لا جديد</h3>
+          <p class="settings-note">كل ما في الرمز موجود على هذا الجهاز بالفعل، فلا شيء لإضافته. ليتطابق الجهازان، أرسل التقدّم من هذا الجهاز إلى الآخر أيضًا.</p>
+          ${kept.length ? `<ul class="transfer-changes">${kept.join("")}</ul>` : ""}
+          ${transferWarnings(plan)}
+          <div class="transfer-buttons">
+            <button class="dialog-button primary" type="button" data-transfer-action="done">تم</button>
+            <button class="dialog-button" type="button" data-transfer-action="send">إرسال من هذا الجهاز</button>
+          </div>`;
+      }
+      const resets = transferResetRows(plan);
+      const changes = [...resets, ...transferAdditionRows(plan), ...kept];
+      const hasResets = plan.resets.length > 0;
+      return `${refreshed}<p class="transfer-lead">${hasResets ? "سيتغيّر على هذا الجهاز:" : "سيُضاف إلى هذا الجهاز:"}</p>
+        ${createdLine}
+        <ul class="transfer-changes">${changes.join("")}</ul>
+        ${hasResets
+          ? `<p class="transfer-warning">أُعيد ضبط بعض التقدّم على الجهاز الآخر بعد آخر ما سُجّل هنا، فسيُطبَّق هنا كما هو موضّح أعلاه. لا شيء غير ذلك يُحذف أو ينقص، وتبقى إعداداتك الحالية كما هي.</p>`
+          : `<p class="transfer-assure">لن يُحذف شيء من هذا الجهاز ولن ينقص أي عدد. يُضاف ما ينقصه فقط، وتبقى إعداداتك الحالية كما هي.</p>`}
+        <p class="settings-note">لا يُنقل «التراجع»: إن تراجعت عن عدّة على أحد الجهازين، فلن ينقص العدّ على الجهاز الآخر بالنقل.</p>
+        ${transferWarnings(plan)}
+        <div class="transfer-footer">
+          <button class="dialog-button" type="button" data-transfer-action="cancel">إلغاء</button>
+          <button class="dialog-button primary" type="button" data-transfer-action="confirm">${hasResets ? "تطبيق التغييرات" : "إضافة التقدّم"}</button>
+        </div>`;
+    }
+
+    function renderTransferPreview() {
+      transferViews.preview.innerHTML = transferPreviewMarkup(transferPlan);
+      const done = transferViews.preview.querySelector('[data-transfer-action="done"]');
+      showTransferView("preview", done ?? transferTitle);
+      if (transferPlanRefreshed) announceTransfer("تغيّر التقدّم على هذا الجهاز أثناء المراجعة، فحُدّثت القائمة. راجعها ثم أكّد.");
+    }
+
+    // The dry run on what is stored now; `planned` errors (clock, too-big) mean the code is refused before any preview.
+    function planTransferFromStorage(decoded) {
+      const local = readTransferLocal();
+      if (!local) return { ok: false, error: "write" };
+      const plan = planTransfer(local, decoded);
+      return plan.error ? { ok: false, error: plan.error } : { ok: true, plan };
+    }
+
+    function openTransferPreview(decoded) {
+      const planned = planTransferFromStorage(decoded);
+      if (!planned.ok) {
+        showTransferResultError(planned.error);
+        return;
+      }
+      transferDecoded = decoded;
+      transferPlan = planned.plan;
+      transferPlanRefreshed = false;
+      renderTransferPreview();
+    }
+
+    function setTransferWriting(writing) {
+      transferWriting = writing;
+      for (const button of transferDialog.querySelectorAll("button")) {
+        if (writing) {
+          button.dataset.wasDisabled = button.disabled ? "1" : "";
+          button.disabled = true;
+        } else if (button.dataset.wasDisabled !== undefined) {
+          button.disabled = button.dataset.wasDisabled === "1";
+          delete button.dataset.wasDisabled;
+        }
+      }
+    }
+
+    // applyTransfer commits exactly the previewed plan. When storage changed meanwhile ("changed": another tab wrote, or
+    // midnight passed), plan again: if the preview would read the same, commit that plan; otherwise show it for review.
+    async function confirmTransfer() {
+      if (!transferPlan || transferWriting) return;
+      const confirm = transferViews.preview.querySelector('[data-transfer-action="confirm"]');
+      setTransferWriting(true);
+      if (confirm) confirm.textContent = "يُحفظ…";
+      await new Promise(resolve => requestAnimationFrame(() => resolve()));
+      let result = applyTransfer(transferPlan);
+      if (!result.ok && result.error === "changed") {
+        const shown = transferPreviewMarkup(transferPlan);
+        const planned = planTransferFromStorage(transferDecoded);
+        if (!planned.ok) result = planned;
+        else {
+          transferPlan = planned.plan;
+          result = transferPreviewMarkup(planned.plan) === shown ? applyTransfer(planned.plan) : { ok: false, error: "changed" };
+        }
+        if (!result.ok && result.error === "changed") {
+          setTransferWriting(false);
+          transferPlanRefreshed = true;
+          renderTransferPreview();
+          return;
+        }
+      }
+      setTransferWriting(false);
+      if (result.ok) {
+        transferWrote = true;
+        transferDecoded = null;
+        transferPlan = null;
+        transferCodeIn.value = "";
+        showTransferSuccess();
+      } else showTransferResultError(result.error);
+    }
+
+    function showTransferSuccess() {
+      transferViews.result.innerHTML = `
+        <div class="transfer-result"><div class="completion-mark" aria-hidden="true">✓</div></div>
+        <h3 class="transfer-result">نُقل التقدّم إلى هذا الجهاز</h3>
+        <p class="settings-note transfer-result">ليتطابق الجهازان، أرسل التقدّم من هذا الجهاز إلى الآخر أيضًا.</p>
+        <div class="transfer-buttons">
+          <button class="dialog-button primary" type="button" data-transfer-action="done">تم</button>
+          <button class="dialog-button" type="button" data-transfer-action="send">إرسال من هذا الجهاز</button>
+        </div>`;
+      showTransferView("success", transferViews.result.querySelector('[data-transfer-action="done"]'));
+      announceTransfer("نُقل التقدّم إلى هذا الجهاز.");
+    }
+
+    function showTransferResultError(error, surface) {
+      const [title] = transferErrorCopy[transferErrorKind(error)];
+      const message = transferErrorText(error, surface);
+      transferViews.result.innerHTML = `
+        <div class="transfer-result"><div class="completion-mark is-error" aria-hidden="true">!</div></div>
+        <h3 class="transfer-result">${escapeHtml(title)}</h3>
+        <p class="settings-note transfer-result">${escapeHtml(message)}</p>
+        <div class="transfer-buttons">
+          <button class="dialog-button primary" type="button" data-transfer-action="retry">المحاولة مرة أخرى</button>
+          <button class="dialog-button" type="button" data-transfer-action="done">إغلاق</button>
+        </div>`;
+      showTransferView("error", transferViews.result.querySelector('[data-transfer-action="retry"]'));
+      announceTransfer(`${title}. ${message}`);
+    }
+
+    // Close (button, Escape, backdrop, «تم»): camera, QR timer and wake lock stop; the payload is dropped; Settings and
+    // the main screen show what was written.
+    function onTransferClose() {
+      leaveTransferQr();
+      if (transferView === "scan") leaveTransferScan();
+      transferView = null;
+      transferSendRun += 1;
+      transferEncoded = null;
+      transferDecoded = null;
+      transferPlan = null;
+      transferQrMatrices = null;
+      transferCodeOut.value = "";
+      transferCodeIn.value = "";
+      clearTimeout(transferAnnounceTimer);
+      if (transferWrote) {
+        transferWrote = false;
+        updateHistoryView();
+        updateReminderControls();
+        updateManualCompletionControls();
+        updateBackupControls();
+      }
+      transferOpener?.focus();
+    }
+
+    transferSendOpen.addEventListener("click", () => openTransfer("send", transferSendOpen));
+    transferReceiveOpen.addEventListener("click", () => openTransfer("receive", transferReceiveOpen));
+    document.getElementById("transfer-close").addEventListener("click", () => transferDialog.close());
+    transferBack.addEventListener("click", () => {
+      const target = transferBackTo[transferView];
+      if (target === "send") showTransferView("send");
+      else if (target === "receive") showTransferReceive();
+    });
+    transferDialog.addEventListener("cancel", event => {
+      if (transferWriting) event.preventDefault();
+    });
+    transferDialog.addEventListener("close", onTransferClose);
+    // A backdrop tap closes, except while aiming the camera or writing.
+    transferDialog.addEventListener("click", event => {
+      if (event.target === transferDialog && transferView !== "scan" && !transferWriting) transferDialog.close();
+    });
+    transferViews.preview.addEventListener("click", event => handleTransferAction(event.target.closest("[data-transfer-action]")));
+    transferViews.result.addEventListener("click", event => handleTransferAction(event.target.closest("[data-transfer-action]")));
+    function handleTransferAction(button) {
+      const action = button?.dataset.transferAction;
+      if (!action || transferWriting) return;
+      if (action === "done") transferDialog.close();
+      else if (action === "send") openTransferSend();
+      else if (action === "cancel" || action === "retry") showTransferReceive();
+      else if (action === "confirm") confirmTransfer();
+    }
+
+    transferCodeOut.addEventListener("focus", () => transferCodeOut.select());
+    transferCopy.addEventListener("click", copyTransferCode);
+    transferShareFile.addEventListener("click", shareTransferFile);
+    transferShowQr.addEventListener("click", openTransferQr);
+    transferQrPrev.addEventListener("click", () => stepTransferQr(-1));
+    transferQrNext.addEventListener("click", () => stepTransferQr(1));
+    transferQrPlay.addEventListener("click", () => {
+      if (!transferQrMatrices) return;
+      transferQrPlaying = !transferQrPlaying;
+      syncTransferQrTimer();
+      updateTransferQrControls();
+    });
+    addEventListener("resize", () => {
+      if (transferView === "qr") drawTransferQr();
+    });
+
+    transferCodeIn.addEventListener("input", () => {
+      clearTransferPasteError();
+      transferContinue.disabled = !transferCodeIn.value.trim();
+    });
+    transferContinue.addEventListener("click", continueTransferPaste);
+    transferPaste.addEventListener("click", pasteTransferCode);
+    transferFilePick.addEventListener("click", () => transferFileInput.click());
+    transferFileInput.addEventListener("change", readTransferFile);
+    transferScanOpen.addEventListener("click", openTransferScan);
+    transferCamStart.addEventListener("click", startTransferCamera);
+    transferCamRetry.addEventListener("click", startTransferCamera);
+    transferScanResume.addEventListener("click", startTransferCamera);
+    for (const button of [transferScanStop, transferScanFallback, transferCamToPaste]) {
+      button.addEventListener("click", () => showTransferReceive(button === transferScanStop ? transferTitle : transferPasteHeading));
+    }
+    // Hidden page: the camera stops (frames kept) and the wake lock goes; back, the QR asks for the lock again and the
+    // scan waits for «استئناف المسح».
+    document.addEventListener("visibilitychange", () => {
+      if (!transferDialog.open) return;
+      if (document.visibilityState !== "visible") {
+        releaseTransferWakeLock();
+        if (transferView === "scan" && transferScanStream) {
+          stopTransferCamera();
+          transferScanPaused = true;
+        }
+        return;
+      }
+      if (transferView === "qr") requestTransferWakeLock();
+      if (transferView === "scan" && transferScanPaused) {
+        hideTransferScanSteps();
+        setTransferNote(transferCamStatus, "توقفت الكاميرا عند مغادرة الصفحة.");
+        transferScanResume.hidden = false;
+      }
+    });
+
     settingsButton.addEventListener("click", () => {
       backupIncludeLocation.checked = false;
       updateBackupControls();
@@ -9540,6 +11009,7 @@
       updateReminderControls();
       updateManualCompletionControls();
       updateInstallUi();
+      updateTransferEntry();
       settingsDialog.showModal();
     });
     settingsDialogClose.addEventListener("click", () => settingsDialog.close());

@@ -103,9 +103,10 @@ base45 codec, QR frames, limits, validation, and the merge with reset epochs. It
 | File | Function(s) | Content |
 | --- | --- | --- |
 | `transfer/fixtures/codec.json` | `base45Encode`/`Decode`, `transferChecksum`, `transferFrames`, `decodeTransfer`, `decodeTransferFrames`, `decodeTransferFile`, `encodeTransfer` | RFC 9285 vectors, checksums, frame splitting; `cases`: a code, frames or file text → `result` (accepted, or the error, reason and path); `roundTrip`: device storage → the container, decoded back from both the text form and the frames |
-| `transfer/fixtures/merge.json` | `planTransfer` (`mergeTransfer`) | receiver `storage` and the `incoming` container → the plan and the storage after its writes |
+| `transfer/fixtures/merge.json` | `planTransfer` (`mergeTransfer`) | receiver `storage` and the `incoming` container → the plan and the storage after its writes, or the refusal (`{error: "clock"}`, `{error: "too-big"}`) with storage untouched |
 | `transfer/fixtures/properties.json` | `planTransfer` | idempotence, commutativity and two-way convergence for every ordered pair of devices; associativity for triples |
-| `transfer/fixtures/apply.json` | `applyTransfer` | storage before and the plan's writes → result and storage after, including rollback and refusal cases |
+| `transfer/fixtures/apply.json` | `applyTransfer` | storage before and the plan's writes → result and storage after, including the write-ahead record, rollback (and a failed rollback finished by the next start) and refusal cases |
+| `transfer/fixtures/recover.json` | `recoverTransferPending` | storage with an interrupted transfer's write-ahead record → what the next start did (`forward`, `back`, `conflict`, `invalid`) and the storage after |
 
 Codes in `codec.json` use stored (uncompressed) deflate blocks, so they are byte-identical on every zlib; the round
 trips use the host's `CompressionStream` and record only the container.

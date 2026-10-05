@@ -1,7 +1,7 @@
 "use strict";
 
 const CACHE_NAME_PREFIX = "athkar-static-";
-const CACHE_NAME = "athkar-static-v51";
+const CACHE_NAME = "athkar-static-v52";
 // Navigations are answered from the network and fall back to ./index.html, so "./" is never read from the cache.
 const APP_SHELL = [
   "./index.html",
@@ -11,6 +11,10 @@ const APP_SHELL = [
   "./icons/icon-512.png?v=13",
   "./fonts/kfgqpc-uthman-taha-naskh.ttf",
   "./fonts/kfgqpc-hafs-v30.ttf",
+  // Loaded on demand by the transfer QR views (vendor/README.md).
+  "./vendor/qrcode.js",
+  "./vendor/qr-scanner.min.js",
+  "./vendor/qr-scanner-worker.min.js",
 ];
 
 self.addEventListener("install", event => {
