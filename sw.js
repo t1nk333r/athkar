@@ -1,6 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "athkar-static-v46";
+const CACHE_NAME_PREFIX = "athkar-static-";
+const CACHE_NAME = "athkar-static-v47";
 // Navigations are answered from the network and fall back to ./index.html, so "./" is never read from the cache.
 const APP_SHELL = [
   "./index.html",
@@ -21,7 +22,10 @@ self.addEventListener("install", event => {
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      // Other apps on this origin share CacheStorage; delete only this app's old caches.
+      .then(keys => Promise.all(keys
+        .filter(key => key.startsWith(CACHE_NAME_PREFIX) && key !== CACHE_NAME)
+        .map(key => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -45,6 +49,16 @@ self.addEventListener("notificationclick", event => {
   );
 });
 
+// Only the app's own page may replace the cached shell: the scope root or index.html, query and hash ignored.
+function isAppShellRequest(url) {
+  const scopePath = new URL(self.registration.scope).pathname;
+  return url.pathname === scopePath || url.pathname === `${scopePath}index.html`;
+}
+
+function isHtmlResponse(response) {
+  return (response.headers.get("Content-Type") || "").toLowerCase().startsWith("text/html");
+}
+
 self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
@@ -55,9 +69,9 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          if (response.ok) {
+          if (response.ok && isAppShellRequest(url) && isHtmlResponse(response)) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy));
+            event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put("./index.html", copy)));
           }
           return response;
         })
@@ -72,7 +86,7 @@ self.addEventListener("fetch", event => {
       return fetch(request).then(response => {
         if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, copy)));
         }
         return response;
       });

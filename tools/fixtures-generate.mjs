@@ -76,8 +76,8 @@ const functions = [
   // the scoped resets also clear athkar-suwar-v1 and athkar-tasbih-v1 (kept empty here, so the adhkar state under test
   // is unaffected)
   "emptySuwarState", "saveSuwarState", "suraPagesRead", "suwarHasResettableState", "resetSuwarProgress",
-  "deleteSuwarHistory", "emptyTasbihState", "saveTasbihState", "tasbihHasResettableState", "resetTasbihProgress",
-  "deleteTasbihHistory",
+  "deleteSuwarHistory", "emptyTasbihState", "saveTasbihState", "refreshTasbihState", "tasbihHasResettableState",
+  "resetTasbihProgress", "deleteTasbihHistory",
   // athkar-tasbih-v1 load: normalisation (phrase-key migration) and rollover
   "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
   "canonicalTasbihKey", "findTasbihPhrase", "tasbihCounts", "normalizeTasbihState", "tasbihDayCounts",
@@ -111,6 +111,7 @@ let reminderPreferences = null;
 let longAdhkarLast = false;
 let suwarState = emptySuwarState("2000-01-01");
 let tasbihState = emptyTasbihState("2000-01-01");
+let tasbihStorageWorks = true;
 let activePeriod = "morning";
 ${stubs}
 ${functions.map(extractFunction).join("\n\n")}
@@ -1083,8 +1084,8 @@ function tasbihLoadCases() {
       '{"date":"2026-10-04","__proto__":{"target":5,"polluted":true},"selected":"__proto__","target":"33","custom":["__proto__",5,"  سبحان   الله  "],' +
       '"firstUse":"nope","counts":{"__proto__":7,"subhan":"5","hamd":3.5,"takbir":-1,"tahlil":4,"constructor":3},' +
       '"history":{"__proto__":{"subhan":1},"2026-02-30":{"subhan":1},"2026-10-03":{"__proto__":2,"istighfar":6}}}'),
-    tasbihLoadCase("future stored date (clock moved back): counts kept as today's, history at or after today dropped",
-      tasbihStored({ date: "2026-10-05", counts: { subhan: 7 }, firstUse: ["subhan"], history: { "2026-10-04": { hamd: 5 }, "2026-10-03": { takbir: 3 } } }))
+    tasbihLoadCase("future stored date (clock moved back): counts kept as today's, history days at or after today summed into them (first use in day order), earlier history kept",
+      tasbihStored({ date: "2026-10-05", counts: { subhan: 7 }, firstUse: ["subhan"], history: { "2026-10-04": { hamd: 5, subhan: 2 }, "2026-10-03": { takbir: 3 } } }))
   ];
 }
 
@@ -1130,7 +1131,7 @@ writeCases("spec/sessions/fixtures/scoped-reset.json",
     "resetDayProgress, resetWeek, recentDates, resetEverything, hasResettableState"),
   sessionDefaultInput, scopedResetCases());
 writeCases("spec/sessions/fixtures/tasbih-load-state.json",
-  sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date. `reloaded` is the same load run on the saved result and must equal `state`.",
+  sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
     "loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate"),
   { timeZone: SESSION_ZONE }, tasbihLoadCases());
 writeCases("spec/reminders/fixtures/next-reminder-time.json",

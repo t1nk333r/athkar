@@ -1035,6 +1035,7 @@
       background: transparent;
       opacity: 0;
       cursor: pointer;
+      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -2036,7 +2037,7 @@
     (() => {
       try {
         if (navigator.onLine === false || window.top !== window.self || location.protocol === "file:"
-          || /(localhost$|^127\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^0\.0\.0\.0$)/.test(location.hostname)) return;
+          || /(localhost$|^127\.|^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^0\.0\.0\.0$|^\[::1\]$)/.test(location.hostname)) return;
         try { if (localStorage.getItem("skipgc") === "t") return; } catch (_) {}
         let sent = false;
         const send = () => {
@@ -2064,7 +2065,7 @@
   </script>
 </head>
 <body data-period="morning">
-  <a class="skip-link" id="skip-link" href="#athkar-list">تخطَّ إلى الأذكار</a>
+  <a class="skip-link" id="skip-link" href="#morning">تخطَّ إلى الأذكار</a>
 
   <div class="app-shell">
     <header class="app-header">
@@ -2454,7 +2455,7 @@
 
       <section class="settings-section" aria-labelledby="backup-settings-title">
         <h3 id="backup-settings-title">النسخة الاحتياطية</h3>
-        <p class="settings-note" id="backup-note">احفظ تقدّم اليوم وسجل الإكمال والإعدادات في ملف يمكن استيراده في تطبيق الجوال. يُنشأ الملف على جهازك، ولا يُرسل هو ولا محتواه إلى أي خادم.</p>
+        <p class="settings-note" id="backup-note">احفظ تقدّم أذكار اليوم وسجل إكمالها والإعدادات في ملف يمكن استيراده في تطبيق الجوال. لا تشمل النسخة عدّ المسبحة ولا قراءة السور. يُنشأ الملف على جهازك، ولا يُرسل هو ولا محتواه إلى أي خادم.</p>
         <label class="settings-toggle-control" for="backup-include-location">
           <span class="settings-toggle-copy">
             <strong>تضمين الموقع المحفوظ</strong>
@@ -5520,6 +5521,8 @@
     let state = loadState();
     let suwarState = loadSuwarState();
     let tasbihState = loadTasbihState();
+    // False once athkar-tasbih-v1 cannot be written: the session then counts in memory and stops rereading storage.
+    let tasbihStorageWorks = true;
     let tasbihAnnounceTimer = null;
     let tasbihCapAnnounced = false;
     // The armed haptic switch (syncHapticArm); armed only where it can play the iOS switch haptic: no navigator.vibrate,
@@ -5538,7 +5541,13 @@
     const hapticArmDeferMs = 300;
     let hapticArmDeferTimer = null;
     let hapticArmObservedCard = null;
-    const hapticArmContentObserver = new ResizeObserver(() => syncHapticArm());
+    // Whether the observed card's text overflows, measured when the card is first observed and then only in the
+    // ResizeObserver callback (after layout), so a tap never forces a layout to read it.
+    let hapticArmCardOverflows = false;
+    const hapticArmContentObserver = new ResizeObserver(() => {
+      hapticArmCardOverflows = cardContentOverflows(hapticArmObservedCard);
+      syncHapticArm();
+    });
     let hapticArmRestAt = 0;
     if (initialRoute.sura) suwarState.selected = initialRoute.sura;
     let reminderPreferences = loadReminderPreferences();
@@ -5875,11 +5884,29 @@
       return Object.fromEntries(keys.filter(key => candidate.counts[key] > 0).map(key => [key, candidate.counts[key]]));
     }
 
-    // A later stored date (the device clock moved back) keeps its counts as today's; history never holds a day at or
-    // after the new date.
+    // A later stored date (the device clock moved back) keeps its counts as today's, and the history days at or after
+    // the new date are summed into them (capped; first use in day order), so no day is lost; history never holds a day
+    // at or after the new date.
     function rollTasbihStateToDate(candidate, nextDate) {
       const history = Object.fromEntries(Object.entries(candidate.history).filter(([day]) => day < nextDate));
-      if (candidate.date > nextDate) return { ...candidate, date: nextDate, history: trimDailyHistory(history) };
+      if (candidate.date > nextDate) {
+        const laterDays = Object.keys(candidate.history).filter(day => day >= nextDate).sort();
+        const counts = { ...candidate.counts };
+        const firstUse = [];
+        for (const day of laterDays) {
+          for (const [key, count] of Object.entries(candidate.history[day])) {
+            counts[key] = Math.min((Object.hasOwn(counts, key) ? counts[key] : 0) + count, tasbihMaxCount);
+            firstUse.push(key);
+          }
+        }
+        return {
+          ...candidate,
+          date: nextDate,
+          counts,
+          firstUse: [...new Set([...firstUse, ...candidate.firstUse])],
+          history: trimDailyHistory(history)
+        };
+      }
       const day = tasbihDayCounts(candidate);
       if (Object.keys(day).length) history[candidate.date] = day;
       return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history) };
@@ -5897,7 +5924,18 @@
     }
 
     function saveTasbihState() {
-      try { localStorage.setItem(tasbihStorageKey, JSON.stringify(tasbihState)); } catch (_) {}
+      try {
+        localStorage.setItem(tasbihStorageKey, JSON.stringify(tasbihState));
+        tasbihStorageWorks = true;
+      } catch (_) {
+        tasbihStorageWorks = false;
+      }
+    }
+
+    // Every change rereads athkar-tasbih-v1 first, applies itself to what is stored, and saves at once: another tab's
+    // newer counts, resets and settings are never written over by this tab's older copy.
+    function refreshTasbihState() {
+      if (tasbihStorageWorks) tasbihState = loadTasbihState();
     }
 
     function tasbihHasResettableState() {
@@ -5906,14 +5944,17 @@
 
     // Scoped reset: today's counts of every phrase; deleteTasbihHistory drops past days (all when null).
     function resetTasbihProgress() {
+      refreshTasbihState();
       tasbihState.counts = {};
       tasbihState.firstUse = [];
       saveTasbihState();
     }
 
     function deleteTasbihHistory(dates) {
+      refreshTasbihState();
       if (dates === null) tasbihState.history = {};
       else for (const date of dates) delete tasbihState.history[date];
+      saveTasbihState();
     }
 
     function ensureCurrentDay(refresh = true) {
@@ -5934,8 +5975,11 @@
         for (const id of Object.keys(suwarIndices)) suwarIndices[id] = null;
         saveSuwarState();
       }
+      // Rolled from what is stored (loadTasbihState rolls it), not from this tab's copy: another tab may have counted
+      // since, or rolled the day already.
       if (tasbihRolled) {
-        tasbihState = rollTasbihStateToDate(tasbihState, today);
+        refreshTasbihState();
+        if (tasbihState.date !== today) tasbihState = rollTasbihStateToDate(tasbihState, today);
         saveTasbihState();
       }
       if (refresh) {
@@ -6195,6 +6239,7 @@
 
     function fitVisibleCard() {
       fitCardContent(list.querySelector("li:not([hidden]) .dhikr-card"));
+      if (hapticArmObservedCard) hapticArmCardOverflows = cardContentOverflows(hapticArmObservedCard);
       syncHapticArm();
     }
 
@@ -6652,8 +6697,9 @@
     //   click and plays the haptic), so a rejected gesture neither counts nor ticks. A pan that starts on the armed surface
     //   does not scroll the page (only the completing tap is armed).
     // - A card whose text overflows (.card-content scrolls) is never armed: it would lose native scrolling for as long as
-    //   it needs one tap (a whole target-1 card). It completes without the iPhone haptic. hapticArmContentObserver and
-    //   fitVisibleCard re-check this when the layout, text size or line spacing changes.
+    //   it needs one tap (a whole target-1 card). It completes without the iPhone haptic. The verdict is cached
+    //   (hapticArmCardOverflows): hapticArmContentObserver and fitVisibleCard re-measure it when the layout, text size or
+    //   line spacing changes, so a counted tap reads no layout.
     function hapticArmTarget() {
       if (!hapticArmAvailable || !hapticsEnabled || document.visibilityState !== "visible") return null;
       if (activePeriod === "tasbih") {
@@ -6666,16 +6712,22 @@
       const card = document.getElementById(activePeriod === "suwar" ? `page-${item.id}` : item.id);
       if (!card || card.closest("li")?.hidden) return null;
       observeHapticArmContent(card);
-      const content = card.querySelector(".card-content");
-      if (content && content.scrollHeight > content.clientHeight + 1) return null;
+      if (hapticArmCardOverflows) return null;
       if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
       return countFor(item) === targetFor(item) - 1 ? card : null;
     }
 
-    // Watches the text of the card on screen (its box and its children), so a change of fit re-arms or disarms.
+    function cardContentOverflows(card) {
+      const content = card?.querySelector(".card-content");
+      return Boolean(content) && content.scrollHeight > content.clientHeight + 1;
+    }
+
+    // Watches the text of the card on screen (its box and its children), so a change of fit re-arms or disarms. A newly
+    // observed card is measured once here; later changes reach hapticArmCardOverflows through the observer.
     function observeHapticArmContent(card) {
       if (hapticArmObservedCard === card) return;
       hapticArmObservedCard = card;
+      hapticArmCardOverflows = cardContentOverflows(card);
       hapticArmContentObserver.disconnect();
       const content = card.querySelector(".card-content");
       if (!content) return;
@@ -6908,6 +6960,7 @@
       return Object.values(tasbihState.counts).reduce((sum, count) => sum + count, 0);
     }
 
+    // Callers reread the stored state first (refreshTasbihState), so the count is applied to what is stored.
     function setTasbihCount(key, count) {
       if (count > 0) {
         tasbihState.counts[key] = count;
@@ -6917,6 +6970,14 @@
         tasbihState.firstUse = tasbihState.firstUse.filter(used => used !== key);
       }
       saveTasbihState();
+    }
+
+    // After a reread, the phrase this tab shows stays selected even if another tab chose another one meanwhile; false
+    // when another tab deleted it, so a tap is never counted on a phrase other than the one on screen.
+    function keepTasbihSelection(key) {
+      if (!Object.hasOwn(tasbihPresetById, key) && !tasbihState.custom.includes(key.slice(2))) return false;
+      tasbihState.selected = key;
+      return true;
     }
 
     // S1–S6. The state is a pure function of the count and the target (null: no target).
@@ -6984,6 +7045,16 @@
       syncHapticArm();
     }
 
+    // Shows what another tab saved (a storage event), or what it may have saved while this one was hidden.
+    function showStoredTasbihState() {
+      if (!tasbihStorageWorks) return;
+      tasbihState = loadTasbihState();
+      if (activePeriod === "tasbih") renderTasbih({ arc: "jump" });
+      else sessionReset.disabled = !hasResettableState();
+      if (tasbihLabelDialog.open) refreshTasbihPhraseSheet();
+      updateHistoryView();
+    }
+
     function renderTasbihPanel() {
       renderTasbih({ arc: "jump" });
       tasbihPanel.classList.remove("is-entering");
@@ -7013,6 +7084,11 @@
     function addTasbihCount() {
       ensureCurrentDay();
       const key = tasbihState.selected;
+      refreshTasbihState();
+      if (!keepTasbihSelection(key)) {
+        renderTasbih({ arc: "jump" });
+        return;
+      }
       const before = tasbihCount(key);
       if (before >= tasbihMaxCount) {
         if (!tasbihCapAnnounced) announceTasbih("بلغت الحد الأقصى للعدّ");
@@ -7033,13 +7109,17 @@
     function undoTasbihCount() {
       ensureCurrentDay();
       const key = tasbihState.selected;
-      const before = tasbihCount(key);
+      refreshTasbihState();
+      const before = keepTasbihSelection(key) ? tasbihCount(key) : 0;
       if (before > 0) {
         const target = tasbihState.target;
         const count = before - 1;
         setTasbihCount(key, count);
         renderTasbih({ arc: target && count > 0 && count % target === 0 ? "jump" : "step" });
         announceTasbih(`تراجع، العدد ${formatNumber(count)}`);
+      } else {
+        // Another tab reset or deleted it meanwhile: there is nothing to undo, so show what is stored.
+        renderTasbih({ arc: "jump" });
       }
       if (tasbihUndo.disabled) tasbihSurface.focus();
     }
@@ -7059,6 +7139,8 @@
         `سيعود عدّ هذا الذكر اليوم من ${formatNumber(count)} إلى الصفر، ويُنقص من مجموع اليوم.`,
         () => {
           ensureCurrentDay();
+          refreshTasbihState();
+          keepTasbihSelection(key);
           setTasbihCount(key, 0);
           renderTasbih({ arc: "reset" });
           tasbihSurface.focus();
@@ -7068,7 +7150,12 @@
     }
 
     function selectTasbihPhrase(key) {
-      tasbihState.selected = key;
+      refreshTasbihState();
+      if (!keepTasbihSelection(key)) {
+        refreshTasbihPhraseSheet();
+        renderTasbih({ arc: "jump" });
+        return;
+      }
       saveTasbihState();
       if (tasbihLabelDialog.open) tasbihLabelDialog.close();
       renderTasbih();
@@ -7120,13 +7207,17 @@
     function addTasbihPhrase(value) {
       const text = cleanTasbihPhrase(value);
       if (!text) return;
+      refreshTasbihState();
       const known = findTasbihPhrase(text);
       tasbihCustomInput.value = "";
       if (known) {
         selectTasbihPhrase(known);
         return;
       }
-      if (tasbihState.custom.length >= tasbihMaxCustom) return;
+      if (tasbihState.custom.length >= tasbihMaxCustom) {
+        refreshTasbihPhraseSheet();
+        return;
+      }
       tasbihState.custom.unshift(text);
       tasbihState.selected = `c:${text}`;
       saveTasbihState();
@@ -7137,8 +7228,13 @@
 
     // Removes the phrase from the picker only: its counts today and in the history stay.
     function deleteTasbihPhrase(text) {
+      refreshTasbihState();
       const index = tasbihState.custom.indexOf(text);
-      if (index === -1) return;
+      if (index === -1) {
+        renderTasbih({ arc: "jump" });
+        refreshTasbihPhraseSheet();
+        return;
+      }
       tasbihState.custom.splice(index, 1);
       if (tasbihState.selected === `c:${text}`) tasbihState.selected = tasbihPresets[0].id;
       saveTasbihState();
@@ -7185,6 +7281,7 @@
 
     // Counts never change with the target; a count already at or past it shows the reached state, without a haptic.
     function setTasbihTarget(target) {
+      refreshTasbihState();
       tasbihState.target = target;
       saveTasbihState();
       if (tasbihTargetDialog.open) tasbihTargetDialog.close();
@@ -7281,6 +7378,12 @@
       panel.hidden = tasbihActive;
       tasbihPanel.hidden = !tasbihActive;
       skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : "تخطَّ إلى الأذكار";
+      // Only "open in new tab" follows it (a click moves focus instead), and that should open this same tab.
+      skipLink.setAttribute("href", `#${period}`);
+      if (!tasbihActive) {
+        clearTimeout(tasbihAnnounceTimer);
+        tasbihAnnounceTimer = null;
+      }
       sessionReset.setAttribute("aria-label", "خيارات الإعادة");
       if (!tasbihActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
       updateSessionTitle();
@@ -7886,7 +7989,8 @@
       clearTimeout(installOnboardingTimer);
       if (isInstalled() || hasSeenInstallOnboarding()) return;
       installOnboardingTimer = setTimeout(() => {
-        if (document.querySelector("dialog[open]")) {
+        // Held while the tasbih is open: a modal there would catch the next count tap and answer itself.
+        if (document.querySelector("dialog[open]") || activePeriod === "tasbih") {
           scheduleFirstUseInstallPrompt(1800);
           return;
         }
@@ -7925,7 +8029,8 @@
       if (hasAnsweredLongOrderPrompt()) return;
       setTimeout(() => {
         if (hasAnsweredLongOrderPrompt()) return;
-        if (document.querySelector("dialog[open]")) {
+        // Held while the tasbih is open: a tap meant for the count would answer a question about adhkar order.
+        if (document.querySelector("dialog[open]") || activePeriod === "tasbih") {
           scheduleLongOrderPrompt(1500);
           return;
         }
@@ -8535,9 +8640,14 @@
       syncHapticArm();
       if (document.visibilityState !== "visible") return;
       ensureCurrentDay();
+      showStoredTasbihState();
       updateReminderControls();
       scheduleReminders();
       scheduleDayRollover();
+    });
+    // Another tab or window saved athkar-tasbih-v1 (key null: storage was cleared).
+    addEventListener("storage", event => {
+      if (event.key === tasbihStorageKey || event.key === null) showStoredTasbihState();
     });
 
     dialogCancel.addEventListener("click", () => {

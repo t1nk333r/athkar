@@ -1,5 +1,5 @@
 {
-  "about": "athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date. `reloaded` is the same load run on the saved result and must equal `state`.",
+  "about": "athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
   "source": "index.html: loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, tasbihCounts, rollTasbihStateToDate",
   "generator": "tools/fixtures-generate.mjs",
   "defaultInput": {
@@ -475,12 +475,12 @@
       }
     },
     {
-      "name": "future stored date (clock moved back): counts kept as today's, history at or after today dropped",
+      "name": "future stored date (clock moved back): counts kept as today's, history days at or after today summed into them (first use in day order), earlier history kept",
       "input": {
         "now": "2026-10-04T06:00:00.000Z",
         "nowLocal": "2026-10-04T09:00:00.000+03:00",
         "storage": {
-          "athkar-tasbih-v1": "{\"date\":\"2026-10-05\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":7},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{\"2026-10-04\":{\"hamd\":5},\"2026-10-03\":{\"takbir\":3}}}"
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-05\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":7},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{\"2026-10-04\":{\"hamd\":5,\"subhan\":2},\"2026-10-03\":{\"takbir\":3}}}"
         }
       },
       "expected": {
@@ -489,9 +489,11 @@
           "selected": "subhan",
           "target": 33,
           "counts": {
-            "subhan": 7
+            "subhan": 9,
+            "hamd": 5
           },
           "firstUse": [
+            "hamd",
             "subhan"
           ],
           "custom": [],
@@ -506,9 +508,11 @@
           "selected": "subhan",
           "target": 33,
           "counts": {
-            "subhan": 7
+            "subhan": 9,
+            "hamd": 5
           },
           "firstUse": [
+            "hamd",
             "subhan"
           ],
           "custom": [],
