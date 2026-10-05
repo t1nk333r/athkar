@@ -8089,9 +8089,10 @@
     // Touch tracking on the armed haptic switch (WebKit bug 321591, see syncHapticArm). A touch that moved more than
     // 10 px, was cancelled, lifted outside the surface, or began before the switch moved to another surface does not
     // count. Its switch is removed from the render tree (hidden, then a forced layout) before WebKit's own touchend
-    // handling, which then finds no renderer: it makes no click, plays no haptic, and drops its pointer tracking and
-    // held timer (a preventDefault would skip that clean-up and leave the switch capturing mouse events). The switch
-    // stays out until hapticArmRestAt, past WebKit's 200 ms held timer, then syncHapticArm re-arms it.
+    // handling, which then finds no renderer: it makes no click, plays no haptic, and releases its pointer tracking and
+    // mouse capture (stopSwitchPointerTracking; a preventDefault would skip that and leave the switch capturing mouse
+    // events). WebKit's 200 ms held timer is not stopped, but its callback returns early while the switch has no
+    // renderer; the switch stays out until hapticArmRestAt (250 ms, past that deadline), then syncHapticArm re-arms it.
     // A finger still down when an earlier lift disarmed the switch gets no click from WebKit (a hidden switch has no
     // renderer), so its lift runs the action itself, as a lift on the surface would.
     function rejectHapticArmGesture() {
