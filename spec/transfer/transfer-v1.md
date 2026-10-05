@@ -93,7 +93,7 @@ Every code is hostile until it passes all of these; any failure rejects the whol
 | Text | ≤ 65 536 characters, in total over all frames | `too-long` |
 | Frame syntax, checksum | §3 | `not-code`, `corrupt` (`checksum`) |
 | Base45 | length mod 3 ≠ 1; each triple ≤ 65 535, a final pair ≤ 255 | `corrupt` (`base45`) |
-| Inflate | zlib stream valid, Adler-32 equal, nothing after it; output counted while streaming and cancelled past 262 144 bytes (a deflate bomb) | `corrupt` (`inflate`, `inflate-cap`) |
+| Inflate | zlib stream valid, Adler-32 equal, nothing after it; the compressed bytes are written in 256-byte slices, each only after all output of the one before was read, and both sides are cancelled once the output passes 262 144 bytes (a deflate bomb). Deflate expands at most 1 032-fold, so no more than 262 144 + 264 192 bytes are ever inflated, in the platform's buffers included (`codec.json` `inflateBounds`). | `corrupt` (`inflate`, `inflate-cap`) |
 | Text decoding | UTF-8, fatal on invalid bytes; then `JSON.parse` | `corrupt` (`json`) |
 | `transfer` > 1, envelope `meta.format` > 1 | | `newer` |
 | `app` or `meta.app` is `ruqyah-pwa` | | `wrong-app` |

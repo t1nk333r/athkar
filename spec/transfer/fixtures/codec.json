@@ -2907,5 +2907,29 @@
         }
       }
     }
+  ],
+  "inflateBounds": [
+    {
+      "inflatedSize": 300000,
+      "compressedBytes": 1897,
+      "result": {
+        "reason": "inflate-cap"
+      },
+      "compressedFed": 1792,
+      "inflatedProduced": 283801,
+      "cap": 262144,
+      "bound": 526336
+    },
+    {
+      "inflatedSize": 16777216,
+      "compressedBytes": 105678,
+      "result": {
+        "reason": "inflate-cap"
+      },
+      "compressedFed": 1792,
+      "inflatedProduced": 283801,
+      "cap": 262144,
+      "bound": 526336
+    }
   ]
 }

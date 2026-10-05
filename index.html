@@ -8807,6 +8807,8 @@
     const transferMaxTasbihKeysPerDay = 256;
     const transferMaxTasbihKeys = 512;
     const transferMaxResets = 1024;
+    // Compressed bytes fed to DecompressionStream per write (see inflateTransferBytes).
+    const transferInflateSlice = 256;
 
     // CompressionStream and DecompressionStream ("deflate"): iOS/Safari 16.4+, Chrome 80+, Firefox 113+.
     function transferSupported() {
@@ -8909,13 +8911,70 @@
     }
 
     // The zlib wrapper's Adler-32 is checked by DecompressionStream, which also rejects truncated input and trailing data.
+    // A deflate bomb must not be inflated past the cap anywhere, the platform's own buffers included: the compressed
+    // bytes go in transferInflateSlice-byte slices, and the next slice is written only after everything the last one
+    // produced has been read (the reader is idle, waiting for data). Both sides are cancelled once the output passes the
+    // cap. Deflate expands at most 1 032-fold, so at most cap + 1 032 × slice bytes (≈ 514 KiB) are ever inflated.
     async function inflateTransferBytes(bytes) {
+      const stream = new DecompressionStream("deflate");
+      const writer = stream.writable.getWriter();
+      const reader = stream.readable.getReader();
+      // One macrotask (not a timer: no clamping, and it runs in a background tab too).
+      const channel = new MessageChannel();
+      const tick = () => new Promise(resolve => {
+        channel.port1.onmessage = () => resolve();
+        channel.port2.postMessage(0);
+      });
+      let stopped = false;
+      let waiting = false;
+      let reads = 0;
+      const feeding = (async () => {
+        for (let offset = 0; offset < bytes.length && !stopped; offset += transferInflateSlice) {
+          await writer.write(bytes.subarray(offset, offset + transferInflateSlice));
+          let seen;
+          do {
+            seen = reads;
+            await tick();
+          } while (!stopped && (reads !== seen || !waiting));
+        }
+        if (!stopped) await writer.close();
+        channel.port1.close();
+      })();
+      feeding.catch(() => {});
+      const stop = () => {
+        stopped = true;
+        channel.port1.close();
+        reader.cancel().catch(() => {});
+        writer.abort().catch(() => {});
+      };
+      const parts = [];
+      let total = 0;
       try {
-        const inflated = await readTransferStream(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate")), transferMaxInflatedBytes);
-        return inflated ? { bytes: inflated } : { reason: "inflate-cap" };
+        for (;;) {
+          waiting = true;
+          const { done, value } = await reader.read();
+          waiting = false;
+          reads += 1;
+          if (done) break;
+          total += value.byteLength;
+          if (total > transferMaxInflatedBytes) {
+            stop();
+            return { reason: "inflate-cap" };
+          }
+          parts.push(value);
+        }
+        await feeding;
       } catch (_) {
+        stop();
         return { reason: "inflate" };
       }
+      const inflated = new Uint8Array(total);
+      let offset = 0;
+      for (const part of parts) {
+        inflated.set(part, offset);
+        offset += part.byteLength;
+      }
+      return { bytes: inflated };
     }
 
     // One frame (a scanned QR text, or the whole text form): its fields, or { error, reason }. Line breaks and the ends'

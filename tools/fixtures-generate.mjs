@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
+import { inflateSync, constants as zlibConstants } from "node:zlib";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const generator = "tools/fixtures-generate.mjs";
@@ -69,7 +70,7 @@ const constants = [
   "transferApp", "transferMaxTextLength", "transferMaxInflatedBytes", "transferMaxFrames", "transferFrameChunk",
   "transferBase45", "transferFramePattern", "transferItemIdPattern", "transferSlugPattern", "transferTimeZonePattern",
   "transferForbiddenKeys", "transferStoreKeys", "transferSettingKeys", "transferClockSkewMs", "transferEarliestExport",
-  "transferMaxTasbihKeysPerDay", "transferMaxTasbihKeys", "transferMaxResets", "transferPendingKey"
+  "transferMaxTasbihKeysPerDay", "transferMaxTasbihKeys", "transferMaxResets", "transferPendingKey", "transferInflateSlice"
 ];
 
 const transferFunctions = [
@@ -178,6 +179,48 @@ globalThis.__api = {
 // Sandbox
 // ---------------------------------------------------------------------------------------------------
 
+// DecompressionStream as the Compression Standard defines it ("decompress and enqueue a chunk": a TransformStream that
+// inflates each written chunk at once and enqueues all of its output; readable high-water mark 0, so a write waits
+// until the output before it was read), with counters: compressed bytes written, and every inflated byte it ever
+// produced. Node's own DecompressionStream buffers ahead of its reader, so it cannot show what the browsers bound.
+// The output comes from zlib over the bytes written so far; the platform's stream, fed the same bytes, still decides
+// at close whether the whole stream is valid (Adler-32, truncation, trailing data).
+const inflateStats = { input: 0, produced: 0 };
+class CountingDecompressionStream {
+  constructor(format) {
+    const fed = [];
+    let produced = 0;
+    const platform = new DecompressionStream(format);
+    const platformWriter = platform.writable.getWriter();
+    const platformDone = new Response(platform.readable).arrayBuffer();
+    platformDone.catch(() => {});
+    const stream = new TransformStream({
+      transform(chunk, controller) {
+        inflateStats.input += chunk.byteLength;
+        fed.push(Buffer.from(chunk));
+        platformWriter.write(chunk).catch(() => {});
+        let output;
+        try {
+          output = inflateSync(Buffer.concat(fed), { finishFlush: zlibConstants.Z_SYNC_FLUSH });
+        } catch (_) {
+          throw new TypeError("invalid deflate data");
+        }
+        if (output.length > produced) {
+          controller.enqueue(new Uint8Array(output.subarray(produced)));
+          produced = output.length;
+        }
+        inflateStats.produced = Math.max(inflateStats.produced, produced);
+      },
+      async flush() {
+        await platformWriter.close();
+        await platformDone;
+      }
+    }, undefined, { highWaterMark: 0 });
+    this.readable = stream.readable;
+    this.writable = stream.writable;
+  }
+}
+
 const storage = new Map();
 // Fault injection for applyTransfer's storage rules: `read` makes getItem throw; `writesLeft` lets that many setItem
 // calls succeed, fails the next one once (as a full quota would), and then lets writes through again (null: never);
@@ -210,7 +253,9 @@ const sandbox = {
   clearTimeout: () => {},
   __firedReminders: firedReminders,
   // The transfer codec's platform APIs (CompressionStream exists from iOS/Safari 16.4).
-  CompressionStream, DecompressionStream, Blob, TextEncoder, TextDecoder, crypto
+  CompressionStream, DecompressionStream: CountingDecompressionStream, Blob, TextEncoder, TextDecoder, MessageChannel,
+  // Fixed "random" bytes, so ids (the write-ahead record's) are the same on every run.
+  crypto: { getRandomValues: array => array.fill(7) }
 };
 sandbox.window = sandbox;
 const context = vm.createContext(sandbox);
@@ -1902,6 +1947,23 @@ written.push(writeVectors("spec/prayer-times/vectors.json"));
 const transferSource = "index.html: base45Encode, base45Decode, transferChecksum, transferFrames, transferTextCode, " +
   "parseTransferFrame, decodeTransfer, decodeTransferFrames, decodeTransferFile, validateTransferContainer, validateTransferEnvelope";
 const codec = await transferCodecFixture();
+// The deflate-bomb guard: compressed bytes go in in slices and both sides stop once the output passes the cap, so a
+// bomb is cut off long before its end and no more than cap + one slice's output (1 032 × slice) is ever read.
+async function inflateBound(size) {
+  const zlib = bombZlib(size);
+  const cap = vm.runInContext("transferMaxInflatedBytes", context);
+  const bound = cap + 1032 * vm.runInContext("transferInflateSlice", context);
+  inflateStats.input = 0;
+  inflateStats.produced = 0;
+  const result = plain(await fn.inflateTransferBytes(zlib));
+  // Every byte the decompressor ever inflated (read or still queued) is the peak it buffered.
+  const produced = inflateStats.produced;
+  const entry = { inflatedSize: size, compressedBytes: zlib.length, result: { reason: result.reason ?? null }, compressedFed: inflateStats.input, inflatedProduced: produced, cap, bound };
+  if (result.reason !== "inflate-cap" || produced > bound) throw new Error(`deflate bomb not bounded: ${JSON.stringify(entry)}`);
+  if (size > 4 * cap && inflateStats.input >= zlib.length) throw new Error(`deflate bomb not cut off early: ${JSON.stringify(entry)}`);
+  return entry;
+}
+const inflateBounds = [await inflateBound(300000), await inflateBound(16 * 1024 * 1024)];
 const roundTrips = [
   await roundTripCase("typical: some of today, a day of history, a reset epoch", codec.typical),
   await roundTripCase("full: every store full, a day epoch on each of the 31 window days", worstDevice(false)),
@@ -1921,7 +1983,8 @@ written.push({
     checksum: codec.checksum,
     frames: codec.frames,
     cases: codec.decode,
-    roundTrip: roundTrips
+    roundTrip: roundTrips,
+    inflateBounds
   }),
   count: codec.decode.length + roundTrips.length
 });
