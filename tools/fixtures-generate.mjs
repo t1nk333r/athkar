@@ -84,7 +84,7 @@ const transferFunctions = [
   "transferIncomingProgress", "transferIncomingSuwar", "transferIncomingTasbih", "transferResetsBefore",
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
-  "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending",
+  "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending", "journalHolds",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
   "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
@@ -153,6 +153,7 @@ let longAdhkarLast = false;
 let suwarState = emptySuwarState("2000-01-01");
 let tasbihState = emptyTasbihState("2000-01-01");
 let tasbihStorageWorks = true;
+let transferJournal = null;
 let hapticsEnabled = true;
 let activePeriod = "morning";
 ${stubs}
@@ -167,6 +168,8 @@ globalThis.__api = {
   getStores() { return { state, suwarState, tasbihState }; },
   setStores(value) { state = value.state; suwarState = value.suwarState; tasbihState = value.tasbihState; },
   setTasbihStorageWorks(value) { tasbihStorageWorks = value; },
+  setTransferJournal(value) { transferJournal = value; },
+  getTransferJournal() { return transferJournal; },
   setPreferences(value) { Object.assign(root.dataset, value.dataset); hapticsEnabled = value.haptics; },
   longDhikrThreshold,
   prayerCalculationMethods,
@@ -1878,6 +1881,49 @@ function recoverCase(name, local, incoming, { landed, rollback = false, change, 
   return { name, input: { storage: start }, expected: { recovered, logged: warnings.length > 0, storage: after } };
 }
 
+// A start on the next day while one of an interrupted transfer's writes still fails: recovery fails and keeps the
+// record; the day's ordinary load, rollover and saves then write none of its keys, so the record stays valid; the next
+// start with working storage completes it.
+function recoverAfterFailedStartCase(name, local, incoming) {
+  prepareTransfer();
+  api.setTransferJournal(null);
+  const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
+  const keys = Object.keys(plan.writes);
+  if (keys.length < 2) throw new Error(`${name}: needs a plan writing two stores`);
+  loadStorage(local);
+  storage.set("athkar-transfer-pending-v1", JSON.stringify({ id: "TEST", before: plan.before, after: plan.writes }));
+  storage.set(keys[0], plan.writes[keys[0]]);
+  const start = storageMap();
+  const nextDay = localMs(SESSION_ZONE, 2026, 10, 5, 9, 0);
+  setNow(nextDay);
+  storageFault.stuckKeys = [keys[1]];
+  const first = plain(fn.recoverTransferPending());
+  const held = api.getTransferJournal() !== null;
+  api.setStores({ state: fn.loadState(), suwarState: fn.loadSuwarState(), tasbihState: fn.loadTasbihState() });
+  fn.ensureCurrentDay();
+  fn.saveState();
+  fn.saveSuwarState();
+  fn.saveTasbihState();
+  const afterDay = storageMap();
+  storageFault.stuckKeys = [];
+  if (first !== "failed" || !held || JSON.stringify(afterDay) !== JSON.stringify(start)) {
+    throw new Error(`${name}: the failed start changed the journal's keys or dropped the record (${first})`);
+  }
+  api.setTransferJournal(null);
+  api.setTasbihStorageWorks(true);
+  const second = plain(fn.recoverTransferPending());
+  const after = storageMap();
+  if (second !== "forward" || JSON.stringify(sortDeep(after)) !== JSON.stringify(sortDeep(withWrites(local, plan)))) {
+    throw new Error(`${name}: the next start did not complete the transfer (${second})`);
+  }
+  setNow(transferNowMs);
+  return {
+    name,
+    input: { storage: start, now: new Date(nextDay).toISOString(), stuckKeys: [keys[1]] },
+    expected: { recovered: first, storageAfterTheDay: afterDay, nextStart: { recovered: second, storage: after } }
+  };
+}
+
 function transferRecoverCases() {
   const s = mergeScenarios();
   const count = Object.keys(planOf(s.join, { ok: true, source: "code", container: containerOf(s.history) }).writes).length;
@@ -1888,7 +1934,8 @@ function transferRecoverCases() {
     recoverCase("a record marked rollback (its rollback failed): the next start restores every key (back)", s.join, s.history, { landed: 1, rollback: true }),
     recoverCase("another tab wrote a key meanwhile: storage is left as it is, the record dropped and the conflict logged (conflict)", s.join, s.history,
       { landed: 1, change: ["athkar-tasbih-v1", JSON.stringify({ ...tasbihStored(), counts: { subhan: 11 } })] }),
-    recoverCase("an unreadable record is dropped and nothing else changes (invalid)", s.join, s.history, { landed: 0, record: "{not json" })
+    recoverCase("an unreadable record is dropped and nothing else changes (invalid)", s.join, s.history, { landed: 0, record: "{not json" }),
+    recoverAfterFailedStartCase("the next day, a write still fails: recovery keeps the record (failed), the day's load, rollover and saves leave its keys alone, and the start after that completes it (forward)", s.join, s.history)
   ];
 }
 

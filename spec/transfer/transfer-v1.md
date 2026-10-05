@@ -247,7 +247,9 @@ the receiver's clock the clock check (§4) and the merge use. A refused code giv
      tab, or step 3's marked record). If every key still holds its planned-on or its new value, all keys get the new
      values (the user confirmed them), or the planned-on ones for a `rollback` record; then the record goes. If any key
      holds something else, another writer changed it meanwhile: storage is left as it is, the record is dropped and
-     the conflict logged.
+     the conflict logged. If a write still fails at startup, the record stays and that session holds its keys: no save
+     writes any of them (the tasbih runs in memory mode, its storage-failure state) and no transfer applies, so the
+     record still matches at the next start, which completes it (`recover.json`).
 
   So storage holds all of the plan's writes or none of them, at the latest after the next start. Only the conflict
   case (another tab wrote a planned key while a transfer was interrupted) leaves a mix. If even the marked record
