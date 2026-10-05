@@ -286,7 +286,23 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": "2026-10-03T02:00:00.000Z",
+                    "eveningAt": "2026-10-03T15:00:00.000Z"
+                  },
+                  {
+                    "date": "2026-10-02",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-02T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -475,6 +491,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":2,\"morning-02\":1,\"morning-03\":1},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":true,\"morningAt\":\"2026-10-03T02:00:00.000Z\",\"eveningAt\":\"2026-10-03T15:00:00.000Z\"},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
@@ -558,7 +578,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -673,6 +694,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-10-04T06:00:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}"
@@ -756,7 +781,8 @@
               "adhkar": {
                 "resets": {
                   "2026-10-04": "2026-10-04T04:00:00.000Z"
-                }
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -860,6 +886,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
@@ -967,7 +997,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1077,6 +1108,10 @@
           ],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": true,
           "writes": {}
         },
@@ -1157,7 +1192,8 @@
                 "resets": {
                   "2026-10-03": "2026-10-04T04:00:00.000Z",
                   "2026-10-02": "2026-10-04T04:00:00.000Z"
-                }
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1261,6 +1297,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-03\":\"2026-10-04T04:00:00.000Z\",\"2026-10-02\":\"2026-10-04T04:00:00.000Z\"}}",
@@ -1357,7 +1397,23 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": "2026-10-03T03:00:00.000Z",
+                    "eveningAt": "2026-10-03T15:00:00.000Z"
+                  },
+                  {
+                    "date": "2026-10-02",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-02T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1479,6 +1535,10 @@
           ],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": true,
           "writes": {}
         },
@@ -1560,7 +1620,8 @@
               "adhkar": {
                 "resets": {
                   "2026-10-04|morning": "2026-10-04T04:00:00.000Z"
-                }
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1628,6 +1689,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04|morning\":\"2026-10-04T04:00:00.000Z\"}}"
@@ -1707,7 +1772,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1809,6 +1875,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{\"kahf-1-4\":true},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true,\"mulk-18-21\":true,\"mulk-22-26\":true,\"mulk-27-30\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":\"2026-10-04T06:00:00.000Z\"},\"history\":{},\"resets\":{\"2026-10-04|kahf\":\"2026-10-04T04:00:00.000Z\"}}"
@@ -1888,7 +1958,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -1950,6 +2021,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"hamd\":2,\"subhan\":40},\"firstUse\":[\"hamd\",\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|hamd\":\"2026-10-04T04:00:00.000Z\"}}"
@@ -2029,7 +2104,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -2140,6 +2216,10 @@
               ]
             }
           ],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:عبارة ١\":1,\"c:ذكر أ\":4,\"c:ذكر ب\":5},\"firstUse\":[\"c:عبارة ١\",\"c:ذكر أ\",\"c:ذكر ب\"],\"custom\":[\"عبارة ١\",\"عبارة ٢\",\"عبارة ٣\",\"عبارة ٤\",\"عبارة ٥\",\"عبارة ٦\",\"ذكر أ\",\"ذكر ب\"],\"history\":{},\"resets\":{}}"
@@ -2221,7 +2301,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -2288,6 +2369,10 @@
             }
           ],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-line-spacing": "wide",
@@ -2382,7 +2467,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -2444,6 +2530,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": true
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{\"morning-20\":1},\"evening\":{\"evening-20\":100}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
@@ -2551,7 +2641,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-03",
@@ -2616,6 +2707,10 @@
               "date": "2026-10-03"
             }
           ],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1,\"morning-03\":1},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}"
@@ -2737,7 +2832,23 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-04",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": "2026-10-04T03:00:00.000Z",
+                    "eveningAt": "2026-10-04T15:00:00.000Z"
+                  },
+                  {
+                    "date": "2026-10-03",
+                    "morning": false,
+                    "evening": true,
+                    "morningAt": null,
+                    "eveningAt": "2026-10-03T15:00:00.000Z"
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-05",
@@ -2820,6 +2931,10 @@
               "date": "2026-10-05"
             }
           ],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":true,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":\"2026-10-03T15:00:00.000Z\"}],\"resets\":{}}",
@@ -2834,7 +2949,7 @@
       }
     },
     {
-      "name": "only the newest 7 history days are kept (trimmed warning)",
+      "name": "history is kept by date for the 31-day window, not by count: a full week and two older days are all kept",
       "input": {
         "storage": {
           "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-01\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-01T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-30\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-30T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-29\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-29T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-28\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-28T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-27\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-27T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
@@ -2915,7 +3030,377 @@
             },
             "athkar": {
               "adhkar": {
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-09-20",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": null,
+                    "eveningAt": null
+                  },
+                  {
+                    "date": "2026-09-19",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": null,
+                    "eveningAt": null
+                  }
+                ]
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
                 "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "adhkar",
+              "date": "2026-09-20",
+              "unit": "morning",
+              "before": {
+                "complete": false,
+                "at": null
+              },
+              "after": {
+                "complete": true,
+                "at": null
+              }
+            },
+            {
+              "store": "adhkar",
+              "date": "2026-09-20",
+              "unit": "evening",
+              "before": {
+                "complete": false,
+                "at": null
+              },
+              "after": {
+                "complete": true,
+                "at": null
+              }
+            },
+            {
+              "store": "adhkar",
+              "date": "2026-09-19",
+              "unit": "morning",
+              "before": {
+                "complete": false,
+                "at": null
+              },
+              "after": {
+                "complete": true,
+                "at": null
+              }
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-01\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-01T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-30\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-30T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-29\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-29T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-28\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-28T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-27\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-27T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-20\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-19\",\"morning\":true,\"evening\":false,\"morningAt\":null,\"eveningAt\":null}],\"resets\":{}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-01\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-01T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-30\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-30T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-29\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-29T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-28\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-28T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-27\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-27T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-20\",\"morning\":true,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-19\",\"morning\":true,\"evening\":false,\"morningAt\":null,\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "days before this receiver's 31-day window are not added (trimmed warning)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-09-10T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-09-10",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": [
+                  {
+                    "date": "2026-09-09",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-09-09T03:00:00.000Z",
+                    "eveningAt": null
+                  },
+                  {
+                    "date": "2026-09-01",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": "2026-09-01T03:00:00.000Z",
+                    "eveningAt": "2026-09-01T15:00:00.000Z"
+                  }
+                ]
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-09-09",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-09-09T03:00:00.000Z",
+                    "eveningAt": null
+                  },
+                  {
+                    "date": "2026-09-01",
+                    "morning": true,
+                    "evening": true,
+                    "morningAt": "2026-09-01T03:00:00.000Z",
+                    "eveningAt": "2026-09-01T15:00:00.000Z"
+                  }
+                ]
+              },
+              "suwar": {
+                "date": "2026-09-10",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-09-10",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-09-10T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "adhkar",
+              "date": "2026-09-09",
+              "unit": "morning",
+              "before": {
+                "complete": false,
+                "at": null
+              },
+              "after": {
+                "complete": true,
+                "at": "2026-09-09T03:00:00.000Z"
+              }
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [
+            {
+              "kind": "stale",
+              "date": "2026-09-10"
+            },
+            {
+              "kind": "trimmed"
+            }
+          ],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-09\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-09T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-09\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-09T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "reset epochs only (adhkar): nothing visible changes, but the plan is not empty (hidden.resets) and writes the epoch",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {
+                  "2026-10-04": "2026-10-04T04:00:00.000Z"
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -2960,18 +3445,896 @@
           "resets": [],
           "keptLocal": [],
           "settings": [],
-          "warnings": [
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "reset epochs only (suwar): hidden.resets, written",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {
+                  "2026-10-04|mulk": "2026-10-04T04:00:00.000Z"
+                }
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-04|mulk\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-04|mulk\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "reset epochs only (tasbih): hidden.resets, written",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {
+                  "2026-10-04|subhan": "2026-10-04T04:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|subhan\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|subhan\":\"2026-10-04T04:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
+      "name": "after the epochs arrived, the code from before the reset changes nothing (keptLocal; empty)",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-04|mulk\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|subhan\":\"2026-10-04T04:00:00.000Z\"}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {
+                      "morning-01": 1
+                    },
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {
+                    "mulk-1-4": true,
+                    "mulk-5-8": true
+                  }
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "subhan": 7
+                },
+                "firstUse": [
+                  "subhan"
+                ],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [],
+          "keptLocal": [
             {
-              "kind": "trimmed"
+              "store": "adhkar",
+              "date": "2026-10-04",
+              "unit": "morning",
+              "before": {
+                "progress": {},
+                "manualCompletion": false,
+                "completedAt": null
+              },
+              "after": {
+                "progress": {},
+                "manualCompletion": false,
+                "completedAt": null
+              },
+              "incoming": {
+                "progress": {
+                  "morning-01": 1
+                },
+                "manualCompletion": false,
+                "completedAt": null
+              }
+            },
+            {
+              "store": "suwar",
+              "date": "2026-10-04",
+              "unit": "mulk",
+              "before": {
+                "pages": [],
+                "completedAt": null
+              },
+              "after": {
+                "pages": [],
+                "completedAt": null
+              },
+              "incoming": {
+                "pages": [
+                  "mulk-1-4",
+                  "mulk-5-8"
+                ],
+                "completedAt": null
+              }
+            },
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "subhan",
+              "before": 0,
+              "after": 0,
+              "incoming": 7
             }
           ],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": true,
           "writes": {}
         },
         "storage": {
-          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-10-01\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-01T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-30\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-30T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-29\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-29T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-28\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-28T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-27\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-27T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-04|mulk\":\"2026-10-04T04:00:00.000Z\"}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|subhan\":\"2026-10-04T04:00:00.000Z\"}}"
+        }
+      }
+    },
+    {
+      "name": "equivalent unsaved spellings are one unit: max, never the sum",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
           "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
-          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":1},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {
+                  "c:يَا رَبّ": 2
+                },
+                "firstUse": [
+                  "c:يَا رَبّ"
+                ],
+                "custom": [],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "c:يا رب",
+              "before": 1,
+              "after": 2
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "a saved spelling arriving later names the unit; its count is not added to the orphan's",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [
+                  "يا رب"
+                ],
+                "history": {},
+                "resets": {}
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "custom",
+              "before": [],
+              "after": [
+                "يا رب"
+              ]
+            }
+          ],
+          "resets": [],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}"
+        }
+      }
+    },
+    {
+      "name": "a reset of one spelling resets the equivalent unit",
+      "input": {
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":1},\"firstUse\":[\"c:يا رب\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+        },
+        "incoming": {
+          "source": "code",
+          "container": {
+            "transfer": 1,
+            "app": "athkar-pwa",
+            "envelope": {
+              "meta": {
+                "format": 1,
+                "app": "athkar-pwa",
+                "exportedAt": "2026-10-04T06:00:00.000Z",
+                "timeZone": "Asia/Riyadh"
+              },
+              "adhkar": {
+                "today": {
+                  "date": "2026-10-04",
+                  "progress": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "targets": {
+                    "morning": {},
+                    "evening": {}
+                  },
+                  "completedAt": {
+                    "morning": null,
+                    "evening": null
+                  },
+                  "manualCompletion": {
+                    "morning": false,
+                    "evening": false
+                  }
+                },
+                "history": []
+              },
+              "reminders": {
+                "morning": {
+                  "enabled": false
+                },
+                "evening": {
+                  "enabled": false
+                },
+                "calculationMethod": "mwl",
+                "asrSchool": "standard",
+                "lastShown": {
+                  "morning": null,
+                  "evening": null
+                }
+              },
+              "preferences": {
+                "theme": "system",
+                "textSize": "medium",
+                "lineSpacing": "comfortable",
+                "haptics": true,
+                "longOrder": "original",
+                "longOrderPromptAnswered": false
+              }
+            },
+            "athkar": {
+              "adhkar": {
+                "resets": {},
+                "history": []
+              },
+              "suwar": {
+                "date": "2026-10-04",
+                "selected": "kahf",
+                "read": {
+                  "kahf": {},
+                  "yasin": {},
+                  "saffat": {},
+                  "waqiah": {},
+                  "mulk": {}
+                },
+                "completedAt": {
+                  "kahf": null,
+                  "yasin": null,
+                  "saffat": null,
+                  "waqiah": null,
+                  "mulk": null
+                },
+                "history": {},
+                "resets": {}
+              },
+              "tasbih": {
+                "date": "2026-10-04",
+                "selected": "subhan",
+                "target": 33,
+                "counts": {},
+                "firstUse": [],
+                "custom": [],
+                "history": {},
+                "resets": {
+                  "2026-10-04|c:يَا رَبّ": "2026-10-04T04:00:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "plan": {
+          "createdAt": "2026-10-04T06:00:00.000Z",
+          "source": "code",
+          "today": "2026-10-04",
+          "additions": [],
+          "resets": [
+            {
+              "store": "tasbih",
+              "date": "2026-10-04",
+              "unit": "c:يا رب",
+              "before": 1,
+              "after": 0
+            }
+          ],
+          "keptLocal": [],
+          "settings": [],
+          "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
+          "empty": false,
+          "writes": {
+            "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
+          }
+        },
+        "storage": {
+          "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+          "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+          "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}"
         }
       }
     },
@@ -3053,7 +4416,16 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-03T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -3114,6 +4486,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": true,
           "writes": {}
         },
@@ -3202,7 +4578,16 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-03T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -3339,6 +4724,10 @@
           ],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-03\":\"2026-10-03T04:00:00.000Z\"}}",
@@ -3507,6 +4896,10 @@
               "date": "2026-09-23"
             }
           ],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null},{\"date\":\"2026-09-23\",\"morning\":false,\"evening\":true,\"morningAt\":null,\"eveningAt\":null},{\"date\":\"2026-09-22\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-09-22T17:38:40.481Z\",\"eveningAt\":null}],\"resets\":{}}",
@@ -3598,7 +4991,8 @@
               "adhkar": {
                 "resets": {
                   "2026-10-04": "9999-12-31T23:59:59.999Z"
-                }
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -3743,7 +5137,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -3868,7 +5263,16 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": [
+                  {
+                    "date": "2026-10-03",
+                    "morning": true,
+                    "evening": false,
+                    "morningAt": "2026-10-03T03:00:00.000Z",
+                    "eveningAt": null
+                  }
+                ]
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -4001,7 +5405,8 @@
               "adhkar": {
                 "resets": {
                   "2026-10-04": "2026-10-04T04:00:00.000Z"
-                }
+                },
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -4105,6 +5510,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": true,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
@@ -4192,7 +5601,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -4260,6 +5670,10 @@
           "keptLocal": [],
           "settings": [],
           "warnings": [],
+          "hidden": {
+            "resets": false,
+            "targets": false
+          },
           "empty": false,
           "writes": {
             "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":3,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}"
@@ -4339,7 +5753,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",
@@ -4855,7 +6270,8 @@
             },
             "athkar": {
               "adhkar": {
-                "resets": {}
+                "resets": {},
+                "history": []
               },
               "suwar": {
                 "date": "2026-10-04",

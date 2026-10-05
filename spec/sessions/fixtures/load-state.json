@@ -579,7 +579,7 @@
       }
     },
     {
-      "name": "normalization: invalid date falls back to today (no roll); bad fields and history garbage sanitized",
+      "name": "normalization: invalid date falls back to today (no roll); bad fields and history garbage sanitized (history entries need a real date inside the 31-day window)",
       "input": {
         "timeZone": "Asia/Riyadh",
         "now": "2026-09-23T05:00:00.000Z",
@@ -656,6 +656,20 @@
               "evening": true,
               "morningAt": null,
               "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-13",
+              "morning": false,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
             }
           ],
           "resets": {}
@@ -663,7 +677,7 @@
       }
     },
     {
-      "name": "normalization trims stored history to 7 before rolling adds today's predecessor",
+      "name": "normalization keeps stored history inside the 31-day window (not 7 entries); rolling adds today's predecessor",
       "input": {
         "timeZone": "Asia/Riyadh",
         "now": "2026-09-24T05:00:00.000Z",
@@ -736,6 +750,27 @@
             },
             {
               "date": "2026-09-17",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-16",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-15",
+              "morning": true,
+              "evening": true,
+              "morningAt": null,
+              "eveningAt": null
+            },
+            {
+              "date": "2026-09-14",
               "morning": true,
               "evening": true,
               "morningAt": null,

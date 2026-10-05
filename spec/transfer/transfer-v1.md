@@ -22,7 +22,7 @@ The code carries one UTF-8 JSON document:
   "app": "athkar-pwa",
   "envelope": { "meta": {}, "adhkar": {}, "reminders": {}, "preferences": {} },
   "athkar": {
-    "adhkar": { "resets": {} },
+    "adhkar": { "resets": {}, "history": [] },
     "suwar": { "date": "", "selected": "", "read": {}, "completedAt": {}, "history": {}, "resets": {} },
     "tasbih": { "date": "", "selected": "", "target": 33, "counts": {}, "firstUse": [], "custom": [], "history": {}, "resets": {} }
   }
@@ -35,6 +35,7 @@ The code carries one UTF-8 JSON document:
 | `app` | `"athkar-pwa"`. `"ruqyah-pwa"` is refused with `wrong-app`. |
 | `envelope` | Exactly `buildBackup(false)`: [envelope v1](../backup/envelope-v1.md) of the athkar PWA, **never with `reminders.location`**. A native importer can hand it to `BackupImporter` unchanged. The encoder leaves out progress and target IDs that §4 would refuse, as the backup exporter leaves out malformed values. |
 | `athkar.adhkar.resets` | The reset epochs of `athkar-progress-v2` (§5.1); units `morning`, `evening`. |
+| `athkar.adhkar.history` | The progress history of the whole reset window (envelope-v1 history entries, newest first, every day of the 31 ending on the code's date, today excluded). `envelope.adhkar.history` keeps envelope v1's newest seven; a code's receiver merges this list instead. |
 | `athkar.suwar` | `athkar-suwar-v1` as stored, normalized: `read` holds only `true` marks of known pages, `completedAt` only for complete suras, `history` only valid instants. Units of `resets` are sura IDs. |
 | `athkar.tasbih` | `athkar-tasbih-v1` as stored, normalized; units of `resets` are phrase keys (a preset ID or `c:` + phrase). |
 
@@ -100,9 +101,9 @@ Every code is hostile until it passes all of these; any failure rejects the whol
 | Shape | Every object has exactly the keys of §1 and envelope v1: **no unknown and no missing key at any depth**. `JSON.parse` turns `"__proto__"` into an own key, so it fails here like any unknown key. Map keys are never `__proto__`, `constructor` or `prototype`. Validation descends only into expected keys and types, so nesting depth cannot exhaust the stack. | `corrupt` (`invalid`, with `path`) |
 | Dates | real proleptic-Gregorian days (`2026-02-30` fails) | idem |
 | Instants | envelope-v1 rule: `YYYY-MM-DDTHH:MM:SS[.f]Z`, round-tripping through `Date` (`T24:00` fails) | idem |
-| Envelope | as envelope v1 for `athkar-pwa`, plus: progress and target maps ≤ 128 keys `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`, values finite numbers 0 … 2^53 − 1; history ≤ 7 entries, strictly newest first, before today; `timeZone` `^[A-Za-z0-9_+\-/]{1,64}$`; `reminders` without `location` | idem |
-| Suwar | sura and page IDs `^[a-z0-9][a-z0-9-]{0,47}$`, ≤ 16 suras, ≤ 64 pages each, read marks exactly `true`; history ≤ 7 days, each before today | idem |
-| Tasbih | `target` null or integer 1 … 9 999; counts integers 1 … 99 999, ≤ 256 keys per day; keys a preset-shaped ID `^[a-z][a-z-]{0,31}$` or `c:` + a phrase `canonicalTasbihKey` accepts; `custom` ≤ 8 phrases, each already in `cleanTasbihPhrase` form; no C0 control character in any key or phrase; history ≤ 7 days before today | idem |
+| Envelope | as envelope v1 for `athkar-pwa`, plus: progress and target maps ≤ 128 keys `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`, values finite numbers 0 … 2^53 − 1; history ≤ 7 entries, strictly newest first, before today; `timeZone` `^[A-Za-z0-9_+\-/]{1,64}$`; `reminders` without `location`. `athkar.adhkar.history`: the same entries, ≤ 31, strictly newest first, inside the 31-day window before the code's date | idem |
+| Suwar | sura and page IDs `^[a-z0-9][a-z0-9-]{0,47}$`, ≤ 16 suras, ≤ 64 pages each, read marks exactly `true`; history days inside the 31-day window before the code's date | idem |
+| Tasbih | `target` null or integer 1 … 9 999; counts integers 1 … 99 999, ≤ 256 keys per day; keys a preset-shaped ID `^[a-z][a-z-]{0,31}$` or `c:` + a phrase `canonicalTasbihKey` accepts; `custom` ≤ 8 phrases, each already in `cleanTasbihPhrase` form; no C0 control character in any key or phrase; history days inside the 31-day window before the code's date | idem |
 | Reset epochs | ≤ 512 keys `YYYY-MM-DD` or `YYYY-MM-DD\|<unit>`; the date within the 31-day window ending on the code's date, never after it; the unit valid for the store; values instants | idem |
 
 These checks need nothing but the code. Two more run when the receiver plans the merge (§6), against one reading of
@@ -185,18 +186,22 @@ Both sides are normalized and rolled to the receiver's local date `T` first.
 unit, the merge applies `syncCompletionState`'s bookkeeping: counters complete → `manualCompletion` false;
 incomplete and not manual → `completedAt` null; complete without an instant (the union completed it) → the merge
 instant. Incoming item IDs this version does not have are dropped first (§4). `targets` stay the receiver's;
-incoming targets fill only keys the receiver lacks. History keeps the days
-with a completed period, newest first, at most 7 (`trimmed` warning when a merged day falls outside). For history
+incoming targets fill only keys the receiver lacks. History keeps the days with a completed period inside the
+receiver's 31-day window (§5.5), newest first. For history
 this matches spec/schema.md's "an existing non-empty unit wins" except that equal epochs OR instead of choosing; for
 today it departs on purpose, since both sides are the same user's live counts. The native merge rules are unchanged.
 
 **`athkar-suwar-v1`.** Units as §5.2. A sura complete after the merge keeps its chosen instant, or the merge instant
-when it has none. History: union per (date, sura), at most 7 days. `selected` stays the receiver's.
+when it has none. History: union per (date, sura) inside the window. `selected` stays the receiver's.
 
 **`athkar-tasbih-v1`.** Saved phrases: the receiver's, then the incoming phrases that `findTasbihPhrase` does not
 match, up to 8. **An incoming phrase that does not fit is dropped with its counts and epochs, today and in history;
-its counts are never folded into another key** (`tasbih-cap` warning listing the phrases). Keys and epoch units of
-both sides are re-canonicalized against the merged list (`canonicalTasbihKey`) before the units merge. `firstUse`:
+its counts are never folded into another key** (`tasbih-cap` warning listing the phrases). A unit's phrase is
+identified by its preset ID or its match key (`tasbihMatchKey`), whatever either side has saved: spellings that
+match are one unit, and equivalent keys on one side join by max under their epochs. They are **never summed** (summing
+converging keys is only the stored store's own migration, `tasbihCounts`), so the result does not depend on which
+device saved which spelling first. A unit is stored under its preset ID, the merged saved spelling, else the
+receiver's spelling, else the incoming one (receiver-owned). `firstUse`:
 the receiver's order, then the incoming one, then any remaining key. `selected` and `target` stay the receiver's.
 
 **Settings.** A setting is written only where the receiver has **no stored value** and the incoming value differs
@@ -207,10 +212,20 @@ switches, `lastShown` and location never transfer: notification permission is pe
 `athkar-reading-text-size` on every launch, so in practice text size never transfers.
 
 **Laws and their exceptions.** Commutativity and convergence hold for everything except receiver-owned fields:
-targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases (two spellings that
-`tasbihMatchKey` equates keep the receiver's), first-use order, settings, and the phrases a cap overflow drops.
-`spec/transfer/fixtures/properties.json` checks idempotence, commutativity and convergence for every ordered pair of
-12 devices and associativity for 6 triples; generation fails if any check fails.
+targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases and of unsaved
+phrase keys (spellings that `tasbihMatchKey` equates keep the receiver's), first-use order, settings, and the phrases a
+cap overflow drops. `spec/transfer/fixtures/properties.json` checks idempotence (and that a second receipt of a code
+has nothing to commit), commutativity and convergence for every ordered pair of 21 devices, and associativity and
+repeated receipt for 11 triples, among them equivalent phrase spellings and history with tombstones; generation fails
+if any check fails.
+
+### 5.5 History window
+
+All three stores keep history **by date**: the days of the 31-day reset window before today, whatever their number.
+Pruning is a pointwise filter on the date, so it composes with the epoch join (a count limit does not: dropping the
+eighth-newest day in one merge loses what a later tombstone on newer days would have exposed). Days the merge brings
+from before the receiver's window are not added (`trimmed` warning). The history list in Settings and the backup
+file still show the newest seven days.
 
 ## 6. Plan and apply
 
@@ -228,7 +243,8 @@ the receiver's clock the clock check (§4) and the merge use. A refused code giv
 | `keptLocal[]` | units where this device's later reset makes it ignore the incoming copy: `{…, incoming}` |
 | `settings[]` | `{key, value}` to write |
 | `warnings[]` | `{kind}`: `backup`, `stale` / `future` (with `date`), `trimmed`, `tasbih-cap` (with `phrases`) |
-| `empty` | no additions, no resets, no settings |
+| `hidden` | committed changes no row shows: `resets` (newer reset epochs, e.g. a reset or deleted day that removes nothing here), `targets` (targets this side lacked) |
+| `empty` | nothing to commit: no additions, resets, settings or `hidden` change. A plan with only `hidden` changes is still previewed and confirmed, so a later stale code cannot bring back what the other device reset |
 | `writes` | each storage key → its new string (`null`: remove, the legacy `athkar-progress-v1`) |
 | `before` | every key the transfer reads, as stored when planned |
 
@@ -263,7 +279,9 @@ the receiver's clock the clock check (§4) and the merge use. A refused code giv
 
 `not-code`, `too-long`, `one-frame`, `incomplete`, `mixed`, `wrong-app`, `newer`, `corrupt` (with `reason`:
 `checksum`, `base45`, `inflate`, `inflate-cap`, `json`, `invalid`; `invalid` also gives the JSON `path`),
-`file-read`, `unsupported`, `clock`, `too-big`, `write`, `changed`. Decoding never touches storage.
+`file-read`, `unsupported`, `clock`, `too-big`, `write`, `changed`. Decoding never touches storage. `applyTransfer`
+adds `pending: true` to `write` when a write-ahead record is still stored (its rollback failed, or another
+transfer's record is waiting): the next start completes or undoes it, so the UI does not say that nothing changed.
 
 ## 8. Sizes
 
@@ -272,8 +290,8 @@ within a few percent):
 
 | State | JSON | deflate | Text form | QR frames |
 | --- | ---: | ---: | ---: | ---: |
-| Typical: some of today, one history day, one reset epoch | 1 483 B | 619 B | 953 chars | 2 |
-| Full: every store full, 7 history days, a day epoch on all 31 window days (after «حذف كل شيء») | 19 654 B | 1 708 B | 2 586 chars | 3 |
-| Worst: as full, plus an epoch on every unit of every window day | 76 007 B | 4 389 B | 6 608 chars | 8 |
+| Typical: some of today, one history day, one reset epoch | 1 625 B | 626 B | 963 chars | 2 |
+| Full: every store full, 7 history days, a day epoch on all 31 window days (after «حذف كل شيء») | 20 576 B | 1 721 B | 2 606 chars | 3 |
+| Worst: as full, plus an epoch on every unit of every window day | 76 929 B | 4 401 B | 6 626 chars | 8 |
 
 All are far below the 64 KiB text and 256 KiB JSON limits.

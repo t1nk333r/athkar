@@ -303,7 +303,7 @@ The `athkar-backup` export uses format 1 and contains one JSON document:
 | --- | --- | --- |
 | `meta` | `{format: 1, app: "athkar-pwa", exportedAt, timeZone}` | `{format: 1, app: "ruqyah-pwa", exportedAt, timeZone}` |
 | `adhkar.today` | `athkar-progress-v2` → `date`, `progress`, `targets`, `completedAt`, `manualCompletion` | absent |
-| `adhkar.history` | `history[]` (≤7 entries: `date`, `morning`, `evening`, `morningAt`, `eveningAt`) | absent |
+| `adhkar.history` | the newest 7 entries of `history[]` (`date`, `morning`, `evening`, `morningAt`, `eveningAt`; the store keeps the 31-day window) | absent |
 | `ruqyah.today` | absent | `ruqyah-daily-v1` → `date`, `counts` |
 | `ruqyah.history` | absent | `history` object (≤365 entries) |
 | `reminders` | `athkar-reminders-v2` → `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown`; `location` only if the user ticks the inclusion checkbox | absent |

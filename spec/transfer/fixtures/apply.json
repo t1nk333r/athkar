@@ -303,7 +303,8 @@
       "expected": {
         "result": {
           "ok": false,
-          "error": "write"
+          "error": "write",
+          "pending": true
         },
         "storage": {
           "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":true,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":\"2026-10-03T15:00:00.000Z\"},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
@@ -315,7 +316,8 @@
           "saves": "nothing written",
           "secondTransfer": {
             "ok": false,
-            "error": "write"
+            "error": "write",
+            "pending": true
           }
         },
         "nextStart": {

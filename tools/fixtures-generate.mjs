@@ -85,6 +85,7 @@ const transferFunctions = [
   "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
   "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
   "transferKnownItems", "transferInstants", "transferClockIsPlausible", "transferWithinBudget", "recoverTransferPending", "journalHolds",
+  "transferTasbihIdentity", "transferHistoryList",
   "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
   // the envelope (buildBackup) and the stores the transfer reads
   "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
@@ -543,7 +544,8 @@ function rollStateToDateCases() {
       progress: { morning: morningAllDone, evening: {} },
       history: [historyEntry("2026-09-23", false, true), historyEntry("2026-09-22", true, false)]
     }), "2026-09-24"),
-    rollCase("history is trimmed to 7 entries (newest first)", baseState("2026-09-23", { history: eightDays }), "2026-09-24"),
+    rollCase("history is kept by date for the 31-day window, not trimmed to 7 entries", baseState("2026-09-23", { history: eightDays }), "2026-09-24"),
+    rollCase("history days before the 31-day window are dropped", baseState("2026-09-23", { history: [historyEntry("2026-09-01", true, true), historyEntry("2026-08-24", true, true), historyEntry("2026-08-20", true, false)] }), "2026-09-24"),
     rollCase("multi-day gap adds only the stored day; skipped days get no entries", baseState("2026-09-20", {
       progress: { morning: morningAllDone, evening: eveningAllDone }
     }), "2026-09-23"),
@@ -613,7 +615,7 @@ function loadStateCases() {
       "athkar-progress-v2": JSON.stringify(baseState("2026-09-23", { manualCompletion: { morning: false, evening: true } })),
       "athkar-progress-v1": JSON.stringify(baseState("2026-09-23", { manualCompletion: { morning: true, evening: false } }))
     }),
-    loadCase("normalization: invalid date falls back to today (no roll); bad fields and history garbage sanitized", z, localMs(z, 2026, 9, 23, 8, 0), {
+    loadCase("normalization: invalid date falls back to today (no roll); bad fields and history garbage sanitized (history entries need a real date inside the 31-day window)", z, localMs(z, 2026, 9, 23, 8, 0), {
       "athkar-progress-v2": JSON.stringify({
         date: "23/09/2026",
         progress: { morning: "oops", evening: null },
@@ -624,7 +626,7 @@ function loadStateCases() {
           ...Array.from({ length: 8 }, (_, i) => ({ date: `2026-09-${String(20 - i).padStart(2, "0")}`, evening: true }))]
       })
     }),
-    loadCase("normalization trims stored history to 7 before rolling adds today's predecessor", z, localMs(z, 2026, 9, 24, 8, 0), {
+    loadCase("normalization keeps stored history inside the 31-day window (not 7 entries); rolling adds today's predecessor", z, localMs(z, 2026, 9, 24, 8, 0), {
       "athkar-progress-v2": JSON.stringify(baseState("2026-09-23", {
         history: Array.from({ length: 9 }, (_, i) => historyEntry(`2026-09-${String(22 - i).padStart(2, "0")}`, true, true))
       }))
@@ -1670,7 +1672,22 @@ function mergeScenarios() {
     }),
     fullWeek: device({ progress: { history: daysBack(7).map(day => hist(day, true, false, at(day, "03:00"), null)) } }),
     olderDays: device({ progress: { history: [hist("2026-09-20", true, true, null, null), hist("2026-09-19", true, false, null, null)] } }),
-    oldEpochs: device({ progress: { resets: { "2026-08-01": at("2026-08-01", "04:00"), [YESTERDAY]: at(YESTERDAY, "04:00") } } })
+    oldEpochs: device({ progress: { resets: { "2026-08-01": at("2026-08-01", "04:00"), [YESTERDAY]: at(YESTERDAY, "04:00") } } }),
+    // Equivalent spellings of one phrase, unsaved (orphan counts) on two devices, saved on a third (the reviewer's triple).
+    orphanA: device({ tasbih: tasbih({ "c:يا رب": 1 }) }),
+    orphanB: device({ tasbih: tasbih({ "c:يَا رَبّ": 2 }) }),
+    savedC: device({ tasbih: tasbih({}, { custom: ["يا رب"] }) }),
+    orphanReset: device({ tasbih: tasbih({}, { resets: { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00") } }) }),
+    // History over the 31-day window: a full week, two older days, and day tombstones on that week (truncation + tombstones).
+    weekTombstone: device({ progress: { resets: Object.fromEntries(daysBack(7).map(day => [day, at(TRANSFER_TODAY, "04:00")])) } }),
+    // Reset epochs only (a reset that leaves nothing behind), one store each.
+    epochAdhkar: device({ progress: { resets: { [TRANSFER_TODAY]: at(TRANSFER_TODAY, "04:00") } } }),
+    epochSuwar: device({ suwar: { resets: { [`${TRANSFER_TODAY}|mulk`]: at(TRANSFER_TODAY, "04:00") } } }),
+    epochTasbih: device({ tasbih: tasbih({}, { resets: { [`${TRANSFER_TODAY}|subhan`]: at(TRANSFER_TODAY, "04:00") } }) }),
+    // Before those resets: today's progress in each store.
+    beforeEpochs: device({ progress: { progress: { morning: { [morningIds[0]]: 1 }, evening: {} } }, suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(0, 2)) } }, tasbih: tasbih({ subhan: 7 }) }),
+    // A code made on 2026-09-10, whose history reaches before this receiver's window.
+    oldHistory: device({ suwar: { date: "2026-09-10" }, tasbih: { date: "2026-09-10" }, progress: { date: "2026-09-10", history: [hist("2026-09-09", true, false, at("2026-09-09", "03:00"), null), hist("2026-09-01", true, true, at("2026-09-01", "03:00"), at("2026-09-01", "15:00"))] } })
   };
   return A;
 }
@@ -1748,7 +1765,15 @@ async function transferMergeCases() {
     mergeCase("receiver-owned: targets (absent keys filled), selected sura and phrase, tasbih target; phrases matched by spelling", s.receiverOwned, s.receiverOwnedIncoming),
     mergeCase("a code from yesterday: its today arrives as yesterday's history (stale warning)", s.cardFull, null, { decoded: { ok: true, source: "code", container: containerOn(s.yesterdayCode, 2026, 10, 3) } }),
     mergeCase("a code from a device whose date is ahead: its today and today's history are ignored (future warning)", s.join, null, { decoded: { ok: true, source: "code", container: containerOn(s.aheadCode, 2026, 10, 5) } }),
-    mergeCase("only the newest 7 history days are kept (trimmed warning)", s.fullWeek, s.olderDays),
+    mergeCase("history is kept by date for the 31-day window, not by count: a full week and two older days are all kept", s.fullWeek, s.olderDays),
+    mergeCase("days before this receiver's 31-day window are not added (trimmed warning)", s.join, null, { decoded: { ok: true, source: "code", container: containerOn(s.oldHistory, 2026, 9, 10) } }),
+    mergeCase("reset epochs only (adhkar): nothing visible changes, but the plan is not empty (hidden.resets) and writes the epoch", device(), s.epochAdhkar),
+    mergeCase("reset epochs only (suwar): hidden.resets, written", device(), s.epochSuwar),
+    mergeCase("reset epochs only (tasbih): hidden.resets, written", device(), s.epochTasbih),
+    mergeCase("after the epochs arrived, the code from before the reset changes nothing (keptLocal; empty)", received(received(received(device(), s.epochAdhkar), s.epochSuwar), s.epochTasbih), s.beforeEpochs),
+    mergeCase("equivalent unsaved spellings are one unit: max, never the sum", s.orphanA, s.orphanB),
+    mergeCase("a saved spelling arriving later names the unit; its count is not added to the orphan's", received(s.orphanA, s.orphanB), s.savedC),
+    mergeCase("a reset of one spelling resets the equivalent unit", s.orphanA, s.orphanReset),
     mergeCase("nothing new: an empty plan", s.join, s.join),
     mergeCase("reset epochs before the 31-day window are dropped", s.oldEpochs, s.join),
     mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup }),
@@ -1762,7 +1787,10 @@ function transferPropertyCases() {
   const s = mergeScenarios();
   const devices = {
     join: s.join, joinOther: s.joinOther, history: s.history, stale: s.stale, resetRecount: s.resetRecount, tombstone: s.tombstone,
-    cardReset: s.cardReset, cardFull: s.cardFull, suwarA: s.suwarA, suwarB: s.suwarB, phraseReset: s.phraseReset, phraseOther: s.phraseOther
+    cardReset: s.cardReset, cardFull: s.cardFull, suwarA: s.suwarA, suwarB: s.suwarB, phraseReset: s.phraseReset, phraseOther: s.phraseOther,
+    orphanA: s.orphanA, orphanB: s.orphanB, savedC: s.savedC, orphanReset: s.orphanReset,
+    fullWeek: s.fullWeek, olderDays: s.olderDays, weekTombstone: s.weekTombstone,
+    epochTasbih: s.epochTasbih, beforeEpochs: s.beforeEpochs
   };
   const names = Object.keys(devices);
   const pairs = [];
@@ -1778,20 +1806,27 @@ function transferPropertyCases() {
       const result = {
         idempotent: JSON.stringify(once) === JSON.stringify(twice),
         commutative: convergent(once) === convergent(other),
-        converges: convergent(again) === convergent(back)
+        converges: convergent(again) === convergent(back),
+        // Receiving the same code again finds nothing to commit (no hidden epoch or target changes either).
+        settled: planOf(once, { ok: true, source: "code", container: containerOf(devices[b]) }).empty === true
       };
-      if (!result.idempotent || !result.commutative || !result.converges) throw new Error(`property failed for ${a} ← ${b}: ${JSON.stringify(result)}`);
+      if (!result.idempotent || !result.commutative || !result.converges || !result.settled) throw new Error(`property failed for ${a} ← ${b}: ${JSON.stringify(result)}`);
       pairs.push({ local: a, incoming: b, ...result });
     }
   }
   const triples = [["join", "resetRecount", "tombstone"], ["stale", "resetRecount", "history"], ["cardFull", "cardReset", "join"],
-    ["suwarA", "suwarB", "join"], ["phraseReset", "phraseOther", "stale"], ["tombstone", "history", "resetRecount"]].map(([a, b, c]) => {
+    ["suwarA", "suwarB", "join"], ["phraseReset", "phraseOther", "stale"], ["tombstone", "history", "resetRecount"],
+    // The final review's counterexamples: equivalent spellings with a saved one, and history truncation with tombstones.
+    ["orphanA", "orphanB", "savedC"], ["orphanB", "savedC", "orphanReset"], ["fullWeek", "olderDays", "weekTombstone"],
+    ["weekTombstone", "fullWeek", "olderDays"], ["beforeEpochs", "epochTasbih", "join"]].map(([a, b, c]) => {
     prepareTransfer();
     const left = received(received(devices[a], devices[b]), devices[c]);
     const right = received(devices[a], received(devices[b], devices[c]));
     const associative = convergent(left) === convergent(right);
-    if (!associative) throw new Error(`associativity failed for ${a}, ${b}, ${c}`);
-    return { devices: [a, b, c], associative };
+    // Repeated transfers: receiving any of the three again changes nothing that converges.
+    const repeated = [a, b, c].every(name => convergent(received(left, devices[name])) === convergent(left));
+    if (!associative || !repeated) throw new Error(`associativity failed for ${a}, ${b}, ${c}: ${JSON.stringify({ associative, repeated })}`);
+    return { devices: [a, b, c], associative, repeated };
   });
   return { devices, pairs, triples };
 }
