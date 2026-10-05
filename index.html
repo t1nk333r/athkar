@@ -5520,9 +5520,10 @@
     let reminderStatusOverride = "";
     let state = loadState();
     let suwarState = loadSuwarState();
-    let tasbihState = loadTasbihState();
-    // False once athkar-tasbih-v1 cannot be read or written: the session then counts in memory and stops rereading it.
+    // False once athkar-tasbih-v1 cannot be read or written (at startup too): the session then counts in memory and
+    // neither rereads nor writes it, so what is stored is never written over by a state built without it.
     let tasbihStorageWorks = true;
+    let tasbihState = loadTasbihState();
     let tasbihAnnounceTimer = null;
     let tasbihCapAnnounced = false;
     // The armed haptic switch (syncHapticArm); armed only where it can play the iOS switch haptic: no navigator.vibrate,
@@ -5927,11 +5928,15 @@
       }
     }
 
+    // The startup load: a read that throws starts the session in memory mode with the defaults.
     function loadTasbihState() {
-      return readTasbihState() ?? emptyTasbihState();
+      const stored = readTasbihState();
+      if (!stored) tasbihStorageWorks = false;
+      return stored ?? emptyTasbihState();
     }
 
     function saveTasbihState() {
+      if (!tasbihStorageWorks) return;
       try {
         localStorage.setItem(tasbihStorageKey, JSON.stringify(tasbihState));
       } catch (_) {
