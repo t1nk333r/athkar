@@ -230,7 +230,9 @@ const storage = new Map();
 // Fault injection for applyTransfer's storage rules: `read` makes getItem throw; `writesLeft` lets that many setItem
 // calls succeed, fails the next one once (as a full quota would), and then lets writes through again (null: never);
 // `stuckKeys` keys then keep failing every setItem (a rollback that cannot restore them).
-const storageFault = { read: false, writesLeft: null, stuckKeys: [] };
+const storageFault = { read: false, writesLeft: null, stuckKeys: [], afterGet: null };
+// setItem calls of the code under test, by key.
+const storageWrites = [];
 const timers = [];
 const firedReminders = [];
 // console.warn calls of the code under test (recoverTransferPending logs a conflict).
@@ -240,7 +242,10 @@ const sandbox = {
   localStorage: {
     getItem: key => {
       if (storageFault.read) throw new Error("storage read fault");
-      return storage.has(key) ? storage.get(key) : null;
+      const value = storage.has(key) ? storage.get(key) : null;
+      // Another tab's write landing right after this read (deterministic interleaving for the load-migration cases).
+      if (storageFault.afterGet) storageFault.afterGet(key);
+      return value;
     },
     setItem: (key, value) => {
       if (storageFault.writesLeft === null && storageFault.stuckKeys.includes(key)) throw new Error("storage write fault");
@@ -248,6 +253,7 @@ const sandbox = {
         storageFault.writesLeft = null;
         throw new Error("storage write fault");
       }
+      storageWrites.push(key);
       storage.set(key, String(value));
     },
     removeItem: key => { storage.delete(key); }
@@ -2068,6 +2074,53 @@ async function transferRealPathCases() {
   return cases;
 }
 
+// ---- the tasbih load migration (loadTasbihState) ----
+
+// `stored`: the raw athkar-tasbih-v1 at start; `other`: a raw value another tab stores right after this tab's first read
+// of the key; `journal`: a write-ahead record holding the key.
+function loadMigrationCase(name, stored, { other, journal = false } = {}) {
+  prepareTransfer();
+  api.setTransferJournal(journal ? { before: { "athkar-tasbih-v1": stored }, after: {} } : null);
+  api.setTasbihStorageWorks(true);
+  storage.clear();
+  storage.set("athkar-tasbih-v1", stored);
+  let reads = 0;
+  if (other !== undefined) storageFault.afterGet = key => { if (key === "athkar-tasbih-v1" && (reads += 1) === 1) storage.set(key, other); };
+  storageWrites.length = 0;
+  const state = plain(fn.loadTasbihState());
+  storageFault.afterGet = null;
+  const writes = storageWrites.filter(key => key === "athkar-tasbih-v1").length;
+  const after = storage.get("athkar-tasbih-v1");
+  storageWrites.length = 0;
+  const again = plain(fn.loadTasbihState());
+  const writesAgain = storageWrites.filter(key => key === "athkar-tasbih-v1").length;
+  api.setTransferJournal(null);
+  return { name, input: { stored, ...(other !== undefined ? { otherTabStoresAfterFirstRead: other } : {}), ...(journal ? { journalHoldsKey: true } : {}) },
+    expected: { state, storageWrites: writes, stored: after, reload: { sameState: JSON.stringify(again) === JSON.stringify(state), storageWrites: writesAgain } } };
+}
+
+function tasbihLoadMigrationCases() {
+  const store = (counts, resets = {}) => JSON.stringify({ ...tasbihStored(), custom: ["يا رب"], counts, firstUse: Object.keys(counts), resets });
+  const aliases = store({ "c:يا رب": 10, "c:يَا رَبّ": 2 });
+  const aliasesReset = store({ "c:يا رب": 10, "c:يَا رَبّ": 2 }, { [`${TRANSFER_TODAY}|c:يَا رَبّ`]: at(TRANSFER_TODAY, "04:00") });
+  const newerAliases = store({ "c:يا رب": 20, "c:يَا رَبّ": 1 });
+  prepareTransfer();
+  const canonicalOther = JSON.stringify(plain(fn.parseStoredTasbihState(store({ "c:يا رب": 30 }))));
+  const cases = [
+    loadMigrationCase("aliases with equal epochs: summed (12), saved back once in canonical form; the next load writes nothing", aliases),
+    loadMigrationCase("aliases, one reset later: only the later counts (2), saved back once", aliasesReset),
+    loadMigrationCase("a write-ahead record holds the key: shown canonical, nothing written", aliases, { journal: true }),
+    loadMigrationCase("another tab stores other aliases between the reads: their canonical form (21) is taken and saved, never the stale 12", aliases, { other: newerAliases }),
+    loadMigrationCase("another tab stores an already canonical value between the reads: it is taken (30) and left exactly as stored", aliases, { other: canonicalOther })
+  ];
+  const [once, , held, aliasRace, canonicalRace] = cases;
+  if (once.expected.storageWrites !== 1 || once.expected.reload.storageWrites !== 0) throw new Error("load migration: not once-only");
+  if (held.expected.storageWrites !== 0 || held.expected.stored !== aliases) throw new Error("load migration: wrote a held key");
+  if (aliasRace.expected.state.counts["c:يا رب"] !== 21 || JSON.parse(aliasRace.expected.stored).counts["c:يا رب"] !== 21) throw new Error("load migration: stale candidate after an alias write");
+  if (canonicalRace.expected.state.counts["c:يا رب"] !== 30 || canonicalRace.expected.stored !== canonicalOther || canonicalRace.expected.storageWrites !== 0) throw new Error("load migration: overwrote a canonical write");
+  return cases;
+}
+
 // ---------------------------------------------------------------------------------------------------
 // Write everything
 // ---------------------------------------------------------------------------------------------------
@@ -2184,6 +2237,10 @@ written.push({
   }),
   count: properties.pairs.length + properties.triples.length
 });
+writeCases("spec/sessions/fixtures/tasbih-load-migration.json",
+  sessionMeta("loadTasbihState saves a stored value with aliases back in its canonical form once, and only over the exact string it was computed from: a value another tab stores between the reads is taken instead and never overwritten by a stale form; a key a write-ahead record holds is not written.",
+    "loadTasbihState, parseStoredTasbihState, canonicalTasbihDays"),
+  { ...transferDefaults, collections: realCollections }, tasbihLoadMigrationCases());
 writeCases("spec/transfer/fixtures/real-path.json",
   sessionMeta("The tasbih through the real path: encodeTransfer on the sender (its stored keys with their own epochs), decodeTransfer, then planTransfer on the receiver; the storage after the plan's writes. One device's equivalent keys are canonicalised as its own load does (only the latest epoch counts, those summed); across devices the later epoch wins, equal epochs take the max. `codeTasbih`: the tasbih part of the decoded code; `count`: the unit «يا رب» after the transfer.",
     "encodeTransfer, transferContainerNow, transferTasbihView, decodeTransfer, planTransfer, mergeTransferTasbih"),

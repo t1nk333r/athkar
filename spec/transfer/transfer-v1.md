@@ -203,7 +203,8 @@ identified by its preset ID or its match key (`tasbihMatchKey`), whatever either
 are canonicalised by one rule, `canonicalTasbihDays`, which the app's own load and the transfer share: each stored key
 has its own epoch (its day's reset or its own); only the keys with the unit's latest epoch count, and their counts
 are **summed**; a key with only a reset counts 0 at its epoch. The unit is kept under one key with the latest of its
-keys' reset epochs. The app saves a store it loaded with aliases back in this form, once. So the app shows what the
+keys' reset epochs. The app saves a store it loaded with aliases back in this form, once, and only over the exact
+string it computed it from: a value another tab stored in between is taken instead (`tasbih-load-migration.json`). So the app shows what the
 transfer sends: two spellings with equal epochs show and send their sum, and a later reset of one spelling leaves
 only what was counted after it.
 

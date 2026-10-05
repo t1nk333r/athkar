@@ -1,0 +1,358 @@
+{
+  "about": "loadTasbihState saves a stored value with aliases back in its canonical form once, and only over the exact string it was computed from: a value another tab stores between the reads is taken instead and never overwritten by a stale form; a key a write-ahead record holds is not written.",
+  "source": "index.html: loadTasbihState, parseStoredTasbihState, canonicalTasbihDays",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "now": "2026-10-04T06:00:00.000Z",
+    "nowLocal": "2026-10-04T09:00:00.000+03:00",
+    "collections": {
+      "morning": [
+        {
+          "id": "morning-01"
+        },
+        {
+          "id": "morning-02",
+          "count": 3
+        },
+        {
+          "id": "morning-03",
+          "count": 3
+        },
+        {
+          "id": "morning-04",
+          "count": 3
+        },
+        {
+          "id": "morning-05"
+        },
+        {
+          "id": "morning-06"
+        },
+        {
+          "id": "morning-07"
+        },
+        {
+          "id": "morning-08",
+          "count": 4
+        },
+        {
+          "id": "morning-09"
+        },
+        {
+          "id": "morning-10",
+          "count": 3
+        },
+        {
+          "id": "morning-11"
+        },
+        {
+          "id": "morning-12",
+          "count": 7
+        },
+        {
+          "id": "morning-13"
+        },
+        {
+          "id": "morning-14"
+        },
+        {
+          "id": "morning-15",
+          "count": 3
+        },
+        {
+          "id": "morning-16",
+          "count": 3
+        },
+        {
+          "id": "morning-17"
+        },
+        {
+          "id": "morning-18"
+        },
+        {
+          "id": "morning-19"
+        },
+        {
+          "id": "morning-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "morning-21",
+          "count": 100
+        },
+        {
+          "id": "morning-22",
+          "count": 3
+        },
+        {
+          "id": "morning-23"
+        },
+        {
+          "id": "morning-24",
+          "count": 100
+        },
+        {
+          "id": "morning-26"
+        },
+        {
+          "id": "morning-25",
+          "count": 10
+        }
+      ],
+      "evening": [
+        {
+          "id": "evening-01"
+        },
+        {
+          "id": "evening-02",
+          "count": 3
+        },
+        {
+          "id": "evening-03",
+          "count": 3
+        },
+        {
+          "id": "evening-04",
+          "count": 3
+        },
+        {
+          "id": "evening-05"
+        },
+        {
+          "id": "evening-06"
+        },
+        {
+          "id": "evening-07"
+        },
+        {
+          "id": "evening-08",
+          "count": 4
+        },
+        {
+          "id": "evening-09"
+        },
+        {
+          "id": "evening-10",
+          "count": 3
+        },
+        {
+          "id": "evening-11"
+        },
+        {
+          "id": "evening-12",
+          "count": 7
+        },
+        {
+          "id": "evening-13"
+        },
+        {
+          "id": "evening-14"
+        },
+        {
+          "id": "evening-15",
+          "count": 3
+        },
+        {
+          "id": "evening-16",
+          "count": 3
+        },
+        {
+          "id": "evening-17"
+        },
+        {
+          "id": "evening-18"
+        },
+        {
+          "id": "evening-19"
+        },
+        {
+          "id": "evening-20",
+          "targetOptions": [
+            1,
+            10,
+            100
+          ],
+          "defaultTarget": 100
+        },
+        {
+          "id": "evening-21",
+          "count": 100
+        },
+        {
+          "id": "evening-22",
+          "count": 3
+        },
+        {
+          "id": "evening-24"
+        },
+        {
+          "id": "evening-23",
+          "count": 10
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "aliases with equal epochs: summed (12), saved back once in canonical form; the next load writes nothing",
+      "input": {
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}"
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:يا رب": 12
+          },
+          "firstUse": [
+            "c:يا رب"
+          ],
+          "custom": [
+            "يا رب"
+          ],
+          "history": {},
+          "resets": {}
+        },
+        "storageWrites": 1,
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":12},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "reload": {
+          "sameState": true,
+          "storageWrites": 0
+        }
+      }
+    },
+    {
+      "name": "aliases, one reset later: only the later counts (2), saved back once",
+      "input": {
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{\"2026-10-04|c:يَا رَبّ\":\"2026-10-04T04:00:00.000Z\"}}"
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:يا رب": 2
+          },
+          "firstUse": [
+            "c:يا رب"
+          ],
+          "custom": [
+            "يا رب"
+          ],
+          "history": {},
+          "resets": {
+            "2026-10-04|c:يا رب": "2026-10-04T04:00:00.000Z"
+          }
+        },
+        "storageWrites": 1,
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":2},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{\"2026-10-04|c:يا رب\":\"2026-10-04T04:00:00.000Z\"}}",
+        "reload": {
+          "sameState": true,
+          "storageWrites": 0
+        }
+      }
+    },
+    {
+      "name": "a write-ahead record holds the key: shown canonical, nothing written",
+      "input": {
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "journalHoldsKey": true
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:يا رب": 12
+          },
+          "firstUse": [
+            "c:يا رب"
+          ],
+          "custom": [
+            "يا رب"
+          ],
+          "history": {},
+          "resets": {}
+        },
+        "storageWrites": 0,
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "reload": {
+          "sameState": true,
+          "storageWrites": 0
+        }
+      }
+    },
+    {
+      "name": "another tab stores other aliases between the reads: their canonical form (21) is taken and saved, never the stale 12",
+      "input": {
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "otherTabStoresAfterFirstRead": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":20,\"c:يَا رَبّ\":1},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}"
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:يا رب": 21
+          },
+          "firstUse": [
+            "c:يا رب"
+          ],
+          "custom": [
+            "يا رب"
+          ],
+          "history": {},
+          "resets": {}
+        },
+        "storageWrites": 1,
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":21},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "reload": {
+          "sameState": true,
+          "storageWrites": 0
+        }
+      }
+    },
+    {
+      "name": "another tab stores an already canonical value between the reads: it is taken (30) and left exactly as stored",
+      "input": {
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":10,\"c:يَا رَبّ\":2},\"firstUse\":[\"c:يا رب\",\"c:يَا رَبّ\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "otherTabStoresAfterFirstRead": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":30},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}"
+      },
+      "expected": {
+        "state": {
+          "date": "2026-10-04",
+          "selected": "subhan",
+          "target": 33,
+          "counts": {
+            "c:يا رب": 30
+          },
+          "firstUse": [
+            "c:يا رب"
+          ],
+          "custom": [
+            "يا رب"
+          ],
+          "history": {},
+          "resets": {}
+        },
+        "storageWrites": 0,
+        "stored": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"c:يا رب\":30},\"firstUse\":[\"c:يا رب\"],\"custom\":[\"يا رب\"],\"history\":{},\"resets\":{}}",
+        "reload": {
+          "sameState": true,
+          "storageWrites": 0
+        }
+      }
+    }
+  ]
+}

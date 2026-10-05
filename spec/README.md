@@ -51,6 +51,7 @@ The output is byte-identical on every run, whatever the host time zone. Regenera
 | `sessions/fixtures/completion-sync.json` | `syncCompletionState`, `setManualCompletion` | `now`, `state`, `operation` | `returned` (sync only, else `null`), resulting `state` |
 | `sessions/fixtures/scoped-reset.json` | `resetDayProgress` / `resetWeek` / `resetEverything`, `hasResettableState` | `now`, `timeZone`, `scope` (`day`/`week`/`everything`), `state` | `hasResettableStateBefore`, `deletedHistoryDates` (week), resulting `state` with the reset epochs each scope records |
 | `sessions/fixtures/tasbih-load-state.json` | `loadTasbihState` (`normalizeTasbihState`, phrase-key migration, rollover) | `now`, `timeZone`, `storage` (`athkar-tasbih-v1` raw string) | resulting `state` (`{date, selected, target, counts, firstUse, custom, history, resets}`), and `reloaded`: the same load on the saved result, equal to `state` |
+| `sessions/fixtures/tasbih-load-migration.json` | `loadTasbihState` | a stored `athkar-tasbih-v1` with aliases, optionally another tab's write between this tab's reads, or a write-ahead record holding the key → the loaded state, the writes made, the stored value after, and a second load (once only) |
 | `reminders/fixtures/next-reminder-time.json` | `nextReminderTime`, `scheduleReminders`, `prayerTimesForDate` | `now`, `timeZone`, `preferences` (the `athkar-reminders-v2` shape), `state`, `notificationPermission` | `todaySchedule`, per period `nextReminderTime`, and per period `scheduled: {delayMs, fireAt}` or `null` |
 
 ### Reminder notes

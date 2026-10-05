@@ -6277,19 +6277,33 @@
     }
 
     // The startup load: a read that throws starts the session in memory mode with the defaults. A stored value with
-    // aliases (canonicalTasbihDays) is saved back in its canonical form, once.
+    // aliases (canonicalTasbihDays) is saved back in its canonical form, once, and only over the very string it was
+    // computed from: if another tab stored something else meanwhile, that newer value is taken instead (and
+    // canonicalised the same way), never overwritten by a stale form.
     function loadTasbihState() {
-      const stored = readTasbihState();
-      if (!stored) {
+      let raw;
+      try {
+        raw = localStorage.getItem(tasbihStorageKey);
+      } catch (_) {
         tasbihStorageWorks = false;
         return emptyTasbihState();
       }
-      try {
-        const raw = localStorage.getItem(tasbihStorageKey);
+      for (let attempt = 0; ; attempt += 1) {
+        const stored = parseStoredTasbihState(raw);
         const canonical = JSON.stringify(stored);
-        if (raw !== null && raw !== canonical && !journalHolds(tasbihStorageKey)) localStorage.setItem(tasbihStorageKey, canonical);
-      } catch (_) {}
-      return stored;
+        if (raw === null || raw === canonical || journalHolds(tasbihStorageKey) || attempt >= 8) return stored;
+        let current;
+        try {
+          current = localStorage.getItem(tasbihStorageKey);
+        } catch (_) {
+          return stored;
+        }
+        if (current === raw) {
+          try { localStorage.setItem(tasbihStorageKey, canonical); } catch (_) {}
+          return stored;
+        }
+        raw = current;
+      }
     }
 
     function saveTasbihState() {
