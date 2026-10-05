@@ -36,7 +36,7 @@ function lineIndex(predicate, what) {
 
 // Top-level declarations are indented four spaces; a function ends at the first `    }` line.
 function extractFunction(name) {
-  const start = lineIndex(line => line.startsWith(`    function ${name}(`), `function ${name}`);
+  const start = lineIndex(line => line.startsWith(`    function ${name}(`) || line.startsWith(`    async function ${name}(`), `function ${name}`);
   for (let end = start + 1; end < lines.length; end += 1) {
     if (lines[end] === "    }") return lines.slice(start, end + 1).join("\n");
   }
@@ -62,7 +62,32 @@ const constants = [
   "legacyRemindersStorageKey", "longDhikrThreshold", "prayerCalculationMethods", "asrShadowFactors",
   "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices",
   "tasbihStorageKey", "tasbihPresets", "tasbihDefaultTarget", "suwarHistoryDays", "tasbihPresetById",
-  "tasbihMaxTarget", "tasbihMaxCount", "tasbihMaxCustom", "tasbihMaxPhraseLength"
+  "tasbihMaxTarget", "tasbihMaxCount", "tasbihMaxCustom", "tasbihMaxPhraseLength",
+  // reset epochs and the transfer (spec/transfer/transfer-v1.md)
+  "suwarById", "hapticsStorageKey", "textSizeStorageKey", "lineSpacingStorageKey", "longOrderStorageKey",
+  "longOrderPromptStorageKey", "resetEpochDays", "backupDatePattern", "backupInstantPattern", "transferVersion",
+  "transferApp", "transferMaxTextLength", "transferMaxInflatedBytes", "transferMaxFrames", "transferFrameChunk",
+  "transferBase45", "transferFramePattern", "transferItemIdPattern", "transferSlugPattern", "transferTimeZonePattern",
+  "transferForbiddenKeys", "transferStoreKeys", "transferSettingKeys"
+];
+
+const transferFunctions = [
+  "transferSupported", "base45Encode", "base45Decode", "transferChecksum", "transferFrames", "transferTextCode",
+  "transferMessageId", "readTransferStream", "deflateTransferBytes", "inflateTransferBytes", "parseTransferFrame",
+  "decodeTransferPayload", "decodeTransfer", "decodeTransferFrames", "decodeTransferFile", "validateTransferValue",
+  "transferReject", "transferCheck", "transferIsObject", "transferFields", "transferEntries", "transferInstant",
+  "transferPhraseIsValid", "transferTasbihKeyIsValid", "transferResets", "validateTransferEnvelope",
+  "validateTransferContainer", "transferResetsFor", "buildTransferContainer", "encodeTransfer", "readTransferStorage",
+  "transferLocalFromStorage", "readTransferLocal", "earliestInstant", "maxCounts", "laterResets", "transferWinner",
+  "transferIncomingProgress", "transferIncomingSuwar", "transferIncomingTasbih", "transferResetsBefore",
+  "transferPeriodUnit", "mergeTransferProgress", "transferSuraUnit", "mergeTransferSuwar", "mergeTransferTasbih",
+  "mergeTransferSettings", "mergeTransfer", "transferUnitEmpty", "transferUnitCovers", "planTransfer", "applyTransfer",
+  "showStoredProgressState", "showStoredSuwarState", "showStoredTasbihState",
+  // the envelope (buildBackup) and the stores the transfer reads
+  "backupDate", "backupInstant", "finiteCounts", "backupHistory", "buildBackup", "hasAnsweredLongOrderPrompt",
+  "ensureCurrentDay", "loadReminderPreferences", "parseStoredState", "normalizeSuwarState", "suraIsComplete",
+  "rollSuwarStateToDate", "parseStoredSuwarState", "loadSuwarState", "parseStoredTasbihState", "resetCutoff",
+  "normalizeResets", "markReset", "resetEpoch"
 ];
 
 const functions = [
@@ -100,6 +125,19 @@ const stubs = `
     function showReminder(period) { __firedReminders.push(period); }
     // Stands in for the confirm dialog: the user presses the confirm button.
     function openConfirmation(title, copy, callback) { callback(); }
+    // The transfer's UI collaborators (applyTransfer refreshes this tab; buildBackup reads the shown preferences).
+    const root = { dataset: { theme: "system", textSize: "medium", lineSpacing: "comfortable" } };
+    const tasbihLabelDialog = { open: false };
+    const sessionReset = { disabled: false };
+    const hapticsToggle = { checked: true };
+    const longOrderToggle = { checked: false };
+    function refreshTasbihPhraseSheet() {}
+    function renderTasbih() {}
+    function syncHapticArm() {}
+    function updateReminderControls() {}
+    function applyTheme(value) { root.dataset.theme = value; }
+    function applyTextSize(value) { root.dataset.textSize = value; }
+    function applyLineSpacing(value) { root.dataset.lineSpacing = value; }
 `;
 
 const harnessSource = `
@@ -112,9 +150,10 @@ let longAdhkarLast = false;
 let suwarState = emptySuwarState("2000-01-01");
 let tasbihState = emptyTasbihState("2000-01-01");
 let tasbihStorageWorks = true;
+let hapticsEnabled = true;
 let activePeriod = "morning";
 ${stubs}
-${functions.map(extractFunction).join("\n\n")}
+${[...functions, ...transferFunctions].map(extractFunction).join("\n\n")}
 globalThis.__api = {
   realCollections: { morning: collections.morning, evening: collections.evening },
   setCollections(value) { collections.morning = value.morning; collections.evening = value.evening; },
@@ -122,10 +161,14 @@ globalThis.__api = {
   setState(value) { state = value; },
   setReminderPreferences(value) { reminderPreferences = value; },
   setLongAdhkarLast(value) { longAdhkarLast = value; },
+  getStores() { return { state, suwarState, tasbihState }; },
+  setStores(value) { state = value.state; suwarState = value.suwarState; tasbihState = value.tasbihState; },
+  setTasbihStorageWorks(value) { tasbihStorageWorks = value; },
+  setPreferences(value) { Object.assign(root.dataset, value.dataset); hapticsEnabled = value.haptics; },
   longDhikrThreshold,
   prayerCalculationMethods,
   asrShadowFactors,
-  fns: { ${functions.join(", ")} }
+  fns: { ${[...functions, ...transferFunctions].join(", ")} }
 };
 `;
 
@@ -134,20 +177,34 @@ globalThis.__api = {
 // ---------------------------------------------------------------------------------------------------
 
 const storage = new Map();
+// Fault injection for applyTransfer's storage rules: `read` makes getItem throw; `writesLeft` lets that many setItem
+// calls succeed, fails the next one once (as a full quota would), and then lets writes through again (null: never).
+const storageFault = { read: false, writesLeft: null };
 const timers = [];
 const firedReminders = [];
 const sandbox = {
   console,
   localStorage: {
-    getItem: key => (storage.has(key) ? storage.get(key) : null),
-    setItem: (key, value) => { storage.set(key, String(value)); },
+    getItem: key => {
+      if (storageFault.read) throw new Error("storage read fault");
+      return storage.has(key) ? storage.get(key) : null;
+    },
+    setItem: (key, value) => {
+      if (storageFault.writesLeft !== null && storageFault.writesLeft-- <= 0) {
+        storageFault.writesLeft = null;
+        throw new Error("storage write fault");
+      }
+      storage.set(key, String(value));
+    },
     removeItem: key => { storage.delete(key); }
   },
   navigator: { serviceWorker: {} },
   Notification: { permission: "granted" },
   setTimeout: (callback, delay) => { timers.push({ callback, delay }); return timers.length; },
   clearTimeout: () => {},
-  __firedReminders: firedReminders
+  __firedReminders: firedReminders,
+  // The transfer codec's platform APIs (CompressionStream exists from iOS/Safari 16.4).
+  CompressionStream, DecompressionStream, Blob, TextEncoder, TextDecoder, crypto
 };
 sandbox.window = sandbox;
 const context = vm.createContext(sandbox);
@@ -230,6 +287,9 @@ function prepare(input) {
   for (const [key, value] of Object.entries(input.storage ?? {})) storage.set(key, value);
   timers.length = 0;
   firedReminders.length = 0;
+  storageFault.read = false;
+  storageFault.writesLeft = null;
+  api.setTasbihStorageWorks(true);
   fn.invalidateDecks();
 }
 
@@ -1089,6 +1149,595 @@ function tasbihLoadCases() {
   ];
 }
 
+// ---------------------------------------------------------------------------------------------------
+// Transfer fixtures (spec/transfer/transfer-v1.md)
+// ---------------------------------------------------------------------------------------------------
+
+const TRANSFER_TODAY = "2026-10-04";
+const transferNowMs = localMs(SESSION_ZONE, 2026, 10, 4, 9, 0);
+const TRANSFER_NOW = new Date(transferNowMs).toISOString();
+const transferDefaults = { timeZone: SESSION_ZONE, now: TRANSFER_NOW, nowLocal: localIso(SESSION_ZONE, transferNowMs) };
+const morningIds = realCollections.morning.filter(item => !item.review).map(item => item.id);
+const eveningIds = realCollections.evening.filter(item => !item.review).map(item => item.id);
+
+function prepareTransfer() {
+  prepare({ ...sessionDefaults, now: TRANSFER_NOW });
+}
+
+function adler32(bytes) {
+  let low = 1;
+  let high = 0;
+  for (const byte of bytes) {
+    low = (low + byte) % 65521;
+    high = (high + low) % 65521;
+  }
+  return ((high << 16) | low) >>> 0;
+}
+
+function zlibTrailer(out, sum) {
+  out.push(sum >>> 24, (sum >>> 16) & 255, (sum >>> 8) & 255, sum & 255);
+  return Uint8Array.from(out);
+}
+
+// A zlib stream of stored (uncompressed) deflate blocks: valid input to any inflater and byte-identical everywhere,
+// unlike a compressor's output. `adler` overrides the checksum; `trailing` appends bytes after the stream.
+function storedZlib(bytes, { adler = adler32(bytes), trailing = [] } = {}) {
+  const out = [0x78, 0x01];
+  for (let start = 0; start === 0 || start < bytes.length; start += 65535) {
+    const block = bytes.subarray(start, start + 65535);
+    out.push(start + 65535 >= bytes.length ? 1 : 0, block.length & 255, block.length >>> 8, ~block.length & 255, (~block.length >>> 8) & 255);
+    for (const byte of block) out.push(byte);
+  }
+  const result = zlibTrailer(out, adler);
+  return Uint8Array.from([...result, ...trailing]);
+}
+
+// A deflate bomb: one fixed-Huffman block, a literal 0 and then (length 258, distance 1) copies until `size` zeros.
+function bombZlib(size) {
+  const out = [0x78, 0x01];
+  let acc = 0;
+  let used = 0;
+  const bit = value => {
+    acc |= value << used;
+    used += 1;
+    if (used === 8) {
+      out.push(acc);
+      acc = 0;
+      used = 0;
+    }
+  };
+  const huffman = (code, length) => { for (let i = length - 1; i >= 0; i -= 1) bit((code >> i) & 1); };
+  bit(1); bit(1); bit(0); // BFINAL, BTYPE = 01 (fixed Huffman), LSB first
+  huffman(0x30, 8); // literal 0
+  let produced = 1;
+  while (produced + 258 <= size) {
+    huffman(0xC5, 8); // length code 285 (258)
+    huffman(0, 5); // distance code 0 (1)
+    produced += 258;
+  }
+  huffman(0, 7); // end of block
+  if (used) out.push(acc);
+  return zlibTrailer(out, adler32(new Uint8Array(produced)));
+}
+
+// A text-form code around `bytes` (already a zlib stream), as the PWA writes it.
+function codeOf(zlib, { msg = "TEST", app = "A", index = 1, count = 1, textForm = true } = {}) {
+  const payload = fn.base45Encode(zlib);
+  const body = `AQ1:${app}:${msg}:${index}:${count}:${payload}`;
+  const frame = `${body}:${fn.transferChecksum(body)}`;
+  return textForm ? frame.replaceAll(" ", "=") : frame;
+}
+
+function jsonZlib(value) {
+  return storedZlib(new TextEncoder().encode(typeof value === "string" ? value : JSON.stringify(value)));
+}
+
+function storageMap() {
+  return Object.fromEntries([...storage.entries()].sort(([a], [b]) => a.localeCompare(b)));
+}
+
+function loadStorage(map) {
+  storage.clear();
+  for (const [key, value] of Object.entries(map)) if (value !== null) storage.set(key, value);
+}
+
+// A device: raw localStorage values for the stores (each dated today unless overridden) and any setting keys.
+function device({ progress = {}, suwar = {}, tasbih = {}, settings = {} } = {}) {
+  return {
+    "athkar-progress-v2": JSON.stringify({
+      date: TRANSFER_TODAY, progress: { morning: {}, evening: {} }, targets: { morning: {}, evening: {} },
+      completedAt: { morning: null, evening: null }, manualCompletion: { morning: false, evening: false }, history: [], resets: {},
+      ...progress
+    }),
+    "athkar-suwar-v1": JSON.stringify({
+      date: suwar.date ?? TRANSFER_TODAY,
+      selected: suwar.selected ?? "kahf",
+      read: { ...Object.fromEntries(suwarPack.suwar.map(sura => [sura.id, {}])), ...suwar.read },
+      completedAt: { ...Object.fromEntries(suwarPack.suwar.map(sura => [sura.id, null])), ...suwar.completedAt },
+      history: suwar.history ?? {},
+      resets: suwar.resets ?? {}
+    }),
+    "athkar-tasbih-v1": JSON.stringify({ ...tasbihStored(), resets: {}, ...tasbih }),
+    ...settings
+  };
+}
+
+function localOf(map) {
+  loadStorage(map);
+  return fn.transferLocalFromStorage(fn.readTransferStorage());
+}
+
+// What encodeTransfer would put in the code for a device (before compression), checked by the PWA's own validator.
+function containerOf(map) {
+  const local = localOf(map);
+  api.setStores({ state: local.progress, suwarState: local.suwar, tasbihState: local.tasbih });
+  api.setReminderPreferences(fn.loadReminderPreferences());
+  api.setLongAdhkarLast(map["athkar-long-order-v1"] === "last");
+  api.setPreferences({
+    dataset: { theme: map["athkar-theme"] ?? "system", textSize: map["athkar-reading-text-size"] ?? "medium", lineSpacing: map["athkar-line-spacing"] ?? "comfortable" },
+    haptics: map["athkar-haptics"] !== "off"
+  });
+  const container = fn.buildTransferContainer(fn.buildBackup(false), local.progress, local.suwar, local.tasbih);
+  const checked = plain(fn.validateTransferValue(container, "code"));
+  if (!checked.ok) throw new Error(`the encoder's container is rejected: ${JSON.stringify(checked)}`);
+  return plain(container);
+}
+
+function planOf(map, decoded) {
+  return plain(fn.planTransfer(localOf(map), intoContext(decoded), TRANSFER_NOW));
+}
+
+function withWrites(map, plan) {
+  const next = { ...map };
+  for (const [key, value] of Object.entries(plan.writes)) {
+    if (value === null) delete next[key];
+    else next[key] = value;
+  }
+  return Object.fromEntries(Object.entries(next).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+// `local` after receiving `incoming`'s code.
+function received(local, incoming) {
+  return withWrites(local, planOf(local, { ok: true, source: "code", container: containerOf(incoming) }));
+}
+
+function sortDeep(value) {
+  if (Array.isArray(value)) return value.map(sortDeep);
+  if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map(key => [key, sortDeep(value[key])]));
+  return value;
+}
+
+// The part of a device's stores both sides of a transfer must agree on: everything except what stays the receiver's
+// (targets, the selected sura and phrase, the tasbih target, the order and spelling of saved phrases, first-use order).
+function convergent(map) {
+  const local = plain(localOf(map));
+  const key = value => (value.startsWith("c:") ? `c:${fn.tasbihMatchKey(value.slice(2))}` : value);
+  const rekey = counts => Object.fromEntries(Object.entries(counts).map(([name, count]) => [key(name), count]));
+  const resetKey = name => (name.length > 10 ? `${name.slice(0, 11)}${key(name.slice(11))}` : name);
+  const { targets, ...progress } = local.progress;
+  const { selected, ...suwar } = local.suwar;
+  return JSON.stringify(sortDeep({
+    progress,
+    suwar,
+    tasbih: {
+      counts: rekey(local.tasbih.counts),
+      history: Object.fromEntries(Object.entries(local.tasbih.history).map(([day, counts]) => [day, rekey(counts)])),
+      resets: Object.fromEntries(Object.entries(local.tasbih.resets).map(([name, at]) => [resetKey(name), at])),
+      custom: local.tasbih.custom.map(phrase => fn.tasbihMatchKey(phrase)).sort()
+    }
+  }));
+}
+
+const at = (day, time) => `${day}T${time}:00.000Z`;
+const YESTERDAY = "2026-10-03";
+const TWO_DAYS_AGO = "2026-10-02";
+const resetWindowDays = 31;
+// `count` local dates counting back from `from` days before TRANSFER_TODAY.
+const daysBack = (count, from = 1) => Array.from({ length: count }, (_, i) => new Date(Date.UTC(2026, 9, 4 - from - i)).toISOString().slice(0, 10));
+const suwarPack = JSON.parse(readFileSync(join(root, "content/suwar.v1.json"), "utf8"));
+const pagesOf = id => suwarPack.suwar.find(sura => sura.id === id).pages.map(page => page.id);
+const readPages = (id, pages) => Object.fromEntries(pages.map(page => [page, true]));
+const allMorning = Object.fromEntries(realCollections.morning.filter(item => !item.review).map(item => [item.id, targetOf(item)]));
+const allButLastMorning = Object.fromEntries(Object.entries(allMorning).slice(0, -1));
+const lastMorningOnly = Object.fromEntries(Object.entries(allMorning).slice(-1));
+
+// `local` builds its container on a clock moved to another day (a code from yesterday, or from a device ahead).
+function containerOn(map, y, m, d) {
+  setNow(localMs(SESSION_ZONE, y, m, d, 9, 0));
+  const container = containerOf(map);
+  setNow(transferNowMs);
+  return container;
+}
+
+// ---- codec ----
+
+async function decodeCase(name, input, run) {
+  prepareTransfer();
+  const before = storageMap();
+  const result = plain(await run());
+  if (JSON.stringify(storageMap()) !== JSON.stringify(before)) throw new Error(`${name}: decoding touched storage`);
+  return { name, input, result };
+}
+
+async function transferCodecFixture() {
+  prepareTransfer();
+  const hex = bytes => Buffer.from(bytes).toString("hex");
+  const base45 = ["AB", "Hello!!", "base-45", "ietf!"].map(text => ({ text, bytes: hex(Buffer.from(text)), encoded: fn.base45Encode(Uint8Array.from(Buffer.from(text))) }));
+  const base45Invalid = ["GGW", "ABCD", ":::", "aBC", "BB"].map(text => {
+    const bytes = fn.base45Decode(text);
+    return { text, bytes: bytes ? hex(bytes) : null };
+  });
+  const checksum = ["", "AQ1:A:TEST:1:1:BB8", "AQ1:A:TEST:1:1:%69 VD92EX0"].map(text => ({ text, checksum: fn.transferChecksum(text) }));
+  const payload = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:".repeat(45).slice(0, 2000);
+  const frames = plain(fn.transferFrames(payload, "TEST"));
+
+  const typical = device({
+    progress: {
+      progress: { morning: { [morningIds[0]]: 1, [morningIds[1]]: 1 }, evening: {} },
+      history: [historyEntry(YESTERDAY, true, true, at(YESTERDAY, "03:00"), at(YESTERDAY, "15:00"))],
+      resets: { [`${TRANSFER_TODAY}|morning`]: at(TRANSFER_TODAY, "04:00") }
+    },
+    suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(0, 2)) }, history: { [YESTERDAY]: { kahf: at(YESTERDAY, "18:00") } } },
+    tasbih: { custom: ["يا حي يا قيوم"], counts: { subhan: 33, "c:يا حي يا قيوم": 7 }, firstUse: ["subhan", "c:يا حي يا قيوم"], history: { [YESTERDAY]: { hamd: 100 } } }
+  });
+  const container = containerOf(typical);
+  const valid = jsonZlib(container);
+  const code = codeOf(valid);
+  const ok = decoded => (decoded.ok && JSON.stringify(decoded.container) === JSON.stringify(container)
+    ? { ok: true, source: decoded.source, container: "equals input container" } : decoded);
+  const decodeText = text => async () => {
+    const decoded = plain(await fn.decodeTransfer(text));
+    return decoded.ok ? ok(decoded) : decoded;
+  };
+  const decodeFrames = texts => async () => {
+    const decoded = plain(await fn.decodeTransferFrames(intoContext(texts)));
+    return decoded.ok ? ok(decoded) : decoded;
+  };
+  const decodeFile = text => async () => {
+    const decoded = plain(await fn.decodeTransferFile(text));
+    return decoded.ok && decoded.source === "code" ? ok(decoded) : decoded;
+  };
+  const mutated = change => {
+    const copy = structuredClone(container);
+    change(copy);
+    return codeOf(jsonZlib(copy));
+  };
+  const textCode = text => codeOf(jsonZlib(text));
+  const reframe = body => `${body}:${fn.transferChecksum(body)}`.replaceAll(" ", "=");
+  const flipped = `${code.slice(0, 15)}${code[15] === "0" ? "1" : "0"}${code.slice(16)}`;
+  const payloadOf = zlib => fn.base45Encode(zlib);
+  const qrFrames = plain(fn.transferFrames(payloadOf(valid), "QRQR", 300));
+  const otherFrames = plain(fn.transferFrames(payloadOf(valid), "ZZZZ", 300));
+  const tooManyFrames = reframe(`AQ1:A:TEST:1:65:${payloadOf(valid)}`);
+  const wrapped = `  \n${code.match(/.{1,60}/g).join("\r\n")}\n `;
+  const json = JSON.stringify(container);
+  const progressPath = `"progress":{"morning":{"${morningIds[0]}":1`;
+  if (!json.includes(progressPath)) throw new Error("progress path not found for the 1e400 case");
+  const eightHistory = Array.from({ length: 8 }, (_, i) => historyEntry(`2026-09-${String(30 - i).padStart(2, "0")}`, true, false, null, null));
+  const nineCustom = Array.from({ length: 9 }, (_, i) => `عبارة ${i + 1}`);
+  const athkarExample = readFileSync(join(root, "spec/backup/examples/athkar-pwa.athkarbackup"), "utf8");
+  const ruqyahExample = readFileSync(join(root, "spec/backup/examples/ruqyah-pwa.athkarbackup"), "utf8");
+  // Deep enough to overflow a recursive validator, small enough for a stored-block code under the 64 KiB text cap.
+  const deep = 10000;
+
+  const decode = [
+    await decodeCase("text form decodes to the container it was built from", { code }, decodeText(code)),
+    await decodeCase("the same frame with spaces (as a QR carries it) is accepted", { code: code.replaceAll("=", " ") }, decodeText(code.replaceAll("=", " "))),
+    await decodeCase("line breaks and surrounding whitespace added by a carrier are ignored", { code: wrapped }, decodeText(wrapped)),
+    await decodeCase("QR frames in any order, with a repeat, assemble", { frames: [qrFrames[2], qrFrames[0], qrFrames[2], qrFrames[1], ...qrFrames.slice(3)] },
+      decodeFrames([qrFrames[2], qrFrames[0], qrFrames[2], qrFrames[1], ...qrFrames.slice(3)])),
+    await decodeCase("a missing QR frame: incomplete", { frames: qrFrames.slice(1) }, decodeFrames(qrFrames.slice(1))),
+    await decodeCase("frames of two codes: mixed", { frames: [qrFrames[0], ...otherFrames.slice(1)] }, decodeFrames([qrFrames[0], ...otherFrames.slice(1)])),
+    await decodeCase("one QR frame pasted as text: one-frame", { code: qrFrames[0] }, decodeText(qrFrames[0])),
+    await decodeCase("empty text: not-code", { code: "" }, decodeText("")),
+    await decodeCase("other text: not-code", { code: "hello" }, decodeText("hello")),
+    await decodeCase("lowercase prefix: not-code", { code: code.replace("AQ1", "aq1") }, decodeText(code.replace("AQ1", "aq1"))),
+    await decodeCase("over 64 KiB of text: too-long", { code: `AQ1:${"A".repeat(65533)}` }, decodeText(`AQ1:${"A".repeat(65533)}`)),
+    await decodeCase("AQ2: newer", { code: code.replace("AQ1", "AQ2") }, decodeText(code.replace("AQ1", "AQ2"))),
+    await decodeCase("a ruqyah code (R) with a valid checksum: wrong-app", { code: codeOf(valid, { app: "R" }) }, decodeText(codeOf(valid, { app: "R" }))),
+    await decodeCase("one changed character: corrupt (checksum)", { code: flipped }, decodeText(flipped)),
+    await decodeCase("text cut short: not-code", { code: code.slice(0, -5) }, decodeText(code.slice(0, -5))),
+    await decodeCase("payload cut short, checksum recomputed: corrupt (inflate)", { code: reframe(`AQ1:A:TEST:1:1:${payloadOf(valid).slice(0, -30)}`) },
+      decodeText(reframe(`AQ1:A:TEST:1:1:${payloadOf(valid).slice(0, -30)}`))),
+    await decodeCase("base45 group above 65535: corrupt (base45)", { code: reframe(`AQ1:A:TEST:1:1:GGW${payloadOf(valid)}`) },
+      decodeText(reframe(`AQ1:A:TEST:1:1:GGW${payloadOf(valid)}`))),
+    await decodeCase("one dangling base45 character: corrupt (base45)", { code: reframe(`AQ1:A:TEST:1:1:${payloadOf(valid)}A`) },
+      decodeText(reframe(`AQ1:A:TEST:1:1:${payloadOf(valid)}A`))),
+    await decodeCase("zlib Adler-32 mismatch: corrupt (inflate)", { code: codeOf(storedZlib(new TextEncoder().encode(json), { adler: 1 })) },
+      decodeText(codeOf(storedZlib(new TextEncoder().encode(json), { adler: 1 })))),
+    await decodeCase("bytes after the zlib stream: corrupt (inflate)", { code: codeOf(storedZlib(new TextEncoder().encode(json), { trailing: [0, 0] })) },
+      decodeText(codeOf(storedZlib(new TextEncoder().encode(json), { trailing: [0, 0] })))),
+    await decodeCase("not UTF-8: corrupt (json)", { code: codeOf(storedZlib(Uint8Array.from([0x7B, 0xFF, 0xFE, 0x7D]))) },
+      decodeText(codeOf(storedZlib(Uint8Array.from([0x7B, 0xFF, 0xFE, 0x7D]))))),
+    await decodeCase("not JSON: corrupt (json)", { code: textCode("not json") }, decodeText(textCode("not json"))),
+    await decodeCase("a deflate bomb (300 000 zero bytes from 2 KB): corrupt (inflate-cap)", { code: codeOf(bombZlib(300000)) }, decodeText(codeOf(bombZlib(300000)))),
+    await decodeCase("65 frames: too-long", { code: tooManyFrames }, decodeText(tooManyFrames)),
+    await decodeCase("frame index above the count: not-code", { code: reframe(`AQ1:A:TEST:3:2:${payloadOf(valid)}`) }, decodeText(reframe(`AQ1:A:TEST:3:2:${payloadOf(valid)}`))),
+    await decodeCase("unknown top-level key", { code: mutated(c => { c.extra = 1; }) }, decodeText(mutated(c => { c.extra = 1; }))),
+    await decodeCase("__proto__ key", { code: textCode(`{"__proto__":{"polluted":true},${json.slice(1)}`) }, decodeText(textCode(`{"__proto__":{"polluted":true},${json.slice(1)}`))),
+    await decodeCase("unknown nested key", { code: mutated(c => { c.envelope.meta.extra = 1; }) }, decodeText(mutated(c => { c.envelope.meta.extra = 1; }))),
+    await decodeCase("transfer 2: newer", { code: mutated(c => { c.transfer = 2; }) }, decodeText(mutated(c => { c.transfer = 2; }))),
+    await decodeCase("envelope format 2: newer", { code: mutated(c => { c.envelope.meta.format = 2; }) }, decodeText(mutated(c => { c.envelope.meta.format = 2; }))),
+    await decodeCase("app ruqyah-pwa: wrong-app", { code: mutated(c => { c.app = "ruqyah-pwa"; }) }, decodeText(mutated(c => { c.app = "ruqyah-pwa"; }))),
+    await decodeCase("history date 2026-02-30", { code: mutated(c => { c.envelope.adhkar.history[0].date = "2026-02-30"; }) }, decodeText(mutated(c => { c.envelope.adhkar.history[0].date = "2026-02-30"; }))),
+    await decodeCase("instant at 24:00", { code: mutated(c => { c.envelope.adhkar.history[0].morningAt = "2026-10-03T24:00:00Z"; }) }, decodeText(mutated(c => { c.envelope.adhkar.history[0].morningAt = "2026-10-03T24:00:00Z"; }))),
+    await decodeCase("history not newest first", { code: mutated(c => { c.envelope.adhkar.history.push(historyEntry("2026-10-03", false, true, null, null)); }) },
+      decodeText(mutated(c => { c.envelope.adhkar.history.push(historyEntry("2026-10-03", false, true, null, null)); }))),
+    await decodeCase("eight history days", { code: mutated(c => { c.envelope.adhkar.history = eightHistory; }) }, decodeText(mutated(c => { c.envelope.adhkar.history = eightHistory; }))),
+    await decodeCase("negative count", { code: mutated(c => { c.envelope.adhkar.today.progress.morning[morningIds[0]] = -1; }) }, decodeText(mutated(c => { c.envelope.adhkar.today.progress.morning[morningIds[0]] = -1; }))),
+    await decodeCase("count 1e400 (Infinity)", { code: textCode(json.replace(progressPath, `"progress":{"morning":{"${morningIds[0]}":1e400`)) },
+      decodeText(textCode(json.replace(progressPath, `"progress":{"morning":{"${morningIds[0]}":1e400`)))),
+    await decodeCase("count above 2^53 - 1", { code: textCode(json.replace(progressPath, `"progress":{"morning":{"${morningIds[0]}":9007199254740993`)) },
+      decodeText(textCode(json.replace(progressPath, `"progress":{"morning":{"${morningIds[0]}":9007199254740993`)))),
+    await decodeCase("count as a string", { code: mutated(c => { c.envelope.adhkar.today.progress.morning[morningIds[0]] = "1"; }) }, decodeText(mutated(c => { c.envelope.adhkar.today.progress.morning[morningIds[0]] = "1"; }))),
+    await decodeCase("item id constructor", { code: mutated(c => { c.envelope.adhkar.today.progress.morning.constructor = 1; }) }, decodeText(mutated(c => { c.envelope.adhkar.today.progress.morning.constructor = 1; }))),
+    await decodeCase("location in a code", { code: mutated(c => { c.envelope.reminders.location = { latitude: 21.42, longitude: 39.83, updatedAt: null }; }) },
+      decodeText(mutated(c => { c.envelope.reminders.location = { latitude: 21.42, longitude: 39.83, updatedAt: null }; }))),
+    await decodeCase("timeZone with a path", { code: mutated(c => { c.envelope.meta.timeZone = "../etc"; }) }, decodeText(mutated(c => { c.envelope.meta.timeZone = "../etc"; }))),
+    await decodeCase("suwar dated another day", { code: mutated(c => { c.athkar.suwar.date = YESTERDAY; }) }, decodeText(mutated(c => { c.athkar.suwar.date = YESTERDAY; }))),
+    await decodeCase("suwar read mark false", { code: mutated(c => { c.athkar.suwar.read.kahf = { [pagesOf("kahf")[0]]: false }; }) }, decodeText(mutated(c => { c.athkar.suwar.read.kahf = { [pagesOf("kahf")[0]]: false }; }))),
+    await decodeCase("tasbih count 100000", { code: mutated(c => { c.athkar.tasbih.counts.subhan = 100000; }) }, decodeText(mutated(c => { c.athkar.tasbih.counts.subhan = 100000; }))),
+    await decodeCase("tasbih counts key __proto__", { code: textCode(json.replace('"counts":{"subhan"', '"counts":{"__proto__":5,"subhan"')) },
+      decodeText(textCode(json.replace('"counts":{"subhan"', '"counts":{"__proto__":5,"subhan"')))),
+    await decodeCase("nine saved phrases", { code: mutated(c => { c.athkar.tasbih.custom = nineCustom; }) }, decodeText(mutated(c => { c.athkar.tasbih.custom = nineCustom; }))),
+    await decodeCase("saved phrase with a control character", { code: mutated(c => { c.athkar.tasbih.custom = ["ذكر\u0001"]; }) }, decodeText(mutated(c => { c.athkar.tasbih.custom = ["ذكر\u0001"]; }))),
+    await decodeCase("firstUse not an array", { code: mutated(c => { c.athkar.tasbih.firstUse = "subhan"; }) }, decodeText(mutated(c => { c.athkar.tasbih.firstUse = "subhan"; }))),
+    await decodeCase("reset epoch older than the 31-day window", { code: mutated(c => { c.athkar.adhkar.resets["2026-09-03"] = at(TRANSFER_TODAY, "01:00"); }) },
+      decodeText(mutated(c => { c.athkar.adhkar.resets["2026-09-03"] = at(TRANSFER_TODAY, "01:00"); }))),
+    await decodeCase("reset epoch for a later day", { code: mutated(c => { c.athkar.adhkar.resets["2026-10-05"] = at(TRANSFER_TODAY, "01:00"); }) },
+      decodeText(mutated(c => { c.athkar.adhkar.resets["2026-10-05"] = at(TRANSFER_TODAY, "01:00"); }))),
+    await decodeCase("reset unit that is not a period", { code: mutated(c => { c.athkar.adhkar.resets[`${TRANSFER_TODAY}|noon`] = at(TRANSFER_TODAY, "01:00"); }) },
+      decodeText(mutated(c => { c.athkar.adhkar.resets[`${TRANSFER_TODAY}|noon`] = at(TRANSFER_TODAY, "01:00"); }))),
+    await decodeCase(`an array nested ${deep} deep in place of the envelope`, { code: textCode(`{"transfer":1,"app":"athkar-pwa","envelope":${"[".repeat(deep)}${"]".repeat(deep)},"athkar":null}`) },
+      decodeText(textCode(`{"transfer":1,"app":"athkar-pwa","envelope":${"[".repeat(deep)}${"]".repeat(deep)},"athkar":null}`))),
+    await decodeCase("file: a transfer code with a BOM and a final newline", { file: `\uFEFF${code}\n` }, decodeFile(`\uFEFF${code}\n`)),
+    await decodeCase("file: an athkar .athkarbackup (spec/backup/examples)", { file: athkarExample }, decodeFile(athkarExample)),
+    await decodeCase("file: a ruqyah .athkarbackup: wrong-app", { file: ruqyahExample }, decodeFile(ruqyahExample)),
+    await decodeCase("file: other JSON: corrupt", { file: '{"meta":{}}' }, decodeFile('{"meta":{}}')),
+    await decodeCase("file: other text: not-code", { file: "notes" }, decodeFile("notes"))
+  ];
+  // Every rejection names an error; a typo in a case (an unexpected success) fails generation.
+  for (const entry of decode) {
+    const expectOk = /decodes|accepted|ignored|assemble|BOM|athkar \.athkarbackup/.test(entry.name);
+    if (entry.result.ok !== expectOk) throw new Error(`decode case "${entry.name}" gave ${JSON.stringify(entry.result)}`);
+  }
+  return { container, typical, base45, base45Invalid, checksum, frames: { payloadLength: payload.length, msg: "TEST", frames }, decode };
+}
+
+// The largest athkar state the stores hold (plan §3 "worst"). `unitEpochs`: besides a day epoch on every day of the
+// window (as after «حذف كل شيء»), an epoch on every unit of every day, which no sequence of taps can exceed.
+function worstDevice(unitEpochs) {
+  const days = daysBack(7);
+  const window = daysBack(resetWindowDays, 0);
+  const custom = Array.from({ length: 8 }, (_, i) => `سبحان الله وبحمده سبحان الله العظيم عدد خلقه ورضا نفسه ${i + 1}`.slice(0, 60).trim());
+  const keys = [...["subhan", "hamd", "takbir", "tahlil", "istighfar", "subhan-bihamdih", "hawqala", "salawat"], ...custom.map(phrase => `c:${phrase}`)];
+  const full = Object.fromEntries(keys.map(key => [key, 99999]));
+  const everySura = Object.fromEntries(suwarPack.suwar.map(sura => [sura.id, at(TRANSFER_TODAY, "05:00")]));
+  const epochs = units => Object.fromEntries(window.flatMap(day => [[day, at(TRANSFER_TODAY, "01:00")],
+    ...(unitEpochs ? units.map(unit => [`${day}|${unit}`, at(TRANSFER_TODAY, "02:00")]) : [])]));
+  return device({
+    progress: {
+      progress: { morning: allMorning, evening: Object.fromEntries(realCollections.evening.filter(item => !item.review).map(item => [item.id, targetOf(item)])) },
+      completedAt: { morning: at(TRANSFER_TODAY, "03:00"), evening: at(TRANSFER_TODAY, "15:00") },
+      history: days.map(day => historyEntry(day, true, true, at(day, "03:00"), at(day, "15:00"))),
+      resets: epochs(["morning", "evening"])
+    },
+    suwar: {
+      read: Object.fromEntries(suwarPack.suwar.map(sura => [sura.id, readPages(sura.id, pagesOf(sura.id))])),
+      completedAt: everySura,
+      history: Object.fromEntries(days.map(day => [day, everySura])),
+      resets: epochs(suwarPack.suwar.map(sura => sura.id))
+    },
+    tasbih: { custom, counts: full, firstUse: keys, history: Object.fromEntries(days.map(day => [day, full])), resets: epochs(keys) }
+  });
+}
+
+// encodeTransfer itself (CompressionStream), then both decoders on its output. Sizes depend on the host's zlib, so
+// they are printed, not recorded.
+async function roundTripCase(name, map) {
+  prepareTransfer();
+  const container = containerOf(map);
+  const encoded = plain(await fn.encodeTransfer("RTRP"));
+  if (!encoded.ok || JSON.stringify(encoded.container) !== JSON.stringify(container)) throw new Error(`${name}: encodeTransfer built another container`);
+  const fromText = plain(await fn.decodeTransfer(encoded.code));
+  const fromFrames = plain(await fn.decodeTransferFrames(intoContext([...encoded.frames].reverse())));
+  for (const decoded of [fromText, fromFrames]) {
+    if (!decoded.ok || JSON.stringify(decoded.container) !== JSON.stringify(container)) throw new Error(`${name}: round trip failed: ${JSON.stringify(decoded).slice(0, 300)}`);
+  }
+  const jsonBytes = Buffer.byteLength(JSON.stringify(container));
+  const deflated = fn.base45Decode(fn.parseTransferFrame(encoded.code).chunk).length;
+  console.log(`transfer size, ${name}: JSON ${jsonBytes} B, deflate ${deflated} B, text code ${encoded.code.length} chars, ` +
+    `${encoded.frames.length} QR frame(s) of at most ${Math.max(...encoded.frames.map(frame => frame.length))} chars`);
+  return { name, input: { storage: map }, expected: { container, jsonBytes, roundTrip: { text: true, frames: true } } };
+}
+
+// ---- merge and plan ----
+
+const hist = historyEntry;
+
+function mergeScenarios() {
+  const tasbih = (counts, extra = {}) => ({ counts, firstUse: Object.keys(counts), ...extra });
+  const A = {
+    join: device({
+      progress: { progress: { morning: { [morningIds[0]]: 1, [morningIds[1]]: 1 }, evening: {} }, history: [hist(YESTERDAY, true, false, at(YESTERDAY, "03:00"), null)] },
+      suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(0, 4)) } },
+      tasbih: tasbih({ subhan: 10, hamd: 3 }, { history: { [YESTERDAY]: { subhan: 33 } } })
+    }),
+    joinOther: device({
+      progress: {
+        progress: { morning: { [morningIds[0]]: 2, [morningIds[2]]: 1 }, evening: { [eveningIds[0]]: 1 } },
+        history: [hist(YESTERDAY, true, true, at(YESTERDAY, "02:00"), at(YESTERDAY, "15:00")), hist(TWO_DAYS_AGO, true, false, at(TWO_DAYS_AGO, "03:00"), null)]
+      },
+      suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(2, 5)) }, history: { [YESTERDAY]: { kahf: at(YESTERDAY, "18:00") } } },
+      tasbih: tasbih({ subhan: 7, hamd: 9 }, { history: { [YESTERDAY]: { subhan: 20, hamd: 100 } } })
+    }),
+    completes: device({ progress: { progress: { morning: allButLastMorning, evening: {} } } }),
+    stale: device({ progress: { progress: { morning: allMorning, evening: {} }, completedAt: { morning: at(TRANSFER_TODAY, "03:00"), evening: null } }, tasbih: tasbih({ subhan: 70 }) }),
+    resetRecount: device({ progress: { resets: { [TRANSFER_TODAY]: at(TRANSFER_TODAY, "04:00") }, progress: { morning: { [morningIds[0]]: 1 }, evening: {} } }, tasbih: tasbih({ subhan: 5 }, { resets: { [TRANSFER_TODAY]: at(TRANSFER_TODAY, "04:00") } }) }),
+    tombstone: device({
+      progress: { resets: { [YESTERDAY]: at(TRANSFER_TODAY, "04:00"), [TWO_DAYS_AGO]: at(TRANSFER_TODAY, "04:00") } },
+      suwar: { resets: { [YESTERDAY]: at(TRANSFER_TODAY, "04:00") } },
+      tasbih: tasbih({}, { resets: { [YESTERDAY]: at(TRANSFER_TODAY, "04:00") } })
+    }),
+    history: device({
+      progress: { history: [hist(YESTERDAY, true, true, at(YESTERDAY, "03:00"), at(YESTERDAY, "15:00")), hist(TWO_DAYS_AGO, true, false, at(TWO_DAYS_AGO, "03:00"), null)] },
+      suwar: { history: { [YESTERDAY]: { kahf: at(YESTERDAY, "18:00") } } },
+      tasbih: tasbih({}, { history: { [YESTERDAY]: { hamd: 100 } } })
+    }),
+    cardReset: device({ progress: { resets: { [`${TRANSFER_TODAY}|morning`]: at(TRANSFER_TODAY, "04:00") }, progress: { morning: { [morningIds[0]]: 1 }, evening: {} } } }),
+    cardFull: device({ progress: { progress: { morning: { [morningIds[0]]: 1, [morningIds[1]]: 1, [morningIds[2]]: 1 }, evening: { [eveningIds[0]]: 1 } } } }),
+    suwarA: device({ suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(0, 4)), kahf: readPages("kahf", pagesOf("kahf").slice(0, 1)) }, resets: { [`${TRANSFER_TODAY}|kahf`]: at(TRANSFER_TODAY, "04:00") } } }),
+    suwarB: device({ suwar: { read: { mulk: readPages("mulk", pagesOf("mulk").slice(3)), kahf: readPages("kahf", pagesOf("kahf").slice(0, 3)) } } }),
+    phraseReset: device({ tasbih: tasbih({ hamd: 2, subhan: 10 }, { resets: { [`${TRANSFER_TODAY}|hamd`]: at(TRANSFER_TODAY, "04:00") } }) }),
+    phraseOther: device({ tasbih: tasbih({ hamd: 50, subhan: 40 }) }),
+    capLocal: device({ tasbih: tasbih({ "c:عبارة ١": 1 }, { custom: ["عبارة ١", "عبارة ٢", "عبارة ٣", "عبارة ٤", "عبارة ٥", "عبارة ٦"] }) }),
+    capIncoming: device({ tasbih: tasbih({ "c:ذكر أ": 4, "c:ذكر ب": 5, "c:ذكر ج": 6, "c:ذكر د": 7 }, { custom: ["ذكر أ", "ذكر ب", "ذكر ج", "ذكر د"], history: { [YESTERDAY]: { "c:ذكر د": 9 } } }) }),
+    settingsLocal: device({ settings: { "athkar-theme": "light", "athkar-reading-text-size": "medium" } }),
+    settingsIncoming: device({
+      settings: { "athkar-theme": "dark", "athkar-reading-text-size": "large", "athkar-line-spacing": "wide", "athkar-haptics": "off",
+        "athkar-long-order-v1": "last", "athkar-long-order-prompt-v1": "answered",
+        "athkar-reminders-v2": JSON.stringify({ morning: { enabled: true }, evening: { enabled: false }, calculationMethod: "umm-al-qura", asrSchool: "hanafi", location: { latitude: 21.42, longitude: 39.83, updatedAt: null }, lastShown: { morning: TRANSFER_TODAY, evening: null } }) }
+    }),
+    receiverOwned: device({
+      progress: { targets: { morning: { [tawhidMorningId]: 1 }, evening: {} } },
+      suwar: { selected: "yasin" },
+      tasbih: tasbih({}, { selected: "hamd", target: 100, custom: ["يا رب"] })
+    }),
+    receiverOwnedIncoming: device({
+      progress: { targets: { morning: { [tawhidMorningId]: 10 }, evening: { [tawhidEveningId]: 100 } } },
+      suwar: { selected: "mulk" },
+      tasbih: tasbih({}, { selected: "takbir", target: null, custom: ["يَا رَبّ", "حسبي الله"] })
+    }),
+    yesterdayCode: device({ progress: { date: YESTERDAY, progress: { morning: allMorning, evening: {} }, completedAt: { morning: at(YESTERDAY, "03:00"), evening: null } }, suwar: { date: YESTERDAY }, tasbih: { date: YESTERDAY } }),
+    aheadCode: device({
+      progress: { date: "2026-10-05", progress: { morning: allMorning, evening: {} }, completedAt: { morning: at("2026-10-05", "03:00"), evening: null },
+        history: [hist(TRANSFER_TODAY, true, true, at(TRANSFER_TODAY, "03:00"), at(TRANSFER_TODAY, "15:00")), hist(YESTERDAY, false, true, null, at(YESTERDAY, "15:00"))] },
+      suwar: { date: "2026-10-05" }, tasbih: { date: "2026-10-05", counts: { subhan: 9 }, firstUse: ["subhan"], history: { [TRANSFER_TODAY]: { hamd: 3 }, [YESTERDAY]: { takbir: 4 } } }
+    }),
+    fullWeek: device({ progress: { history: daysBack(7).map(day => hist(day, true, false, at(day, "03:00"), null)) } }),
+    olderDays: device({ progress: { history: [hist("2026-09-20", true, true, null, null), hist("2026-09-19", true, false, null, null)] } }),
+    oldEpochs: device({ progress: { resets: { "2026-08-01": at("2026-08-01", "04:00"), [YESTERDAY]: at(YESTERDAY, "04:00") } } })
+  };
+  return A;
+}
+
+function mergeCase(name, local, incoming, { source = "code", decoded } = {}) {
+  prepareTransfer();
+  const input = decoded ?? { ok: true, source, container: containerOf(incoming) };
+  const plan = planOf(local, input);
+  const { before, ...shown } = plan;
+  if (JSON.stringify(before) !== JSON.stringify(plain(fn.readTransferStorage()))) throw new Error(`${name}: plan.before is not the stored values`);
+  return { name, input: { storage: local, incoming: { source: input.source, container: input.container } }, expected: { plan: shown, storage: withWrites(local, plan) } };
+}
+
+async function transferMergeCases() {
+  const s = mergeScenarios();
+  prepareTransfer();
+  const backup = plain(await fn.decodeTransferFile(readFileSync(join(root, "spec/backup/examples/athkar-pwa.athkarbackup"), "utf8")));
+  return [
+    mergeCase("join: today's counts take the per-item max, history days union (OR, earliest instant), suwar pages OR, tasbih max", s.join, s.joinOther),
+    mergeCase("the union completes a period: completedAt is the merge instant", s.completes, device({ progress: { progress: { morning: lastMorningOnly, evening: {} } } })),
+    mergeCase("the sender reset later: the receiver's stale counts are replaced (resets row with before/after)", s.stale, s.resetRecount),
+    mergeCase("the receiver reset later: the sender's stale counts are ignored (keptLocal row)", s.resetRecount, s.stale),
+    mergeCase("history days deleted on the sender (tombstones) are deleted here", s.history, s.tombstone),
+    mergeCase("history days deleted here stay deleted", s.tombstone, s.history),
+    mergeCase("a card reset makes the whole period the later side's (limitation: the other side's other cards go)", s.cardFull, s.cardReset),
+    mergeCase("suwar: pages OR; a sura reset wins for that sura only", s.suwarB, s.suwarA),
+    mergeCase("tasbih: a phrase reset wins for that phrase only; other phrases take the max", s.phraseOther, s.phraseReset),
+    mergeCase("tasbih: phrases beyond the cap of 8 are dropped with their counts (warning), never folded into another key", s.capLocal, s.capIncoming),
+    mergeCase("settings: imported only where absent here and not the default; reminder switches, lastShown and location never", s.settingsLocal, s.settingsIncoming),
+    mergeCase("receiver-owned: targets (absent keys filled), selected sura and phrase, tasbih target; phrases matched by spelling", s.receiverOwned, s.receiverOwnedIncoming),
+    mergeCase("a code from yesterday: its today arrives as yesterday's history (stale warning)", s.cardFull, null, { decoded: { ok: true, source: "code", container: containerOn(s.yesterdayCode, 2026, 10, 3) } }),
+    mergeCase("a code from a device whose date is ahead: its today and today's history are ignored (future warning)", s.join, null, { decoded: { ok: true, source: "code", container: containerOn(s.aheadCode, 2026, 10, 5) } }),
+    mergeCase("only the newest 7 history days are kept (trimmed warning)", s.fullWeek, s.olderDays),
+    mergeCase("nothing new: an empty plan", s.join, s.join),
+    mergeCase("reset epochs before the 31-day window are dropped", s.oldEpochs, s.join),
+    mergeCase("a backup file: adhkar and settings only (backup warning)", s.join, null, { decoded: backup })
+  ];
+}
+
+// Idempotence, commutativity (up to receiver-owned fields), two-way convergence and associativity over devices with
+// reset epochs. Generation fails if any property does not hold.
+function transferPropertyCases() {
+  const s = mergeScenarios();
+  const devices = {
+    join: s.join, joinOther: s.joinOther, history: s.history, stale: s.stale, resetRecount: s.resetRecount, tombstone: s.tombstone,
+    cardReset: s.cardReset, cardFull: s.cardFull, suwarA: s.suwarA, suwarB: s.suwarB, phraseReset: s.phraseReset, phraseOther: s.phraseOther
+  };
+  const names = Object.keys(devices);
+  const pairs = [];
+  for (const a of names) {
+    for (const b of names) {
+      if (a === b) continue;
+      prepareTransfer();
+      const once = received(devices[a], devices[b]);
+      const twice = received(once, devices[b]);
+      const other = received(devices[b], devices[a]);
+      const back = received(devices[b], once);
+      const again = received(once, back);
+      const result = {
+        idempotent: JSON.stringify(once) === JSON.stringify(twice),
+        commutative: convergent(once) === convergent(other),
+        converges: convergent(again) === convergent(back)
+      };
+      if (!result.idempotent || !result.commutative || !result.converges) throw new Error(`property failed for ${a} ← ${b}: ${JSON.stringify(result)}`);
+      pairs.push({ local: a, incoming: b, ...result });
+    }
+  }
+  const triples = [["join", "resetRecount", "tombstone"], ["stale", "resetRecount", "history"], ["cardFull", "cardReset", "join"],
+    ["suwarA", "suwarB", "join"], ["phraseReset", "phraseOther", "stale"], ["tombstone", "history", "resetRecount"]].map(([a, b, c]) => {
+    prepareTransfer();
+    const left = received(received(devices[a], devices[b]), devices[c]);
+    const right = received(devices[a], received(devices[b], devices[c]));
+    const associative = convergent(left) === convergent(right);
+    if (!associative) throw new Error(`associativity failed for ${a}, ${b}, ${c}`);
+    return { devices: [a, b, c], associative };
+  });
+  return { devices, pairs, triples };
+}
+
+// ---- apply ----
+
+function applyCase(name, local, incoming, { fault, change, memoryMode, nextDay } = {}) {
+  prepareTransfer();
+  const plan = planOf(local, { ok: true, source: "code", container: containerOf(incoming) });
+  loadStorage(local);
+  const stored = fn.transferLocalFromStorage(fn.readTransferStorage());
+  api.setStores({ state: stored.progress, suwarState: stored.suwar, tasbihState: stored.tasbih });
+  api.setReminderPreferences(fn.loadReminderPreferences());
+  if (change) storage.set(...change);
+  if (memoryMode) api.setTasbihStorageWorks(false);
+  if (fault === "read") storageFault.read = true;
+  if (typeof fault === "number") storageFault.writesLeft = fault;
+  if (nextDay) setNow(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30));
+  const result = plain(fn.applyTransfer(intoContext(plan)));
+  storageFault.read = false;
+  storageFault.writesLeft = null;
+  const after = storageMap();
+  const expectedAfter = result.ok ? withWrites(local, plan) : change ? { ...local, [change[0]]: change[1] } : local;
+  if (JSON.stringify(sortDeep(after)) !== JSON.stringify(sortDeep(expectedAfter))) throw new Error(`${name}: storage is not ${result.ok ? "the plan's writes" : "unchanged"}`);
+  let reapplied;
+  if (result.ok) reapplied = plain(fn.applyTransfer(intoContext(plan)));
+  return {
+    name,
+    input: { storage: local, ...(change ? { changedBeforeApply: { [change[0]]: change[1] } } : {}), ...(fault !== undefined ? { fault } : {}), ...(memoryMode ? { tasbihMemoryMode: true } : {}), ...(nextDay ? { now: new Date(localMs(SESSION_ZONE, 2026, 10, 5, 0, 30)).toISOString() } : {}), writes: plan.writes },
+    expected: { result, storage: after, ...(reapplied ? { sameAgain: reapplied } : {}) }
+  };
+}
+
+function transferApplyCases() {
+  const s = mergeScenarios();
+  const writes = planOf(s.join, { ok: true, source: "code", container: containerOf(s.history) }).writes;
+  if (Object.keys(writes).length < 3) throw new Error("the apply cases need a plan with at least three writes");
+  return [
+    applyCase("all writes land; the same plan again is refused (changed): it was planned on other values", s.join, s.history),
+    applyCase("the second write fails: the first is rolled back, storage is byte-identical (write)", s.join, s.history, { fault: 1 }),
+    applyCase("storage cannot be read: nothing is written (write)", s.join, s.history, { fault: "read" }),
+    applyCase("tasbih memory mode: nothing is written (write)", s.join, s.history, { memoryMode: true }),
+    applyCase("another tab wrote after the plan: nothing is written (changed)", s.join, s.history, { change: ["athkar-tasbih-v1", JSON.stringify({ ...tasbihStored(), counts: { subhan: 11 } })] }),
+    applyCase("midnight passed after the plan: nothing is written (changed)", s.join, s.history, { nextDay: true })
+  ];
+}
 
 // ---------------------------------------------------------------------------------------------------
 // Write everything
@@ -1127,8 +1776,8 @@ writeCases("spec/sessions/fixtures/completion-sync.json",
     "syncCompletionState, setManualCompletion"),
   sessionDefaultInput, completionCases());
 writeCases("spec/sessions/fixtures/scoped-reset.json",
-  sessionMeta("Scoped reset outcomes (confirmation accepted). day: resetDayProgress; week: resetWeek; everything: resetEverything.",
-    "resetDayProgress, resetWeek, recentDates, resetEverything, hasResettableState"),
+  sessionMeta("Scoped reset outcomes (confirmation accepted). day: resetDayProgress; week: resetWeek; everything: resetEverything. Each records reset epochs in `resets` (spec/transfer/transfer-v1.md §5.1): today for day, the 7 local dates for week, the 31-day window for everything.",
+    "resetDayProgress, resetWeek, recentDates, resetEverything, hasResettableState, markReset"),
   sessionDefaultInput, scopedResetCases());
 writeCases("spec/sessions/fixtures/tasbih-load-state.json",
   sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
@@ -1141,5 +1790,56 @@ writeCases("spec/reminders/fixtures/next-reminder-time.json",
   },
   { collections: realCollections }, reminderCases());
 written.push(writeVectors("spec/prayer-times/vectors.json"));
+
+const transferSource = "index.html: base45Encode, base45Decode, transferChecksum, transferFrames, transferTextCode, " +
+  "parseTransferFrame, decodeTransfer, decodeTransferFrames, decodeTransferFile, validateTransferContainer, validateTransferEnvelope";
+const codec = await transferCodecFixture();
+const roundTrips = [
+  await roundTripCase("typical: some of today, a day of history, a reset epoch", codec.typical),
+  await roundTripCase("full: every store full, a day epoch on each of the 31 window days", worstDevice(false)),
+  await roundTripCase("worst case: every store full, epochs on every unit of the 31-day window", worstDevice(true))
+];
+written.push({
+  path: writeJson("spec/transfer/fixtures/codec.json", {
+    about: "Transfer code: base45 (RFC 9285) vectors, the frame checksum (Adler-32 of the frame text before it), QR frame splitting, " +
+      "decoding of text, frames and files (`result`: { ok, source, container } or { ok: false, error, reason?, path? }), and round trips " +
+      "through encodeTransfer's CompressionStream. Codes in `decode` use stored (uncompressed) deflate blocks so they are byte-identical everywhere; " +
+      "decoding never touches storage.",
+    source: transferSource,
+    generator,
+    defaultInput: transferDefaults,
+    base45: codec.base45,
+    base45Invalid: codec.base45Invalid,
+    checksum: codec.checksum,
+    frames: codec.frames,
+    cases: codec.decode,
+    roundTrip: roundTrips
+  }),
+  count: codec.decode.length + roundTrips.length
+});
+writeCases("spec/transfer/fixtures/merge.json",
+  sessionMeta("planTransfer on the receiver's stored values (`storage`) and a decoded code (`incoming`): the plan (additions, resets, keptLocal, settings, warnings, empty, writes; `before` is `storage` and is omitted) and the storage after its writes. Units are (date, period), (date, sura) and (date, phrase key); the later reset epoch takes a unit whole, equal epochs join (max, OR, earliest instant).",
+    "planTransfer, mergeTransfer, mergeTransferProgress, mergeTransferSuwar, mergeTransferTasbih, mergeTransferSettings, transferLocalFromStorage, buildTransferContainer"),
+  { ...transferDefaults, collections: realCollections }, await transferMergeCases());
+const properties = transferPropertyCases();
+written.push({
+  path: writeJson("spec/transfer/fixtures/properties.json", {
+    about: "Merge laws over devices with reset epochs. `local ← incoming` is the receiver's storage after applying the plan of incoming's code. " +
+      "idempotent: receiving the same code twice equals once (byte-identical storage). commutative: local ← incoming and incoming ← local hold the same " +
+      "convergent stores (everything except receiver-owned fields: targets, selected sura and phrase, tasbih target, saved-phrase order and spelling, first-use order). " +
+      "converges: after transfers both ways the two devices hold the same convergent stores. associative: (a ← b) ← c and a ← (b ← c) agree.",
+    source: "index.html: planTransfer, mergeTransfer, buildTransferContainer",
+    generator,
+    defaultInput: transferDefaults,
+    devices: properties.devices,
+    pairs: properties.pairs,
+    triples: properties.triples
+  }),
+  count: properties.pairs.length + properties.triples.length
+});
+writeCases("spec/transfer/fixtures/apply.json",
+  sessionMeta("applyTransfer commits exactly a plan: every stored value must still be what the plan was made on, writes land all or none (a failed write rolls back the earlier ones), and a tab in tasbih memory mode or with unreadable storage writes nothing.",
+    "applyTransfer, readTransferStorage"),
+  { ...transferDefaults, collections: realCollections }, transferApplyCases());
 
 for (const { path, count } of written) console.log(`${path}: ${count}`);

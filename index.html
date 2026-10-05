@@ -5412,6 +5412,10 @@
     const longOrderStorageKey = "athkar-long-order-v1";
     const longOrderPromptStorageKey = "athkar-long-order-prompt-v1";
     const longDhikrThreshold = 10;
+    // Reset epochs (spec/transfer/transfer-v1.md) are kept for this many local days, today included.
+    const resetEpochDays = 31;
+    const backupDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+    const backupInstantPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
     const resetDialog = document.getElementById("reset-dialog");
     const resetDayButton = document.getElementById("reset-day");
     const resetWeekButton = document.getElementById("reset-week");
@@ -5607,7 +5611,8 @@
         targets: { morning: {}, evening: {} },
         completedAt: { morning: null, evening: null },
         manualCompletion: { morning: false, evening: false },
-        history: []
+        history: [],
+        resets: {}
       };
     }
 
@@ -5644,7 +5649,8 @@
           morning: Boolean(parsed?.manualCompletion?.morning || parsed?.skipped?.morning),
           evening: Boolean(parsed?.manualCompletion?.evening || parsed?.skipped?.evening)
         },
-        history
+        history,
+        resets: normalizeResets(parsed?.resets, date, sub => (sub === "morning" || sub === "evening" ? sub : null))
       };
     }
 
@@ -5689,17 +5695,25 @@
     function rollStateToDate(candidate, nextDate) {
       const previous = historyEntryFor(candidate);
       const history = [previous, ...candidate.history.filter(entry => entry.date !== previous.date)].slice(0, 7);
-      return { ...emptyState(nextDate), history };
+      return { ...emptyState(nextDate), history, resets: normalizeResets(candidate.resets, nextDate) };
+    }
+
+    // A stored athkar-progress-v2 value (or the legacy v1 one), normalized and rolled to today's date.
+    function parseStoredState(current, legacy) {
+      try {
+        const parsed = JSON.parse(current || legacy);
+        const normalized = parsed && typeof parsed === "object" ? normalizeState(parsed) : emptyState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollStateToDate(normalized, today);
+      } catch (_) {
+        return emptyState();
+      }
     }
 
     function loadState() {
       try {
         const current = localStorage.getItem(storageKey);
-        const legacy = current ? null : localStorage.getItem(legacyStorageKey);
-        const parsed = JSON.parse(current || legacy);
-        const normalized = parsed && typeof parsed === "object" ? normalizeState(parsed) : emptyState();
-        const today = localDateKey();
-        return normalized.date === today ? normalized : rollStateToDate(normalized, today);
+        return parseStoredState(current, current ? null : localStorage.getItem(legacyStorageKey));
       } catch (_) {
         return emptyState();
       }
@@ -5720,7 +5734,8 @@
         selected,
         read: Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, {}])),
         completedAt: Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, null])),
-        history: {}
+        history: {},
+        resets: {}
       };
     }
 
@@ -5740,6 +5755,7 @@
         const completed = Object.fromEntries(Object.entries(entry).filter(([id, at]) => typeof id === "string" && Object.hasOwn(suwarById, id) && typeof at === "string"));
         if (Object.keys(completed).length) normalized.history[day] = completed;
       }
+      normalized.resets = normalizeResets(parsed?.resets, date, sub => (Object.hasOwn(suwarById, sub) ? sub : null));
       return normalized;
     }
 
@@ -5748,19 +5764,70 @@
       return Object.fromEntries(kept.map(day => [day, history[day]]));
     }
 
+    // The first local date whose reset epochs are still kept on `today`.
+    function resetCutoff(today) {
+      const [year, month, day] = today.split("-").map(Number);
+      const date = new Date(0);
+      date.setUTCFullYear(year, month - 1, day - (resetEpochDays - 1));
+      return date.toISOString().slice(0, 10);
+    }
+
+    // A store's `resets`: "date" (every unit of that local day) or "date|unit" → the ISO instant of the last reset that
+    // cleared it. Keys before resetCutoff(today), malformed keys and non-instant values are dropped; `subKey` maps a
+    // unit to its current form (null drops it), and keys that converge keep the later instant.
+    function normalizeResets(value, today, subKey = sub => sub) {
+      const resets = {};
+      if (!value || typeof value !== "object" || Array.isArray(value)) return resets;
+      const cutoff = resetCutoff(today);
+      for (const [key, at] of Object.entries(value)) {
+        const separator = key.indexOf("|");
+        const date = separator === -1 ? key : key.slice(0, separator);
+        const instant = backupInstant(at);
+        if (!isRealDateKey(date) || date < cutoff || !instant) continue;
+        const sub = separator === -1 ? null : subKey(key.slice(separator + 1));
+        if (separator !== -1 && !sub) continue;
+        const unit = sub === null ? date : `${date}|${sub}`;
+        if (!Object.hasOwn(resets, unit) || resets[unit] < instant) resets[unit] = instant;
+      }
+      return resets;
+    }
+
+    // Records a reset of `key` ("date" or "date|unit") at the current instant; an epoch never moves back.
+    function markReset(store, key) {
+      const at = new Date().toISOString();
+      if (!store.resets || typeof store.resets !== "object") store.resets = {};
+      if (!Object.hasOwn(store.resets, key) || store.resets[key] < at) store.resets[key] = at;
+    }
+
+    // The epoch of one unit: the later of its day's and its own reset, "" when neither was ever reset.
+    function resetEpoch(resets, date, sub) {
+      const day = Object.hasOwn(resets, date) ? resets[date] : "";
+      const unit = Object.hasOwn(resets, `${date}|${sub}`) ? resets[`${date}|${sub}`] : "";
+      return day > unit ? day : unit;
+    }
+
     function rollSuwarStateToDate(candidate, nextDate) {
       const completed = Object.fromEntries(Object.entries(candidate.completedAt).filter(([, at]) => at));
       const history = { ...candidate.history };
       if (Object.keys(completed).length) history[candidate.date] = completed;
-      return { ...emptySuwarState(nextDate, candidate.selected), history: trimDailyHistory(history) };
+      return { ...emptySuwarState(nextDate, candidate.selected), history: trimDailyHistory(history), resets: normalizeResets(candidate.resets, nextDate) };
+    }
+
+    // A stored athkar-suwar-v1 value, normalized and rolled to today's date.
+    function parseStoredSuwarState(raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        const normalized = parsed && typeof parsed === "object" ? normalizeSuwarState(parsed) : emptySuwarState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollSuwarStateToDate(normalized, today);
+      } catch (_) {
+        return emptySuwarState();
+      }
     }
 
     function loadSuwarState() {
       try {
-        const parsed = JSON.parse(localStorage.getItem(suwarStorageKey));
-        const normalized = parsed && typeof parsed === "object" ? normalizeSuwarState(parsed) : emptySuwarState();
-        const today = localDateKey();
-        return normalized.date === today ? normalized : rollSuwarStateToDate(normalized, today);
+        return parseStoredSuwarState(localStorage.getItem(suwarStorageKey));
       } catch (_) {
         return emptySuwarState();
       }
@@ -5783,25 +5850,29 @@
         suwarContent.suwar.some(sura => suraPagesRead(sura) > 0 || suwarState.completedAt[sura.id]);
     }
 
-    // Scoped reset: today's pages and completions of every sura; deleteSuwarHistory drops past days (all when null).
+    // Scoped reset: today's pages and completions of every sura; deleteSuwarHistory drops past days (the reset-epoch
+    // window when null). Both record reset epochs so a transfer does not bring the cleared days back.
     function resetSuwarProgress() {
       for (const sura of suwarContent.suwar) {
         suwarState.read[sura.id] = {};
         suwarState.completedAt[sura.id] = null;
         suwarIndices[sura.id] = 0;
       }
+      markReset(suwarState, suwarState.date);
       saveSuwarState();
     }
 
     function deleteSuwarHistory(dates) {
       if (dates === null) suwarState.history = {};
       else for (const date of dates) delete suwarState.history[date];
+      for (const date of dates ?? recentDates(resetEpochDays)) markReset(suwarState, date);
     }
 
     // athkar-tasbih-v1: the «مسبحة» tab, apart from the other stores and, like athkar-suwar-v1, outside the backup.
     // `counts` (non-zero only) and `firstUse` (order of today's first taps, for history ties) are today's; a key is a
     // preset id or "c:" + a saved phrase. `history` maps each earlier local date to that day's counts, newest seven.
     // `selected`, `target` (null or 1…9999) and `custom` (newest first, at most eight) are preferences: resets keep them.
+    // `resets` holds reset epochs ("date" or "date|key"; spec/transfer/transfer-v1.md).
     function emptyTasbihState(date = localDateKey()) {
       return {
         date,
@@ -5810,7 +5881,8 @@
         counts: {},
         firstUse: [],
         custom: [],
-        history: {}
+        history: {},
+        resets: {}
       };
     }
 
@@ -5906,6 +5978,7 @@
         if (Object.keys(counts).length) normalized.history[day] = counts;
       }
       normalized.history = trimDailyHistory(normalized.history);
+      normalized.resets = normalizeResets(parsed.resets, date, sub => canonicalTasbihKey(sub, normalized.custom));
       return normalized;
     }
 
@@ -5935,19 +6008,18 @@
           date: nextDate,
           counts,
           firstUse: [...new Set([...firstUse, ...candidate.firstUse])],
-          history: trimDailyHistory(history)
+          history: trimDailyHistory(history),
+          resets: normalizeResets(candidate.resets, nextDate)
         };
       }
       const day = tasbihDayCounts(candidate);
       if (Object.keys(day).length) history[candidate.date] = day;
-      return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history) };
+      return { ...candidate, date: nextDate, counts: {}, firstUse: [], history: trimDailyHistory(history), resets: normalizeResets(candidate.resets, nextDate) };
     }
 
-    // The stored state rolled to today's date, or null when storage cannot be read at all. A missing or malformed value
-    // gives the defaults; a read that throws must not, or a reread would replace this tab's counts with zeros.
-    function readTasbihState() {
-      let raw;
-      try { raw = localStorage.getItem(tasbihStorageKey); } catch (_) { return null; }
+    // A stored athkar-tasbih-v1 value, normalized and rolled to today's date; a missing or malformed value gives the
+    // defaults.
+    function parseStoredTasbihState(raw) {
       try {
         const parsed = JSON.parse(raw);
         const normalized = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? normalizeTasbihState(parsed) : emptyTasbihState();
@@ -5956,6 +6028,14 @@
       } catch (_) {
         return emptyTasbihState();
       }
+    }
+
+    // The stored state rolled to today's date, or null when storage cannot be read at all: a read that throws must not
+    // give the defaults, or a reread would replace this tab's counts with zeros.
+    function readTasbihState() {
+      let raw;
+      try { raw = localStorage.getItem(tasbihStorageKey); } catch (_) { return null; }
+      return parseStoredTasbihState(raw);
     }
 
     // The startup load: a read that throws starts the session in memory mode with the defaults.
@@ -5988,11 +6068,13 @@
       return Object.keys(tasbihState.counts).length > 0 || Object.keys(tasbihState.history).length > 0;
     }
 
-    // Scoped reset: today's counts of every phrase; deleteTasbihHistory drops past days (all when null).
+    // Scoped reset: today's counts of every phrase; deleteTasbihHistory drops past days (the reset-epoch window when
+    // null). Both record reset epochs so a transfer does not bring the cleared days back.
     function resetTasbihProgress() {
       refreshTasbihState();
       tasbihState.counts = {};
       tasbihState.firstUse = [];
+      markReset(tasbihState, tasbihState.date);
       saveTasbihState();
     }
 
@@ -6000,6 +6082,7 @@
       refreshTasbihState();
       if (dates === null) tasbihState.history = {};
       else for (const date of dates) delete tasbihState.history[date];
+      for (const date of dates ?? recentDates(resetEpochDays)) markReset(tasbihState, date);
       saveTasbihState();
     }
 
@@ -6572,6 +6655,7 @@
       if (!suwarState.read[sura.id][page.id]) return;
       delete suwarState.read[sura.id][page.id];
       suwarState.completedAt[sura.id] = null;
+      markReset(suwarState, `${suwarState.date}|${sura.id}`);
       saveSuwarState();
       updateSuraPage(sura, page, card, index, true);
       updateSessionProgress();
@@ -7187,6 +7271,7 @@
           ensureCurrentDay();
           refreshTasbihState();
           keepTasbihSelection(key);
+          markReset(tasbihState, `${tasbihState.date}|${key}`);
           setTasbihCount(key, 0);
           renderTasbih({ arc: "reset" });
           tasbihSurface.focus();
@@ -7361,6 +7446,7 @@
       if (!count) return;
       const reset = () => {
         state.progress[activePeriod][item.id] = 0;
+        markReset(state, `${state.date}|${activePeriod}`);
         syncCompletionState(activePeriod);
         saveState();
         updateCard(item, card, index, true);
@@ -7478,6 +7564,7 @@
         state.manualCompletion[period] = false;
         currentIndices[period] = 0;
       }
+      markReset(state, state.date);
       saveState();
       resetSuwarProgress();
       resetTasbihProgress();
@@ -7511,6 +7598,7 @@
         `ستُعاد عدادات اليوم، وسيُحذف ${recorded ? `سجل ${dayCountLabel(recorded)} من آخر أسبوع` : "سجل آخر سبعة أيام"}. لا يمكن التراجع.`,
         () => {
           state.history = state.history.filter(entry => !dates.includes(entry.date));
+          for (const date of dates) markReset(state, date);
           deleteSuwarHistory(dates);
           deleteTasbihHistory(dates);
           resetDayProgress(false);
@@ -7526,6 +7614,7 @@
         `ستُعاد العدادات وسيُحذف السجل كاملًا${recorded ? ` (${dayCountLabel(recorded)})` : ""}. لا يمكن التراجع.`,
         () => {
           state.history = [];
+          for (const date of recentDates(resetEpochDays)) markReset(state, date);
           deleteSuwarHistory(null);
           deleteTasbihHistory(null);
           resetDayProgress(false);
@@ -8402,9 +8491,6 @@
       showCard(activeIndex() + 1, "forward", true, true);
     });
 
-    const backupDatePattern = /^\d{4}-\d{2}-\d{2}$/;
-    const backupInstantPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
-
     // The loaders tolerate malformed stored values; the envelope must not carry them (spec/backup/envelope-v1.md).
     function backupDate(value) {
       if (typeof value !== "string" || !backupDatePattern.test(value)) return null;
@@ -8536,6 +8622,915 @@
       } finally {
         backupExportButton.disabled = false;
       }
+    }
+
+    // Transfer between devices (spec/transfer/transfer-v1.md). encodeTransfer() builds the code the user moves: the text
+    // form (copy or file) and the animated QR frames. decodeTransfer(), decodeTransferFrames() and decodeTransferFile()
+    // treat their input as hostile. planTransfer() is the dry run the preview shows; applyTransfer() commits exactly that
+    // plan, atomically. Nothing here uses the network.
+    const transferVersion = 1;
+    const transferApp = "athkar-pwa";
+    const transferMaxTextLength = 65536;
+    const transferMaxInflatedBytes = 262144;
+    const transferMaxFrames = 64;
+    const transferFrameChunk = 880;
+    const transferBase45 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+    const transferFramePattern = /^AQ1:([A-Z]):([0-9A-Z]{4}):([1-9][0-9]?):([1-9][0-9]?):([0-9A-Z $%*+\-./:]+):([0-9A-F]{8})$/;
+    const transferItemIdPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+    const transferSlugPattern = /^[a-z0-9][a-z0-9-]{0,47}$/;
+    const transferTimeZonePattern = /^[A-Za-z0-9_+\-/]{1,64}$/;
+    const transferForbiddenKeys = new Set(["__proto__", "constructor", "prototype"]);
+    const transferStoreKeys = Object.freeze([storageKey, legacyStorageKey, suwarStorageKey, tasbihStorageKey]);
+    const transferSettingKeys = Object.freeze([
+      "athkar-theme", textSizeStorageKey, "athkar-text-size", lineSpacingStorageKey, hapticsStorageKey, longOrderStorageKey,
+      longOrderPromptStorageKey, remindersStorageKey, legacyRemindersStorageKey
+    ]);
+
+    // CompressionStream and DecompressionStream ("deflate"): iOS/Safari 16.4+, Chrome 80+, Firefox 113+.
+    function transferSupported() {
+      return typeof CompressionStream === "function" && typeof DecompressionStream === "function";
+    }
+
+    // RFC 9285.
+    function base45Encode(bytes) {
+      let text = "";
+      for (let index = 0; index < bytes.length; index += 2) {
+        if (index + 1 < bytes.length) {
+          const value = bytes[index] * 256 + bytes[index + 1];
+          text += transferBase45[value % 45] + transferBase45[Math.floor(value / 45) % 45] + transferBase45[Math.floor(value / 2025)];
+        } else {
+          text += transferBase45[bytes[index] % 45] + transferBase45[Math.floor(bytes[index] / 45)];
+        }
+      }
+      return text;
+    }
+
+    // The bytes, or null when the text is not base45: a character outside the alphabet, one dangling character, a
+    // group above 65535 or a final pair above 255.
+    function base45Decode(text) {
+      if (text.length % 3 === 1) return null;
+      const bytes = new Uint8Array(Math.floor(text.length / 3) * 2 + (text.length % 3 === 2 ? 1 : 0));
+      let offset = 0;
+      for (let index = 0; index < text.length; index += 3) {
+        const digits = [...text.slice(index, index + 3)].map(character => transferBase45.indexOf(character));
+        if (digits.includes(-1)) return null;
+        const value = digits[0] + digits[1] * 45 + (digits.length === 3 ? digits[2] * 2025 : 0);
+        if (value > (digits.length === 3 ? 65535 : 255)) return null;
+        if (digits.length === 3) {
+          bytes[offset] = Math.floor(value / 256);
+          offset += 1;
+        }
+        bytes[offset] = value % 256;
+        offset += 1;
+      }
+      return bytes;
+    }
+
+    // Adler-32 of a frame's text up to its checksum field, as 8 uppercase hex digits.
+    function transferChecksum(text) {
+      let low = 1;
+      let high = 0;
+      for (let index = 0; index < text.length; index += 1) {
+        low = (low + text.charCodeAt(index)) % 65521;
+        high = (high + low) % 65521;
+      }
+      return (high * 65536 + low).toString(16).toUpperCase().padStart(8, "0");
+    }
+
+    // The QR frames of a base45 payload: n equal slices of at most `chunk` characters, each "AQ1:A:msg:i:n:slice:sum".
+    function transferFrames(payload, msg, chunk = transferFrameChunk) {
+      const count = Math.max(1, Math.ceil(payload.length / chunk));
+      const size = Math.ceil(payload.length / count);
+      return Array.from({ length: count }, (_, index) => {
+        const body = `AQ1:A:${msg}:${index + 1}:${count}:${payload.slice(index * size, (index + 1) * size)}`;
+        return `${body}:${transferChecksum(body)}`;
+      });
+    }
+
+    // The text form (copy, file): the payload as one frame with every space written "=", so it has no space a messenger
+    // or editor could collapse or wrap.
+    function transferTextCode(payload, msg) {
+      return transferFrames(payload, msg, Infinity)[0].replaceAll(" ", "=");
+    }
+
+    function transferMessageId() {
+      const digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      return Array.from(crypto.getRandomValues(new Uint8Array(4)), byte => digits[byte % 36]).join("");
+    }
+
+    // All bytes of a stream, or null as soon as they pass `limit` (the stream is then cancelled): the inflate cap.
+    async function readTransferStream(stream, limit) {
+      const reader = stream.getReader();
+      const parts = [];
+      let total = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > limit) {
+          reader.cancel().catch(() => {});
+          return null;
+        }
+        parts.push(value);
+      }
+      const bytes = new Uint8Array(total);
+      let offset = 0;
+      for (const part of parts) {
+        bytes.set(part, offset);
+        offset += part.byteLength;
+      }
+      return bytes;
+    }
+
+    function deflateTransferBytes(bytes) {
+      return readTransferStream(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate")), Infinity);
+    }
+
+    // The zlib wrapper's Adler-32 is checked by DecompressionStream, which also rejects truncated input and trailing data.
+    async function inflateTransferBytes(bytes) {
+      try {
+        const inflated = await readTransferStream(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate")), transferMaxInflatedBytes);
+        return inflated ? { bytes: inflated } : { reason: "inflate-cap" };
+      } catch (_) {
+        return { reason: "inflate" };
+      }
+    }
+
+    // One frame (a scanned QR text, or the whole text form): its fields, or { error, reason }. Line breaks and the ends'
+    // whitespace are dropped; text containing "=" is the text form, so every other whitespace goes and "=" reads as space.
+    function parseTransferFrame(text) {
+      let clean = text.replace(/[\r\n]+/g, "").trim();
+      if (clean.includes("=")) clean = clean.replace(/\s+/g, "").replaceAll("=", " ");
+      const version = /^AQ(\d+):/.exec(clean);
+      if (!version) return { error: "not-code" };
+      if (Number(version[1]) > transferVersion) return { error: "newer", reason: "version" };
+      const match = transferFramePattern.exec(clean);
+      if (!match) return { error: "not-code" };
+      const [, app, msg, index, count, chunk, checksum] = match;
+      if (transferChecksum(clean.slice(0, -9)) !== checksum) return { error: "corrupt", reason: "checksum" };
+      if (app !== "A") return { error: "wrong-app" };
+      if (Number(count) > transferMaxFrames) return { error: "too-long" };
+      if (Number(index) > Number(count)) return { error: "not-code" };
+      return { app, msg, index: Number(index), count: Number(count), chunk };
+    }
+
+    async function decodeTransferPayload(frames) {
+      const [first] = frames;
+      const chunks = [];
+      for (const frame of frames) {
+        if (frame.msg !== first.msg || frame.count !== first.count) return { ok: false, error: "mixed" };
+        const known = chunks[frame.index - 1];
+        if (known !== undefined && known !== frame.chunk) return { ok: false, error: "mixed" };
+        chunks[frame.index - 1] = frame.chunk;
+      }
+      for (let index = 0; index < first.count; index += 1) {
+        if (chunks[index] === undefined) return { ok: false, error: "incomplete" };
+      }
+      const bytes = base45Decode(chunks.join(""));
+      if (!bytes) return { ok: false, error: "corrupt", reason: "base45" };
+      const inflated = await inflateTransferBytes(bytes);
+      if (!inflated.bytes) return { ok: false, error: "corrupt", reason: inflated.reason };
+      let value;
+      try {
+        value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(inflated.bytes));
+      } catch (_) {
+        return { ok: false, error: "corrupt", reason: "json" };
+      }
+      return validateTransferValue(value, "code");
+    }
+
+    // A pasted code or one read from a file: { ok: true, source, container } or { ok: false, error, reason?, path? }.
+    async function decodeTransfer(text) {
+      if (typeof text !== "string") return { ok: false, error: "not-code" };
+      if (text.length > transferMaxTextLength) return { ok: false, error: "too-long" };
+      if (!transferSupported()) return { ok: false, error: "unsupported" };
+      const frame = parseTransferFrame(text);
+      if (frame.error) return { ok: false, ...frame };
+      if (frame.count > 1) return { ok: false, error: "one-frame" };
+      return decodeTransferPayload([frame]);
+    }
+
+    // The texts of scanned QR frames, in any order; repeats are allowed if identical.
+    async function decodeTransferFrames(texts) {
+      if (!Array.isArray(texts) || !texts.length || texts.some(text => typeof text !== "string")) return { ok: false, error: "not-code" };
+      if (texts.length > transferMaxFrames || texts.reduce((total, text) => total + text.length, 0) > transferMaxTextLength) {
+        return { ok: false, error: "too-long" };
+      }
+      if (!transferSupported()) return { ok: false, error: "unsupported" };
+      const frames = [];
+      for (const text of texts) {
+        const frame = parseTransferFrame(text);
+        if (frame.error) return { ok: false, ...frame };
+        frames.push(frame);
+      }
+      return decodeTransferPayload(frames);
+    }
+
+    // A chosen file: a transfer code, or an envelope-v1 .athkarbackup, whose adhkar part (today and history) and
+    // settings import; it carries no suwar, tasbih or reset epochs.
+    async function decodeTransferFile(text) {
+      if (typeof text !== "string") return { ok: false, error: "file-read" };
+      if (text.length > transferMaxTextLength) return { ok: false, error: "too-long" };
+      const clean = text.replace(/^\uFEFF/, "").trim();
+      if (clean.startsWith("AQ")) return decodeTransfer(clean);
+      let value;
+      try {
+        value = JSON.parse(clean);
+      } catch (_) {
+        return { ok: false, error: "not-code" };
+      }
+      return validateTransferValue(value, "backup");
+    }
+
+    function validateTransferValue(value, source) {
+      try {
+        const container = source === "backup"
+          ? { transfer: transferVersion, app: transferApp, envelope: validateTransferEnvelope(value, true), athkar: null }
+          : validateTransferContainer(value);
+        return { ok: true, source, container };
+      } catch (failure) {
+        if (typeof failure?.transferError !== "string") throw failure;
+        return { ok: false, error: failure.transferError, reason: failure.reason, path: failure.path };
+      }
+    }
+
+    function transferReject(path, error = "corrupt", reason = "invalid") {
+      throw { transferError: error, reason, path };
+    }
+
+    function transferCheck(valid, path) {
+      if (!valid) transferReject(path);
+    }
+
+    function transferIsObject(value) {
+      return value !== null && typeof value === "object" && !Array.isArray(value);
+    }
+
+    // An object with exactly `keys`. JSON.parse makes "__proto__" an own key, so it fails here like any unknown key.
+    function transferFields(value, path, keys) {
+      transferCheck(transferIsObject(value), path);
+      const own = Object.keys(value);
+      transferCheck(own.length === keys.length && keys.every(key => Object.hasOwn(value, key)), path);
+      return value;
+    }
+
+    // A map with at most `maxKeys` entries whose keys pass `keyIsValid` and are never __proto__/constructor/prototype.
+    function transferEntries(value, path, maxKeys, keyIsValid, checkValue) {
+      transferCheck(transferIsObject(value), path);
+      const entries = Object.entries(value);
+      transferCheck(entries.length <= maxKeys, path);
+      for (const [key, item] of entries) {
+        transferCheck(!transferForbiddenKeys.has(key) && keyIsValid(key), `${path}/${key}`);
+        checkValue(item, `${path}/${key}`);
+      }
+      return value;
+    }
+
+    function transferInstant(value, path, nullable = false) {
+      transferCheck((nullable && value === null) || backupInstant(value) !== null, path);
+    }
+
+    function transferPhraseIsValid(text) {
+      return typeof text === "string" && text.length > 0 && cleanTasbihPhrase(text) === text && !/[\u0000-\u001F\u007F]/.test(text);
+    }
+
+    function transferTasbihKeyIsValid(key) {
+      if (typeof key !== "string" || transferForbiddenKeys.has(key) || /[\u0000-\u001F\u007F]/.test(key)) return false;
+      return key.startsWith("c:") ? canonicalTasbihKey(key, []) !== null : /^[a-z][a-z-]{0,31}$/.test(key);
+    }
+
+    function transferResets(value, path, date, unitIsValid) {
+      const cutoff = resetCutoff(date);
+      transferEntries(value, path, 512, key => {
+        const separator = key.indexOf("|");
+        const day = separator === -1 ? key : key.slice(0, separator);
+        return isRealDateKey(day) && day >= cutoff && day <= date && (separator === -1 || unitIsValid(key.slice(separator + 1)));
+      }, (at, itemPath) => transferInstant(at, itemPath));
+    }
+
+    // Envelope v1 as the athkar PWA writes it (spec/backup/envelope-v1.md), with the transfer's tighter bounds.
+    // `location` is accepted only in a backup file and is never imported.
+    function validateTransferEnvelope(envelope, allowLocation) {
+      transferCheck(transferIsObject(envelope), "envelope");
+      const meta = envelope.meta;
+      if (transferIsObject(meta) && Number.isInteger(meta.format) && meta.format > 1) transferReject("envelope/meta/format", "newer", "format");
+      if (transferIsObject(meta) && meta.app === "ruqyah-pwa") transferReject("envelope/meta/app", "wrong-app", "app");
+      transferFields(envelope, "envelope", ["meta", "adhkar", "reminders", "preferences"]);
+      transferFields(meta, "envelope/meta", ["format", "app", "exportedAt", "timeZone"]);
+      transferCheck(meta.format === 1 && meta.app === transferApp, "envelope/meta");
+      transferInstant(meta.exportedAt, "envelope/meta/exportedAt");
+      transferCheck(typeof meta.timeZone === "string" && transferTimeZonePattern.test(meta.timeZone), "envelope/meta/timeZone");
+      const adhkar = transferFields(envelope.adhkar, "envelope/adhkar", ["today", "history"]);
+      const today = transferFields(adhkar.today, "envelope/adhkar/today", ["date", "progress", "targets", "completedAt", "manualCompletion"]);
+      transferCheck(isRealDateKey(today.date), "envelope/adhkar/today/date");
+      for (const field of ["progress", "targets", "completedAt", "manualCompletion"]) {
+        const periods = transferFields(today[field], `envelope/adhkar/today/${field}`, ["morning", "evening"]);
+        for (const period of ["morning", "evening"]) {
+          const path = `envelope/adhkar/today/${field}/${period}`;
+          if (field === "completedAt") transferInstant(periods[period], path, true);
+          else if (field === "manualCompletion") transferCheck(typeof periods[period] === "boolean", path);
+          else {
+            transferEntries(periods[period], path, 128, key => transferItemIdPattern.test(key), (count, countPath) =>
+              transferCheck(typeof count === "number" && Number.isFinite(count) && count >= 0 && count <= Number.MAX_SAFE_INTEGER, countPath));
+          }
+        }
+      }
+      transferCheck(Array.isArray(adhkar.history) && adhkar.history.length <= 7, "envelope/adhkar/history");
+      adhkar.history.forEach((entry, index) => {
+        const path = `envelope/adhkar/history/${index}`;
+        transferFields(entry, path, ["date", "morning", "evening", "morningAt", "eveningAt"]);
+        transferCheck(isRealDateKey(entry.date) && entry.date < today.date && (index === 0 || entry.date < adhkar.history[index - 1].date), `${path}/date`);
+        transferCheck(typeof entry.morning === "boolean" && typeof entry.evening === "boolean", path);
+        transferInstant(entry.morningAt, `${path}/morningAt`, true);
+        transferInstant(entry.eveningAt, `${path}/eveningAt`, true);
+      });
+      const reminders = envelope.reminders;
+      const withLocation = allowLocation && transferIsObject(reminders) && Object.hasOwn(reminders, "location");
+      transferFields(reminders, "envelope/reminders", ["morning", "evening", "calculationMethod", "asrSchool", "lastShown", ...(withLocation ? ["location"] : [])]);
+      for (const period of ["morning", "evening"]) {
+        transferFields(reminders[period], `envelope/reminders/${period}`, ["enabled"]);
+        transferCheck(typeof reminders[period].enabled === "boolean", `envelope/reminders/${period}/enabled`);
+      }
+      transferCheck(typeof reminders.calculationMethod === "string" && Object.hasOwn(prayerCalculationMethods, reminders.calculationMethod), "envelope/reminders/calculationMethod");
+      transferCheck(typeof reminders.asrSchool === "string" && Object.hasOwn(asrShadowFactors, reminders.asrSchool), "envelope/reminders/asrSchool");
+      const lastShown = transferFields(reminders.lastShown, "envelope/reminders/lastShown", ["morning", "evening"]);
+      for (const period of ["morning", "evening"]) transferCheck(lastShown[period] === null || isRealDateKey(lastShown[period]), `envelope/reminders/lastShown/${period}`);
+      if (withLocation) {
+        const location = transferFields(reminders.location, "envelope/reminders/location", ["latitude", "longitude", "updatedAt"]);
+        transferCheck(typeof location.latitude === "number" && location.latitude >= -90 && location.latitude <= 90 &&
+          typeof location.longitude === "number" && location.longitude >= -180 && location.longitude <= 180, "envelope/reminders/location");
+        transferInstant(location.updatedAt, "envelope/reminders/location/updatedAt", true);
+      }
+      const preferences = transferFields(envelope.preferences, "envelope/preferences", ["theme", "textSize", "lineSpacing", "haptics", "longOrder", "longOrderPromptAnswered"]);
+      transferCheck(["system", "light", "dark"].includes(preferences.theme) && ["small", "medium", "large"].includes(preferences.textSize) &&
+        ["compact", "comfortable", "wide"].includes(preferences.lineSpacing) && typeof preferences.haptics === "boolean" &&
+        ["last", "original"].includes(preferences.longOrder) && typeof preferences.longOrderPromptAnswered === "boolean", "envelope/preferences");
+      return envelope;
+    }
+
+    function validateTransferContainer(value) {
+      transferCheck(transferIsObject(value), "transfer");
+      if (Number.isInteger(value.transfer) && value.transfer > transferVersion) transferReject("transfer/transfer", "newer", "version");
+      if (value.app === "ruqyah-pwa") transferReject("transfer/app", "wrong-app", "app");
+      transferFields(value, "transfer", ["transfer", "app", "envelope", "athkar"]);
+      transferCheck(value.transfer === transferVersion && value.app === transferApp, "transfer");
+      const date = validateTransferEnvelope(value.envelope, false).adhkar.today.date;
+      const athkar = transferFields(value.athkar, "athkar", ["adhkar", "suwar", "tasbih"]);
+      transferFields(athkar.adhkar, "athkar/adhkar", ["resets"]);
+      transferResets(athkar.adhkar.resets, "athkar/adhkar/resets", date, unit => unit === "morning" || unit === "evening");
+      const slug = key => transferSlugPattern.test(key);
+      const suwar = transferFields(athkar.suwar, "athkar/suwar", ["date", "selected", "read", "completedAt", "history", "resets"]);
+      transferCheck(suwar.date === date, "athkar/suwar/date");
+      transferCheck(typeof suwar.selected === "string" && slug(suwar.selected), "athkar/suwar/selected");
+      transferEntries(suwar.read, "athkar/suwar/read", 16, slug, (pages, path) =>
+        transferEntries(pages, path, 64, slug, (read, pagePath) => transferCheck(read === true, pagePath)));
+      transferEntries(suwar.completedAt, "athkar/suwar/completedAt", 16, slug, (at, path) => transferInstant(at, path, true));
+      transferEntries(suwar.history, "athkar/suwar/history", suwarHistoryDays, day => isRealDateKey(day) && day < date, (entry, path) =>
+        transferEntries(entry, path, 16, slug, (at, suraPath) => transferInstant(at, suraPath)));
+      transferResets(suwar.resets, "athkar/suwar/resets", date, slug);
+      const tasbih = transferFields(athkar.tasbih, "athkar/tasbih", ["date", "selected", "target", "counts", "firstUse", "custom", "history", "resets"]);
+      transferCheck(tasbih.date === date, "athkar/tasbih/date");
+      transferCheck(transferTasbihKeyIsValid(tasbih.selected), "athkar/tasbih/selected");
+      transferCheck(tasbih.target === null || (Number.isInteger(tasbih.target) && tasbih.target >= 1 && tasbih.target <= tasbihMaxTarget), "athkar/tasbih/target");
+      const counts = (entry, path) => transferEntries(entry, path, 256, transferTasbihKeyIsValid, (count, keyPath) =>
+        transferCheck(Number.isInteger(count) && count >= 1 && count <= tasbihMaxCount, keyPath));
+      counts(tasbih.counts, "athkar/tasbih/counts");
+      transferCheck(Array.isArray(tasbih.firstUse) && tasbih.firstUse.length <= 256 && tasbih.firstUse.every(key => transferTasbihKeyIsValid(key)), "athkar/tasbih/firstUse");
+      transferCheck(Array.isArray(tasbih.custom) && tasbih.custom.length <= tasbihMaxCustom && tasbih.custom.every(phrase => transferPhraseIsValid(phrase)), "athkar/tasbih/custom");
+      transferEntries(tasbih.history, "athkar/tasbih/history", suwarHistoryDays, day => isRealDateKey(day) && day < date, counts);
+      transferResets(tasbih.resets, "athkar/tasbih/resets", date, transferTasbihKeyIsValid);
+      return value;
+    }
+
+    // Reset epochs of `date` and earlier (normalized and windowed) whose unit passes `unitIsValid`.
+    function transferResetsFor(resets, date, unitIsValid) {
+      return Object.fromEntries(Object.entries(normalizeResets(resets, date)).filter(([key]) => {
+        const separator = key.indexOf("|");
+        return key.slice(0, 10) <= date && (separator === -1 || unitIsValid(key.slice(separator + 1)));
+      }).slice(0, 512));
+    }
+
+    // The container for stores rolled to the envelope's date; `envelope` is buildBackup(false). Whatever the validator
+    // would refuse (a malformed id, phrase or instant a loader tolerated) is left out, as the backup exporter does.
+    function buildTransferContainer(envelope, progress, suwar, tasbih) {
+      const date = envelope.adhkar.today.date;
+      const ids = values => Object.fromEntries(Object.entries(values).filter(([id]) => transferItemIdPattern.test(id) && !transferForbiddenKeys.has(id)).slice(0, 128));
+      const today = envelope.adhkar.today;
+      const read = {};
+      const completedAt = {};
+      for (const sura of suwarContent.suwar) {
+        read[sura.id] = Object.fromEntries(sura.pages.filter(page => suwar.read[sura.id]?.[page.id] === true).map(page => [page.id, true]));
+        completedAt[sura.id] = suraIsComplete(sura, suwar) ? backupInstant(suwar.completedAt[sura.id]) : null;
+      }
+      const suwarHistory = {};
+      for (const [day, entry] of Object.entries(suwar.history)) {
+        if (!isRealDateKey(day) || day >= date) continue;
+        const completed = Object.fromEntries(Object.entries(entry)
+          .filter(([id]) => Object.hasOwn(suwarById, id))
+          .map(([id, at]) => [id, backupInstant(at)])
+          .filter(([, at]) => at));
+        if (Object.keys(completed).length) suwarHistory[day] = completed;
+      }
+      const tasbihCountsOut = values => Object.fromEntries(Object.entries(values).filter(([key]) => transferTasbihKeyIsValid(key)).slice(0, 256));
+      const counts = tasbihCountsOut(tasbih.counts);
+      const tasbihHistory = {};
+      for (const [day, values] of Object.entries(tasbih.history)) {
+        const kept = tasbihCountsOut(values);
+        if (isRealDateKey(day) && day < date && Object.keys(kept).length) tasbihHistory[day] = kept;
+      }
+      return {
+        transfer: transferVersion,
+        app: transferApp,
+        envelope: {
+          ...envelope,
+          adhkar: {
+            ...envelope.adhkar,
+            today: {
+              ...today,
+              progress: { morning: ids(today.progress.morning), evening: ids(today.progress.evening) },
+              targets: { morning: ids(today.targets.morning), evening: ids(today.targets.evening) }
+            }
+          }
+        },
+        athkar: {
+          adhkar: { resets: transferResetsFor(progress.resets, date, unit => unit === "morning" || unit === "evening") },
+          suwar: {
+            date,
+            selected: suwar.selected,
+            read,
+            completedAt,
+            history: trimDailyHistory(suwarHistory),
+            resets: transferResetsFor(suwar.resets, date, unit => Object.hasOwn(suwarById, unit))
+          },
+          tasbih: {
+            date,
+            selected: transferTasbihKeyIsValid(tasbih.selected) ? tasbih.selected : tasbihPresets[0].id,
+            target: tasbih.target,
+            counts,
+            firstUse: tasbih.firstUse.filter(key => Object.hasOwn(counts, key)),
+            custom: tasbih.custom.filter(phrase => transferPhraseIsValid(phrase)),
+            history: trimDailyHistory(tasbihHistory),
+            resets: transferResetsFor(tasbih.resets, date, transferTasbihKeyIsValid)
+          }
+        }
+      };
+    }
+
+    // { ok: true, container, code, frames }: `code` is the text form (copy, file), `frames` the QR frames; both carry
+    // one random `msg`, new on every call.
+    async function encodeTransfer(msg = transferMessageId()) {
+      if (!transferSupported()) return { ok: false, error: "unsupported" };
+      const envelope = buildBackup(false);
+      refreshTasbihState();
+      const date = envelope.adhkar.today.date;
+      // Midnight passed between the reads: build again, now on one date.
+      if (suwarState.date !== date || tasbihState.date !== date) return encodeTransfer(msg);
+      const container = buildTransferContainer(envelope, state, suwarState, tasbihState);
+      const json = new TextEncoder().encode(JSON.stringify(container));
+      if (json.length > transferMaxInflatedBytes) return { ok: false, error: "too-long" };
+      const payload = base45Encode(await deflateTransferBytes(json));
+      const code = transferTextCode(payload, msg);
+      if (code.length > transferMaxTextLength) return { ok: false, error: "too-long" };
+      return { ok: true, container, code, frames: transferFrames(payload, msg) };
+    }
+
+    // Every key a transfer reads or writes, as stored now; null when storage cannot be read (then nothing is written).
+    function readTransferStorage() {
+      const raw = {};
+      try {
+        for (const key of [...transferStoreKeys, ...transferSettingKeys]) raw[key] = localStorage.getItem(key);
+      } catch (_) {
+        return null;
+      }
+      return raw;
+    }
+
+    // The receiving side of a merge, from readTransferStorage's values: each store normalized and rolled to today.
+    function transferLocalFromStorage(raw) {
+      const current = raw[storageKey];
+      return {
+        raw,
+        progress: parseStoredState(current, current ? null : raw[legacyStorageKey]),
+        suwar: parseStoredSuwarState(raw[suwarStorageKey]),
+        tasbih: parseStoredTasbihState(raw[tasbihStorageKey]),
+        settings: Object.fromEntries(transferSettingKeys.map(key => [key, raw[key]]))
+      };
+    }
+
+    // The receiving side as stored now, after this tab has saved its own rollover; null in tasbih memory mode or when
+    // storage cannot be read, as the tasbih never writes over what it could not read.
+    function readTransferLocal() {
+      ensureCurrentDay();
+      if (!tasbihStorageWorks) return null;
+      const raw = readTransferStorage();
+      return raw && transferLocalFromStorage(raw);
+    }
+
+    function earliestInstant(first, second) {
+      const one = backupInstant(first);
+      const other = backupInstant(second);
+      return one && other ? (one <= other ? one : other) : one ?? other;
+    }
+
+    function maxCounts(first, second) {
+      const counts = { ...first };
+      for (const [key, count] of Object.entries(second)) counts[key] = Object.hasOwn(counts, key) ? Math.max(counts[key], count) : count;
+      return counts;
+    }
+
+    function laterResets(first, second, today) {
+      const resets = { ...first };
+      for (const [key, at] of Object.entries(second)) {
+        if (!Object.hasOwn(resets, key) || resets[key] < at) resets[key] = at;
+      }
+      return normalizeResets(resets, today);
+    }
+
+    // Whose copy of a unit the merge keeps: -1 the receiver's, 1 the incoming one (its reset is later), 0 both (equal
+    // epochs: the join).
+    function transferWinner(localResets, incomingResets, date, unit) {
+      const mine = resetEpoch(localResets, date, unit);
+      const theirs = resetEpoch(incomingResets, date, unit);
+      return mine === theirs ? 0 : mine > theirs ? -1 : 1;
+    }
+
+    function transferIncomingProgress(container, today) {
+      const { adhkar } = container.envelope;
+      const candidate = normalizeState({ ...adhkar.today, history: adhkar.history, resets: container.athkar?.adhkar.resets ?? {} });
+      if (candidate.date === today) return candidate;
+      if (candidate.date < today) return rollStateToDate(candidate, today);
+      return { ...emptyState(today), history: candidate.history.filter(entry => entry.date < today), resets: transferResetsBefore(candidate.resets, today) };
+    }
+
+    function transferIncomingSuwar(store, today) {
+      const candidate = normalizeSuwarState(store);
+      if (candidate.date === today) return candidate;
+      if (candidate.date < today) return rollSuwarStateToDate(candidate, today);
+      const history = Object.fromEntries(Object.entries(candidate.history).filter(([day]) => day < today));
+      return { ...emptySuwarState(today, candidate.selected), history, resets: transferResetsBefore(candidate.resets, today) };
+    }
+
+    function transferIncomingTasbih(store, today) {
+      const candidate = normalizeTasbihState(store);
+      if (candidate.date === today) return candidate;
+      if (candidate.date < today) return rollTasbihStateToDate(candidate, today);
+      const history = Object.fromEntries(Object.entries(candidate.history).filter(([day]) => day < today));
+      return { ...candidate, date: today, counts: {}, firstUse: [], history, resets: transferResetsBefore(candidate.resets, today) };
+    }
+
+    // A code from a device whose date is ahead: only its days before the receiver's today take part.
+    function transferResetsBefore(resets, today) {
+      return Object.fromEntries(Object.entries(resets).filter(([key]) => key.slice(0, 10) < today));
+    }
+
+    function transferPeriodUnit(candidate, period) {
+      return {
+        progress: finiteCounts(candidate.progress[period]),
+        manualCompletion: Boolean(candidate.manualCompletion[period]),
+        completedAt: backupInstant(candidate.completedAt[period])
+      };
+    }
+
+    // athkar-progress-v2. Units: (date, period). Today's unit is the period's counts, manual mark and completion instant;
+    // a history unit is the period's completion that day. Targets stay the receiver's, gaining only absent keys.
+    function mergeTransferProgress(local, incoming, now, units) {
+      const today = local.date;
+      const merged = { ...emptyState(today), resets: laterResets(local.resets, incoming.resets, today) };
+      for (const period of ["morning", "evening"]) {
+        merged.targets[period] = { ...local.targets[period] };
+        for (const [id, target] of Object.entries(incoming.targets[period])) {
+          if (!Object.hasOwn(merged.targets[period], id)) merged.targets[period][id] = target;
+        }
+        const mine = transferPeriodUnit(local, period);
+        const theirs = transferPeriodUnit(incoming, period);
+        const winner = transferWinner(local.resets, incoming.resets, today, period);
+        const kept = winner < 0 ? mine : winner > 0 ? theirs : {
+          progress: maxCounts(mine.progress, theirs.progress),
+          manualCompletion: mine.manualCompletion || theirs.manualCompletion,
+          completedAt: earliestInstant(mine.completedAt, theirs.completedAt)
+        };
+        merged.progress[period] = { ...kept.progress };
+        merged.manualCompletion[period] = kept.manualCompletion;
+        merged.completedAt[period] = kept.completedAt;
+        // syncCompletionState's bookkeeping on the merged day; a completion the union made gets the merge instant.
+        const countersComplete = periodCountersComplete(period, merged);
+        if (countersComplete) merged.manualCompletion[period] = false;
+        if (!countersComplete && !merged.manualCompletion[period]) merged.completedAt[period] = null;
+        else if (!merged.completedAt[period]) merged.completedAt[period] = now;
+        units.push({ store: "adhkar", date: today, unit: period, winner, before: mine, incoming: theirs, after: transferPeriodUnit(merged, period) });
+      }
+      const days = new Map();
+      for (const [side, entries] of [["mine", local.history], ["theirs", incoming.history]]) {
+        for (const entry of entries) {
+          if (!isRealDateKey(entry.date) || entry.date >= today) continue;
+          const day = days.get(entry.date) ?? {};
+          if (!day[side]) day[side] = entry;
+          days.set(entry.date, day);
+        }
+      }
+      const history = [];
+      for (const [date, day] of days) {
+        const entry = { date, morning: false, evening: false, morningAt: null, eveningAt: null };
+        for (const period of ["morning", "evening"]) {
+          const field = `${period}At`;
+          const side = value => (value?.[period] ? { complete: true, at: backupInstant(value[field]) } : { complete: false, at: null });
+          const mine = side(day.mine);
+          const theirs = side(day.theirs);
+          const winner = transferWinner(local.resets, incoming.resets, date, period);
+          const kept = winner < 0 ? mine : winner > 0 ? theirs : { complete: mine.complete || theirs.complete, at: earliestInstant(mine.at, theirs.at) };
+          entry[period] = kept.complete;
+          entry[field] = kept.complete ? kept.at : null;
+          units.push({ store: "adhkar", date, unit: period, winner, before: mine, incoming: theirs, after: { complete: entry[period], at: entry[field] } });
+        }
+        if (entry.morning || entry.evening) history.push(entry);
+      }
+      merged.history = history.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+      return merged;
+    }
+
+    function transferSuraUnit(candidate, sura) {
+      return {
+        pages: sura.pages.filter(page => candidate.read[sura.id]?.[page.id] === true).map(page => page.id),
+        completedAt: backupInstant(candidate.completedAt[sura.id])
+      };
+    }
+
+    // athkar-suwar-v1. Units: (date, sura). Today's unit is the sura's read pages and completion instant; a history unit
+    // is the sura's completion that day. `selected` stays the receiver's.
+    function mergeTransferSuwar(local, incoming, now, units) {
+      const today = local.date;
+      const merged = { ...emptySuwarState(today, local.selected), resets: laterResets(local.resets, incoming.resets, today) };
+      for (const sura of suwarContent.suwar) {
+        const mine = transferSuraUnit(local, sura);
+        const theirs = transferSuraUnit(incoming, sura);
+        const winner = transferWinner(local.resets, incoming.resets, today, sura.id);
+        const pages = winner < 0 ? mine.pages : winner > 0 ? theirs.pages : [...mine.pages, ...theirs.pages];
+        for (const page of sura.pages) if (pages.includes(page.id)) merged.read[sura.id][page.id] = true;
+        const at = winner < 0 ? mine.completedAt : winner > 0 ? theirs.completedAt : earliestInstant(mine.completedAt, theirs.completedAt);
+        merged.completedAt[sura.id] = suraIsComplete(sura, merged) ? at ?? now : null;
+        units.push({ store: "suwar", date: today, unit: sura.id, winner, before: mine, incoming: theirs, after: transferSuraUnit(merged, sura) });
+      }
+      const history = {};
+      const dates = new Set([...Object.keys(local.history), ...Object.keys(incoming.history)].filter(day => isRealDateKey(day) && day < today));
+      for (const date of [...dates].sort().reverse()) {
+        for (const sura of suwarContent.suwar) {
+          const mine = backupInstant(local.history[date]?.[sura.id]);
+          const theirs = backupInstant(incoming.history[date]?.[sura.id]);
+          if (!mine && !theirs) continue;
+          const winner = transferWinner(local.resets, incoming.resets, date, sura.id);
+          const kept = winner < 0 ? mine : winner > 0 ? theirs : earliestInstant(mine, theirs);
+          if (kept) (history[date] ??= {})[sura.id] = kept;
+          units.push({ store: "suwar", date, unit: sura.id, winner, before: mine, incoming: theirs, after: kept });
+        }
+      }
+      merged.history = trimDailyHistory(history);
+      return merged;
+    }
+
+    // athkar-tasbih-v1. Units: (date, key). Saved phrases: the receiver's, then the incoming ones it lacks, up to
+    // tasbihMaxCustom; an incoming phrase that does not fit is dropped with its counts and epochs, never folded into
+    // another key. `selected` and `target` stay the receiver's.
+    function mergeTransferTasbih(local, incoming, units) {
+      const today = local.date;
+      const custom = [...local.custom];
+      const dropped = [];
+      for (const phrase of incoming.custom) {
+        if (findTasbihPhrase(phrase, custom)) continue;
+        if (custom.length < tasbihMaxCustom) custom.push(phrase);
+        else dropped.push(phrase);
+      }
+      const droppedKeys = new Set(dropped.map(phrase => `c:${phrase}`));
+      const mineCounts = counts => tasbihCounts(counts, custom);
+      const theirsCounts = counts => Object.fromEntries(Object.entries(tasbihCounts(counts, custom)).filter(([key]) => !droppedKeys.has(key)));
+      const mineResets = normalizeResets(local.resets, today, unit => canonicalTasbihKey(unit, custom));
+      const theirsResets = Object.fromEntries(Object.entries(normalizeResets(incoming.resets, today, unit => canonicalTasbihKey(unit, custom)))
+        .filter(([key]) => !droppedKeys.has(key.slice(11))));
+      const mergeDay = (date, mine, theirs) => {
+        const counts = {};
+        for (const key of new Set([...Object.keys(mine), ...Object.keys(theirs)])) {
+          const before = Object.hasOwn(mine, key) ? mine[key] : 0;
+          const other = Object.hasOwn(theirs, key) ? theirs[key] : 0;
+          const winner = transferWinner(mineResets, theirsResets, date, key);
+          const after = winner < 0 ? before : winner > 0 ? other : Math.max(before, other);
+          if (after > 0) counts[key] = after;
+          units.push({ store: "tasbih", date, unit: key, winner, before, incoming: other, after });
+        }
+        return counts;
+      };
+      const counts = mergeDay(today, mineCounts(local.counts), theirsCounts(incoming.counts));
+      const firstUse = [...local.firstUse, ...incoming.firstUse].map(key => canonicalTasbihKey(key, custom));
+      const history = {};
+      const dates = new Set([...Object.keys(local.history), ...Object.keys(incoming.history)].filter(day => day < today));
+      for (const date of [...dates].sort().reverse()) {
+        const day = mergeDay(date, mineCounts(local.history[date]), theirsCounts(incoming.history[date]));
+        if (Object.keys(day).length) history[date] = day;
+      }
+      return {
+        tasbih: {
+          date: today,
+          selected: local.selected,
+          target: local.target,
+          counts,
+          firstUse: [...new Set([...firstUse, ...Object.keys(counts)])].filter(key => key && Object.hasOwn(counts, key)),
+          custom,
+          history: trimDailyHistory(history),
+          resets: laterResets(mineResets, theirsResets, today)
+        },
+        added: custom.slice(local.custom.length),
+        dropped
+      };
+    }
+
+    // Settings are written only where the receiver has no stored value, and only when they differ from the default it
+    // already shows. Reminder switches, lastShown and location never transfer (notification permission is per app).
+    function mergeTransferSettings(local, envelope) {
+      const { preferences, reminders } = envelope;
+      const absent = (...keys) => keys.every(key => local[key] === null || local[key] === undefined);
+      const settings = {};
+      if (absent("athkar-theme") && preferences.theme !== "system") settings["athkar-theme"] = preferences.theme;
+      if (absent(textSizeStorageKey, "athkar-text-size") && preferences.textSize !== "medium") settings[textSizeStorageKey] = preferences.textSize;
+      if (absent(lineSpacingStorageKey) && preferences.lineSpacing !== "comfortable") settings[lineSpacingStorageKey] = preferences.lineSpacing;
+      if (absent(hapticsStorageKey) && !preferences.haptics) settings[hapticsStorageKey] = "off";
+      if (absent(longOrderStorageKey) && preferences.longOrder === "last") settings[longOrderStorageKey] = "last";
+      if (absent(longOrderPromptStorageKey) && preferences.longOrderPromptAnswered) settings[longOrderPromptStorageKey] = "answered";
+      const defaults = emptyReminderPreferences();
+      if (absent(remindersStorageKey, legacyRemindersStorageKey) &&
+        (reminders.calculationMethod !== defaults.calculationMethod || reminders.asrSchool !== defaults.asrSchool)) {
+        settings[remindersStorageKey] = JSON.stringify({ ...defaults, calculationMethod: reminders.calculationMethod, asrSchool: reminders.asrSchool });
+      }
+      return settings;
+    }
+
+    // The merged stores of `local` (transferLocalFromStorage) and a validated container, plus one record per unit
+    // {store, date, unit, winner, before, incoming, after}. Pure: `now` is the instant of completions the union makes.
+    function mergeTransfer(local, container, now = new Date().toISOString()) {
+      const today = local.progress.date;
+      const units = [];
+      const progress = mergeTransferProgress(local.progress, transferIncomingProgress(container, today), now, units);
+      let suwar = local.suwar;
+      let tasbih = local.tasbih;
+      let phrases = { added: [], dropped: [] };
+      if (container.athkar) {
+        suwar = mergeTransferSuwar(local.suwar, transferIncomingSuwar(container.athkar.suwar, today), now, units);
+        const merged = mergeTransferTasbih(local.tasbih, transferIncomingTasbih(container.athkar.tasbih, today), units);
+        tasbih = merged.tasbih;
+        phrases = { added: merged.added, dropped: merged.dropped };
+      }
+      return { progress, suwar, tasbih, settings: mergeTransferSettings(local.settings, container.envelope), units, phrases };
+    }
+
+    function transferUnitEmpty(value) {
+      if (value === null || typeof value !== "object") return !value;
+      if (Object.hasOwn(value, "progress")) return !value.manualCompletion && !Object.values(value.progress).some(count => count > 0);
+      if (Object.hasOwn(value, "pages")) return value.pages.length === 0;
+      return !value.complete;
+    }
+
+    // Whether `after` keeps everything `before` had (so taking the other side's unit lost nothing).
+    function transferUnitCovers(after, before) {
+      if (typeof before === "number") return after >= before;
+      if (before === null || typeof before !== "object") return !before || Boolean(after);
+      if (Object.hasOwn(before, "progress")) {
+        return Object.entries(before.progress).every(([id, count]) => Object.hasOwn(after.progress, id) && after.progress[id] >= count) &&
+          (!(before.manualCompletion || before.completedAt) || Boolean(after.manualCompletion || after.completedAt));
+      }
+      if (Object.hasOwn(before, "pages")) return before.pages.every(page => after.pages.includes(page));
+      return !before.complete || after.complete;
+    }
+
+    // The dry run the preview shows (nothing is written): `additions`, `resets` (the other device's later reset replaces
+    // a unit here; before/after), `keptLocal` (this device's later reset; the incoming copy is ignored), `settings`,
+    // `warnings`, `empty`, and for applyTransfer the exact `writes` and the stored values they were planned on (`before`).
+    function planTransfer(local, decoded, now = new Date().toISOString()) {
+      const { container, source } = decoded;
+      const today = local.progress.date;
+      const merged = mergeTransfer(local, container, now);
+      const kept = {
+        adhkar: new Set(merged.progress.history.map(entry => entry.date)),
+        suwar: new Set(Object.keys(merged.suwar.history)),
+        tasbih: new Set(Object.keys(merged.tasbih.history))
+      };
+      const additions = [];
+      const resets = [];
+      const keptLocal = [];
+      let trimmed = false;
+      for (const unit of merged.units) {
+        const { store, date, winner, before, incoming, after } = unit;
+        const row = { store, date, unit: unit.unit, before, after };
+        // A merged day past the newest seven is trimmed, not reset: it is a warning, not a row.
+        if (date < today && !transferUnitEmpty(after) && !kept[store].has(date)) {
+          trimmed = true;
+          continue;
+        }
+        const changed = JSON.stringify(after) !== JSON.stringify(before);
+        if (winner > 0 && changed && !transferUnitEmpty(before) && !transferUnitCovers(after, before)) resets.push(row);
+        else if (winner < 0 && !transferUnitEmpty(incoming) && JSON.stringify(incoming) !== JSON.stringify(before)) keptLocal.push({ ...row, incoming });
+        else if (changed && !transferUnitEmpty(after)) additions.push(row);
+      }
+      if (merged.phrases.added.length) {
+        additions.push({ store: "tasbih", date: today, unit: "custom", before: local.tasbih.custom, after: merged.tasbih.custom });
+      }
+      const incomingDate = container.envelope.adhkar.today.date;
+      const warnings = [];
+      if (source === "backup") warnings.push({ kind: "backup" });
+      if (incomingDate > today) warnings.push({ kind: "future", date: incomingDate });
+      if (incomingDate < today) warnings.push({ kind: "stale", date: incomingDate });
+      if (trimmed) warnings.push({ kind: "trimmed" });
+      if (merged.phrases.dropped.length) warnings.push({ kind: "tasbih-cap", phrases: merged.phrases.dropped });
+      const settings = Object.entries(merged.settings).map(([key, value]) => ({ key, value }));
+      const writes = {};
+      const write = (key, value) => {
+        if (local.raw[key] !== value) writes[key] = value;
+      };
+      write(storageKey, JSON.stringify(merged.progress));
+      write(legacyStorageKey, null);
+      if (container.athkar) {
+        write(suwarStorageKey, JSON.stringify(merged.suwar));
+        write(tasbihStorageKey, JSON.stringify(merged.tasbih));
+      }
+      for (const { key, value } of settings) write(key, value);
+      return {
+        createdAt: container.envelope.meta.exportedAt,
+        source,
+        today,
+        additions,
+        resets,
+        keptLocal,
+        settings,
+        warnings,
+        empty: !additions.length && !resets.length && !settings.length,
+        writes,
+        before: { ...local.raw }
+      };
+    }
+
+    // Commits exactly `plan`: only if every stored value is still what it was planned on (else "changed": plan again),
+    // all writes or none (a failed write rolls back the ones before it), then this tab shows the result.
+    function applyTransfer(plan) {
+      if (!tasbihStorageWorks || plan.today !== localDateKey()) return { ok: false, error: tasbihStorageWorks ? "changed" : "write" };
+      const current = readTransferStorage();
+      if (!current) return { ok: false, error: "write" };
+      if (Object.keys(plan.before).some(key => current[key] !== plan.before[key])) return { ok: false, error: "changed" };
+      const written = [];
+      try {
+        for (const [key, value] of Object.entries(plan.writes)) {
+          written.push(key);
+          if (value === null) localStorage.removeItem(key);
+          else localStorage.setItem(key, value);
+        }
+      } catch (_) {
+        for (const key of written.reverse()) {
+          try {
+            if (plan.before[key] === null) localStorage.removeItem(key);
+            else localStorage.setItem(key, plan.before[key]);
+          } catch (_) {
+            if (key === tasbihStorageKey) tasbihStorageWorks = false;
+          }
+        }
+        return { ok: false, error: "write" };
+      }
+      showStoredProgressState();
+      showStoredSuwarState();
+      showStoredTasbihState();
+      for (const { key, value } of plan.settings) {
+        if (key === "athkar-theme") applyTheme(value, false);
+        else if (key === textSizeStorageKey) applyTextSize(value, false, false);
+        else if (key === lineSpacingStorageKey) applyLineSpacing(value, false, false);
+        else if (key === hapticsStorageKey) {
+          hapticsEnabled = value !== "off";
+          hapticsToggle.checked = hapticsEnabled;
+          syncHapticArm();
+        } else if (key === longOrderStorageKey) {
+          longAdhkarLast = value === "last";
+          longOrderToggle.checked = longAdhkarLast;
+          invalidateDecks();
+          renderCards();
+        } else if (key === remindersStorageKey) {
+          reminderPreferences = loadReminderPreferences();
+          updateReminderControls();
+          scheduleReminders();
+        }
+      }
+      return { ok: true };
+    }
+
+    // athkar-progress-v2 or athkar-suwar-v1 changed in storage (another tab's taps or transfer, or applyTransfer here).
+    function showStoredProgressState() {
+      state = loadState();
+      invalidateDecks();
+      if (collections[activePeriod]) renderCards();
+      else updateSessionProgress();
+      updateHistoryView();
+      scheduleReminders();
+    }
+
+    function showStoredSuwarState() {
+      const selected = suwarState.selected;
+      suwarState = loadSuwarState();
+      suwarState.selected = selected;
+      if (activePeriod === "suwar") renderCards();
+      else updateSessionProgress();
+      updateHistoryView();
     }
 
     settingsButton.addEventListener("click", () => {
@@ -8691,9 +9686,11 @@
       scheduleReminders();
       scheduleDayRollover();
     });
-    // Another tab or window saved athkar-tasbih-v1 (key null: storage was cleared).
+    // Another tab or window saved a store: its taps, or a transfer it applied (key null: storage was cleared).
     addEventListener("storage", event => {
       if (event.key === tasbihStorageKey || event.key === null) showStoredTasbihState();
+      if (event.key === storageKey || event.key === null) showStoredProgressState();
+      if (event.key === suwarStorageKey || event.key === null) showStoredSuwarState();
     });
 
     dialogCancel.addEventListener("click", () => {

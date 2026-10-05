@@ -1,0 +1,1048 @@
+{
+  "about": "Merge laws over devices with reset epochs. `local ← incoming` is the receiver's storage after applying the plan of incoming's code. idempotent: receiving the same code twice equals once (byte-identical storage). commutative: local ← incoming and incoming ← local hold the same convergent stores (everything except receiver-owned fields: targets, selected sura and phrase, tasbih target, saved-phrase order and spelling, first-use order). converges: after transfers both ways the two devices hold the same convergent stores. associative: (a ← b) ← c and a ← (b ← c) agree.",
+  "source": "index.html: planTransfer, mergeTransfer, buildTransferContainer",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "now": "2026-10-04T06:00:00.000Z",
+    "nowLocal": "2026-10-04T09:00:00.000+03:00"
+  },
+  "devices": {
+    "join": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":10,\"hamd\":3},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":33}},\"resets\":{}}"
+    },
+    "joinOther": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":2,\"morning-03\":1},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":true,\"morningAt\":\"2026-10-03T02:00:00.000Z\",\"eveningAt\":\"2026-10-03T15:00:00.000Z\"},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-9-13\":true,\"mulk-14-17\":true,\"mulk-18-21\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{\"2026-10-03\":{\"kahf\":\"2026-10-03T18:00:00.000Z\"}},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":7,\"hamd\":9},\"firstUse\":[\"subhan\",\"hamd\"],\"custom\":[],\"history\":{\"2026-10-03\":{\"subhan\":20,\"hamd\":100}},\"resets\":{}}"
+    },
+    "history": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[{\"date\":\"2026-10-03\",\"morning\":true,\"evening\":true,\"morningAt\":\"2026-10-03T03:00:00.000Z\",\"eveningAt\":\"2026-10-03T15:00:00.000Z\"},{\"date\":\"2026-10-02\",\"morning\":true,\"evening\":false,\"morningAt\":\"2026-10-02T03:00:00.000Z\",\"eveningAt\":null}],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{\"2026-10-03\":{\"kahf\":\"2026-10-03T18:00:00.000Z\"}},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{\"2026-10-03\":{\"hamd\":100}},\"resets\":{}}"
+    },
+    "stale": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":3,\"morning-03\":3,\"morning-04\":3,\"morning-05\":1,\"morning-06\":1,\"morning-07\":1,\"morning-08\":4,\"morning-09\":1,\"morning-10\":3,\"morning-11\":1,\"morning-12\":7,\"morning-13\":1,\"morning-14\":1,\"morning-15\":3,\"morning-16\":3,\"morning-17\":1,\"morning-18\":1,\"morning-19\":1,\"morning-20\":100,\"morning-21\":100,\"morning-22\":3,\"morning-23\":1,\"morning-24\":100,\"morning-26\":1,\"morning-25\":10},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":\"2026-10-04T03:00:00.000Z\",\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":70},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+    },
+    "resetRecount": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"subhan\":5},\"firstUse\":[\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04\":\"2026-10-04T04:00:00.000Z\"}}"
+    },
+    "tombstone": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-03\":\"2026-10-04T04:00:00.000Z\",\"2026-10-02\":\"2026-10-04T04:00:00.000Z\"}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-03\":\"2026-10-04T04:00:00.000Z\"}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-03\":\"2026-10-04T04:00:00.000Z\"}}"
+    },
+    "cardReset": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{\"2026-10-04|morning\":\"2026-10-04T04:00:00.000Z\"}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+    },
+    "cardFull": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{\"morning-01\":1,\"morning-02\":1,\"morning-03\":1},\"evening\":{\"evening-01\":1}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+    },
+    "suwarA": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{\"kahf-1-4\":true},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-1-4\":true,\"mulk-5-8\":true,\"mulk-9-13\":true,\"mulk-14-17\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{\"2026-10-04|kahf\":\"2026-10-04T04:00:00.000Z\"}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+    },
+    "suwarB": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{\"kahf-1-4\":true,\"kahf-5-8\":true,\"kahf-9-12\":true},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{\"mulk-14-17\":true,\"mulk-18-21\":true,\"mulk-22-26\":true,\"mulk-27-30\":true}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{},\"firstUse\":[],\"custom\":[],\"history\":{},\"resets\":{}}"
+    },
+    "phraseReset": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"hamd\":2,\"subhan\":10},\"firstUse\":[\"hamd\",\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{\"2026-10-04|hamd\":\"2026-10-04T04:00:00.000Z\"}}"
+    },
+    "phraseOther": {
+      "athkar-progress-v2": "{\"date\":\"2026-10-04\",\"progress\":{\"morning\":{},\"evening\":{}},\"targets\":{\"morning\":{},\"evening\":{}},\"completedAt\":{\"morning\":null,\"evening\":null},\"manualCompletion\":{\"morning\":false,\"evening\":false},\"history\":[],\"resets\":{}}",
+      "athkar-suwar-v1": "{\"date\":\"2026-10-04\",\"selected\":\"kahf\",\"read\":{\"kahf\":{},\"yasin\":{},\"saffat\":{},\"waqiah\":{},\"mulk\":{}},\"completedAt\":{\"kahf\":null,\"yasin\":null,\"saffat\":null,\"waqiah\":null,\"mulk\":null},\"history\":{},\"resets\":{}}",
+      "athkar-tasbih-v1": "{\"date\":\"2026-10-04\",\"selected\":\"subhan\",\"target\":33,\"counts\":{\"hamd\":50,\"subhan\":40},\"firstUse\":[\"hamd\",\"subhan\"],\"custom\":[],\"history\":{},\"resets\":{}}"
+    }
+  },
+  "pairs": [
+    {
+      "local": "join",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "join",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "joinOther",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "history",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "stale",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "resetRecount",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "tombstone",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardReset",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "cardFull",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarA",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "suwarB",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseReset",
+      "incoming": "phraseOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "join",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "joinOther",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "history",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "stale",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "resetRecount",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "tombstone",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "cardReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "cardFull",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "suwarA",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "suwarB",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    },
+    {
+      "local": "phraseOther",
+      "incoming": "phraseReset",
+      "idempotent": true,
+      "commutative": true,
+      "converges": true
+    }
+  ],
+  "triples": [
+    {
+      "devices": [
+        "join",
+        "resetRecount",
+        "tombstone"
+      ],
+      "associative": true
+    },
+    {
+      "devices": [
+        "stale",
+        "resetRecount",
+        "history"
+      ],
+      "associative": true
+    },
+    {
+      "devices": [
+        "cardFull",
+        "cardReset",
+        "join"
+      ],
+      "associative": true
+    },
+    {
+      "devices": [
+        "suwarA",
+        "suwarB",
+        "join"
+      ],
+      "associative": true
+    },
+    {
+      "devices": [
+        "phraseReset",
+        "phraseOther",
+        "stale"
+      ],
+      "associative": true
+    },
+    {
+      "devices": [
+        "tombstone",
+        "history",
+        "resetRecount"
+      ],
+      "associative": true
+    }
+  ]
+}

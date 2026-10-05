@@ -510,6 +510,7 @@ Support routes for morning, evening, a specific card, a prayer occurrence, searc
   If it fails, GoatCounter's own cleanup (about 30 days) is the fallback. The PWA's Settings discloses this.
 - The native app's 1.0 release gate of "no data collected/shared" (Store declarations below) is unchanged. It ships no counter.
 - No worship or location data leaves the device during ordinary use.
+- PWA transfer codes ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)) are built on the device, are plaintext like the backup file, and travel only by a channel the user picks (copy, file, or a QR code shown on screen). No server is involved.
 - The app uses one-shot location requests, uses a coarse location sufficient for calculations, rounds coordinates before storage, and never collects location in the background.
 - Notification text contains no personal prayer history.
 - Exclude sensitive details from default exports and redact them from diagnostics.

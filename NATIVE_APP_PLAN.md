@@ -531,6 +531,8 @@ This policy takes effect at the end of Slice 1:
 
 **Owner-approved exceptions (2026-10-04).** The owner approved additions to the live PWAs that fall in the "not allowed" column. In athkar, the exceptions are the «سور» tab (`athkar-suwar-v1`, shipped 2026-10-02) and the «مسبحة» tab (`#tasbih`, `athkar-tasbih-v1`, shipped 2026-10-04). In ruqyah, the exception is one tab per sura (shipped 2026-10-03), using `ruqyah-suwar-v1` and an IndexedDB database named `ruqyah`. The database has an object store named `state`, with `daily` and `suwar` records. Backup envelope v1 does not carry the per-sura or tasbih state: `athkar-suwar-v1`, `athkar-tasbih-v1`, `ruqyah-suwar-v1`, or the `suwar` record. The `daily` record has the shape of `ruqyah-daily-v1` and is exported as before.
 
+**Owner-approved exception: transfer import (2026-10-05).** The owner allowed import into the PWAs for one purpose only: moving progress between copies of the same PWA (for example Safari and the Home Screen app, or phone and iPad). It is the offline transfer code of [`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md): copied text, a file or animated QR frames, with no server, relay or WebRTC. The receiving PWA validates the code, shows a preview, and merges it with idempotent joins under reset epochs, which the three athkar stores now record in a `resets` field. It may also read an envelope-v1 `.athkarbackup` file for its adhkar part. Any other import into the PWAs remains "not allowed". The native app stays the destination for backups.
+
 The athkar PWA's ruqyah launcher tab remains unchanged. `MOBILE_APP_PLAN.md` and this document are linked from the athkar README; the ruqyah README gains one line pointing here.
 
 ---

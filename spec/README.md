@@ -34,9 +34,12 @@ The output is byte-identical on every run, whatever the host time zone. Regenera
 - **`timeZone`** is an IANA zone. Local dates (`YYYY-MM-DD`) and local wall-clock times are interpreted in it.
 - **`now`** is an ISO-8601 UTC instant. `nowLocal` is the same instant written in `timeZone`, for readers only.
 - **`state`** is an `athkar-progress-v2` object:
-  `{date, progress, targets, completedAt, manualCompletion, history[]}`.
+  `{date, progress, targets, completedAt, manualCompletion, history[], resets}`.
   - Each history entry is `{date, morning, evening, morningAt, eveningAt}`.
   - Timestamps (`completedAt`, `morningAt`, `eveningAt`) are ISO strings or `null`.
+  - `resets` holds reset epochs, `{"YYYY-MM-DD" or "YYYY-MM-DD|<unit>": instant}`, kept for 31 local days
+    ([`transfer/transfer-v1.md`](transfer/transfer-v1.md) §5.1). `athkar-suwar-v1` and `athkar-tasbih-v1` carry the
+    same field. Inputs may omit it; it defaults to `{}`.
 
 | File | Function(s) | Case input | Expected |
 | --- | --- | --- | --- |
@@ -46,8 +49,8 @@ The output is byte-identical on every run, whatever the host time zone. Regenera
 | `sessions/fixtures/build-deck.json` | `buildDeck`, `isLongDhikr` | `longAdhkarLast`, `state` (targets) | per period `{deck: [ids], longItems: [ids]}` |
 | `sessions/fixtures/first-incomplete-index.json` | `firstIncompleteIndex` | `longAdhkarLast`, `state` | per period `{index, itemId}` |
 | `sessions/fixtures/completion-sync.json` | `syncCompletionState`, `setManualCompletion` | `now`, `state`, `operation` | `returned` (sync only, else `null`), resulting `state` |
-| `sessions/fixtures/scoped-reset.json` | `resetDayProgress` / `resetWeek` / `resetEverything`, `hasResettableState` | `now`, `timeZone`, `scope` (`day`/`week`/`everything`), `state` | `hasResettableStateBefore`, `deletedHistoryDates` (week), resulting `state` |
-| `sessions/fixtures/tasbih-load-state.json` | `loadTasbihState` (`normalizeTasbihState`, phrase-key migration, rollover) | `now`, `timeZone`, `storage` (`athkar-tasbih-v1` raw string) | resulting `state` (`{date, selected, target, counts, firstUse, custom, history}`), and `reloaded`: the same load on the saved result, equal to `state` |
+| `sessions/fixtures/scoped-reset.json` | `resetDayProgress` / `resetWeek` / `resetEverything`, `hasResettableState` | `now`, `timeZone`, `scope` (`day`/`week`/`everything`), `state` | `hasResettableStateBefore`, `deletedHistoryDates` (week), resulting `state` with the reset epochs each scope records |
+| `sessions/fixtures/tasbih-load-state.json` | `loadTasbihState` (`normalizeTasbihState`, phrase-key migration, rollover) | `now`, `timeZone`, `storage` (`athkar-tasbih-v1` raw string) | resulting `state` (`{date, selected, target, counts, firstUse, custom, history, resets}`), and `reloaded`: the same load on the saved result, equal to `state` |
 | `reminders/fixtures/next-reminder-time.json` | `nextReminderTime`, `scheduleReminders`, `prayerTimesForDate` | `now`, `timeZone`, `preferences` (the `athkar-reminders-v2` shape), `state`, `notificationPermission` | `todaySchedule`, per period `nextReminderTime`, and per period `scheduled: {delayMs, fireAt}` or `null` |
 
 ### Reminder notes
@@ -91,6 +94,21 @@ The adapter configuration, the P1 results and the written explanation for every 
 ## Backup envelope
 
 `backup/envelope-v1.md` specifies the `.athkarbackup` file both PWAs export (NATIVE_APP_PLAN.md §6.4); `backup/examples/` holds real exports. Validate any export with `node tools/backup-validate.mjs <file>`.
+
+## Transfer code
+
+`transfer/transfer-v1.md` specifies the code that moves progress between copies of the PWA: container, deflate +
+base45 codec, QR frames, limits, validation, and the merge with reset epochs. Its fixtures:
+
+| File | Function(s) | Content |
+| --- | --- | --- |
+| `transfer/fixtures/codec.json` | `base45Encode`/`Decode`, `transferChecksum`, `transferFrames`, `decodeTransfer`, `decodeTransferFrames`, `decodeTransferFile`, `encodeTransfer` | RFC 9285 vectors, checksums, frame splitting; `cases`: a code, frames or file text → `result` (accepted, or the error, reason and path); `roundTrip`: device storage → the container, decoded back from both the text form and the frames |
+| `transfer/fixtures/merge.json` | `planTransfer` (`mergeTransfer`) | receiver `storage` and the `incoming` container → the plan and the storage after its writes |
+| `transfer/fixtures/properties.json` | `planTransfer` | idempotence, commutativity and two-way convergence for every ordered pair of devices; associativity for triples |
+| `transfer/fixtures/apply.json` | `applyTransfer` | storage before and the plan's writes → result and storage after, including rollback and refusal cases |
+
+Codes in `codec.json` use stored (uncompressed) deflate blocks, so they are byte-identical on every zlib; the round
+trips use the host's `CompressionStream` and record only the container.
 
 ## Deck definition
 

@@ -249,7 +249,8 @@
               "morningAt": null,
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -334,7 +335,8 @@
               "morningAt": "2026-09-23T03:15:00.000Z",
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -390,7 +392,8 @@
               "morningAt": null,
               "eveningAt": "2026-09-23T15:00:00.000Z"
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -454,7 +457,8 @@
               "morningAt": "2026-09-23T04:00:00.000Z",
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -539,7 +543,8 @@
               "morningAt": null,
               "eveningAt": "2026-09-21T14:00:00.000Z"
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -644,7 +649,8 @@
               "morningAt": null,
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -799,7 +805,8 @@
               "morningAt": null,
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -907,7 +914,8 @@
               "morningAt": null,
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     },
@@ -1025,7 +1033,8 @@
               "morningAt": null,
               "eveningAt": null
             }
-          ]
+          ],
+          "resets": {}
         }
       }
     }
