@@ -2550,30 +2550,12 @@
 
       <section class="settings-section" aria-labelledby="transfer-settings-title">
         <h3 id="transfer-settings-title">نقل التقدّم إلى جهاز آخر</h3>
-        <p class="settings-note" id="transfer-note">انقل تقدّم اليوم وسجل آخر ٣١ يومًا، ومعهما قراءة السور والمسبحة، إلى جهاز آخر أو من سفاري إلى التطبيق المثبّت على الجهاز نفسه. يعرض التطبيق ويحفظ في النسخة الاحتياطية آخر سبعة أيام فقط، لكن الرمز يحمل الأيام الأقدم أيضًا. يُنشأ الرمز على جهازك ولا يُرسل إلى أي خادم. من يرى الرمز أو ينسخه يستطيع قراءة تقدّمك.</p>
+        <p class="settings-note" id="transfer-note">انقل تقدّم اليوم وسجل آخر ٣١ يومًا، ومعهما قراءة السور والمسبحة، إلى جهاز آخر أو من سفاري إلى التطبيق المثبّت على الجهاز نفسه. يعرض سجل الإكمال آخر سبعة أيام فقط، لكن الرمز يحمل الأيام الأقدم أيضًا. يُنشأ الرمز على جهازك ولا يُرسل إلى أي خادم، ولا يحمل موقعك المحفوظ. من يرى الرمز أو ينسخه يستطيع قراءة تقدّمك.</p>
         <p class="settings-note" id="transfer-unsupported" hidden>لا يدعم هذا المتصفح نقل التقدّم. حدّث النظام أو المتصفح؛ يحتاج آيفون وآيباد إلى الإصدار ١٦٫٤ أو أحدث.</p>
         <div class="transfer-entry">
           <button class="settings-action" id="transfer-send-open" type="button" aria-describedby="transfer-note">إرسال التقدّم</button>
           <button class="settings-action" id="transfer-receive-open" type="button" aria-describedby="transfer-note">استلام التقدّم</button>
         </div>
-      </section>
-
-      <section class="settings-section" aria-labelledby="backup-settings-title">
-        <h3 id="backup-settings-title">النسخة الاحتياطية</h3>
-        <p class="settings-note" id="backup-note">احفظ تقدّم أذكار اليوم وسجل إكمالها والإعدادات في ملف يمكن استيراده في تطبيق الجوال. لا تشمل النسخة عدّ المسبحة ولا قراءة السور. يُنشأ الملف على جهازك، ولا يُرسل هو ولا محتواه إلى أي خادم.</p>
-        <label class="settings-toggle-control" for="backup-include-location">
-          <span class="settings-toggle-copy">
-            <strong>تضمين الموقع المحفوظ</strong>
-            <small id="backup-location-note">يُستخدم لحساب مواعيد التذكير فقط.</small>
-            <small id="backup-location-missing" hidden>لم يُحدَّد موقع بعد، فلا يوجد ما يُضمَّن.</small>
-          </span>
-          <span class="toggle-switch">
-            <input class="toggle-input" id="backup-include-location" type="checkbox" switch role="switch" aria-describedby="backup-location-note backup-location-missing">
-            <span class="toggle-track" aria-hidden="true"></span>
-          </span>
-        </label>
-        <button class="settings-action" id="backup-export" type="button" aria-describedby="backup-note">تصدير نسخة احتياطية</button>
-        <p class="settings-note" id="backup-status" aria-live="polite"></p>
       </section>
 
       <section class="settings-section" aria-labelledby="history-title">
@@ -5647,10 +5629,6 @@
     const updateApply = document.getElementById("update-apply");
     const updateDismiss = document.getElementById("update-dismiss");
     const hapticsToggle = document.getElementById("haptics-toggle");
-    const backupIncludeLocation = document.getElementById("backup-include-location");
-    const backupExportButton = document.getElementById("backup-export");
-    const backupStatus = document.getElementById("backup-status");
-    const backupLocationMissing = document.getElementById("backup-location-missing");
     const nativeSwitchSupported = root.classList.contains("supports-native-switch");
     const themeSelect = document.getElementById("theme-select");
     const themeColor = document.getElementById("theme-color");
@@ -5865,7 +5843,7 @@
     function rollStateToDate(candidate, nextDate) {
       const previous = historyEntryFor(candidate);
       // History is kept by date, for the reset window (31 local days), not by count: pruning by date composes with the
-      // transfer's epoch join. The history list and the backup show the newest seven.
+      // transfer's epoch join. The history list and envelope v1 show the newest seven.
       const cutoff = resetCutoff(nextDate);
       const history = [previous, ...candidate.history.filter(entry => entry.date !== previous.date)].filter(entry => entry.date >= cutoff);
       return { ...emptyState(nextDate), history, resets: normalizeResets(candidate.resets, nextDate) };
@@ -6045,7 +6023,7 @@
       for (const date of dates ?? recentDates(resetEpochDays)) markReset(suwarState, date);
     }
 
-    // athkar-tasbih-v1: the «مسبحة» tab, apart from the other stores and, like athkar-suwar-v1, outside the backup.
+    // athkar-tasbih-v1: the «مسبحة» tab, apart from the other stores and, like athkar-suwar-v1, outside envelope v1.
     // `counts` (non-zero only) and `firstUse` (order of today's first taps, for history ties) are today's; a key is a
     // preset id or "c:" + a saved phrase. `history` maps each earlier local date to that day's counts, newest seven.
     // `selected`, `target` (null or 1…9999) and `custom` (newest first, at most eight) are preferences: resets keep them.
@@ -7275,8 +7253,8 @@
       return sura.surah.replace(/^سورة /, "");
     }
 
-    // Same entries the backup carries: real calendar days before today, de-duplicated, newest first (backupHistory).
-    // The suras completed on a day (athkar-suwar-v1) and its tasbih counts (athkar-tasbih-v1), neither in the backup,
+    // Same entries envelope v1 carries: real calendar days before today, de-duplicated, newest first (backupHistory).
+    // The suras completed on a day (athkar-suwar-v1) and its tasbih counts (athkar-tasbih-v1), neither in envelope v1,
     // are listed under its row.
     function updateHistoryView() {
       const adhkarDays = new Map(backupHistory(state.history, state.date).map(entry => [entry.date, entry]));
@@ -8211,7 +8189,6 @@
       const succeeded = await prayerLocationRequest;
       prayerLocationRequest = null;
       updateReminderControls();
-      updateBackupControls();
       scheduleReminders();
       return succeeded;
     }
@@ -8797,7 +8774,9 @@
       return [...byDate.values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit);
     }
 
-    function buildBackup(includeLocation) {
+    // Envelope v1 (spec/backup/envelope-v1.md), embedded in every transfer code. It never carries `reminders.location`:
+    // the saved location stays on this device.
+    function buildBackup() {
       ensureCurrentDay();
       const reminders = {
         morning: { enabled: reminderPreferences.morning.enabled },
@@ -8809,14 +8788,6 @@
           evening: backupDate(reminderPreferences.lastShown.evening)
         }
       };
-      const location = reminderPreferences.location;
-      if (includeLocation && location) {
-        reminders.location = {
-          latitude: Number(location.latitude.toFixed(4)),
-          longitude: Number(location.longitude.toFixed(4)),
-          updatedAt: backupInstant(location.updatedAt)
-        };
-      }
       return {
         meta: {
           format: 1,
@@ -8867,26 +8838,6 @@
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       return "downloaded";
-    }
-
-    function updateBackupControls() {
-      const hasLocation = Boolean(reminderPreferences.location);
-      backupIncludeLocation.disabled = !hasLocation;
-      if (!hasLocation) backupIncludeLocation.checked = false;
-      backupLocationMissing.hidden = hasLocation;
-    }
-
-    async function exportBackup() {
-      backupExportButton.disabled = true;
-      backupStatus.textContent = "";
-      try {
-        const outcome = await deliverFile(JSON.stringify(buildBackup(backupIncludeLocation.checked), null, 2), `athkar-backup-${localDateKey()}.athkarbackup`, "application/json");
-        if (outcome !== "cancelled") backupStatus.textContent = "جُهّز ملف النسخة الاحتياطية.";
-      } catch (_) {
-        backupStatus.textContent = "تعذّر تصدير النسخة الاحتياطية. حاول مرة أخرى.";
-      } finally {
-        backupExportButton.disabled = false;
-      }
     }
 
     // Transfer between devices (spec/transfer/transfer-v1.md). encodeTransfer() builds the code the user moves: the text
@@ -9410,9 +9361,9 @@
       return tasbihState;
     }
 
-    // The container for stores rolled to the envelope's date; `envelope` is buildBackup(false), `tasbih` a stored tasbih
+    // The container for stores rolled to the envelope's date; `envelope` is buildBackup(), `tasbih` a stored tasbih
     // value (transferTasbihStore). Whatever the validator would refuse (a malformed id, phrase or instant a loader
-    // tolerated) is left out, as the backup exporter does. Tasbih keys travel as stored, with their own epochs.
+    // tolerated) is left out, as buildBackup does. Tasbih keys travel as stored, with their own epochs.
     function buildTransferContainer(envelope, progress, suwar, tasbih) {
       const date = envelope.adhkar.today.date;
       const ids = values => Object.fromEntries(Object.entries(values).filter(([id]) => transferItemIdPattern.test(id) && !transferForbiddenKeys.has(id)).slice(0, 128));
@@ -9484,7 +9435,7 @@
 
     // The container of what this tab holds now (the stores rolled to today; the tasbih as stored).
     function transferContainerNow() {
-      const envelope = buildBackup(false);
+      const envelope = buildBackup();
       const date = envelope.adhkar.today.date;
       // Midnight passed between the reads: null, build again.
       if (suwarState.date !== date) return null;
@@ -11324,7 +11275,6 @@
         updateHistoryView();
         updateReminderControls();
         updateManualCompletionControls();
-        updateBackupControls();
       }
       transferOpener?.focus();
     }
@@ -11408,8 +11358,6 @@
     });
 
     settingsButton.addEventListener("click", () => {
-      backupIncludeLocation.checked = false;
-      updateBackupControls();
       updateHistoryView();
       updateReminderControls();
       updateManualCompletionControls();
@@ -11418,7 +11366,6 @@
       settingsDialog.showModal();
     });
     settingsDialogClose.addEventListener("click", () => settingsDialog.close());
-    backupExportButton.addEventListener("click", exportBackup);
     settingsDialog.addEventListener("click", event => {
       if (event.target === settingsDialog) settingsDialog.close();
     });

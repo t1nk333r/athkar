@@ -94,7 +94,7 @@ The adapter configuration, the P1 results and the written explanation for every 
 
 ## Backup envelope
 
-`backup/envelope-v1.md` specifies the `.athkarbackup` file both PWAs export (NATIVE_APP_PLAN.md §6.4); `backup/examples/` holds real exports. Validate any export with `node tools/backup-validate.mjs <file>`.
+`backup/envelope-v1.md` specifies envelope v1, the import format of the native app (NATIVE_APP_PLAN.md §6.4). The athkar PWA no longer exports a `.athkarbackup` file: its transfer code (`transfer/transfer-v1.md`) replaced that export and embeds envelope v1 as its `envelope` field. The ruqyah PWA exports the envelope as a `.athkarbackup` file. `backup/examples/` holds real exports from both PWAs, made before the athkar PWA's export moved into the transfer code. Validate any envelope with `node tools/backup-validate.mjs <file>`.
 
 ## Transfer code
 

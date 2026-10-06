@@ -456,11 +456,11 @@ Malformed input must never partially modify the database. Import runs in one tra
 
 Native applications cannot read the PWA's localStorage sandbox. Migration therefore requires:
 
-1. Add export/import to the PWA using the shared envelope.
+1. Give the PWA an export in the shared envelope. In the athkar PWA this is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)), which replaced its `.athkarbackup` export: every code embeds envelope v1 as its `envelope` field. The ruqyah PWA exports envelope v1 as a `.athkarbackup` file.
 2. Offer “Import from the web app” during native onboarding and later in settings.
-3. Accept a file through the document picker/share sheet. A custom deep link may be used for convenience with non-sensitive payloads.
-4. Map current progress, targets, manual completion, seven-day history, reminder preferences, theme, reading settings, and haptics. Include location only if the user selects the same explicit location-inclusion option used by normal exports.
-5. Compare a native re-export with the PWA export in an automated round-trip fixture.
+3. Accept a transfer code (pasted text, a `.txt` file or the animated QR frames) and an envelope-v1 file through the document picker/share sheet. A custom deep link may be used for convenience with non-sensitive payloads.
+4. Map current progress, targets, manual completion, seven-day history, reminder preferences, theme, reading settings, and haptics. A transfer code never carries the saved location, so the user sets the location again in the native app; an older `.athkarbackup` file carries it only if the user switched on its location-inclusion option at export.
+5. Compare a native re-export with the PWA's envelope (a code's `envelope`, or a PWA file) in an automated round-trip fixture.
 6. Keep the PWA available through a documented migration window.
 
 ### Encryption and synchronization
@@ -510,7 +510,7 @@ Support routes for morning, evening, a specific card, a prayer occurrence, searc
   If it fails, GoatCounter's own cleanup (about 30 days) is the fallback. The PWA's Settings discloses this.
 - The native app's 1.0 release gate of "no data collected/shared" (Store declarations below) is unchanged. It ships no counter.
 - No worship or location data leaves the device during ordinary use.
-- PWA transfer codes ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)) are built on the device, are plaintext like the backup file, and travel only by a channel the user picks (copy, file, or a QR code shown on screen). No server is involved.
+- PWA transfer codes ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)) are built on the device, are plaintext, and travel only by a channel the user picks (copy, file, or a QR code shown on screen). No server is involved. The transfer code is the athkar PWA's only export: it replaced the `.athkarbackup` backup file and embeds envelope v1, never with the saved location.
 - The app uses one-shot location requests, uses a coarse location sufficient for calculations, rounds coordinates before storage, and never collects location in the background.
 - Notification text contains no personal prayer history.
 - Exclude sensitive details from default exports and redact them from diagnostics.

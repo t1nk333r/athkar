@@ -297,7 +297,7 @@ Both PWAs roll at local civil midnight. `scheduleDayRollover` sets 00:00:01, and
 
 Safari's localStorage is inaccessible to a native app. As `MOBILE_APP_PLAN.md` §13 already concludes, both PWAs must ship an **export** before the iOS app ships an **import**.
 
-The `athkar-backup` export uses format 1 and contains one JSON document:
+Both exports carry envelope v1 (format 1, one JSON document). The ruqyah PWA writes it as a `.athkarbackup` file. The athkar PWA's export is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)): it replaced the athkar PWA's `.athkarbackup` export, and every code embeds envelope v1 as its `envelope` field (`buildBackup()`). The native importer decodes the code (text, `.txt` file or QR frames) and imports that envelope; it may ignore the code's `athkar` part or read its 31-day `athkar.adhkar.history`.
 
 | Section | Populated by athkar PWA from | Populated by ruqyah PWA from |
 | --- | --- | --- |
@@ -306,7 +306,7 @@ The `athkar-backup` export uses format 1 and contains one JSON document:
 | `adhkar.history` | the newest 7 entries of `history[]` (`date`, `morning`, `evening`, `morningAt`, `eveningAt`; the store keeps the 31-day window) | absent |
 | `ruqyah.today` | absent | `ruqyah-daily-v1` → `date`, `counts` |
 | `ruqyah.history` | absent | `history` object (≤365 entries) |
-| `reminders` | `athkar-reminders-v2` → `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown`; `location` only if the user ticks the inclusion checkbox | absent |
+| `reminders` | `athkar-reminders-v2` → `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown`; never `location` in a transfer code (an older `.athkarbackup` carries it only if the user switched on its inclusion option) | absent |
 | `preferences` | `athkar-theme`, `athkar-reading-text-size`, `athkar-line-spacing`, `athkar-haptics`, `athkar-long-order-v1`, `athkar-long-order-prompt-v1` | `ruqyah-theme`, `ruqyah-text-size`, `ruqyah-line-spacing`, `ruqyah-haptics` |
 
 The export omits `athkar-install-onboarding-v1` because the install-prompt state has no meaning natively.
@@ -316,7 +316,7 @@ Import rules:
 - Import either file independently and in either order. Merge each into its own tables. If both files contain preferences, use the athkar file because it has the superset, including long-order.
 - Merge by `(local_date, period)` / `(local_date)` / `(local_date, segment_id)`. An existing native row wins over an imported row unless the native row is empty. This makes re-import idempotent.
 - The PWA loaders (`loadState`, `loadReminderPreferences`, and the inline text-size shim) already normalise legacy keys (`athkar-progress-v1`, `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`). The export does not need to handle them.
-- Use the Web Share API with a file when available; otherwise, download the export. On iOS, declare a UTType for `.athkarbackup` so opening the file from Files/Mail/AirDrop launches import. Keep the payload out of URLs so the location field and history do not pass through browser history.
+- The ruqyah PWA delivers its file with the Web Share API when available, otherwise as a download; the athkar PWA delivers a transfer code the same way as a `.txt` file, or as copied text or QR frames. On iOS, declare a UTType for `.athkarbackup` and accept the transfer `.txt` file so opening either from Files/Mail/AirDrop launches import. Keep the payload out of URLs so history does not pass through browser history.
 - For the round-trip fixture, re-exporting a PWA file after native import must reproduce every section in the original (`MOBILE_APP_PLAN.md` §13 step 5), except for the cases listed in `spec/schema.md` "Export". Coordinates return rounded to 2 decimals (§7.4). The app does not store adhkar history days when neither period was complete because they contain no worship data; those days are absent from re-export.
 - Envelope v1 carries only data the PWAs hold. A native-to-native restore therefore loses native-only prayer settings: the Adhan-only methods (which a v1 export writes as `mwl`), the high-latitude rule, per-prayer adjustments, and Hijri offset. Before the native app ships its own export (backup UI), envelope format 2 adds a `prayerSettings` section; importers keep accepting format 1.
 
@@ -354,7 +354,7 @@ Record P1 findings in `spec/prayer-times/README.md`. Include the method paramete
 - Request one-shot location access with `CLLocationManager`. Tolerate `.reducedAccuracy`, use when-in-use access only, and request access only when the user taps تحديد الموقع (the PWA button) or enables a reminder without a location (`setReminderEnabled` behaviour today).
 - Round stored coordinates to **two decimals** (≈1 km) before persistence. The PWA rounds to four (`toFixed(4)`, ≈11 m). Two-decimal rounding changes prayer times by seconds at most and identifies users less precisely. Use rounded coordinates in parity vectors so the gate reflects what ships.
 - Accept manual coordinates when users deny location. Use the device's current time zone in 1.0.
-- Do not access location in the background or store it off-device. Exclude it from backup unless the user opts in during export.
+- Do not access location in the background or store it off-device. Exclude it from backup unless the user opts in during export. The athkar PWA's transfer code never carries it.
 
 ### 7.5 One notification planner for prayers and adhkar
 
@@ -415,7 +415,7 @@ Each slice ends with an observable exit criterion. Section 10.1 defines the effo
 | # | Slice | Content | Exit criterion | Band |
 | --- | --- | --- | --- | --- |
 | 0 | Fixtures and packs | `content/` packs extracted from `index.html` and `content.js`; `tools/content-validate.mjs` with two-source Quran check; `content-export-pwa.mjs` regenerates `ruqyah/content.js` byte-identically; session/reminder/prayer-time fixtures generated from the PWA. Pin `adhan-swift` and confirm method presets. | CI passes on the packs; regenerated `content.js` diff is empty; fixture files exist for every rule in 4.3. No native code yet. | M |
-| 1 | PWA export | Export button in both PWAs producing envelope v1 (section 6.4); ruqyah PWA reads regenerated `content.js`. Ship both PWAs. | A real export from each live PWA validates against the envelope schema; this is the last PWA feature before maintenance mode. | S |
+| 1 | PWA export | Export in both PWAs producing envelope v1 (section 6.4): the ruqyah PWA's `.athkarbackup` button; in athkar the transfer code, which replaced its export button and embeds envelope v1. Ruqyah PWA reads regenerated `content.js`. Ship both PWAs. | A real export from each live PWA (the athkar code's `envelope`) validates against the envelope schema; this is the last PWA feature before maintenance mode. | S |
 | 2 | Core package and storage | `AthkarCore`: models, GRDB schema + migration 1, repositories, session rules passing session fixtures, import of envelope v1 with round-trip test. | All session fixtures pass; import→export round-trip equals input for both PWA files. | M |
 | 3 | Prayer-time port | `PrayerTimesPort` + Adhan adapter; parity suite P1–P3; location adapter; calculation settings model. | P1–P3 pass with documented exceptions; `spec/prayer-times/README.md` written. | M |
 | 4 | Deck UI | One `DeckView` driven by a deck definition; adhkar morning/evening with counters, targets, manual completion, long-order (with the one-time prompt), scoped reset picker, completion dialog, swipe with axis lock, auto-advance, haptics, Uthman Taha font, auto-fit; ruqyah deck with `repeat` counters and daily completion. Settings for theme/text/spacing/haptics. | Every workflow in section 3.1 works on a device in airplane mode; VoiceOver script for tap-count, target change, manual completion, reset; screenshots at three text sizes in light/dark RTL. | L |
@@ -532,6 +532,8 @@ This policy takes effect at the end of Slice 1:
 **Owner-approved exceptions (2026-10-04).** The owner approved additions to the live PWAs that fall in the "not allowed" column. In athkar, the exceptions are the «سور» tab (`athkar-suwar-v1`, shipped 2026-10-02) and the «مسبحة» tab (`#tasbih`, `athkar-tasbih-v1`, shipped 2026-10-04). In ruqyah, the exception is one tab per sura (shipped 2026-10-03), using `ruqyah-suwar-v1` and an IndexedDB database named `ruqyah`. The database has an object store named `state`, with `daily` and `suwar` records. Backup envelope v1 does not carry the per-sura or tasbih state: `athkar-suwar-v1`, `athkar-tasbih-v1`, `ruqyah-suwar-v1`, or the `suwar` record. The `daily` record has the shape of `ruqyah-daily-v1` and is exported as before.
 
 **Owner-approved exception: transfer import (2026-10-05).** The owner allowed import into the PWAs for one purpose only: moving progress between copies of the same PWA (for example Safari and the Home Screen app, or phone and iPad). It is the offline transfer code of [`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md): copied text, a file or animated QR frames, with no server, relay or WebRTC. The receiving PWA validates the code, shows a preview, and merges it with idempotent joins under reset epochs, which the three athkar stores now record in a `resets` field. It may also read an envelope-v1 `.athkarbackup` file for its adhkar part. Any other import into the PWAs remains "not allowed". The native app stays the destination for backups.
+
+**Transfer replaces the athkar backup export (2026-10-06).** The owner judged «نقل التقدّم» and «النسخة الاحتياطية» to do the same job, so the athkar PWA's settings keep only the transfer. The `.athkarbackup` export button and its "include location" switch were removed. Every transfer code embeds envelope v1 (`envelope`, never with `reminders.location`), which is the native app's import path from the athkar PWA (section 6.4). `spec/backup/` and `tools/backup-validate.mjs` remain the envelope's specification, and the PWA still reads existing `.athkarbackup` files on receive.
 
 The athkar PWA's ruqyah launcher tab remains unchanged. `MOBILE_APP_PLAN.md` and this document are linked from the athkar README; the ruqyah README gains one line pointing here.
 

@@ -3,9 +3,10 @@
 Moves a user's progress from one copy of the athkar PWA to another: Safari to the Home Screen app on the same
 iPhone, phone to iPad, Android to iPhone, desktop to phone. The sending device builds a **transfer code** from its
 stores; the user carries it as copied text, as a file, or as animated QR frames; the receiving device validates it,
-shows a preview and merges it. No server is involved and nothing is encrypted: the code is plaintext, like the backup
-file, and leaves the device only by a channel the user picks (MOBILE_APP_PLAN.md §15). PWA import exists only for
-this transfer (owner exception, NATIVE_APP_PLAN.md §10.4).
+shows a preview and merges it. No server is involved and nothing is encrypted: the code is plaintext and leaves the
+device only by a channel the user picks (MOBILE_APP_PLAN.md §15). PWA import exists only for this transfer (owner
+exception, NATIVE_APP_PLAN.md §10.4). The transfer code is also the athkar PWA's only export: it replaced the
+`.athkarbackup` export button, and the native app reads a code's `envelope` (envelope v1) to import from the PWA.
 
 The athkar PWA implements it in `index.html` (`encodeTransfer`, `decodeTransfer`, `decodeTransferFrames`,
 `decodeTransferFile`, `planTransfer`, `applyTransfer`, `recoverTransferPending`). The fixtures in [`fixtures/`](fixtures/) pin every rule below
@@ -33,7 +34,7 @@ The code carries one UTF-8 JSON document:
 | --- | --- |
 | `transfer` | `1`. A larger integer is a newer format: the receiver refuses it with `newer`. |
 | `app` | `"athkar-pwa"`. `"ruqyah-pwa"` is refused with `wrong-app`. |
-| `envelope` | Exactly `buildBackup(false)`: [envelope v1](../backup/envelope-v1.md) of the athkar PWA, **never with `reminders.location`**. A native importer can hand it to `BackupImporter` unchanged. The encoder leaves out progress and target IDs that §4 would refuse, as the backup exporter leaves out malformed values. |
+| `envelope` | Exactly `buildBackup()`: [envelope v1](../backup/envelope-v1.md) of the athkar PWA, **never with `reminders.location`**. A native importer can hand it to `BackupImporter` unchanged. The encoder leaves out progress and target IDs that §4 would refuse, as `buildBackup` leaves out malformed values. |
 | `athkar.adhkar.resets` | The reset epochs of `athkar-progress-v2` (§5.1); units `morning`, `evening`. |
 | `athkar.adhkar.history` | The progress history of the whole reset window (envelope-v1 history entries, newest first, every day of the 31 ending on the code's date, today excluded). `envelope.adhkar.history` keeps envelope v1's newest seven; a code's receiver merges this list instead. |
 | `athkar.suwar` | `athkar-suwar-v1` as stored, normalized: `read` holds only `true` marks of known pages, `completedAt` only for complete suras, `history` only valid instants. Units of `resets` are sura IDs. |
@@ -82,8 +83,9 @@ whitespace character too, then read `=` as a space. So the text form survives li
 (with spaces) can be pasted as well. A pasted frame with `n > 1` is `one-frame`.
 
 **Files.** A chosen file may hold a transfer code (one leading BOM and surrounding whitespace are ignored) or an
-envelope-v1 `.athkarbackup`. A backup brings adhkar (today and history) and settings, never suwar, tasbih or reset
-epochs; it may carry `reminders.location`, which is validated and never imported. A ruqyah backup is `wrong-app`.
+envelope-v1 `.athkarbackup` (one the athkar PWA exported before the transfer replaced its export button, or one
+written elsewhere). A backup brings adhkar (today and history) and settings, never suwar, tasbih or reset epochs; it
+may carry `reminders.location`, which is validated and never imported. A ruqyah backup is `wrong-app`.
 
 ## 4. Limits and validation
 
