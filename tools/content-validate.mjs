@@ -14,6 +14,10 @@
 // word indices in content/reference/excerpts.json and must equal exactly that slice of each source.
 // Known, reviewed deviations live in content/reference/exceptions.json; each must match the observed diff exactly.
 //
+// Quoted scholars (content/reference/quotes.json). A detail that quotes a scholar names its snapshot in
+// content/reference/<source>.json; the text between the detail's first « and last » must occur in the snapshot's
+// transcript after NFC, with the spaces just inside parentheses dropped on both sides.
+//
 // Review (rules 3, 4). Each REVIEW.md row records the SHA-256 of the pack bytes it approved. The manifest's
 // reviewRecord must name a row for the pack's current version whose SHA-256 equals the pack's, and each pack's
 // rows must have strictly increasing versions, so any text or order change needs a new row and a version bump.
@@ -43,6 +47,7 @@ const reference = Object.fromEntries(
 );
 const exceptions = readJSON(join(contentDir, "reference/exceptions.json")).exceptions;
 const excerpts = readJSON(join(contentDir, "reference/excerpts.json")).excerpts;
+const quotes = readJSON(join(contentDir, "reference/quotes.json")).quotes;
 const usedExceptions = new Set();
 
 // ---- Manifest, versions, checksums, review records (rules 3, 4) ----
@@ -316,6 +321,22 @@ for (const sura of suwar.suwar) {
 for (const exception of exceptions) {
   if (!usedExceptions.has(exception)) fail(`exceptions.json: stale exception for ${exception.items.join(",")} vs ${exception.source}`);
   if (!reviewEntries.has(exception.reviewRecord)) fail(`exceptions.json: ${exception.reviewRecord} has no row in REVIEW.md`);
+}
+
+// ---- Quoted scholars ----
+const quoteText = text => text.normalize("NFC").replace(/\(\s+/g, "(").replace(/\s+\)/g, ")");
+const adhkarById = new Map([...adhkar.periods.morning, ...adhkar.periods.evening].map(item => [item.id, item]));
+for (const [i, quote] of quotes.entries()) {
+  const where = `quotes.json quotes[${i}]`;
+  if (!reviewEntries.has(quote.reviewRecord)) fail(`${where}: ${quote.reviewRecord} has no row in REVIEW.md`);
+  if (!/^[a-z0-9.-]+$/.test(quote.source)) { fail(`${where}: source ${quote.source} is not a reference snapshot name`); continue; }
+  const details = quote.items.map(id => adhkarById.get(id)?.details?.[quote.detail]);
+  if (!details.length || details.some(detail => typeof detail !== "string")) { fail(`${where}: ${quote.items.join(", ")} lack detail ${quote.detail}`); continue; }
+  if (details.some(detail => detail !== details[0])) fail(`${where}: ${quote.items.join(", ")} must share detail ${quote.detail}`);
+  const [open, close] = [details[0].indexOf("«"), details[0].lastIndexOf("»")];
+  if (open < 0 || close <= open + 1) { fail(`${where}: detail ${quote.detail} has no «…» quotation`); continue; }
+  const transcript = readJSON(join(contentDir, "reference", `${quote.source}.json`)).transcript;
+  if (!quoteText(transcript).includes(quoteText(details[0].slice(open + 1, close)))) fail(`${where}: the quotation in ${quote.items[0]} detail ${quote.detail} is not in ${quote.source}`);
 }
 
 if (errors.length) {

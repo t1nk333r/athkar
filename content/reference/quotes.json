@@ -1,0 +1,14 @@
+{
+  "note": "Scholars' words quoted in adhkar details. tools/content-validate.mjs requires each listed item to carry the same detail at `detail`, and the text between its first « and last » to occur in the snapshot's transcript, comparing after Unicode NFC and with the spaces just inside parentheses removed («( » → «(», « )» → «)»), which is the only typographic difference the transcript has from the quote.",
+  "quotes": [
+    {
+      "items": [
+        "morning-13",
+        "evening-13"
+      ],
+      "detail": 1,
+      "source": "alathar.liqa-al-bab-al-maftuh-157",
+      "reviewRecord": "R11"
+    }
+  ]
+}

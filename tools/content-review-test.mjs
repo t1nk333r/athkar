@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { repoRoot } from "./content-lib.mjs";
+import { contentDir, readJSON, repoRoot } from "./content-lib.mjs";
 
 const review = readFileSync(join(repoRoot, "content/REVIEW.md"), "utf8");
 const row = id => review.split("\n").find(line => line.startsWith(`| ${id} |`));
@@ -19,6 +19,9 @@ const fakeSha = "0".repeat(64);
 // The suwar rows in order, and an ID no committed row uses, so the cases hold as rows are appended.
 const suwarRows = review.split("\n").filter(line => /^\| R\d+ \| suwar \|/.test(line)).map(line => cells(line)[0]);
 const freshId = `R${Math.max(...review.split("\n").flatMap(line => (/^\| R(\d+) \|/.exec(line) ?? []).slice(1).map(Number))) + 1}`;
+// Case (e) blanks the reviewer on the row the manifest ships for each pack, whichever row that currently is.
+const shipped = Object.entries(readJSON(join(contentDir, "manifest.json")).packs)
+  .map(([pack, { reviewRecord, version }]) => ({ pack, id: reviewRecord, version }));
 
 const cases = [
   {
@@ -40,16 +43,11 @@ const cases = [
     fails: new RegExp(`${freshId}: suwar rows after R8 \\(the first with a named reviewer\\) must name a reviewer`)
   },
   { name: "(d) REVIEW.md as committed", review, passes: true },
-  {
-    name: "(e) adhkar: blank reviewer on the manifest's row R7 (1.1.1)",
-    review: replaceRow(review, "R7", edit("R7", { 4: "" })),
-    fails: /R7: a named reviewer is required to ship adhkar 1\.1\.1/
-  },
-  {
-    name: "(e) ruqyah: blank reviewer on the manifest's row R4 (1.0.1)",
-    review: replaceRow(review, "R4", edit("R4", { 4: "" })),
-    fails: /R4: a named reviewer is required to ship ruqyah 1\.0\.1/
-  },
+  ...shipped.map(({ pack, id, version }) => ({
+    name: `(e) ${pack}: blank reviewer on the manifest's row ${id} (${version})`,
+    review: replaceRow(review, id, edit(id, { 4: "" })),
+    fails: new RegExp(`${id}: a named reviewer is required to ship ${pack} ${version.replace(/\./g, "\\.")}`)
+  })),
   {
     name: "blank suwar R8, then every later suwar row named (blank rows before the first named one stay legal)",
     review: suwarRows.slice(1).reduce((text, id) => replaceRow(text, id, edit(id, { 4: "Someone" })), review),
