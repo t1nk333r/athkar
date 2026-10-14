@@ -427,7 +427,14 @@ private final class PendingLocationCall {
         task = Task { @MainActor [weak self] in
             let result: Result<GeoCoordinates, DeviceLocationError>
             do { result = .success(try await request.currentCoordinates()) }
-            catch { result = .failure(error) }
+            catch let error as DeviceLocationError { result = .failure(error) }
+            catch {
+                XCTFail("Unexpected location request error: \(error)")
+                guard let self else { return }
+                self.completions += 1
+                self.completed.fulfill()
+                return
+            }
             guard let self else { return }
             self.result = result
             self.completions += 1
