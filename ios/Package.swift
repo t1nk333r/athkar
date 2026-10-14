@@ -28,10 +28,12 @@ let package = Package(
             exclude: ["App/AppModel.swift", "Assets.xcassets", "AthkarApp.swift", "Deck/DeckCardView.swift",
                       "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
-                      "Qibla/QiblaView.swift", "Reminders", "Screens"],
+                      "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
+                      "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
-                      "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift"]
+                      "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
+                      "Reminders/ReminderModel.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),

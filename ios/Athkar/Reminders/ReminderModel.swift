@@ -1,12 +1,12 @@
 import AthkarCore
 import Foundation
 import Observation
-import UserNotifications
 
 /// Local reminders (NATIVE_APP_PLAN.md §7.5): the rules in SQLite, turned into pending `UNNotificationRequest`s by
 /// `ReminderPlanner`. The whole plan is rebuilt on every trigger (foreground, clock or zone change, a rule, the
 /// location or the calculation settings, a period completed or reopened, an import); requests keep stable IDs, so
 /// rebuilding replaces them instead of adding duplicates. Permission is asked only when a reminder is turned on.
+/// iOS's notification centre is reached through `ReminderNotificationCenter` (`ReminderNotifications.swift`).
 @MainActor
 @Observable
 final class ReminderModel {
@@ -21,10 +21,13 @@ final class ReminderModel {
 
     @ObservationIgnored private let repository: ReminderRepository
     @ObservationIgnored private let report: (any Error) -> Void
-    @ObservationIgnored private let center = UNUserNotificationCenter.current()
+    @ObservationIgnored private let center: any ReminderNotificationCenter
+    /// The current instant, for rule timestamps and planning.
+    @ObservationIgnored private let clock: () -> Date
     /// Supplies what the planner needs from the rest of the app at planning time.
     @ObservationIgnored var inputs: () -> PlanInputs? = { nil }
-    @ObservationIgnored private var replanTask: Task<Void, Never>?
+    /// Internal so tests can wait for it.
+    @ObservationIgnored private(set) var replanTask: Task<Void, Never>?
 
     struct PlanInputs {
         let zone: TimeZone
@@ -37,9 +40,12 @@ final class ReminderModel {
     nonisolated static let ruleIdKey = "ruleId"
     nonisolated static let targetKey = "target"
 
-    init(repository: ReminderRepository, report: @escaping (any Error) -> Void) throws {
+    init(repository: ReminderRepository, report: @escaping (any Error) -> Void,
+         center: any ReminderNotificationCenter, clock: @escaping () -> Date = { Date() }) throws {
         self.repository = repository
         self.report = report
+        self.center = center
+        self.clock = clock
         rules = Dictionary(uniqueKeysWithValues: try repository.rules().map { ($0.id, $0) })
     }
 
@@ -52,14 +58,14 @@ final class ReminderModel {
     var anyEnabled: Bool { rules.values.contains { $0.enabled && $0.kind != .personal } }
 
     func setAdhkar(_ period: Period, enabled: Bool) async {
-        save(.adhkar(period, enabled: enabled, updatedAt: Date()))
+        save(.adhkar(period, enabled: enabled, updatedAt: clock()))
         if enabled { await requestAuthorization() }
         replan()
     }
 
     /// Turns a prayer's reminder on or off, or moves it (`offsetMinutes` from the prayer; negative is before).
     func setPrayer(_ key: ReminderRule.PrayerKey, enabled: Bool, offsetMinutes: Int) async {
-        save(.prayer(key, offsetMinutes: offsetMinutes, enabled: enabled, updatedAt: Date()))
+        save(.prayer(key, offsetMinutes: offsetMinutes, enabled: enabled, updatedAt: clock()))
         if enabled { await requestAuthorization() }
         replan()
     }
@@ -88,17 +94,12 @@ final class ReminderModel {
     private func requestAuthorization() async {
         await refreshAuthorization()
         guard authorization == .notDetermined else { return }
-        _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+        _ = try? await center.requestAuthorization()
         await refreshAuthorization()
     }
 
     func refreshAuthorization() async {
-        let status = await center.notificationSettings().authorizationStatus
-        authorization = switch status {
-        case .notDetermined: .notDetermined
-        case .denied: .denied
-        default: .allowed
-        }
+        authorization = await center.authorization()
     }
 
     // MARK: Planning
@@ -113,7 +114,7 @@ final class ReminderModel {
 
     private func performReplan() async {
         await refreshAuthorization()
-        let now = Date()
+        let now = clock()
         let inputs = inputs()
         let zone = inputs?.zone ?? .current
         let today = SessionCalendar.localDate(of: now, in: zone)
@@ -128,8 +129,8 @@ final class ReminderModel {
         }
 
         let wanted = Set(plan.map(\.id))
-        let pending = await center.pendingNotificationRequests().map(\.identifier).filter(Self.isOwned)
-        center.removePendingNotificationRequests(withIdentifiers: pending.filter { !wanted.contains($0) })
+        let pending = await center.pendingRequests().map(\.id).filter(Self.isOwned)
+        center.removePendingRequests(withIdentifiers: pending.filter { !wanted.contains($0) })
         // Today's delivered adhkar reminder goes once its period is complete (`periodIsComplete`).
         if let complete = inputs?.completeToday, !complete.isEmpty {
             center.removeDeliveredNotifications(withIdentifiers: complete.map { "adhkar.\($0.rawValue).\(today)" })
@@ -137,10 +138,8 @@ final class ReminderModel {
         guard !Task.isCancelled else { return }
         for item in plan {
             guard let rule = ruleId(for: item) else { continue }
-            let request = UNNotificationRequest(identifier: item.id, content: Self.content(item, ruleId: rule),
-                                                trigger: Self.trigger(item, now: now, zone: zone))
             do {
-                try await center.add(request)
+                try await center.add(ReminderRequest(item: item, ruleId: rule, now: now, zone: zone))
             } catch {
                 report(error)
             }
@@ -149,13 +148,9 @@ final class ReminderModel {
     }
 
     private func refreshNextPending() async {
-        let next = await center.pendingNotificationRequests()
-            .filter { Self.isOwned($0.identifier) }
-            .compactMap { request -> (String, Date)? in
-                let date = (request.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
-                    ?? (request.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate()
-                return date.map { (request.content.title, $0) }
-            }
+        let next = await center.pendingRequests()
+            .filter { Self.isOwned($0.id) }
+            .compactMap { request -> (String, Date)? in request.fireAt.map { (request.title, $0) } }
             .min { $0.1 < $1.1 }
         nextPending = next.map { (title: $0.0, fireAt: $0.1) }
     }
@@ -173,10 +168,10 @@ final class ReminderModel {
     /// day neither repeats nor catches them up.
     private func recordDelivered(today: String, zone: TimeZone) async {
         for notification in await center.deliveredNotifications() {
-            guard Self.isOwned(notification.request.identifier) else { continue }
+            guard Self.isOwned(notification.id) else { continue }
             let date = SessionCalendar.localDate(of: notification.date, in: zone)
             guard date == today else { continue }
-            markShown(ReminderPayload(notification.request.content.userInfo), localDate: date)
+            markShown(ReminderPayload(ruleId: notification.ruleId, requestId: notification.id), localDate: date)
         }
     }
 
@@ -191,41 +186,7 @@ final class ReminderModel {
         }
     }
 
-    // MARK: Requests
-
-    private static func trigger(_ item: PlannedNotification, now: Date, zone: TimeZone) -> UNNotificationTrigger {
-        if item.isCatchUp {
-            return UNTimeIntervalNotificationTrigger(timeInterval: max(1, item.fireAt.timeIntervalSince(now)),
-                                                     repeats: false)
-        }
-        // A calendar trigger follows the wall clock, so a clock change before the next replan does not shift it.
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = zone
-        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: item.fireAt)
-        components.timeZone = zone
-        return UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-    }
-
-    static func content(_ item: PlannedNotification, ruleId: String) -> UNNotificationContent {
-        let content = UNMutableNotificationContent()
-        content.sound = .default
-        content.userInfo = [ruleIdKey: ruleId, targetKey: item.id]
-        switch item.target {
-        case .adhkar(let period):
-            // The PWA's `showReminder` wording.
-            let section = AdhkarSessionModel.title(period)
-            let prayer = period == .morning ? "الفجر" : "العصر"
-            content.title = section
-            content.body = "مرّت ساعة على صلاة \(prayer). حان وقت \(section)."
-            content.threadIdentifier = "adhkar"
-        case .prayer(let key):
-            let name = PrayerNames.name(key.prayerTime)
-            content.title = "صلاة \(name)"
-            content.body = prayerBody(name, offsetMinutes: item.offsetMinutes)
-            content.threadIdentifier = "prayer"
-        }
-        return content
-    }
+    // MARK: Wording
 
     static func prayerBody(_ name: String, offsetMinutes offset: Int) -> String {
         if offset == 0 { return "حان الآن وقت صلاة \(name)." }
@@ -243,6 +204,45 @@ final class ReminderModel {
         }
     }
 
+}
+
+/// The notification centre calls reminders make, in the app's own types: `UNUserNotificationCenter` in the app
+/// (`ReminderNotifications.swift`), a controlled centre in the portable tests.
+@MainActor
+protocol ReminderNotificationCenter: AnyObject {
+    func authorization() async -> ReminderModel.Authorization
+    /// Asks for alert, sound and badge permission.
+    func requestAuthorization() async throws
+    func deliveredNotifications() async -> [DeliveredReminder]
+    func pendingRequests() async -> [PendingReminder]
+    func removePendingRequests(withIdentifiers ids: [String])
+    func removeDeliveredNotifications(withIdentifiers ids: [String])
+    /// Adds a request, replacing a pending one with the same ID. Cancellation does not stop it: once called, it
+    /// completes.
+    func add(_ request: ReminderRequest) async throws
+}
+
+/// A delivered notification: its request ID, the rule in its payload, and when it was shown.
+struct DeliveredReminder: Equatable, Sendable {
+    let id: String
+    let ruleId: String?
+    let date: Date
+}
+
+/// A pending request: its ID, title and next fire date.
+struct PendingReminder: Equatable, Sendable {
+    let id: String
+    let title: String
+    let fireAt: Date?
+}
+
+/// A planned notification to add, the rule it comes from, and the instant and zone it was planned in: a catch-up's
+/// delay and a calendar trigger's wall clock come from them.
+struct ReminderRequest: Equatable, Sendable {
+    let item: PlannedNotification
+    let ruleId: String
+    let now: Date
+    let zone: TimeZone
 }
 
 /// What the app reads from a reminder's `userInfo`.
@@ -280,52 +280,6 @@ extension ReminderRule.PrayerKey {
         case .asr: .asr
         case .maghrib: .maghrib
         case .isha: .isha
-        }
-    }
-}
-
-/// Receives notifications while the app runs and their taps. Set as the centre's delegate at launch, before the app
-/// finishes launching, so a tap that cold-launches the app is delivered.
-final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
-    static let shared = ReminderNotificationDelegate()
-
-    @MainActor private final class Handlers {
-        var onShown: ((ReminderPayload, Date) -> Void)?
-        var onOpen: ((ReminderPayload) -> Void)?
-        /// A tap that arrived before the app model existed.
-        var pendingOpen: ReminderPayload?
-    }
-
-    @MainActor private static let handlers = Handlers()
-
-    /// Called by the running app: a reminder was shown (with its delivery date), or tapped.
-    @MainActor func attach(onShown: @escaping (ReminderPayload, Date) -> Void,
-                           onOpen: @escaping (ReminderPayload) -> Void) {
-        let handlers = Self.handlers
-        handlers.onShown = onShown
-        handlers.onOpen = onOpen
-        if let pending = handlers.pendingOpen {
-            handlers.pendingOpen = nil
-            onOpen(pending)
-        }
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification)
-        async -> UNNotificationPresentationOptions {
-        let payload = ReminderPayload(notification.request.content.userInfo)
-        let date = notification.date
-        await MainActor.run { Self.handlers.onShown?(payload, date) }
-        return [.banner, .list, .sound]
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
-        let payload = ReminderPayload(response.notification.request.content.userInfo)
-        let date = response.notification.date
-        await MainActor.run {
-            let handlers = Self.handlers
-            handlers.onShown?(payload, date)
-            if let onOpen = handlers.onOpen { onOpen(payload) } else { handlers.pendingOpen = payload }
         }
     }
 }
