@@ -207,8 +207,10 @@ between that shape and the adhkar tables. The rules and their fixtures define th
   on the loaded date comes from a file whose `today.date` was ahead of this device (exported just after midnight,
   or in a zone further east). The file records only that the period was complete, which the PWA represents as a
   manual completion. If the store loaded it as incomplete, the next save would delete it.
-- Set `history` to the 7 newest earlier dates with an `adhkar_days` row, newest first. A period is `true` if and
-  only if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
+- Set `history` to every earlier date with an `adhkar_days` row, newest first, without a count or date-window
+  limit. A period is `true` if and only if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
+  Native SQL history is unbounded. The PWA rules separately normalize and roll stored history over 31 local
+  dates; envelope-v1 export separately caps history at seven entries. Neither policy prunes SQL rows.
 
 **Save** (`save(_:)`) makes the rows for `state.date` match the state, in one transaction:
 
