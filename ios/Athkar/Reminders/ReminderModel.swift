@@ -26,7 +26,9 @@ final class ReminderModel {
     @ObservationIgnored private let clock: () -> Date
     /// Supplies what the planner needs from the rest of the app at planning time.
     @ObservationIgnored var inputs: () -> PlanInputs? = { nil }
-    /// Internal so tests can wait for it.
+    /// Counts `replan()` calls. A pass started for an earlier count is outdated.
+    @ObservationIgnored private var replanRequests = 0
+    /// The single writer: it runs passes until one finishes with no newer request. Internal so tests can wait for it.
     @ObservationIgnored private(set) var replanTask: Task<Void, Never>?
 
     struct PlanInputs {
@@ -58,24 +60,27 @@ final class ReminderModel {
     var anyEnabled: Bool { rules.values.contains { $0.enabled && $0.kind != .personal } }
 
     func setAdhkar(_ period: Period, enabled: Bool) async {
-        save(.adhkar(period, enabled: enabled, updatedAt: clock()))
+        guard save(.adhkar(period, enabled: enabled, updatedAt: clock())) else { return }
         if enabled { await requestAuthorization() }
         replan()
     }
 
     /// Turns a prayer's reminder on or off, or moves it (`offsetMinutes` from the prayer; negative is before).
     func setPrayer(_ key: ReminderRule.PrayerKey, enabled: Bool, offsetMinutes: Int) async {
-        save(.prayer(key, offsetMinutes: offsetMinutes, enabled: enabled, updatedAt: clock()))
+        guard save(.prayer(key, offsetMinutes: offsetMinutes, enabled: enabled, updatedAt: clock())) else { return }
         if enabled { await requestAuthorization() }
         replan()
     }
 
-    private func save(_ rule: ReminderRule) {
+    /// A failed save is reported and changes nothing, so neither a permission request nor a replan follows it.
+    private func save(_ rule: ReminderRule) -> Bool {
         do {
             try repository.save(rule)
             rules[rule.id] = rule
+            return true
         } catch {
             report(error)
+            return false
         }
     }
 
@@ -94,7 +99,11 @@ final class ReminderModel {
     private func requestAuthorization() async {
         await refreshAuthorization()
         guard authorization == .notDetermined else { return }
-        _ = try? await center.requestAuthorization()
+        do {
+            try await center.requestAuthorization()
+        } catch {
+            report(error)
+        }
         await refreshAuthorization()
     }
 
@@ -104,25 +113,44 @@ final class ReminderModel {
 
     // MARK: Planning
 
-    /// Rebuilds the pending requests. Calls made while one runs coalesce into the next run.
+    /// Rebuilds the pending requests. One pass runs at a time; calls made while it runs coalesce into one more pass,
+    /// which reads the latest rules and inputs.
     func replan() {
-        replanTask?.cancel()
+        replanRequests &+= 1
+        guard replanTask == nil else { return }
         replanTask = Task { [weak self] in
-            await self?.performReplan()
+            await self?.drainReplans()
         }
     }
 
-    private func performReplan() async {
-        await refreshAuthorization()
+    private func drainReplans() async {
+        var planned: Int
+        repeat {
+            planned = replanRequests
+            await performReplan(planned)
+        } while planned != replanRequests
+        replanTask = nil
+    }
+
+    /// One pass for request `generation`. Once a newer request arrives it stops at its next check, so it never
+    /// removes, adds or publishes for an outdated plan. Nothing cancels it, so an `add` already started completes
+    /// before the next pass reads what is pending.
+    private func performReplan(_ generation: Int) async {
+        func isCurrent() -> Bool { generation == replanRequests }
+
+        let status = await center.authorization()
+        authorization = status
+        guard isCurrent() else { return }
         let now = clock()
         let inputs = inputs()
         let zone = inputs?.zone ?? .current
         let today = SessionCalendar.localDate(of: now, in: zone)
-        await recordDelivered(today: today, zone: zone)
-        guard !Task.isCancelled else { return }
+        let delivered = await center.deliveredNotifications()
+        guard isCurrent() else { return }
+        recordDelivered(delivered, today: today, zone: zone)
 
         var plan: [PlannedNotification] = []
-        if authorization == .allowed, let inputs {
+        if status == .allowed, let inputs {
             let firedToday = Set(rules.keys.filter { (try? repository.lastShown(ruleId: $0)) == today })
             plan = ReminderPlanner.plan(now: now, zone: zone, rules: Array(rules.values), schedule: inputs.schedule,
                                         completeToday: inputs.completeToday, firedToday: firedToday)
@@ -130,28 +158,28 @@ final class ReminderModel {
 
         let wanted = Set(plan.map(\.id))
         let pending = await center.pendingRequests().map(\.id).filter(Self.isOwned)
+        guard isCurrent() else { return }
         center.removePendingRequests(withIdentifiers: pending.filter { !wanted.contains($0) })
         // Today's delivered adhkar reminder goes once its period is complete (`periodIsComplete`).
         if let complete = inputs?.completeToday, !complete.isEmpty {
             center.removeDeliveredNotifications(withIdentifiers: complete.map { "adhkar.\($0.rawValue).\(today)" })
         }
-        guard !Task.isCancelled else { return }
         for item in plan {
+            guard isCurrent() else { return }
             guard let rule = ruleId(for: item) else { continue }
             do {
                 try await center.add(ReminderRequest(item: item, ruleId: rule, now: now, zone: zone))
             } catch {
-                report(error)
+                // An outdated pass leaves the failure to the newer one, which adds every wanted request again.
+                if isCurrent() { report(error) }
             }
         }
-        await refreshNextPending()
-    }
 
-    private func refreshNextPending() async {
         let next = await center.pendingRequests()
             .filter { Self.isOwned($0.id) }
             .compactMap { request -> (String, Date)? in request.fireAt.map { (request.title, $0) } }
             .min { $0.1 < $1.1 }
+        guard isCurrent() else { return }
         nextPending = next.map { (title: $0.0, fireAt: $0.1) }
     }
 
@@ -166,8 +194,8 @@ final class ReminderModel {
 
     /// Delivered notifications become `lastShown` (the PWA's `reminderPreferences.lastShown`), so a replan the same
     /// day neither repeats nor catches them up.
-    private func recordDelivered(today: String, zone: TimeZone) async {
-        for notification in await center.deliveredNotifications() {
+    private func recordDelivered(_ delivered: [DeliveredReminder], today: String, zone: TimeZone) {
+        for notification in delivered {
             guard Self.isOwned(notification.id) else { continue }
             let date = SessionCalendar.localDate(of: notification.date, in: zone)
             guard date == today else { continue }
