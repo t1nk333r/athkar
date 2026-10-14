@@ -214,7 +214,12 @@ XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps i
 
 Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
 Testing ran 108 tests in 23 suites, with four session history-fixture failures.
-Task 001 owns that divergence. The historical Mac simulator passed the single
+History PR #16 resolved that divergence. Its exact publication head
+`e446f126770473df455ae7c4bf0917181f95e7ef` passed all 114 Swift Testing declarations
+in 24 suites on Linux on 2026-10-14, including all 22 loadState and ten rollover
+fixtures. Pages passed at merge commit `1c8ce891bcda7b6edb74496e8143d62c19c6b39f`.
+This is a core-only result, with zero XCTest methods and no device/runtime claim.
+The historical Mac simulator passed the single
 LaunchTests case, and Feather published `local.dev.athkar` version 1.0, build 1,
 with 4,513,557 bytes. Its downloaded SHA-256 matched
 `4ca66bbe9a61ec0d5c2be28e148517fadccb483ee1571478d4fe29ad7ada79bd`.
