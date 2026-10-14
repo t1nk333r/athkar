@@ -3,7 +3,8 @@ import Foundation
 import Observation
 
 /// The ruqyah deck: today's segment counters (`ruqyah-daily-v1.counts`) and whether today is recorded complete,
-/// kept in `ruqyah_segment_progress` / `ruqyah_days` after every change.
+/// as stored in `ruqyah_segment_progress` / `ruqyah_days`. A change is shown only once its transaction is stored,
+/// and a day only once it has been read.
 @MainActor
 @Observable
 final class RuqyahDeckModel: DeckModel {
@@ -11,8 +12,8 @@ final class RuqyahDeckModel: DeckModel {
     private(set) var cards: [DeckCard] = []
     private(set) var currentIndex = 0
     private(set) var progress: RuqyahProgress
-    /// When today was recorded complete (`state.history[today].completedAt`).
-    private(set) var completedAt: Date?
+    /// Today's `ruqyah_days` row (`state.history[today]`). The row alone records the day complete.
+    private(set) var completedDay: RuqyahDay?
     private(set) var hasHistory: Bool
 
     @ObservationIgnored private let segments: [RuqyahSegment]
@@ -26,16 +27,27 @@ final class RuqyahDeckModel: DeckModel {
         repository = database.ruqyah
         self.report = report
         progress = RuqyahProgress(date: today, counts: try repository.counts(on: today))
-        completedAt = try repository.day(on: today)?.completedAt
+        completedDay = try repository.day(on: today)
         hasHistory = try repository.dayCount(.all) > 0
         currentIndex = progress.firstIncompleteIndex(in: segments)
         refresh()
     }
 
-    /// `ensureCurrentDay`: a new day starts with that day's counters, on the first segment.
+    /// `ensureCurrentDay`: a new day starts with that day's counters, on the first segment. A day that cannot be
+    /// read is not shown: the deck keeps its day, so the next `ensureCurrentDay` tries again.
     func roll(to today: String) {
         guard today != progress.date else { return }
-        reload(date: today)
+        do {
+            let counts = try repository.counts(on: today)
+            let day = try repository.day(on: today)
+            let hasHistory = try repository.dayCount(.all) > 0
+            progress = RuqyahProgress(date: today, counts: counts)
+            completedDay = day
+            self.hasHistory = hasHistory
+        } catch {
+            report(error)
+            return
+        }
         currentIndex = progress.firstIncompleteIndex(in: segments)
         refresh()
     }
@@ -52,7 +64,10 @@ final class RuqyahDeckModel: DeckModel {
             status: completedAt.map { "تمت رقية اليوم في \(ArabicFormat.time($0))." } ?? "رقية اليوم لم تكتمل بعد.")
     }
 
-    var isComplete: Bool { completedAt != nil }
+    var isComplete: Bool { completedDay != nil }
+
+    /// When today was recorded complete (`state.history[today].completedAt`).
+    var completedAt: Date? { completedDay?.completedAt }
 
     var completion: DeckCompletion {
         DeckCompletion(title: "تمت الرقية بحمد الله", message: "اكتملت جميع المقاطع بتكراراتها.", time: nil,
@@ -66,19 +81,24 @@ final class RuqyahDeckModel: DeckModel {
     /// The ruqyah deck never locks «التالي».
     func canMoveForward(from index: Int) -> Bool { index < segments.count - 1 }
 
-    /// `countReading`: when every segment is complete, today is recorded (once) and the dialog opens.
+    /// `countReading`: when every segment is complete, today is recorded (once) and the dialog opens. A reading
+    /// that is not stored is not counted: `nil`, as for a complete segment.
     func tap(cardAt index: Int) -> DeckChange? {
-        guard let segment = segments[safe: index], let next = progress.countReading(segment) else { return nil }
-        let allComplete = progress.allComplete(segments)
+        var counted = progress
+        guard let segment = segments[safe: index], let next = counted.countReading(segment) else { return nil }
+        let allComplete = counted.allComplete(segments)
         let now = Date()
         do {
-            try repository.setCount(next, for: segment.id, on: progress.date,
+            try repository.setCount(next, for: segment.id, on: counted.date,
                                     completingDayAt: allComplete ? now : nil, at: now)
         } catch {
             report(error)
+            return nil
         }
-        if allComplete, completedAt == nil {
-            completedAt = now
+        progress = counted
+        if allComplete, completedDay == nil {
+            // The same transaction inserted the row; an existing row keeps its first time.
+            completedDay = RuqyahDay(localDate: counted.date, completedAt: now, completionOrigin: .counters)
             hasHistory = true
         }
         refresh()
@@ -98,12 +118,13 @@ final class RuqyahDeckModel: DeckModel {
 
     func resetCard(at index: Int) {
         guard let segment = segments[safe: index], progress.count(for: segment) > 0 else { return }
-        progress.counts[segment.id] = 0
         do {
             try repository.setCount(0, for: segment.id, on: progress.date)
         } catch {
             report(error)
+            return
         }
+        progress.counts[segment.id] = 0
         refresh()
     }
 
@@ -119,7 +140,8 @@ final class RuqyahDeckModel: DeckModel {
         return scope.confirmation(recordedDays: (try? repository.dayCount(removal)) ?? 0)
     }
 
-    /// `resetDayProgress`, `resetWeek`, `resetEverything`; each starts again on the first segment.
+    /// `resetDayProgress`, `resetWeek`, `resetEverything`; each starts again on the first segment. تقدم اليوم (and
+    /// «بدء رقية جديدة») keeps today's record. A reset that is not stored changes nothing.
     func reset(_ scope: ResetScope) {
         let now = Date()
         let removal: HistoryRemoval? = switch scope {
@@ -127,29 +149,24 @@ final class RuqyahDeckModel: DeckModel {
         case .week: .week(endingAt: now, in: .current)
         case .everything: .all
         }
+        let keepsHistory: Bool
         do {
+            // Read first, so that once the transaction is stored nothing is left to fail.
+            keepsHistory = try removal.map { try repository.dayCount(.all) > repository.dayCount($0) } ?? hasHistory
             try repository.resetCounts(on: progress.date, removing: removal, at: now)
         } catch {
             report(error)
+            return
         }
-        reload(date: progress.date)
+        // What the transaction stored: every counter of the day is 0, and the days `removal` covers are gone.
+        progress.counts = progress.counts.mapValues { _ in 0 }
+        if let removal, removal.includes(progress.date) { completedDay = nil }
+        hasHistory = keepsHistory
         currentIndex = 0
         refresh()
     }
 
     // MARK: Private
-
-    private func reload(date: String) {
-        do {
-            progress = RuqyahProgress(date: date, counts: try repository.counts(on: date))
-            completedAt = try repository.day(on: date)?.completedAt
-            hasHistory = try repository.dayCount(.all) > 0
-        } catch {
-            report(error)
-            progress = RuqyahProgress(date: date)
-            completedAt = nil
-        }
-    }
 
     /// `segmentMarkup`, `updateCard` and `segmentLabel` for every segment.
     private func refresh() {
@@ -179,6 +196,16 @@ final class RuqyahDeckModel: DeckModel {
         case 1: "مرة واحدة"
         case 2: "مرتان"
         default: "\(ArabicFormat.number(repeats)) مرات"
+        }
+    }
+}
+
+private extension HistoryRemoval {
+    /// Whether the removal deletes the record of `localDate`.
+    func includes(_ localDate: String) -> Bool {
+        switch self {
+        case let .dates(from, through): from <= localDate && localDate <= through
+        case .all: true
         }
     }
 }
