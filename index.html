@@ -2531,9 +2531,9 @@
                 <rect x="8" y="3" width="8" height="18" rx="2"></rect>
                 <path d="M5 8.5a5 5 0 0 0 0 7M2.5 6a8.5 8.5 0 0 0 0 12M19 8.5a5 5 0 0 1 0 7M21.5 6a8.5 8.5 0 0 1 0 12"></path>
               </svg>
-              <span>الاهتزاز عند إكمال الذكر</span>
+              <span>الاهتزاز عند إكمال العداد</span>
             </strong>
-            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال الذكر وعند بلوغ هدف المسبحة.</small>
+            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند بلوغ هدف المسبحة أو قراءة صفحة من السور.</small>
           </span>
           <span class="toggle-switch">
             <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-describedby="haptics-note">
@@ -7057,7 +7057,7 @@
     // iOS haptic. WebKit plays its switch haptic only when a trusted tap toggles a real `<input type="checkbox" switch>`
     // inside a user gesture (CheckboxInputType::willDispatchClick); since iOS 26.5 (WebKit bug 309082) a scripted click,
     // even on the switch's label, no longer plays it. So while the NEXT tap on the surface on screen is the one that
-    // completes (tasbih: count + 1 is a multiple of the target; a dhikr card: its count is target − 1; a sura page: unread),
+    // completes (tasbih: count + 1 is a multiple of the target; a repeated dhikr: its count is target − 1; a sura page: unread),
     // an invisible switch lies over that surface's tap area and the user's own tap lands on it. Its change event runs the
     // surface's normal action once (runHapticArmAction); every redraw calls this again, which re-arms or disarms it.
     // - opacity 0 and appearance none: WebKit needs the switch rendered (it checks for a renderer), not painted; appearance
@@ -7073,7 +7073,7 @@
     //   click and plays the haptic), so a rejected gesture neither counts nor ticks. A pan that starts on the armed surface
     //   does not scroll the page (only the completing tap is armed).
     // - A card whose text overflows (.card-content scrolls) is never armed: it would lose native scrolling for as long as
-    //   it needs one tap (a whole target-1 card). It completes without the iPhone haptic. The verdict is cached
+    //   it needs one tap. It completes without the iPhone haptic. The verdict is cached
     //   (hapticArmCardOverflows): hapticArmContentObserver and fitVisibleCard re-measure it when the layout, text size or
     //   line spacing changes, so a counted tap reads no layout.
     function hapticArmTarget() {
@@ -7090,7 +7090,8 @@
       observeHapticArmContent(card);
       if (hapticArmCardOverflows) return null;
       if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
-      return countFor(item) === targetFor(item) - 1 ? card : null;
+      const target = targetFor(item);
+      return target > 1 && countFor(item) === target - 1 ? card : null;
     }
 
     function cardContentOverflows(card) {
@@ -7674,7 +7675,7 @@
 
       const next = before + 1;
       const completesItem = next === target;
-      if (completesItem) triggerHaptic(hapticDurationMs);
+      if (completesItem && target > 1) triggerHaptic(hapticDurationMs);
 
       state.progress[activePeriod][item.id] = next;
       const completion = syncCompletionState(activePeriod);
