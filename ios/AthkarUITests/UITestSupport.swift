@@ -41,7 +41,7 @@ class DeckTestCase: XCTestCase {
 
     var tapTarget: XCUIElement { app.buttons["deck.card.tap"] }
     var counter: XCUIElement { app.descendants(matching: .any).matching(identifier: "deck.card.counter").firstMatch }
-    var position: XCUIElement { app.staticTexts["deck.position"] }
+    var position: XCUIElement { app.buttons["deck.position"] }
     var summary: XCUIElement { app.staticTexts["summary.copy"] }
     var nextButton: XCUIElement { app.buttons["deck.next"] }
     var previousButton: XCUIElement { app.buttons["deck.previous"] }

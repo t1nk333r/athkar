@@ -3,7 +3,7 @@ import SwiftUI
 /// The one card-deck component (NATIVE_APP_PLAN.md §3.2): shows the current card of any ``DeckModel`` and
 /// reproduces the PWAs' deck behaviour — tap to count, the 45 ms haptic on completing a repeated counter, auto-advance
 /// 320 ms later (20 ms and unanimated with Reduce Motion), swipe with axis lock (a rightward swipe moves forward,
-/// as in the RTL PWAs), «السابق» / «التالي» with the position, and the counter reset.
+/// as in the RTL PWAs), «السابق» / «التالي» with the position, which opens the quick index, and the counter reset.
 struct DeckView<Model: DeckModel>: View {
     let model: Model
     let haptics: Bool
@@ -12,12 +12,16 @@ struct DeckView<Model: DeckModel>: View {
     let onDeckCompleted: () -> Void
 
     @Environment(\.palette) private var palette
+    @Environment(\.readingMetrics) private var metrics
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drag = DragState()
     @State private var advanceTask: Task<Void, Never>?
     @State private var direction = Direction.forward
     @State private var pendingReset: PendingReset?
-    @State private var sourceItem: SourceItem?
+    @State private var sheet: DeckSheet?
+    /// The card chosen in the quick index, shown once the sheet has closed.
+    @State private var indexChoice: DeckIndexChoice?
 
     enum Direction { case forward, back }
 
@@ -44,6 +48,19 @@ struct DeckView<Model: DeckModel>: View {
         var id: String { item.id }
     }
 
+    /// The deck's one sheet: a card's sources, or the quick index.
+    private enum DeckSheet: Identifiable {
+        case source(SourceItem)
+        case index
+
+        var id: String {
+            switch self {
+            case let .source(source): "source.\(source.id)"
+            case .index: "index"
+            }
+        }
+    }
+
     var body: some View {
         let cards = model.cards
         let index = model.currentIndex
@@ -59,7 +76,7 @@ struct DeckView<Model: DeckModel>: View {
                             onTarget: { setTarget($0, index) },
                             onSource: {
                                 if case let .dhikr(item) = card.content {
-                                    sourceItem = SourceItem(number: card.number, item: item)
+                                    sheet = .source(SourceItem(number: card.number, item: item))
                                 }
                             })
                         .padding(.bottom, 16)
@@ -86,8 +103,15 @@ struct DeckView<Model: DeckModel>: View {
         } message: { pending in
             Text(pending.confirmation.message)
         }
-        .sheet(item: $sourceItem) { source in
-            SourceSheet(number: source.number, item: source.item)
+        .sheet(item: $sheet, onDismiss: showChosenCard) { presented in
+            switch presented {
+            case let .source(source):
+                SourceSheet(number: source.number, item: source.item)
+            case .index:
+                DeckIndexView(model: model) { indexChoice = model.indexChoice(of: $0) }
+                    .environment(\.palette, palette)
+                    .environment(\.readingMetrics, metrics)
+            }
         }
     }
 
@@ -136,13 +160,7 @@ struct DeckView<Model: DeckModel>: View {
                     show(index - 1, .back, announce: true)
                 }
                 Spacer(minLength: 0)
-                Text(model.positionLabel(index))
-                    .font(.subheadline.weight(.heavy))
-                    .foregroundStyle(palette.textSecondary)
-                    .monospacedDigit()
-                    .frame(minWidth: 72)
-                    .accessibilityLabel(model.spokenPosition(index))
-                    .accessibilityIdentifier("deck.position")
+                positionButton(index: index, count: count)
                 Spacer(minLength: 0)
                 navigationButton("التالي", arrow: "←", arrowFirst: false, enabled: canGoForward,
                                  identifier: "deck.next") {
@@ -153,6 +171,34 @@ struct DeckView<Model: DeckModel>: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(model.definition.navigationLabel)
         .accessibilityHint(model.definition.hint)
+    }
+
+    /// «٢ من ٢٦», which opens the quick index: a quiet capsule, so «السابق» and «التالي» stay primary. Its glyph
+    /// shows only up to the default text size; above it the position keeps the room it had as plain text.
+    private func positionButton(index: Int, count: Int) -> some View {
+        let showsGlyph = dynamicTypeSize <= .large
+        return Button(action: openIndex) {
+            HStack(spacing: 4) {
+                if showsGlyph {
+                    Image(systemName: "list.bullet").imageScale(.small).accessibilityHidden(true)
+                }
+                Text(model.positionLabel(index))
+            }
+            .font(.subheadline.weight(.heavy))
+            .foregroundStyle(palette.textSecondary)
+            .monospacedDigit()
+            .fixedSize(horizontal: showsGlyph, vertical: false)
+            .padding(.horizontal, showsGlyph ? 8 : 0)
+            .frame(minWidth: 72, minHeight: 44)
+            .overlay(Capsule().strokeBorder(palette.border))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(DeckButtonStyle())
+        .disabled(count == 0)
+        .accessibilityLabel(model.spokenPosition(index))
+        .accessibilityHint(model.definition.id == .ruqyah
+            ? "يعرض فهرس الرقية للانتقال إلى مقطع" : "يعرض فهرس الورد للانتقال إلى ذكر")
+        .accessibilityIdentifier("deck.position")
     }
 
     private func navigationButton(_ title: String, arrow: String, arrowFirst: Bool, enabled: Bool,
@@ -189,6 +235,25 @@ struct DeckView<Model: DeckModel>: View {
             withAnimation(.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.15)) { model.show(target) }
         }
         if announce { Self.announce(model.spokenPosition(model.currentIndex)) }
+    }
+
+    /// Opening the index cancels a pending auto-advance; closing it does not bring it back.
+    private func openIndex() {
+        advanceTask?.cancel()
+        indexChoice = nil
+        sheet = .index
+    }
+
+    /// After the index closes: the chosen card, if the day has not rolled over, the deck is as it was when the card
+    /// was chosen, and «السابق» / «التالي» could still reach it. Otherwise the reader stays and hears where they are.
+    private func showChosenCard() {
+        guard let choice = indexChoice else { return }
+        indexChoice = nil
+        guard !ensureCurrentDay(), let target = model.destination(of: choice) else {
+            Self.announce(model.spokenPosition(model.currentIndex))
+            return
+        }
+        show(target, target > choice.currentIndex ? .forward : .back, announce: true)
     }
 
     private func tap(_ index: Int) {
