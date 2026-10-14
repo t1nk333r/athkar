@@ -58,11 +58,13 @@ extension SessionState {
     }
 
     /// `rollStateToDate(state, nextDate)`: an empty state for `nextDate` whose history starts with this day's
-    /// entry (replacing any entry with the same date), capped at ``historyLimit``. Days in between get no entry.
+    /// entry (replacing every entry with the same date). Drops dates before the 31-local-date window without
+    /// sorting, validating, deduplicating other dates or capping the entry count. Days in between get no entry.
     public func rolled(to nextDate: String, in collections: SessionCollections) -> SessionState {
         let previous = historyEntry(in: collections)
+        let cutoff = Self.historyCutoff(endingOn: nextDate)
         var rolled = SessionState.empty(date: nextDate)
-        rolled.history = [previous] + history.lazy.filter { $0.date != previous.date }.prefix(Self.historyLimit - 1)
+        rolled.history = ([previous] + history.filter { $0.date != previous.date }).filter { $0.date >= cutoff }
         return rolled
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 /// The PWA's `athkar-progress-v2` state: today's counters, chosen targets, completion bookkeeping and the
-/// last seven days of history.
+/// history retained over a 31-local-date window.
 ///
 /// Dates are local `YYYY-MM-DD` strings. Timestamps (`completedAt`, `morningAt`, `eveningAt`) keep the
 /// PWA's stored strings verbatim (normally `toISOString()` output; ``SessionCalendar/isoString(_:)``
@@ -14,15 +14,17 @@ public struct SessionState: Codable, Sendable, Equatable {
     public var targets: SessionPeriods<ItemValues>
     public var completedAt: SessionPeriods<String?>
     public var manualCompletion: SessionPeriods<Bool>
-    /// Newest first, at most ``historyLimit`` entries after a rollover.
+    /// Stored order, with the predecessor prepended on rollover. Normalization preserves duplicates and future
+    /// dates; the SQL bridge loads all earlier completed dates without a retention limit.
     public var history: [HistoryEntry]
 
     /// `localStorage` key of the current format.
     public static let storageKey = "athkar-progress-v2"
     /// `localStorage` key of the previous format, read only when ``storageKey`` is empty.
     public static let legacyStorageKey = "athkar-progress-v1"
-    /// Days kept in ``history``.
-    public static let historyLimit = 7
+    /// Local dates in the PWA's history window, including the current date (`resetEpochDays`). Normalization
+    /// also limits the stored input to this many entries; rollover filters by date without an entry cap.
+    public static let historyWindowDays = 31
     /// `longDhikrThreshold`: an item whose target is at least this is "long".
     public static let longDhikrThreshold = 10
 
@@ -115,8 +117,9 @@ extension SessionState {
     /// `normalizeState(parsed)`: sanitises any parsed JSON into a well-formed state.
     ///
     /// - A `date` that is not `YYYY-MM-DD` becomes `today`.
-    /// - `history` keeps the first seven objects with a string `date`; legacy `morningSkipped`/`eveningSkipped`
-    ///   count as complete; non-string timestamps become `nil`.
+    /// - `history` keeps the first 31 entries with real dates at or after the window's cutoff, relative to the
+    ///   stored date. Order, duplicates and future dates survive; legacy `morningSkipped`/`eveningSkipped` count
+    ///   as complete; non-string timestamps become `nil`.
     /// - `progress`/`targets` containers that are not objects or arrays become `{}`; containers and their
     ///   values are kept verbatim.
     /// - Legacy `skipped` flags count as `manualCompletion`.
@@ -129,10 +132,15 @@ extension SessionState {
             SessionPeriods(morning: read(.morning), evening: read(.evening))
         }
 
+        let storedDate = parsed.property("date")?.stringValue
+        let date = storedDate.flatMap { isLocalDateKey($0) ? $0 : nil } ?? today
+        let cutoff = historyCutoff(endingOn: date)
         var history: [HistoryEntry] = []
         if case .array(let stored)? = parsed.property("history") {
-            for entry in stored where history.count < historyLimit {
-                guard let entryDate = entry.property("date")?.stringValue else { continue }
+            for entry in stored {
+                guard history.count < historyWindowDays else { break }
+                guard let entryDate = entry.property("date")?.stringValue,
+                      LocalDate.isValid(entryDate), entryDate >= cutoff else { continue }
                 history.append(HistoryEntry(
                     date: entryDate,
                     morning: truthy(entry.property("morning")) || truthy(entry.property("morningSkipped")),
@@ -143,9 +151,8 @@ extension SessionState {
             }
         }
 
-        let storedDate = parsed.property("date")?.stringValue
         return SessionState(
-            date: storedDate.flatMap { isLocalDateKey($0) ? $0 : nil } ?? today,
+            date: date,
             progress: pair { container("progress", $0) },
             targets: pair { container("targets", $0) },
             completedAt: pair { parsed.property("completedAt")?.property($0.rawValue)?.stringValue },
@@ -182,6 +189,17 @@ extension SessionState {
         default:
             return .empty(date: today)
         }
+    }
+
+    /// `resetCutoff(date)`: subtract 30 civil days, independent of time zone or DST. As in `setUTCFullYear`,
+    /// shaped but impossible state dates overflow into the next month/year, and years 0...99 stay literal.
+    static func historyCutoff(endingOn date: String) -> String {
+        guard isLocalDateKey(date) else { return date }
+        let parts = date.split(separator: "-").map { Int64($0)! }
+        let year = parts[0] + (parts[1] == 0 ? -1 : (parts[1] - 1) / 12)
+        let month = (parts[1] + 11) % 12 + 1
+        let day = LocalDate.daysFromCivil(year: year, month: month, day: parts[2]) - Int64(historyWindowDays - 1)
+        return String(SessionCalendar.isoString(Date(timeIntervalSince1970: Double(day) * 86_400)).prefix(10))
     }
 
     /// `/^\d{4}-\d{2}-\d{2}$/` (ASCII digits, no trailing newline).

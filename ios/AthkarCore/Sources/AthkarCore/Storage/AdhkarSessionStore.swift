@@ -6,8 +6,8 @@ import GRDB
 ///
 /// - `load(date:)`: that date's `adhkar_item_progress` rows as `progress`/`targets`; `completedAt` and
 ///   `manualCompletion` from its `adhkar_days` rows (manual unless origin `counters`: see
-///   ``CompletionOrigin/isManualCompletion``); `history` = the newest ``SessionState/historyLimit`` earlier dates
-///   that have an `adhkar_days` row.
+///   ``CompletionOrigin/isManualCompletion``); `history` = every earlier date that has an `adhkar_days` row,
+///   newest first. Native SQL completion history is unbounded; the PWA window and envelope-v1 cap do not apply.
 /// - `save(_:)`: makes the rows for `state.date` match the state, in one transaction. History is not written:
 ///   it is a view of earlier days' rows, which were written when those days were live.
 public struct AdhkarSessionStore: Sendable {
@@ -30,8 +30,8 @@ public struct AdhkarSessionStore: Sendable {
                 state.manualCompletion[period] = session.completion?.completionOrigin.isManualCompletion ?? false
             }
             let dates = try String.fetchAll(db, sql: """
-                SELECT DISTINCT local_date FROM adhkar_days WHERE local_date < ? ORDER BY local_date DESC LIMIT ?
-                """, arguments: [date, SessionState.historyLimit])
+                SELECT DISTINCT local_date FROM adhkar_days WHERE local_date < ? ORDER BY local_date DESC
+                """, arguments: [date])
             state.history = try dates.map { day in
                 let rows = try AdhkarDay.filter(Column("local_date") == day).fetchAll(db)
                 let morning = rows.first { $0.period == .morning }

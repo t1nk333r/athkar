@@ -129,16 +129,30 @@ struct StorageSessionStoreTests {
         #expect(try adhkar.session(on: "2026-09-10", period: .morning).targets == [:])
     }
 
-    @Test func historyIsTheSevenNewestEarlierCompletedDays() throws {
+    @Test func historyIncludesEveryEarlierCompletedDayWithoutPruningSQL() throws {
         for day in 10...20 {
             try database.adhkar.markComplete(on: "2026-09-\(day)", period: .evening, origin: .imported,
                                              completedAt: nil)
         }
+        try database.adhkar.markComplete(on: "2025-01-01", period: .evening, origin: .manual, completedAt: nil)
         try database.adhkar.setCount(1, for: "morning-01", on: "2026-09-09", period: .morning)
-        let history = try store.load(date: "2026-09-18").history
-        #expect(history.map(\.date) == ["2026-09-17", "2026-09-16", "2026-09-15", "2026-09-14", "2026-09-13",
-                                        "2026-09-12", "2026-09-11"])
+        let before = try dump(database)
+        var state = try store.load(date: "2026-09-18")
+        let history = state.history
+        let expected = ["2026-09-17", "2026-09-16", "2026-09-15", "2026-09-14", "2026-09-13",
+                        "2026-09-12", "2026-09-11", "2026-09-10", "2025-01-01"]
+        #expect(history.map(\.date) == expected)
         #expect(history.allSatisfy { !$0.morning && $0.evening && $0.eveningAt == nil })
+
+        // PWA rollover may trim the in-memory view; saving it never deletes old or future SQL rows.
+        state = state.rolled(to: "2026-09-21", in: collections)
+        try store.save(state, at: Instant.at("2026-09-21T04:00:00.000Z"))
+        #expect(try dump(database) == before)
+        #expect(try store.load(date: "2026-09-18").history.map(\.date) == expected)
+
+        let exported = try BackupExporter(database: database).export(
+            app: .athkarPWA, today: "2026-09-18", timeZone: "Asia/Riyadh")
+        #expect(try #require(exported.adhkar).history.map(\.date) == Array(expected.prefix(7)))
     }
 
     @Test func unchangedSaveKeepsRowsAndStamps() throws {
