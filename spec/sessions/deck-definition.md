@@ -130,6 +130,21 @@ The setting is `long_order` (`last` | `original`; default `original`).
     the single unlocked deck described above until it gets sura tabs.
 - **Position.** Shown as «N من M». Spoken as «الذكر N من M» for adhkar and «المقطع N من M» for ruqyah, and
   announced after every navigation.
+- **Native quick index.** The position is a button at least 44 pt tall. It opens an RTL sheet titled
+  «فهرس الورد» for adhkar or «فهرس الرقية» for ruqyah, with «إغلاق» and every card in current deck order.
+  Each row shows its original number, existing opening text or surah/range, counter status and current-row marker.
+  Review rows show their warning and no counter. Quran text uses the same rendering as the card.
+  - Earlier and current rows are selectable. A later row is selectable only when every intervening forward
+    step satisfies the existing lock. Keep unavailable rows visible and disabled. Manual completion unlocks
+    adhkar; native ruqyah remains freely navigable.
+  - Opening the index cancels pending auto-advance. Closing it does not reschedule advance. Selection never
+    changes counts, targets or completion. Dismiss first, resolve the selected card ID against the current deck,
+    recheck day rollover and reachability, then navigate and announce. If rollover changed the deck or the chosen
+    row is no longer reachable, keep the current card and announce its position. Selecting the current row only
+    dismisses.
+  - Keep `deck.position` and its spoken label. Row labels use `card.progressLabel`, never encoded Quran text;
+    their accessibility value gives the deck position, which can differ from the original number in long-order.
+    Wrap rows at large text sizes and preserve Reduce Motion, RTL, palette and reading fonts.
 - **Hint below the controls.** `deck.hint.adhkar` or `deck.hint.ruqyah`.
 
 ## 5. Tap to count
@@ -146,7 +161,8 @@ A tap does nothing when:
 Otherwise:
 
 1. `count += 1`, and the new count is saved.
-2. If the card just reached its target, play the completion haptic: 45 ms, only when `haptics` is true.
+2. If the card just reached a target greater than one, play the completion haptic: 45 ms, only when `haptics`
+   is true. This applies to adhkar and native ruqyah counters. Single-count cards and intermediate taps stay quiet.
 3. **Adhkar:** run `syncCompletionState(period)`. If it returns `newlyCompleted`, open the completion dialog and
    do not auto-advance. Otherwise, if the card just completed, auto-advance.
 4. **Ruqyah:**
@@ -371,8 +387,8 @@ come back if the reader scrolls up again. A card that fits never shows them. The
 
 ## 11. Arabic copy keys
 
-These keys seed `content/ui-copy.json`, which does not exist yet (NATIVE_APP_PLAN.md §4.1). The strings are the
-PWAs' wording, verbatim. `{n}`, `{x}`, `{y}` are Arabic-Indic numbers.
+These keys seed `content/ui-copy.json`, which does not exist yet (NATIVE_APP_PLAN.md §4.1). The existing keys follow the
+PWAs' wording; index keys and the repeated-counter haptic note include the native contract. `{n}`, `{x}`, `{y}` are Arabic-Indic numbers.
 
 | Key | Text |
 | --- | --- |
@@ -380,6 +396,9 @@ PWAs' wording, verbatim. `{n}`, `{x}`, `{y}` are Arabic-Indic numbers.
 | `deck.section.morning` / `deck.section.evening` / `deck.section.ruqyah` | أذكار الصباح / أذكار المساء / رقية القرين |
 | `deck.previous` / `deck.next` | السابق / التالي |
 | `deck.position` | {n} من {m} |
+| `deck.index.adhkar.title` / `.hint` | فهرس الورد / يعرض فهرس الورد للانتقال إلى ذكر |
+| `deck.index.ruqyah.title` / `.hint` | فهرس الرقية / يعرض فهرس الرقية للانتقال إلى مقطع |
+| `deck.index.row.hint` | ينتقل إلى هذه البطاقة |
 | `deck.hint.adhkar` | اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال. |
 | `deck.hint.ruqyah` | اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع. |
 | `card.single.pending` / `card.single.done` / `card.ruqyah.single.done` | اضغط بعد القراءة / تمت القراءة / تمت |
@@ -413,6 +432,6 @@ PWAs' wording, verbatim. `{n}`, `{x}`, `{y}` are Arabic-Indic numbers.
 | `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال الذكر / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال الذكر. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |

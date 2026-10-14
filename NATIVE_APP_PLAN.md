@@ -10,7 +10,9 @@ This document records the stack and sequence for combining three parts into one 
 
 This document replaces only the stack decision in `MOBILE_APP_PLAN.md` (React Native + Expo, Flutter fallback). Section 2 classifies every section of that document as *authoritative*, *superseded*, or *needs rewrite*. This mapping prevents contradictions between the two documents. If the plans disagree, this one takes precedence.
 
-It is a plan, not a status report. No native code exists. No Apple Developer account or organization identity exists yet. Work is not starting immediately.
+This is a sequencing plan, not an implementation status report. Native code now exists under `ios/`.
+The current Linux-only verification procedure is in [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md).
+Publisher identity remains a separate release gate.
 
 This plan cites the file and symbol for each claim about current behaviour. Claims that the repositories could not verify are marked `[INFERENCE]`. Effort uses relative bands (S/M/L/XL, defined in section 10), not calendar dates.
 
@@ -54,7 +56,7 @@ Additional reasons specific to this product:
 | No shared business-logic code | Domain rules (rollover, completion, deck ordering, planner) exist twice. | Platform-neutral fixtures pin the rules (section 4.3). Tests catch divergence without code sharing. |
 | Domain expertise split | Swift and Kotlin both require learning and maintenance. | Work sequentially, not in parallel. Start Android only when iOS demands little attention. |
 | Android users wait longer | Android users stay on the PWAs for the whole iOS phase. | PWAs remain live and get bug/content fixes (section 10.4). |
-| A Mac and Xcode are required | The current workstation is Linux (`uname` shows Arch Linux). iOS development cannot proceed without macOS hardware or a hosted Mac. | This is a hard prerequisite alongside the Apple Developer account (section 11). |
+| Apple runtime behavior needs iOS device evidence | New core/model tests and SDK compilation run on Linux. Compilation does not execute iOS tests or prove an installable app. | Follow [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). Keep required unrun runtime cases open; Apple publisher identity remains a separate gate (section 11). |
 
 ### 1.4 "iOS is stable": criteria that unblock Android
 
@@ -383,9 +385,12 @@ Section 20 of `MOBILE_APP_PLAN.md` is authoritative and is restated here, not su
 - The public developer name has been chosen deliberately at first-app creation.
 - The final Team ID is known and recorded privately, so no Keychain-scoped secret is created under a throwaway team.
 
-This plan also requires macOS hardware or a hosted Mac running current Xcode and a physical iPhone for notification testing. Simulators do not faithfully exercise delivery after termination.
+All new checks use the supported Linux toolchain under the shared and project lane locks. See
+[`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). Record SDK compilation and executed
+production-source tests separately. Required iOS runtime cases need an authorized device result;
+notification delivery after termination remains a physical-iPhone gate.
 
-Slices 0–4 do **not** require the account. Run them on the simulator and local device builds signed with a free personal team. The gate blocks Slice 5 onward.
+Slices 0–4 do **not** require the account. Existing authorized device signing routes remain separate from Linux checks. The gate blocks Slice 5 onward.
 
 ### 8.2 Repository layout
 
@@ -448,7 +453,7 @@ Slices 2–4 may proceed while the identity gate is pending; nothing in them dep
 ### 8.6 Build and release operations
 
 - Local `xcodebuild` archives from tagged commits are sufficient for a solo maintainer; Xcode Cloud is optional and can be added later without changing anything else. No Expo/EAS.
-- CI (GitHub Actions on a macOS runner, or local pre-push): `tools/content-validate.mjs`, `swift test` for `AthkarCore`, and the XCTest fixture suites. UI tests run locally before release, not on every push, to control cost.
+- New verification runs on Linux: `tools/content-validate.mjs`, the AthkarCore suite, supported production-source XCTest and SDK compilation. Required UI/device cases remain open until an authorized iOS runtime result. A live CI migration requires its own reviewed change; existing remote jobs retain their owners.
 - Signing credentials, Apple verification documents, and the Team ID live outside the repository (`MOBILE_APP_PLAN.md` §20).
 
 ---
@@ -502,7 +507,7 @@ AI token costs are highest in phases with long feedback loops, such as SwiftUI l
 | Risk | Consequence | Mitigation |
 | --- | --- | --- |
 | Identity gate stalls (no legal entity, D-U-N-S delays) | Slices 5–9 blocked; work continues on 2–4 but cannot ship. | Start the gate before Slice 0; it has no code dependency. |
-| No Mac / Xcode access | iOS cannot start at all. | Prerequisite in section 11. |
+| iOS runtime result unavailable | Linux core/model tests and SDK compilation can proceed; required device cases remain open. | Use the existing documented device route when authorized. Record unrun cases using [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). |
 | Dropping the PWAs too early | Android users and non-App-Store iOS users lose the only working app; ruqyah users lose their history if they never exported. | Section 10.4 policy; PWAs are never removed before Android ships; export stays available indefinitely. |
 | Maintaining PWA + iOS + Android simultaneously | Three codebases for one person; every content fix triples. | PWAs in maintenance mode with regenerated content (`content-export-pwa.mjs`) so a pack fix is one commit; Android only after S6 shows the iOS load has dropped. |
 | Silent divergence between PWA and native rules during the long overlap | Users see different completion or reminder behaviour in the PWA and native app. | Freeze PWA rule changes (10.4). Any exception must first update the fixtures, which requires the native side to follow. |
@@ -542,7 +547,7 @@ The athkar PWA's ruqyah launcher tab remains unchanged. `MOBILE_APP_PLAN.md` and
 ## 11. Open decisions before implementation
 
 1. **Legal entity and Apple identity.** Which entity will hold the organization membership, its public developer name, the support/privacy domain, and who is Account Holder. Nothing in Slice 5+ can ship without this (section 8.1).
-2. **Mac access.** Owned Mac, hosted Mac, or other; and which physical iPhone(s) are available for the notification matrix.
+2. **Runtime evidence.** New checks are Linux-only; see [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). Physical iPhone coverage for the notification matrix remains to be recorded.
 3. **Minimum iOS version.** Recommendation: iOS 17, for SwiftUI maturity and `@Observable`; lower only if a known user base demands it.
 4. **Scope trim approval.** Confirm the 1.0 / 1.1 split in section 3.3, in particular moving travel/make-up/not-applicable ranges, search, favorites and personal reminders to 1.1.
 5. **Named reviewers.** Who signs `REVIEW.md` for the adhkar pack, the ruqyah pack, and the tracker wording in `content/ui-copy.json`. Without a name the packs cannot version-bump.
