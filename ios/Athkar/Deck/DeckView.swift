@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The one card-deck component (NATIVE_APP_PLAN.md §3.2): shows the current card of any ``DeckModel`` and
-/// reproduces the PWAs' deck behaviour — tap to count, the 45 ms haptic on completing a card, auto-advance
+/// reproduces the PWAs' deck behaviour — tap to count, the 45 ms haptic on completing a repeated counter, auto-advance
 /// 320 ms later (20 ms and unanimated with Reduce Motion), swipe with axis lock (a rightward swipe moves forward,
 /// as in the RTL PWAs), «السابق» / «التالي» with the position, and the counter reset.
 struct DeckView<Model: DeckModel>: View {
@@ -195,7 +195,9 @@ struct DeckView<Model: DeckModel>: View {
         guard Date() >= drag.suppressTapsUntil, !ensureCurrentDay(), let change = model.tap(cardAt: index) else {
             return
         }
-        if change.completedCard, haptics { Haptics.shared.playCompletion() }
+        if change.completedCard, haptics, let card = model.cards[safe: index], card.target > 1 {
+            Haptics.shared.playCompletion()
+        }
         if let card = model.cards[safe: index] { Self.announce(card.progressLabel) }
         handle(change, at: index)
     }

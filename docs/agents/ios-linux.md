@@ -1,0 +1,226 @@
+# Native verification from Linux
+
+All new iOS checks run on Linux under the current user instruction and
+`/home/t1nk33r/.agents/AGENTS.md`. The coordinator owns the native execution queue.
+Source work and light shell checks may proceed before a native grant. Return a
+`linux-request.json` with the exact head, commands, selectors and required gates;
+do not start a native run without that turn's grant.
+
+| Check | Tool and host | Evidence |
+| --- | --- | --- |
+| AthkarCore rules, SQLite storage, content, backups and prayer calculations | Installed Linux Swift, Luna | Nonempty Swift Testing summary and exit status |
+| Portable app deck models, bundled content and production database writes | Installed Linux Swift and real swift-crypto, Luna | Executed production-source XCTest method identifiers, count and exit status |
+| All app sources and optional app-unit test compilation | Existing Linux Darwin SDK, Luna | Compiler and packaging outcomes, zero executed tests |
+| AppModel integration, UI, accessibility, location, heading, haptics and notification delivery | An authorized iOS device route orchestrated from Linux | Exact device, test identifiers and runtime result |
+
+Linux XCTest covers the production files selected by `ios/Package.swift`. It
+does not import CoreLocation, UserNotifications or SwiftUI. AppModel's iOS
+dependencies therefore remain outside that portable target. A compiled Darwin
+XCTest bundle cannot execute as Linux XCTest. Keep its compilation result
+separate from tests that actually ran.
+
+## Installed tools
+
+On Luna, inspected on 2026-10-14:
+
+- `/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift` reports Swift 6.4,
+  `swift-6.4-RELEASE`, target `x86_64-unknown-linux-gnu`.
+- `/home/t1nk33r/.local/bin/xtool` reports commit
+  `f0a1f90efdbb0dc023e276ff529da92618da7a87`. Its app build route takes a SwiftPM
+  project and exposes no job-count argument. The bounded repository adapter uses
+  SwiftPM directly instead.
+- The existing `~/.swiftpm/swift-sdks/darwin.artifactbundle` contains iOS 27.0 SDKs,
+  toolset metadata and Apple XCTest frameworks. Implicit `swift sdk list` found
+  no SDKs during inventory. Explicit selection works:
+
+```bash
+/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift sdk list \
+  --swift-sdks-path /home/t1nk33r/.swiftpm/swift-sdks
+# darwin
+```
+
+SDK inventory must supply this directory explicitly. Set
+`ATHKAR_SWIFT_SDKS_PATH` if the same existing bundle lives elsewhere. It does not
+install SDKs or modify their metadata. SDK discovery is not compiler verification.
+Mars and Jupiter lack Swift/xtool; send their committed source bundles to the
+coordinator. Do not provision hosts or use Terra for new checks.
+
+The portable package pins official `apple/swift-crypto` 5.0.1. Its manifest
+requires Swift 6.2, which Luna's Swift 6.4 satisfies. BundledContent uses CryptoKit
+on Apple platforms and Crypto on Linux, with the same SHA-256 operation.
+`ios/Package.resolved` records the actual resolved revisions, including
+swift-crypto `1c80d3aff53fedc445b60692980cb4f19a618657`. Runs use that lockfile with
+`--force-resolved-versions`. A dependency update must resolve in an isolated
+snapshot, return the generated resolution file for a signed-off source revision,
+and rerun the committed head.
+
+## Queue ownership and isolated output
+
+The runners acquire `/tmp/hikaya-build-suite.lock` first, then
+`/tmp/athkar-build-suite.lock`, using nonblocking exclusive flock. A busy lane
+returns exit 3. If the project lane is busy, the runner immediately releases the
+shared lane. It never waits while holding only one lock and never removes a
+shared lock file. Existing lock files are not evidence that a lane is free.
+`ATHKAR_SHARED_BUILD_LOCK` may select an absolute shared-lane path for a separately
+coordinated host or harmless fixture. Luna's native grants use the default above.
+
+The runners select `ATHKAR_SWIFT`, Swift on PATH, or the installed Swift 6.4 path.
+They accept only one or two build jobs and disable test parallelism. They archive
+the exact clean Git HEAD into a fresh directory outside the checkout. Tests retain
+the whole repository because core fixtures and portable content use repository
+paths. Scratch, dependency caches, test bundles and logs belong to that run.
+
+After the coordinator grants the selected check, run from the checkout:
+
+```bash
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/test-native-core.sh --jobs 2 --filter 'Storage|BackupContentTests'
+
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/test-native-models.sh --jobs 2 --filter PortableModelTests
+
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/test-native-models.sh --jobs 2 -c release --filter PortableModelTests
+```
+
+Omit `--filter` for the full selected suite. The full core suite follows Task
+001's integrated history fix. `--results /absolute/new-directory` selects a fresh
+output directory with an existing parent. Otherwise the runner creates a unique
+directory under `$XDG_CACHE_HOME/athkar-native-checks` or
+`$HOME/.cache/athkar-native-checks`. It prints the output path and retains:
+
+- `resource.log`, with host, source head, lane paths, ownership, process/group IDs
+  and terminal/release state.
+- `toolchain.log`, `command.log`, `check.log` and `exit-status`.
+- `repo/`, the source snapshot, and private `scratch/`, caches and test data.
+
+Count the final Swift Testing result for core coverage. An earlier XCTest
+"Executed 0 tests" line is not the Swift Testing count. For portable coverage,
+record the actual `PortableModelTests` XCTest method names and count. The runners
+fail a zero-test selection even if Swift exits successfully.
+Release test runs explicitly pass `-Xswiftc -enable-testing` so XCTest can import
+the actual production module with `@testable`.
+
+### Caller-held lanes
+
+A coordinator that already owns both locks can pass their inherited descriptors.
+The wrapper verifies each descriptor's exact lane path and exclusive flock in
+`/proc`. An environment claim alone is insufficient. For example, inside the
+coordinator's granted turn:
+
+```bash
+(
+  exec 8>>/tmp/hikaya-build-suite.lock
+  flock -n 8 || exit 3
+  exec 9>>/tmp/athkar-build-suite.lock
+  if ! flock -n 9; then
+    exec 8>&-
+    exit 3
+  fi
+  tools/test-native-core.sh --caller-held-locks 8 9 --jobs 2 --filter Storage
+)
+```
+
+The wrapper does not unlock the caller's file descriptions. The coordinator
+releases them after the wrapper's terminal return. For runner-owned lanes,
+cleanup waits for the owned Linux subreaper to reap the whole process tree before
+closing lock descriptors or writing the completion marker. The subreaper adopts
+orphaned children, including descendants that start separate sessions. TERM/INT
+cleanup signals only those owned processes, allows five seconds for termination,
+then kills resistant owned descendants and waits for their actual exit.
+Never stop shared daemons,
+historical jobs or processes belonging to another owner.
+
+## Compile against the existing iOS SDK
+
+Request a separate SDK turn before running either command:
+
+```bash
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/ios-linux-compile.sh --jobs 2
+
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/ios-linux-compile.sh --jobs 2 --build-tests
+```
+
+The adapter stages the exact shipped manifest, adhkar/ruqyah packs, both fonts
+and city list in its isolated snapshot. SDK mode selects every actual app source
+and the real assets. The adapter follows the installed xtool revision's
+[SwiftBuild settings](https://github.com/xtool-org/xtool/blob/f0a1f90efdbb0dc023e276ff529da92618da7a87/Sources/PackLib/BuildSettings.swift#L58-L70).
+SwiftPM uses `--build-system swiftbuild`, `--triple arm64-apple-ios`, the existing
+`toolset-swb.json` and at most two jobs. The command environment supplies
+`XCODE_EXTRA_PLATFORM_FOLDERS` with the existing bundle's `Developer/Platforms`,
+prepends its `toolset/bin` to PATH and unsets SDKROOT. These settings apply only
+to this process. The optional test build selects `AthkarTests`, enables testable
+imports and adds the SDK's actual XCTest framework search path.
+
+SwiftBuild may invoke the existing actool for asset-symbol generation, even with
+copied catalogue resources. This adapter does not execute iOS tests, sign an app,
+package an installable IPA or install anything. Report the exact
+compiler outcome, each failed build/packaging step and the retained log. A
+successful source compilation leaves packaging and device gates open. The initial
+2026-10-14 attempt using `--swift-sdk` failed before source compilation with
+`unable to find platform for 'iphoneos'`. With xtool's documented platform search
+path and toolset, app compilation passed at `c49655124e4159b904db54504ba700d54802ac1d`.
+App-unit sources compiled and linked at `39832e4c7033accbcd601996f84d0af9097990f3`,
+then XCTest bundle packaging failed in `CopySwiftLibs` with
+`Passed --strip-bitcode without --strip-bitcode-tool.` Both runs executed zero
+tests and produced no installable IPA. Use the exact run's retained outcome when
+verifying a later head. Hikaya's inert CI
+candidate is not an approved route. Leave live CI and historical remote jobs
+unchanged.
+
+## Required runtime cases and historical results
+
+`AthkarTests` is a hosted app-unit target. Starting its host runs the normal
+`AthkarApp` entry point, which opens `Application Support/Athkar/athkar.sqlite`
+through `AppModel.launch()` and attaches and replans reminders. The tests' own
+in-memory databases do not isolate that host startup. The host bundle identity is
+`local.dev.athkar`, matching the user's existing Feather installation. No current
+device run against that installation is approved. Runtime acceptance requires a
+separately authorized, isolated route that preserves the user's app, database and
+notifications. Do not use `--reset-data`, uninstall, change bundle identity,
+pairing or device permissions under this source-verification grant.
+
+The committed `ios/Athkar.xcodeproj` is stale and lacks the new `AthkarTests`
+target. `ios/project.yml` is authoritative. A future authorized Xcode route must
+regenerate the project and verify its hosted-test target and scheme before use.
+No new Mac work or changes to historical jobs and their running copies are
+authorized by this infrastructure work.
+
+Without an authorized iOS device result, these app-unit cases remain required
+unrun:
+
+- `TestInfrastructureTests.testBundledPacksRecordActualChecksumsAndVersions`
+- `TestInfrastructureTests.testAppModelBuildsDecksFromBundledContent`
+- `TestInfrastructureTests.testInMemoryModelsPersistWithoutSharingDatabaseState`
+- `AthkarUITests/LaunchTests.testLaunchShowsPrayerRow`
+
+Keep any task's UI, accessibility, sensor, notification, allocation and device
+acceptance criteria open as well. A remaining required runtime gate means
+`BLOCKED`, even when committed source is ready for paired review. The coordinator
+integrates reviewed source serially; workers do not merge or settle themselves.
+
+`tools/ios-mac-run.sh` is retired from current verification. Its historical
+signal cleanup does not provide the required process-tree and marker lifetime.
+Leave existing historical jobs and their running copies untouched. Do not use
+the runner for new checks or request Mac keys, wake-up or provisioning. Preserve the
+user's physical-device data and the existing signing/publisher identity.
+
+XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps in
+`ios/project.yml` under `targets.Athkar.info.properties`, using
+`CFBundleShortVersionString` and `CFBundleVersion`. Their current values remain
+`1.0` and `1`, matching the published version.
+
+Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
+Testing ran 108 tests in 23 suites, with four session history-fixture failures.
+History PR #16 resolved that divergence. Its exact publication head
+`e446f126770473df455ae7c4bf0917181f95e7ef` passed all 114 Swift Testing declarations
+in 24 suites on Linux on 2026-10-14, including all 22 loadState and ten rollover
+fixtures. Pages passed at merge commit `1c8ce891bcda7b6edb74496e8143d62c19c6b39f`.
+This is a core-only result, with zero XCTest methods and no device/runtime claim.
+The historical Mac simulator passed the single
+LaunchTests case, and Feather published `local.dev.athkar` version 1.0, build 1,
+with 4,513,557 bytes. Its downloaded SHA-256 matched
+`4ca66bbe9a61ec0d5c2be28e148517fadccb483ee1571478d4fe29ad7ada79bd`.
+Those records do not verify the current source head or the new tests.
