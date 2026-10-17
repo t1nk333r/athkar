@@ -7,12 +7,8 @@ import Observation
 @MainActor
 @Observable
 final class DeviceHeading: NSObject {
-    /// Degrees from north, clockwise, where the top of the phone points; `nil` before the first reading.
-    private(set) var degrees: Double?
-    /// From true north (`true`) or magnetic north.
-    private(set) var isTrueNorth = false
-    /// Worse than this many degrees, the compass needs calibrating.
-    private(set) var needsCalibration = false
+    /// The heading the screen may use: empty while stopped and after an invalid heading or a heading failure.
+    private(set) var reading = HeadingReading()
 
     let isAvailable = CLLocationManager.headingAvailable()
 
@@ -27,6 +23,7 @@ final class DeviceHeading: NSObject {
     }
 
     func start() {
+        reading.start()
         guard isAvailable else { return }
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways: manager.startUpdatingLocation()
@@ -38,21 +35,24 @@ final class DeviceHeading: NSObject {
     func stop() {
         manager.stopUpdatingHeading()
         manager.stopUpdatingLocation()
+        reading.stop()
     }
 }
 
 // The manager is created on the main thread, so it calls its delegate there.
 extension DeviceHeading: @preconcurrency CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateHeading heading: CLHeading) {
-        let trueNorth = heading.trueHeading >= 0
-        degrees = trueNorth ? heading.trueHeading : heading.magneticHeading
-        isTrueNorth = trueNorth
-        needsCalibration = heading.headingAccuracy < 0 || heading.headingAccuracy > 20
+        reading.update(trueHeading: heading.trueHeading, magneticHeading: heading.magneticHeading,
+                       accuracy: heading.headingAccuracy)
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {}
 
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {}
+    /// Interference can stop CoreLocation determining the heading; it keeps trying, and its next valid heading restores
+    /// the reading. A location error costs only true north, which the next heading reports.
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        if (error as? CLError)?.code == .headingFailure { reading.fail() }
+    }
 
     func locationManagerShouldDisplayHeadingCalibration(_ manager: CLLocationManager) -> Bool { true }
 }

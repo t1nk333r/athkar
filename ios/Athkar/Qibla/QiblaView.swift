@@ -7,11 +7,14 @@ import SwiftUI
 /// and the bearing is given in degrees.
 struct QiblaView: View {
     let prayer: PrayerTimesModel
+    /// The global haptics setting, which the alignment haptic follows.
+    let haptics: Bool
     let openPrayerTimes: () -> Void
 
     @Environment(\.palette) private var palette
+    @Environment(\.scenePhase) private var scenePhase
     @State private var heading = DeviceHeading()
-    @State private var wasAligned = false
+    @State private var alignmentHaptic = AlignmentHaptic()
 
     var body: some View {
         ScrollView {
@@ -30,14 +33,19 @@ struct QiblaView: View {
         .onAppear { heading.start() }
         .task { await CityDirectory.shared.load() }
         .onDisappear { heading.stop() }
+        // A heading from before the app left the foreground is stale: start again on return.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { heading.stop() } else if phase == .active { heading.start() }
+        }
     }
 
     // MARK: Compass
 
     private func compass(bearing: Double) -> some View {
-        let deviceHeading = heading.degrees ?? 0
-        let live = heading.isAvailable && heading.degrees != nil
-        let aligned = live && Qibla.isAligned(bearing: bearing, heading: deviceHeading)
+        let reading = heading.reading
+        let deviceHeading = reading.degrees ?? 0
+        let live = heading.isAvailable && reading.degrees != nil
+        let aligned = live && reading.isAligned(bearing: bearing)
         return VStack(spacing: 14) {
             ZStack {
                 dial(bearing: bearing, heading: deviceHeading, aligned: aligned)
@@ -70,8 +78,7 @@ struct QiblaView: View {
         .frame(maxWidth: .infinity)
         .qiblaCard(palette)
         .onChange(of: aligned) { _, now in
-            if now, !wasAligned { Haptics.shared.playCompletion() }
-            wasAligned = now
+            if alignmentHaptic.update(aligned: now, haptics: haptics) { Haptics.shared.playCompletion() }
         }
     }
 
@@ -119,7 +126,7 @@ struct QiblaView: View {
     private func status(bearing: Double, live: Bool, aligned: Bool) -> String {
         guard live else { return "القبلة على \(Self.degrees(bearing)) من الشمال" }
         if aligned { return "أنت متجه إلى القبلة" }
-        let offset = Qibla.offset(bearing: bearing, heading: heading.degrees ?? 0)
+        let offset = Qibla.offset(bearing: bearing, heading: heading.reading.degrees ?? 0)
         return offset > 0 ? "استدر يمينًا \(Self.degrees(abs(offset)))" : "استدر يسارًا \(Self.degrees(abs(offset)))"
     }
 
@@ -128,8 +135,8 @@ struct QiblaView: View {
             return "لا توجد بوصلة في هذا الجهاز. قِس الزاوية من الشمال باتجاه عقارب الساعة."
         }
         if !live { return "ضع الهاتف مستويًا وانتظر قليلًا حتى تعمل البوصلة." }
-        if heading.needsCalibration { return "البوصلة تحتاج معايرة: حرّك الهاتف في الهواء على شكل رقم ٨." }
-        if !heading.isTrueNorth {
+        if heading.reading.needsCalibration { return "البوصلة تحتاج معايرة: حرّك الهاتف في الهواء على شكل رقم ٨." }
+        if !heading.reading.isTrueNorth {
             return "الاتجاه من الشمال المغناطيسي وقد يختلف بضع درجات. اسمح بالموقع للتطبيق ليُحسب من الشمال الحقيقي."
         }
         return "ضع الهاتف مستويًا وأبعده عن المعادن والمغناطيس."
