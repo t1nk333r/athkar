@@ -117,12 +117,10 @@ final class AppModel {
     /// before counting a tap. Returns whether the day changed.
     @discardableResult
     func ensureCurrentDay() -> Bool {
-        let today = Self.today()
-        guard today != adhkar.state.date || today != ruqyah.progress.date else { return false }
-        adhkar.roll(to: today)
-        ruqyah.roll(to: today)
-        return true
+        !rollover.roll(to: Self.today()).isEmpty
     }
+
+    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah) }
 
     /// The settings toggle «تأخير الأذكار الطويلة». The decks are reordered only once the choice is saved.
     func setLongOrder(_ enabled: Bool) {
