@@ -142,7 +142,7 @@ final class SettingsPersistenceTests: XCTestCase {
                     XCTAssertEqual(valueAndOrigin(saved["long_order"]), [#""\#(choice.rawValue)""#, "native"], context)
                     XCTAssertEqual(valueAndOrigin(saved["long_order_prompt_answered"]), ["true", "native"], context)
                     XCTAssertEqual(saved["long_order"]?.last, saved["long_order_prompt_answered"]?.last,
-                                   "one transaction, one timestamp; \(context)")
+                                   "both rows carry the answer's timestamp; \(context)")
                     assertRejected(reports, count: 1, context)
 
                     let reloaded = try SettingsModel(repository: database.settings, report: reports.record)
