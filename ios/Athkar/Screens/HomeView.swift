@@ -320,15 +320,15 @@ struct HomeView: View {
         let haptics = app.settings.haptics
         switch app.selection {
         case .morning:
-            DeckView(model: app.morning, haptics: haptics, ensureCurrentDay: app.ensureCurrentDay,
+            DeckView(model: app.morning, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .morning) },
                      onDeckCompleted: { completedDeck = .morning })
             .id(DeckID.morning)
         case .evening:
-            DeckView(model: app.evening, haptics: haptics, ensureCurrentDay: app.ensureCurrentDay,
+            DeckView(model: app.evening, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .evening) },
                      onDeckCompleted: { completedDeck = .evening })
             .id(DeckID.evening)
         case .ruqyah:
-            DeckView(model: app.ruqyah, haptics: haptics, ensureCurrentDay: app.ensureCurrentDay,
+            DeckView(model: app.ruqyah, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .ruqyah) },
                      onDeckCompleted: { completedDeck = .ruqyah })
             .id(DeckID.ruqyah)
         }

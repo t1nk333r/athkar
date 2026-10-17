@@ -114,10 +114,17 @@ final class AppModel {
     }
 
     /// The day rollover (`ensureCurrentDay`): run on `NSCalendarDayChanged`, on returning to the foreground, and
-    /// before counting a tap. Returns whether the day changed.
+    /// before counting a tap. Returns whether any deck's day changed or still cannot be read.
     @discardableResult
     func ensureCurrentDay() -> Bool {
         !rollover.roll(to: Self.today()).isEmpty
+    }
+
+    /// `DeckView`'s gate: the same rollover, answering only for `deck`'s own session, so a day the other session
+    /// cannot read leaves this deck working.
+    @discardableResult
+    func ensureCurrentDay(for deck: DeckID) -> Bool {
+        rollover.roll(to: Self.today()).contains(deck)
     }
 
     private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah) }
