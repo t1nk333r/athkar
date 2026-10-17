@@ -182,11 +182,28 @@ separately authorized, isolated route that preserves the user's app, database an
 notifications. Do not use `--reset-data`, uninstall, change bundle identity,
 pairing or device permissions under this source-verification grant.
 
-The committed `ios/Athkar.xcodeproj` is stale and lacks the new `AthkarTests`
-target. `ios/project.yml` is authoritative. A future authorized Xcode route must
-regenerate the project and verify its hosted-test target and scheme before use.
+`ios/project.yml` is authoritative. The committed `ios/Athkar.xcodeproj` was
+regenerated from it on Luna with XcodeGen 2.46.0. It includes the hosted
+`AthkarTests` target and both test targets in the shared scheme. Xcode has not
+opened it; a future authorized Xcode route must verify the project before use.
 No new Mac work or changes to historical jobs and their running copies are
 authorized by this infrastructure work.
+
+After a `project.yml` change or an added or removed source file, regenerate on
+Linux. Build tag `2.46.0` (commit `8445e778451c7e44237b90281bde622d764b0084`) in a
+new directory outside every repository, holding both lane locks:
+
+```bash
+git clone --depth 1 --branch 2.46.0 https://github.com/yonaskolb/XcodeGen "$src"
+/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift build -c release --jobs 2 \
+  --package-path "$src" --scratch-path "$scratch" --force-resolved-versions \
+  --product xcodegen
+```
+
+Keep `$src` in place, because the binary also looks there for its setting
+presets. From the root of a clean checkout, run
+`"$scratch/release/xcodegen" generate --spec ios/project.yml`. Commit the
+regenerated `ios/Athkar.xcodeproj`, and explain any other changed file.
 
 Without an authorized iOS device result, these app-unit cases remain required
 unrun:

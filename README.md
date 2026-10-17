@@ -13,7 +13,7 @@ device run. Historical Mac jobs are preserved; the Mac runner is retired from ne
 verification.
 Hosted app-unit tests start the normal app database and reminders. They require an
 isolated, authorized device route that preserves the existing Feather installation.
-The committed generated Xcode project is stale; `ios/project.yml` is authoritative.
+The committed Xcode project is generated from the authoritative `ios/project.yml`.
 
 ## Planning
 
