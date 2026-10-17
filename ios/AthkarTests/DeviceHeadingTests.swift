@@ -13,11 +13,11 @@ final class DeviceHeadingTests: XCTestCase {
         deliver(FixedHeading(trueHeading: 244, magneticHeading: 241, accuracy: 5), to: device)
         XCTAssertEqual(device.reading.degrees, 244)
         XCTAssertTrue(device.reading.isTrueNorth)
-        XCTAssertTrue(device.reading.isAligned(bearing: 244))
+        XCTAssertEqual(device.reading.facing(bearing: 244), .aligned)
         // CoreLocation marks an invalid heading with a negative accuracy.
         deliver(FixedHeading(trueHeading: 244, magneticHeading: 241, accuracy: -1), to: device)
         XCTAssertNil(device.reading.degrees)
-        XCTAssertFalse(device.reading.isAligned(bearing: 244))
+        XCTAssertEqual(device.reading.facing(bearing: 244), .unknown)
     }
 
     @MainActor
@@ -32,6 +32,7 @@ final class DeviceHeadingTests: XCTestCase {
         deliver(FixedHeading(trueHeading: -1, magneticHeading: 241, accuracy: 30), to: device)
         XCTAssertEqual(device.reading.degrees, 241)
         XCTAssertTrue(device.reading.needsCalibration)
+        XCTAssertEqual(device.reading.facing(bearing: 241), .unknown)
     }
 
     @MainActor

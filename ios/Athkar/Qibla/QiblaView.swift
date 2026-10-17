@@ -44,8 +44,8 @@ struct QiblaView: View {
     private func compass(bearing: Double) -> some View {
         let reading = heading.reading
         let deviceHeading = reading.degrees ?? 0
-        let live = heading.isAvailable && reading.degrees != nil
-        let aligned = live && reading.isAligned(bearing: bearing)
+        let facing = reading.facing(bearing: bearing)
+        let aligned = facing == .aligned
         return VStack(spacing: 14) {
             ZStack {
                 dial(bearing: bearing, heading: deviceHeading, aligned: aligned)
@@ -59,26 +59,25 @@ struct QiblaView: View {
             .frame(width: 260, height: 260)
             .padding(.top, 18)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Self.spoken(bearing: bearing, heading: deviceHeading, live: live, aligned: aligned))
+            .accessibilityLabel(Self.spoken(bearing: bearing, heading: deviceHeading, facing: facing))
             .accessibilityIdentifier("qibla.compass")
 
-            Text(status(bearing: bearing, live: live, aligned: aligned))
+            Text(Self.status(bearing: bearing, heading: deviceHeading, facing: facing))
                 .font(.headline.weight(.heavy))
                 .foregroundStyle(aligned ? palette.completed : palette.textPrimary)
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("qibla.status")
-            if let note = note(live: live) {
-                Text(note)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(palette.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
+            Text(Self.note(reading.note(compassAvailable: heading.isAvailable)))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(palette.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .padding(16)
         .frame(maxWidth: .infinity)
         .qiblaCard(palette)
-        .onChange(of: aligned) { _, now in
-            if alignmentHaptic.update(aligned: now, haptics: haptics) { Haptics.shared.playCompletion() }
+        // Facing also changes when the compass gains or loses confidence at the same angle.
+        .onChange(of: facing) { _, now in
+            if alignmentHaptic.update(now, haptics: haptics) { Haptics.shared.playCompletion() }
         }
     }
 
@@ -123,23 +122,22 @@ struct QiblaView: View {
         .animation(.easeOut(duration: 0.2), value: heading)
     }
 
-    private func status(bearing: Double, live: Bool, aligned: Bool) -> String {
-        guard live else { return "القبلة على \(Self.degrees(bearing)) من الشمال" }
-        if aligned { return "أنت متجه إلى القبلة" }
-        let offset = Qibla.offset(bearing: bearing, heading: heading.reading.degrees ?? 0)
-        return offset > 0 ? "استدر يمينًا \(Self.degrees(abs(offset)))" : "استدر يسارًا \(Self.degrees(abs(offset)))"
+    private static func status(bearing: Double, heading: Double, facing: QiblaFacing) -> String {
+        guard facing != .unknown else { return "القبلة على \(degrees(bearing)) من الشمال" }
+        if facing == .aligned { return "أنت متجه إلى القبلة" }
+        let offset = Qibla.offset(bearing: bearing, heading: heading)
+        return offset > 0 ? "استدر يمينًا \(degrees(abs(offset)))" : "استدر يسارًا \(degrees(abs(offset)))"
     }
 
-    private func note(live: Bool) -> String? {
-        if !heading.isAvailable {
-            return "لا توجد بوصلة في هذا الجهاز. قِس الزاوية من الشمال باتجاه عقارب الساعة."
+    private static func note(_ note: CompassNote) -> String {
+        switch note {
+        case .noCompass: "لا توجد بوصلة في هذا الجهاز. قِس الزاوية من الشمال باتجاه عقارب الساعة."
+        case .waiting: "ضع الهاتف مستويًا وانتظر قليلًا حتى تعمل البوصلة."
+        case .needsCalibration: "البوصلة تحتاج معايرة: حرّك الهاتف في الهواء على شكل رقم ٨."
+        case .magneticNorth:
+            "الاتجاه من الشمال المغناطيسي وقد يختلف بضع درجات. اسمح بالموقع للتطبيق ليُحسب من الشمال الحقيقي."
+        case .ready: "ضع الهاتف مستويًا وأبعده عن المعادن والمغناطيس."
         }
-        if !live { return "ضع الهاتف مستويًا وانتظر قليلًا حتى تعمل البوصلة." }
-        if heading.reading.needsCalibration { return "البوصلة تحتاج معايرة: حرّك الهاتف في الهواء على شكل رقم ٨." }
-        if !heading.reading.isTrueNorth {
-            return "الاتجاه من الشمال المغناطيسي وقد يختلف بضع درجات. اسمح بالموقع للتطبيق ليُحسب من الشمال الحقيقي."
-        }
-        return "ضع الهاتف مستويًا وأبعده عن المعادن والمغناطيس."
     }
 
     // MARK: Details
@@ -209,9 +207,9 @@ struct QiblaView: View {
         value < 1 ? "أقل من ١ كم" : ArabicFormat.number(Int(value.rounded())) + " كم"
     }
 
-    private static func spoken(bearing: Double, heading: Double, live: Bool, aligned: Bool) -> String {
-        guard live else { return "القبلة على \(degrees(bearing)) من الشمال باتجاه عقارب الساعة" }
-        if aligned { return "أنت متجه إلى القبلة" }
+    private static func spoken(bearing: Double, heading: Double, facing: QiblaFacing) -> String {
+        guard facing != .unknown else { return "القبلة على \(degrees(bearing)) من الشمال باتجاه عقارب الساعة" }
+        if facing == .aligned { return "أنت متجه إلى القبلة" }
         let offset = Qibla.offset(bearing: bearing, heading: heading)
         return "القبلة إلى \(offset > 0 ? "يمينك" : "يسارك") بـ\(degrees(abs(offset)))"
     }
