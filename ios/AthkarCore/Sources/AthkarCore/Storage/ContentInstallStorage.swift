@@ -30,4 +30,11 @@ public struct ContentInstallRepository: Sendable {
     public func record(_ install: ContentInstall) throws {
         try writer.write { try install.upsert($0) }
     }
+
+    /// Records every install in `installs` in one transaction, so a refused row leaves every row as it was.
+    public func record(_ installs: [ContentInstall]) throws {
+        try writer.write { db in
+            for install in installs { try install.upsert(db) }
+        }
+    }
 }

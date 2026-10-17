@@ -1,6 +1,7 @@
 import AthkarCore
 import Crypto
 import Foundation
+import GRDB
 import XCTest
 @testable import AthkarModels
 
@@ -22,6 +23,26 @@ final class BundledIntegrityTests: XCTestCase {
             return ContentInstall(packId: packId, version: pack.version, checksum: checksum(data), installedAt: now)
         }
         XCTAssertEqual(try database.contentInstalls.installs(), expected)
+    }
+
+    func testRefusedLaterRowLeavesEarlierInstallsUnchanged() throws {
+        let support = try PortableTestSupport()
+        let (database, before) = try olderInstalls()
+        // The bundle is valid. SQLite refuses the ruqyah row, written after adhkar's, as a full or failing disk would:
+        // test-only triggers on this private database. An upsert can reach the row through INSERT or UPDATE.
+        try database.writer.write { db in
+            for event in ["INSERT", "UPDATE"] {
+                try db.execute(sql: """
+                    CREATE TRIGGER reject_ruqyah_\(event.lowercased()) BEFORE \(event) ON content_installs
+                    WHEN NEW.pack_id = 'ruqyah' BEGIN SELECT RAISE(ABORT, 'test rejects ruqyah'); END
+                    """)
+            }
+        }
+        XCTAssertThrowsError(try BundledContent.recordInstalls(from: support.bundle, manifest: support.content.manifest,
+                                                               in: database, now: now)) {
+            XCTAssertEqual(($0 as? DatabaseError)?.extendedResultCode, .SQLITE_CONSTRAINT_TRIGGER)
+        }
+        XCTAssertEqual(try database.contentInstalls.installs(), before)
     }
 
     func testChangedByteIsRefused() throws {

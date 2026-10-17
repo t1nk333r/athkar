@@ -121,19 +121,23 @@ struct BundledContent: Sendable {
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack
-    /// is first verified as `load(from:)` verifies it, so a refused bundle leaves every row as it was; a recorded
-    /// checksum is the manifest's SHA-256, which the bundled file was just found to have.
+    /// is first verified as `load(from:)` verifies it, and the changed rows are written in one transaction, so a
+    /// refused bundle or row leaves every row as it was. A recorded checksum is the manifest's SHA-256, which the
+    /// bundled file was just found to have.
     static func recordInstalls(from bundle: Bundle = .main, manifest: ContentManifest, in database: AppDatabase,
                                now: Date = Date()) throws {
         _ = try verified(manifest, in: bundle)
         let installed = Dictionary(uniqueKeysWithValues: try database.contentInstalls.installs().map { ($0.packId, $0) })
+        var changed: [ContentInstall] = []
         for (packId, pack) in manifest.packs.sorted(by: { $0.key < $1.key }) {
             if let current = installed[packId], current.version == pack.version, current.checksum == pack.sha256 {
                 continue
             }
-            try database.contentInstalls.record(ContentInstall(packId: packId, version: pack.version,
-                                                               checksum: pack.sha256, installedAt: now))
+            changed.append(ContentInstall(packId: packId, version: pack.version, checksum: pack.sha256,
+                                          installedAt: now))
         }
+        guard !changed.isEmpty else { return }
+        try database.contentInstalls.record(changed)
     }
 
     private static func resource(_ name: String, in bundle: Bundle) throws -> Data {
