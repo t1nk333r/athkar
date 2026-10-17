@@ -27,6 +27,7 @@ struct SettingsView: View {
                 Section("ترتيب الأذكار الطويلة") {
                     Toggle(isOn: Binding(get: { app.settings.longOrder == .last }, set: { enabled in
                         app.setLongOrder(enabled)
+                        guard app.settings.longOrder == (enabled ? .last : .original) else { return }
                         announce(enabled ? "ستُقرأ الأذكار الطويلة قبل الذكر الأخير" : "عاد ترتيب الأذكار كما هو")
                     })) {
                         toggleCopy("تأخير الأذكار الطويلة",
@@ -47,6 +48,7 @@ struct SettingsView: View {
                 Section("الاهتزاز") {
                     Toggle(isOn: Binding(get: { settings.haptics }, set: { enabled in
                         settings.haptics = enabled
+                        guard settings.haptics == enabled else { return }
                         if enabled { Haptics.shared.playCompletion() }
                         announce(enabled ? "تم تشغيل الاهتزاز" : "تم إيقاف الاهتزاز")
                     })) {

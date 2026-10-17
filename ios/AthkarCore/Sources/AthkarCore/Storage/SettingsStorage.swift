@@ -114,6 +114,19 @@ public struct SettingsRepository: Sendable {
         }
     }
 
+    /// Writes the answer to the one-time long-order question: the chosen order and the answered flag commit in one
+    /// transaction, or neither row changes.
+    public func setLongOrderDecision(_ value: LongOrder, at now: Date = Date()) throws {
+        let order = try Self.json(value)
+        let answered = try Self.json(true)
+        try writer.write { db in
+            try Setting(key: SettingKey<LongOrder>.longOrder.name, valueJson: order, origin: .native,
+                        updatedAt: now).upsert(db)
+            try Setting(key: SettingKey<Bool>.longOrderPromptAnswered.name, valueJson: answered, origin: .native,
+                        updatedAt: now).upsert(db)
+        }
+    }
+
     public func removeValue<Value>(for key: SettingKey<Value>) throws {
         try writer.write { _ = try Setting.deleteOne($0, key: key.name) }
     }
