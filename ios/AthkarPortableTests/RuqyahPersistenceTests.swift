@@ -267,6 +267,30 @@ final class RuqyahPersistenceTests: XCTestCase {
         try assertShowsStorage(deck, store)
     }
 
+    /// A scoped reset, «بدء رقية جديدة» included, says whether it was stored, so a refused one is not announced.
+    @MainActor
+    func testScopedResetReturnsWhetherItWasStored() throws {
+        let store = try RuqyahStore()
+        let deck = try store.makeDeck()
+        try read(deck)
+        XCTAssertEqual(deck.completion.primary, .restart)
+        let shown = Shown(deck)
+
+        try store.reject(["UPDATE"], on: progressTable)
+        for scope in ResetScope.allCases {
+            XCTAssertFalse(deck.reset(scope), "\(scope)")
+        }
+        XCTAssertEqual(store.reported.count, ResetScope.allCases.count)
+        XCTAssertEqual(Shown(deck), shown)
+        try store.allow(["UPDATE"], on: progressTable)
+
+        for scope in ResetScope.allCases {
+            XCTAssertTrue(deck.reset(scope), "\(scope)")
+        }
+        XCTAssertEqual(store.reported.count, ResetScope.allCases.count)
+        try assertShowsStorage(deck, store)
+    }
+
     // MARK: Support
 
     /// Taps every remaining reading in deck order, except the last `leaving` ones, and returns the final change.

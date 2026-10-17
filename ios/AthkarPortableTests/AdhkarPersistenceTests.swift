@@ -471,6 +471,42 @@ final class AdhkarPersistenceTests: XCTestCase {
         XCTAssertTrue(reports.messages.isEmpty)
     }
 
+    // MARK: Reset result
+
+    /// A scoped reset says whether it was stored, so a refused one is not announced: one SQLite rejects, one made while
+    /// the next day cannot be loaded, and the one whose retry loads that day.
+    @MainActor
+    func testScopedResetReturnsWhetherItWasStored() throws {
+        let support = try makeSupport()
+        let reports = Reports()
+        let faults = Faults(database: support.database)
+        let session = try makeSession(support, reports)
+        let deck = AdhkarDeckModel(period: .morning, session: session)
+        XCTAssertEqual(deck.tap(cardAt: try position(of: "morning-02", in: session)), DeckChange())
+        // Every scope then deletes today's manual evening completion from adhkar_days.
+        XCTAssertTrue(session.setManualCompletion(.evening, completed: true))
+
+        try faults.rejectWrites(to: "adhkar_days")
+        for scope in ResetScope.allCases {
+            XCTAssertFalse(deck.reset(scope), "\(scope)")
+        }
+        try faults.allowWrites(to: "adhkar_days")
+        XCTAssertTrue(session.isManuallyComplete(.evening))
+        XCTAssertEqual(reports.messages.count, ResetScope.allCases.count)
+
+        try faults.hide("adhkar_item_progress")
+        session.roll(to: Day.tomorrow)
+        XCTAssertFalse(deck.reset(.day), "the next day cannot be loaded")
+        try faults.restore("adhkar_item_progress")
+        XCTAssertFalse(deck.reset(.day), "the reset whose retry loads the next day")
+        XCTAssertEqual(session.state.date, Day.tomorrow)
+
+        for scope in ResetScope.allCases {
+            XCTAssertTrue(deck.reset(scope), "\(scope)")
+        }
+        XCTAssertEqual(reports.messages.count, ResetScope.allCases.count + 2)
+    }
+
     // MARK: Support
 
     /// The dates around `PortableTestSupport.today`.

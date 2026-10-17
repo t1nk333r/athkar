@@ -77,8 +77,7 @@ struct HomeView: View {
         .sheet(isPresented: $showsResetScope, onDismiss: confirmChosenScope) {
             ResetScopeSheet { scope in
                 if scope == .day {
-                    deck.reset(.day)
-                    AccessibilityNotification.Announcement(scope.announcement).post()
+                    if deck.reset(.day) { AccessibilityNotification.Announcement(scope.announcement).post() }
                 } else {
                     chosenScope = scope
                 }
@@ -101,8 +100,10 @@ struct HomeView: View {
             presenting: scopeConfirmation
         ) { pending in
             Button(pending.confirmation.confirmTitle, role: .destructive) {
-                deck.reset(pending.scope)
-                AccessibilityNotification.Announcement(pending.scope.announcement).post()
+                // A refused reset changed nothing, so there is nothing to announce.
+                if deck.reset(pending.scope) {
+                    AccessibilityNotification.Announcement(pending.scope.announcement).post()
+                }
             }
             Button("إلغاء", role: .cancel) {}
         } message: { pending in
