@@ -9,10 +9,8 @@ final class QiblaUITests: DeckTestCase {
         row.tap()
     }
 
-    /// Without a location the section sends the user to أوقات الصلاة; with Riyadh it gives about 244° and the distance.
-    func testBearingFromTheStoredLocation() {
-        launch()
-        openQibla()
+    /// Enters Riyadh by hand through the section's own button, then returns to the أخرى list.
+    private func setRiyadh() {
         let setLocation = app.buttons["qibla.setLocation"]
         XCTAssertTrue(setLocation.waitForExistence(timeout: 3))
         setLocation.tap()
@@ -30,6 +28,13 @@ final class QiblaUITests: DeckTestCase {
 
         app.buttons["header.back"].tap()
         XCTAssertTrue(app.buttons["other.qibla"].waitForExistence(timeout: 3))
+    }
+
+    /// Without a location the section sends the user to أوقات الصلاة; with Riyadh it gives about 244° and the distance.
+    func testBearingFromTheStoredLocation() {
+        launch()
+        openQibla()
+        setRiyadh()
         XCTAssertTrue((app.buttons["other.qibla"].value as? String ?? "").contains("من الشمال"))
         app.buttons["other.qibla"].tap()
 
@@ -39,5 +44,31 @@ final class QiblaUITests: DeckTestCase {
         XCTAssertTrue(app.staticTexts["qibla.status"].label.contains("من الشمال"), app.staticTexts["qibla.status"].label)
         XCTAssertTrue(app.staticTexts["المسافة إلى الكعبة"].exists || app.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", "كم")).count > 0)
+    }
+
+    /// Leaving القبلة, or the app, and coming back starts the compass again without asking for location: no permission
+    /// alert, and without a compass reading no claim of facing the Qibla.
+    func testCompassRestartsWithoutAskingForLocation() {
+        launch()
+        openQibla()
+        setRiyadh()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let status = app.staticTexts["qibla.status"]
+        for _ in 0..<2 {
+            app.buttons["other.qibla"].tap()
+            XCTAssertTrue(status.waitForExistence(timeout: 3))
+            XCTAssertTrue(status.label.contains("من الشمال"), status.label)
+            XCTAssertFalse(springboard.alerts.firstMatch.waitForExistence(timeout: 2), "location permission alert")
+            app.buttons["header.back"].tap()
+            XCTAssertTrue(app.buttons["other.qibla"].waitForExistence(timeout: 3))
+        }
+
+        app.buttons["other.qibla"].tap()
+        XCTAssertTrue(status.waitForExistence(timeout: 3))
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        XCTAssertTrue(status.label.contains("من الشمال"), status.label)
+        XCTAssertFalse(springboard.alerts.firstMatch.waitForExistence(timeout: 2), "location permission alert")
     }
 }
