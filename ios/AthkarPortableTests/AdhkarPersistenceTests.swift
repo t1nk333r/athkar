@@ -1,5 +1,6 @@
 import AthkarCore
 import Foundation
+import GRDB
 import XCTest
 @testable import AthkarModels
 
@@ -262,7 +263,7 @@ final class AdhkarPersistenceTests: XCTestCase {
         let dates = [support.today, Day.tomorrow]
         let stored = try records(support.database, dates)
 
-        try faults.hide("adhkar_days")
+        try faults.hide("adhkar_item_progress")
         session.roll(to: Day.tomorrow)
         XCTAssertEqual(Snapshot(session), committed)
         XCTAssertEqual(session.state.date, support.today)
@@ -278,7 +279,7 @@ final class AdhkarPersistenceTests: XCTestCase {
         XCTAssertEqual(Snapshot(session), committed)
         XCTAssertEqual(reports.messages.count, 5)
 
-        try faults.restore("adhkar_days")
+        try faults.restore("adhkar_item_progress")
         XCTAssertEqual(try records(support.database, dates), stored)
         // The first change after recovery loads the new day and is dropped, as a tap that rolls the day is.
         session.reset(.day)
@@ -353,10 +354,10 @@ final class AdhkarPersistenceTests: XCTestCase {
         XCTAssertEqual(Snapshot(session), committed)
         try faults.allowWrites(to: "adhkar_item_progress")
 
-        try faults.hide("adhkar_days")
+        try faults.hide("adhkar_item_progress")
         session.roll(to: Day.tomorrow)
         XCTAssertEqual(Snapshot(session), committed)
-        try faults.restore("adhkar_days")
+        try faults.restore("adhkar_item_progress")
         session.roll(to: Day.tomorrow)
         XCTAssertEqual(session.state.date, Day.tomorrow)
         XCTAssertEqual(reports.messages.count, 2)
@@ -456,6 +457,11 @@ private struct Faults {
     }
 
     /// Renames `table`: every read or write of it fails with "no such table".
+    ///
+    /// Only `adhkar_item_progress` is hidden. A day load and a save both read it first, with a plain filter, so the
+    /// error is thrown before anything else runs. `adhkar_days` cannot be hidden: its rows are looked up by key
+    /// (`fetchOne(key:)`, `deleteOne(key:)`), and GRDB answers a key lookup on a missing table with a fatal error,
+    /// not a thrown one, which ends the whole test process.
     func hide(_ table: String) throws {
         try database.writer.write { db in try db.execute(sql: "ALTER TABLE \(table) RENAME TO hidden_\(table)") }
     }
