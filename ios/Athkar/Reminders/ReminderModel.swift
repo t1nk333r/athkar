@@ -24,8 +24,8 @@ final class ReminderModel {
     @ObservationIgnored private let center: any ReminderNotificationCenter
     /// The current instant, for rule timestamps and planning.
     @ObservationIgnored private let clock: () -> Date
-    /// Supplies what the planner needs from the rest of the app at planning time.
-    @ObservationIgnored var inputs: () -> PlanInputs? = { nil }
+    /// Supplies what the planner needs from the rest of the app at a pass's planning instant, which it is given.
+    @ObservationIgnored var inputs: (Date) -> PlanInputs? = { _ in nil }
     /// Counts `replan()` calls. A pass started for an earlier count is outdated.
     @ObservationIgnored private var replanRequests = 0
     /// The single writer: it runs passes until one finishes with no newer request. Internal so tests can wait for it.
@@ -142,7 +142,7 @@ final class ReminderModel {
         authorization = status
         guard isCurrent() else { return }
         let now = clock()
-        let inputs = inputs()
+        let inputs = inputs(now)
         let zone = inputs?.zone ?? .current
         let today = SessionCalendar.localDate(of: now, in: zone)
         let delivered = await center.deliveredNotifications()

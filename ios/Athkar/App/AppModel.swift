@@ -63,14 +63,16 @@ final class AppModel {
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
         }
-        reminders.inputs = { [weak self] in
+        reminders.inputs = { [weak self] now in
             guard let self else { return nil }
-            ensureCurrentDay()
+            ensureCurrentDay(now: now)
             let prayer = prayer
+            let zone = prayer.zone
+            // Completion counts only for the planner's own date, in its zone at the pass's instant.
             return ReminderModel.PlanInputs(
-                zone: prayer.zone,
+                zone: zone,
                 schedule: { date in prayer.schedule(on: date) },
-                completeToday: Set(Period.allCases.filter { self.adhkar.isComplete($0) }))
+                completeToday: adhkar.completedPeriods(on: SessionCalendar.localDate(of: now, in: zone)))
         }
     }
 
@@ -117,7 +119,13 @@ final class AppModel {
     /// before counting a tap. Returns whether any deck's day changed or still cannot be read.
     @discardableResult
     func ensureCurrentDay() -> Bool {
-        !rollover.roll(to: Self.today()).isEmpty
+        ensureCurrentDay(now: Date())
+    }
+
+    /// The day rollover at `now`: a reminder pass rolls at its own planning instant.
+    @discardableResult
+    func ensureCurrentDay(now: Date) -> Bool {
+        !rollover.roll(to: Self.today(now: now)).isEmpty
     }
 
     /// `DeckView`'s gate: the same rollover, answering only for `deck`'s own session, so a day the other session
@@ -142,8 +150,7 @@ final class AppModel {
         adhkar.applyLongOrder(moveLongLast, active: lastPeriod)
     }
 
-    private static func today() -> String {
-        let now = Date()
+    private static func today(now: Date = Date()) -> String {
         let shifted = Calendar.current.date(byAdding: .day, value: TestHooks.dayOffset, to: now) ?? now
         return SessionCalendar.localDate(of: shifted, in: .current)
     }

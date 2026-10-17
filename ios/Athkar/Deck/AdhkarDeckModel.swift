@@ -253,6 +253,14 @@ final class AdhkarSessionModel {
 
     func isComplete(_ period: Period) -> Bool { state.isComplete(period, in: collections) }
 
+    /// The periods complete on `localDate`, a reminder pass's own date: none unless the session shows that date.
+    /// While a new day cannot be loaded, the session still shows the day before, whose completion must not hold
+    /// back the new day's reminders.
+    func completedPeriods(on localDate: String) -> Set<Period> {
+        guard state.date == localDate else { return [] }
+        return Set(Period.allCases.filter { isComplete($0) })
+    }
+
     func countersComplete(_ period: Period) -> Bool { state.countersComplete(period, in: collections) }
 
     func isManuallyComplete(_ period: Period) -> Bool { state.isManuallyComplete(period) }
