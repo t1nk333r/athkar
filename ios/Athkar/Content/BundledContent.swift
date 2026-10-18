@@ -175,7 +175,8 @@ struct ContentManifest: Decodable, Sendable {
     var packs: [String: Pack]
 }
 
-enum BundledContentError: Error, Equatable, CustomStringConvertible {
+/// The launch failure view shows `localizedDescription`, which is `description`: it names the pack, file or item.
+enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedError {
     /// A pack lists an item or segment with no card content.
     case missingContent(id: String)
     /// The bundle has no file of this name.
@@ -200,4 +201,6 @@ enum BundledContentError: Error, Equatable, CustomStringConvertible {
         case let .invalidNoteIndex(id, noteIndex): "\(id) has noteIndex \(noteIndex), outside its details"
         }
     }
+
+    var errorDescription: String? { description }
 }

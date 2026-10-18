@@ -29,14 +29,13 @@ final class BundledIntegrityTests: XCTestCase {
         let support = try PortableTestSupport()
         let (database, before) = try olderInstalls()
         // The bundle is valid. SQLite refuses the ruqyah row, written after adhkar's, as a full or failing disk would:
-        // test-only triggers on this private database. An upsert can reach the row through INSERT or UPDATE.
+        // a test-only trigger on this private database. The ruqyah row already exists, and SQLite runs an upsert's
+        // BEFORE INSERT triggers before it resolves the conflict into DO UPDATE, so this trigger refuses it.
         try database.writer.write { db in
-            for event in ["INSERT", "UPDATE"] {
-                try db.execute(sql: """
-                    CREATE TRIGGER reject_ruqyah_\(event.lowercased()) BEFORE \(event) ON content_installs
-                    WHEN NEW.pack_id = 'ruqyah' BEGIN SELECT RAISE(ABORT, 'test rejects ruqyah'); END
-                    """)
-            }
+            try db.execute(sql: """
+                CREATE TRIGGER reject_ruqyah BEFORE INSERT ON content_installs
+                WHEN NEW.pack_id = 'ruqyah' BEGIN SELECT RAISE(ABORT, 'test rejects ruqyah'); END
+                """)
         }
         XCTAssertThrowsError(try BundledContent.recordInstalls(from: support.bundle, manifest: support.content.manifest,
                                                                in: database, now: now)) {
@@ -91,6 +90,23 @@ final class BundledIntegrityTests: XCTestCase {
             $0["suwar"] = ["file": "suwar.v1.json", "version": "1.0.0", "sha256": checksum(suwar)]
         }
         try assertRefused(fixture, .missingResource(name: "suwar.v1.json"))
+    }
+
+    /// The launch failure view shows `localizedDescription`, so a refusal names its pack or file in Release too.
+    func testRefusalDescriptionNamesThePackOrFile() throws {
+        let changed = try ContentFixture()
+        let adhkar = try XCTUnwrap(changed.manifest().packs["adhkar"]).file
+        try changed.write(changed.read(adhkar) + Data("\n".utf8), to: adhkar)
+        let missing = try ContentFixture()
+        let ruqyah = try XCTUnwrap(missing.manifest().packs["ruqyah"]).file
+        try missing.remove(ruqyah)
+        for (fixture, name) in [(changed, adhkar), (missing, ruqyah)] {
+            let bundle = try fixture.bundle()
+            XCTAssertThrowsError(try BundledContent.load(from: bundle)) { error in
+                XCTAssertTrue(error.localizedDescription.contains(name), error.localizedDescription)
+                XCTAssertEqual(error.localizedDescription, (error as? BundledContentError)?.description)
+            }
+        }
     }
 
     func testMissingManifestIsRefused() throws {
