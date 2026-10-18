@@ -244,4 +244,27 @@ struct StorageRepositoryTests {
             ContentInstall(packId: "ruqyah", version: "1.0.0", checksum: "a7a3", installedAt: t0),
         ])
     }
+
+    @Test func contentInstallBatchRecordsEveryRowOrNone() throws {
+        let installs = database.contentInstalls
+        try installs.record(ContentInstall(packId: "adhkar", version: "1.0.0", checksum: "d5f1", installedAt: t0))
+        let recorded = [ContentInstall(packId: "adhkar", version: "1.0.1", checksum: "e6a2", installedAt: t1),
+                        ContentInstall(packId: "ruqyah", version: "1.0.0", checksum: "a7a3", installedAt: t1)]
+        try installs.record(recorded)
+        #expect(try installs.installs() == recorded)
+
+        // SQLite refuses the second row, as a full or failing disk would: a test-only trigger on this private database.
+        try database.writer.write { db in
+            try db.execute(sql: """
+                CREATE TRIGGER reject_suwar BEFORE INSERT ON content_installs
+                WHEN NEW.pack_id = 'suwar' BEGIN SELECT RAISE(ABORT, 'test rejects suwar'); END
+                """)
+        }
+        let error = #expect(throws: DatabaseError.self) {
+            try installs.record([ContentInstall(packId: "adhkar", version: "1.0.2", checksum: "f0b4", installedAt: t1),
+                                 ContentInstall(packId: "suwar", version: "1.0.0", checksum: "c3d9", installedAt: t1)])
+        }
+        #expect(error?.extendedResultCode == .SQLITE_CONSTRAINT_TRIGGER)
+        #expect(try installs.installs() == recorded)
+    }
 }

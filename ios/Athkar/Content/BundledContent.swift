@@ -67,8 +67,24 @@ struct BundledContent: Sendable {
 
     static func load(from bundle: Bundle = .main) throws -> BundledContent {
         let manifest = try JSONDecoder().decode(ContentManifest.self, from: try resource("manifest.json", in: bundle))
-        let adhkarData = try resource(try manifest.file(of: "adhkar"), in: bundle)
-        let ruqyahData = try resource(try manifest.file(of: "ruqyah"), in: bundle)
+        return try verified(manifest, in: bundle)
+    }
+
+    /// Checks every pack `manifest` lists against its SHA-256, then decodes and validates the packs the app reads.
+    /// Each check throws, so a Release build refuses an inconsistent bundle as a Debug build does, before any pack is
+    /// used or recorded.
+    private static func verified(_ manifest: ContentManifest, in bundle: Bundle) throws -> BundledContent {
+        var files: [String: Data] = [:]
+        for (packId, pack) in manifest.packs.sorted(by: { $0.key < $1.key }) {
+            let data = try resource(pack.file, in: bundle)
+            let checksum = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+            guard checksum == pack.sha256 else {
+                throw BundledContentError.checksumMismatch(file: pack.file, expected: pack.sha256, actual: checksum)
+            }
+            files[packId] = data
+        }
+        guard let adhkarData = files["adhkar"] else { throw BundledContentError.missingPack(id: "adhkar") }
+        guard let ruqyahData = files["ruqyah"] else { throw BundledContentError.missingPack(id: "ruqyah") }
         let adhkar = try JSONDecoder().decode(AdhkarPack.self, from: adhkarData)
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
         let content = BundledContent(
@@ -81,8 +97,18 @@ struct BundledContent: Sendable {
     }
 
     /// Every item and segment the rules deal in has its card content, in the same order, so a card can always be
-    /// drawn. Fails at launch, naming the item, rather than at first render.
+    /// drawn. IDs are unique across both packs and every `noteIndex` is the index of one of its item's details, as
+    /// `tools/content-validate.mjs` requires. Fails at launch, naming the item, rather than at first render.
     func validate() throws {
+        var ids = Set<String>()
+        for id in (adhkar.morning + adhkar.evening).map(\.id) + ruqyah.map(\.id) {
+            guard ids.insert(id).inserted else { throw BundledContentError.duplicateID(id: id) }
+        }
+        for item in adhkar.morning + adhkar.evening {
+            if let noteIndex = item.noteIndex, !item.details.indices.contains(noteIndex) {
+                throw BundledContentError.invalidNoteIndex(id: item.id, noteIndex: noteIndex)
+            }
+        }
         for period in Period.allCases {
             let texts = Dictionary(adhkar[period].map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             if let missing = packs.adhkar[period].first(where: { texts[$0.id] == nil }) {
@@ -94,22 +120,24 @@ struct BundledContent: Sendable {
         }
     }
 
-    /// Records each bundled pack's version in `content_installs` when it differs from the installed one. The checksum
-    /// is computed from the bundled file, so the row describes what is actually installed; it must equal the
-    /// manifest's, which `tools/content-validate.mjs` guarantees for a release.
+    /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack
+    /// is first verified as `load(from:)` verifies it, and the changed rows are written in one transaction, so a
+    /// refused bundle or row leaves every row as it was. A recorded checksum is the manifest's SHA-256, which the
+    /// bundled file was just found to have.
     static func recordInstalls(from bundle: Bundle = .main, manifest: ContentManifest, in database: AppDatabase,
                                now: Date = Date()) throws {
+        _ = try verified(manifest, in: bundle)
         let installed = Dictionary(uniqueKeysWithValues: try database.contentInstalls.installs().map { ($0.packId, $0) })
+        var changed: [ContentInstall] = []
         for (packId, pack) in manifest.packs.sorted(by: { $0.key < $1.key }) {
-            let digest = SHA256.hash(data: try resource(pack.file, in: bundle))
-            let checksum = digest.map { String(format: "%02x", $0) }.joined()
-            assert(checksum == pack.sha256, "\(pack.file) does not match content/manifest.json")
-            if let current = installed[packId], current.version == pack.version, current.checksum == checksum {
+            if let current = installed[packId], current.version == pack.version, current.checksum == pack.sha256 {
                 continue
             }
-            try database.contentInstalls.record(ContentInstall(packId: packId, version: pack.version,
-                                                               checksum: checksum, installedAt: now))
+            changed.append(ContentInstall(packId: packId, version: pack.version, checksum: pack.sha256,
+                                          installedAt: now))
         }
+        guard !changed.isEmpty else { return }
+        try database.contentInstalls.record(changed)
     }
 
     private static func resource(_ name: String, in bundle: Bundle) throws -> Data {
@@ -117,7 +145,7 @@ struct BundledContent: Sendable {
             return try Data(contentsOf: directory.appendingPathComponent(name))
         }
         guard let url = bundle.url(forResource: name, withExtension: nil) else {
-            throw CocoaError(.fileNoSuchFile, userInfo: [NSFilePathErrorKey: name])
+            throw BundledContentError.missingResource(name: name)
         }
         return try Data(contentsOf: url)
     }
@@ -145,20 +173,34 @@ struct ContentManifest: Decodable, Sendable {
     }
 
     var packs: [String: Pack]
-
-    func file(of packId: String) throws -> String {
-        guard let pack = packs[packId] else { throw CocoaError(.fileReadCorruptFile) }
-        return pack.file
-    }
 }
 
-enum BundledContentError: Error, CustomStringConvertible {
+/// The launch failure view shows `localizedDescription`, which is `description`: it names the pack, file or item.
+enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedError {
     /// A pack lists an item or segment with no card content.
     case missingContent(id: String)
+    /// The bundle has no file of this name.
+    case missingResource(name: String)
+    /// `manifest.json` does not list a pack the app reads.
+    case missingPack(id: String)
+    /// A pack's bytes do not have the SHA-256 that `manifest.json` gives for them.
+    case checksumMismatch(file: String, expected: String, actual: String)
+    /// Two items or segments share an ID, which progress and counts are keyed by.
+    case duplicateID(id: String)
+    /// An item's `noteIndex` is not the index of one of its details.
+    case invalidNoteIndex(id: String, noteIndex: Int)
 
     var description: String {
         switch self {
         case let .missingContent(id): "Bundled content has no card for \(id)"
+        case let .missingResource(name): "Bundled content has no \(name)"
+        case let .missingPack(id): "content/manifest.json lists no \(id) pack"
+        case let .checksumMismatch(file, expected, actual):
+            "\(file) has SHA-256 \(actual), not \(expected) as content/manifest.json gives"
+        case let .duplicateID(id): "Bundled content has more than one item or segment with the ID \(id)"
+        case let .invalidNoteIndex(id, noteIndex): "\(id) has noteIndex \(noteIndex), outside its details"
         }
     }
+
+    var errorDescription: String? { description }
 }
