@@ -27,10 +27,11 @@ let package = Package(
             name: "AthkarModels", dependencies: [core, crypto], path: "Athkar",
             exclude: ["App/AppModel.swift", "Assets.xcassets", "AthkarApp.swift", "Deck/DeckCardView.swift",
                       "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
-                      "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla", "Reminders", "Screens"],
+                      "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
+                      "Qibla/QiblaView.swift", "Reminders", "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
-                      "OneShotLocationRequest.swift", "App/SettingsModel.swift"]
+                      "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),
