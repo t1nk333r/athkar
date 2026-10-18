@@ -198,6 +198,13 @@ protocol DeckModel: AnyObject {
     func reset(_ scope: ResetScope)
 }
 
+/// A card chosen in the quick index, with the deck as the reader saw it when choosing.
+struct DeckIndexChoice: Equatable {
+    var cardID: String
+    var cards: [DeckCard]
+    var currentIndex: Int
+}
+
 extension DeckModel {
     func positionLabel(_ index: Int) -> String {
         "\(ArabicFormat.number(index + 1)) من \(ArabicFormat.number(cards.count))"
@@ -205,5 +212,26 @@ extension DeckModel {
 
     func spokenPosition(_ index: Int) -> String {
         "\(definition.cardNoun) \(positionLabel(index))"
+    }
+
+    /// Whether the quick index may open the card at `index`: only a card «السابق» and «التالي» could reach from the
+    /// current one. Earlier cards always; a later card only when every card from the current one up to it may be
+    /// left forward, so the adhkar lock holds until the period is marked complete manually and ruqyah stays free.
+    func canReach(_ index: Int) -> Bool {
+        guard cards.indices.contains(index) else { return false }
+        return index <= currentIndex || (currentIndex..<index).allSatisfy { canMoveForward(from: $0) }
+    }
+
+    func indexChoice(of cardID: String) -> DeckIndexChoice {
+        DeckIndexChoice(cardID: cardID, cards: cards, currentIndex: currentIndex)
+    }
+
+    /// Where a quick-index choice leads once the sheet has closed: the chosen card's index, or `nil` to stay on the
+    /// current card when the deck changed after the choice (a day rollover) or the card can no longer be reached.
+    func destination(of choice: DeckIndexChoice) -> Int? {
+        guard cards == choice.cards, currentIndex == choice.currentIndex,
+              let index = cards.firstIndex(where: { $0.id == choice.cardID }), canReach(index)
+        else { return nil }
+        return index
     }
 }

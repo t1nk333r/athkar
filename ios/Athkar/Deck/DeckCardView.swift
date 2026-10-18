@@ -357,7 +357,7 @@ extension DhikrCardBody {
     }
 }
 
-private struct DhikrCardBody: View {
+struct DhikrCardBody: View {
     let item: AdhkarItemContent
     let number: Int
     let onTap: () -> Void
@@ -488,7 +488,7 @@ private struct ReviewCardBody: View {
 }
 
 /// `.card-index`: the item's number over a short rule; hidden from VoiceOver, which hears it in the labels.
-private struct CardNumber: View {
+struct CardNumber: View {
     let number: Int
     @Environment(\.palette) private var palette
 
