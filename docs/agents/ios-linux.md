@@ -11,6 +11,7 @@ do not start a native run without that turn's grant.
 | AthkarCore rules, SQLite storage, content, backups and prayer calculations | Installed Linux Swift, Luna | Nonempty Swift Testing summary and exit status |
 | Portable app deck models, bundled content and production database writes | Installed Linux Swift and real swift-crypto, Luna | Executed production-source XCTest method identifiers, count and exit status |
 | All app sources and optional app-unit test compilation | Existing Linux Darwin SDK, Luna | Compiler and packaging outcomes, zero executed tests |
+| Ad hoc signed sideload IPA | Existing Linux Darwin SDK, actool and rcodesign, Luna | IPA path, size, SHA-256 and archive checks; no runtime result |
 | AppModel integration, UI, accessibility, location, heading, haptics and notification delivery | An authorized iOS device route orchestrated from Linux | Exact device, test identifiers and runtime result |
 
 Linux XCTest covers the production files selected by `ios/Package.swift`. It
@@ -155,8 +156,8 @@ to this process. The optional test build selects `AthkarTests`, enables testable
 imports and adds the SDK's actual XCTest framework search path.
 
 SwiftBuild may invoke the existing actool for asset-symbol generation, even with
-copied catalogue resources. This adapter does not execute iOS tests, sign an app,
-package an installable IPA or install anything. Report the exact
+copied catalogue resources. This adapter does not execute iOS tests, sign an app or
+install anything; `tools/ios-linux-ipa.sh` packages the app (below). Report the exact
 compiler outcome, each failed build/packaging step and the retained log. A
 successful source compilation leaves packaging and device gates open. The initial
 2026-10-14 attempt using `--swift-sdk` failed before source compilation with
@@ -169,6 +170,58 @@ tests and produced no installable IPA. Use the exact run's retained outcome when
 verifying a later head. Hikaya's inert CI
 candidate is not an approved route. Leave live CI and historical remote jobs
 unchanged.
+
+## Package a sideload IPA
+
+`tools/ios-linux-ipa.sh` builds the app on Linux and packages an ad hoc signed IPA
+for Feather. Request a native turn for it like any other SDK build:
+
+```bash
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/ios-linux-ipa.sh --jobs 2 --wait
+```
+
+It holds both lanes for the whole build, in the runners' order. A busy lane exits 3
+and names its holder. `--wait` retries every 150 seconds for up to 90 minutes and
+holds no lock while it waits. The tool archives the clean HEAD and runs XcodeGen 2.46.0
+in that snapshot. The committed `ios/Athkar.xcodeproj` and `ios/Athkar/Info.plist` must
+equal the regenerated files. It then builds Release through `tools/ios-linux-compile.sh`
+with the lanes it holds. `tools/ios-linux-ipa.py` lays out `Payload/Athkar.app` from the
+generated project's Release settings, Info.plist and Resources phase:
+
+- Each resource file is copied byte for byte. The SDK's actool compiles the asset
+  catalogue into `Assets.car` and the loose icons, and SwiftBuild's `GRDB_GRDB.bundle`
+  is included.
+- The generated Info.plist gains Xcode's build keys. The DT keys come from the iOS 27.0
+  SDK and the Xcode 27.0 record that xtool kept for it.
+- Build-host rpaths are dropped, and LC_BUILD_VERSION records SDK 27.0 instead of the
+  deployment target that the Linux link writes.
+- rcodesign 0.29.0 signs ad hoc, with no identity and no entitlements. Like Xcode, it
+  seals `GRDB_GRDB.bundle` in the app's `CodeResources`. The zip carries no extended
+  attributes.
+
+The tool writes `Athkar-<CFBundleShortVersionString>+<CFBundleVersion>-linux.ipa` and
+its `.sha256` to `~/Projects/athkar-builds` or `--out`. It never replaces an IPA. Before
+publishing, it checks the archive: architecture, LC_BUILD_VERSION, every code page and
+special-slot hash, sealed resources, each resource against the repository and the pack
+digests against `manifest.json`. `rcodesign verify` cannot serve as that check, because
+it rejects every ad hoc signature, including the Xcode build's. Results hold
+`resource.log`, `toolchain.log`, the XcodeGen and package logs, the compile runner's own
+`build/` directory and a `.done` exit marker.
+
+The Linux actool's loose-icon downsampler (darwin-tools `d993142`) writes solid white
+PNGs. SpringBoard can read those files when its `Assets.car` lookup misses. The tool
+detects a uniform icon from a varied source and replaces it with the same area average,
+computed from that source. Remaining differences from the Xcode-built 1.0 (1) IPA:
+there is no `BuildMachineOSBuild`, `Assets.car` and the PNGs are not Xcode's bytes, the
+PNGs are standard rather than CgBI, the code directory uses 4 KiB rather than 16 KiB
+pages, and the binary keeps SwiftBuild's `@loader_path` rpath instead of
+`@executable_path/Frameworks`.
+
+A Linux-built IPA has not been run on a device until someone installs it. Packaging,
+the signature check and the comparison above are not runtime evidence; Feather re-signs
+the app when it installs it. Publishing remains the coordinator's step. This tool does
+not read the Feather token, publish or install anything.
 
 ## Required runtime cases and historical results
 
@@ -226,8 +279,9 @@ user's physical-device data and the existing signing/publisher identity.
 
 XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps in
 `ios/project.yml` under `targets.Athkar.info.properties`, using
-`CFBundleShortVersionString` and `CFBundleVersion`. Their current values remain
-`1.0` and `1`, matching the published version.
+`CFBundleShortVersionString` and `CFBundleVersion`. Their current values are
+`1.1` and `2`. Feather already has `1.0` (`1`) and never replaces the bytes of an
+existing version, so every published IPA needs a new pair.
 
 Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
 Testing ran 108 tests in 23 suites, with four session history-fixture failures.
