@@ -226,8 +226,9 @@ user's physical-device data and the existing signing/publisher identity.
 
 XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps in
 `ios/project.yml` under `targets.Athkar.info.properties`, using
-`CFBundleShortVersionString` and `CFBundleVersion`. Their current values remain
-`1.0` and `1`, matching the published version.
+`CFBundleShortVersionString` and `CFBundleVersion`. Their current values are
+`1.1` and `2`. Feather already has `1.0` (`1`) and never replaces the bytes of an
+existing version, so every published IPA needs a new pair.
 
 Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
 Testing ran 108 tests in 23 suites, with four session history-fixture failures.
