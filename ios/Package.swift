@@ -34,7 +34,7 @@ let package = Package(
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
                       "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
-                      "Reminders/ReminderModel.swift"]
+                      "Reminders/ReminderModel.swift", "App/DayRollover.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),

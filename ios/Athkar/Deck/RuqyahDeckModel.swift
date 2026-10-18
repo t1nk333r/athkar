@@ -141,8 +141,9 @@ final class RuqyahDeckModel: DeckModel {
     }
 
     /// `resetDayProgress`, `resetWeek`, `resetEverything`; each starts again on the first segment. تقدم اليوم (and
-    /// «بدء رقية جديدة») keeps today's record. A reset that is not stored changes nothing.
-    func reset(_ scope: ResetScope) {
+    /// «بدء رقية جديدة») keeps today's record. A reset that is not stored changes nothing and returns `false`.
+    @discardableResult
+    func reset(_ scope: ResetScope) -> Bool {
         let now = Date()
         let removal: HistoryRemoval? = switch scope {
         case .day: nil
@@ -156,7 +157,7 @@ final class RuqyahDeckModel: DeckModel {
             try repository.resetCounts(on: progress.date, removing: removal, at: now)
         } catch {
             report(error)
-            return
+            return false
         }
         // What the transaction stored: every counter of the day is 0, and the days `removal` covers are gone.
         progress.counts = progress.counts.mapValues { _ in 0 }
@@ -164,6 +165,7 @@ final class RuqyahDeckModel: DeckModel {
         hasHistory = keepsHistory
         currentIndex = 0
         refresh()
+        return true
     }
 
     // MARK: Private

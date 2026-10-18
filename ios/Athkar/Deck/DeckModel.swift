@@ -195,7 +195,9 @@ protocol DeckModel: AnyObject {
     var canReset: Bool { get }
     /// The question to ask before a scoped reset, or `nil` to reset at once.
     func confirmation(for scope: ResetScope) -> DeckConfirmation?
-    func reset(_ scope: ResetScope)
+    /// Whether the reset was stored: `false` when it was refused and changed nothing, so it is not announced.
+    @discardableResult
+    func reset(_ scope: ResetScope) -> Bool
 }
 
 /// A card chosen in the quick index, with the deck as the reader saw it when choosing.

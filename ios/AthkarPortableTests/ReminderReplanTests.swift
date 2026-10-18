@@ -356,6 +356,27 @@ final class ReminderReplanTests: XCTestCase {
         }
         XCTAssertEqual(harness.model.nextPending?.fireAt, now.addingTimeInterval(1))
     }
+
+    /// A pass hands its inputs the instant it plans from, even once the clock has moved on: adhkar completion is read
+    /// for the date the pass plans and removes delivered banners for, not a later one.
+    @MainActor
+    func testInputsAreReadAtThePassInstant() async throws {
+        let harness = try Harness([eveningRule])
+        let world = harness.world
+        let start = world.now
+        world.tick = 1
+        var instants: [Date] = []
+        harness.model.inputs = { now in
+            instants.append(now)
+            return world.inputs
+        }
+        harness.model.replan()
+        await harness.settle()
+
+        XCTAssertEqual(instants, [start])
+        XCTAssertEqual(Set(harness.center.requests.map(\.now)), [start])
+        XCTAssertGreaterThan(world.now, start, "the clock moved on once the pass read it")
+    }
 }
 
 private struct InjectedFailure: Error {}
@@ -391,6 +412,8 @@ private func schedule(_ date: String, zone: TimeZone, shift: TimeInterval) -> Pr
 private final class World {
     let zone = TimeZone(secondsFromGMT: 3 * 3600)!
     var now = local(day: 0, hour: 6)
+    /// How far the clock moves on each time the model reads it.
+    var tick: TimeInterval = 0
     var completeToday: Set<Period> = []
     /// Moves every prayer time, as a location change does.
     var shift: TimeInterval = 0
@@ -401,6 +424,12 @@ private final class World {
         let shift = self.shift
         return ReminderModel.PlanInputs(zone: zone, schedule: { schedule($0, zone: zone, shift: shift) },
                                         completeToday: completeToday)
+    }
+
+    /// The model's clock: `now`, which then moves on by `tick`.
+    func read() -> Date {
+        defer { now += tick }
+        return now
     }
 }
 
@@ -418,8 +447,8 @@ private struct Harness {
         let center = ControlledReminderCenter()
         let world = World()
         let model = try ReminderModel(repository: database.reminders, report: { world.reports.append($0) },
-                                      center: center, clock: { world.now })
-        model.inputs = { world.inputs }
+                                      center: center, clock: { world.read() })
+        model.inputs = { _ in world.inputs }
         self.database = database
         self.center = center
         self.world = world

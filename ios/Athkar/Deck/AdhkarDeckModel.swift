@@ -189,10 +189,12 @@ final class AdhkarSessionModel {
         return scope.confirmation(recordedDays: recorded)
     }
 
-    /// A rejected save leaves every record, the cards and their positions as they were. After a saved week or
-    /// everything reset, history is reread from the database; if that read fails, the saved state stays shown.
-    func reset(_ scope: ResetScope) {
-        guard dayIsCurrent() else { return }
+    /// A rejected save leaves every record, the cards and their positions as they were, and returns `false`. After a
+    /// saved week or everything reset, history is reread from the database; if that read fails, the saved state
+    /// stays shown.
+    @discardableResult
+    func reset(_ scope: ResetScope) -> Bool {
+        guard dayIsCurrent() else { return false }
         let now = Date()
         var candidate = state
         let removal: HistoryRemoval?
@@ -215,7 +217,7 @@ final class AdhkarSessionModel {
             }
         } catch {
             report(error)
-            return
+            return false
         }
         state = candidate
         if removal != nil {
@@ -227,6 +229,7 @@ final class AdhkarSessionModel {
         }
         indices = SessionPeriods(morning: 0, evening: 0)
         refresh()
+        return true
     }
 
     // MARK: Presentation
@@ -252,6 +255,14 @@ final class AdhkarSessionModel {
     }
 
     func isComplete(_ period: Period) -> Bool { state.isComplete(period, in: collections) }
+
+    /// The periods complete on `localDate`, a reminder pass's own date: none unless the session shows that date.
+    /// While a new day cannot be loaded, the session still shows the day before, whose completion must not hold
+    /// back the new day's reminders.
+    func completedPeriods(on localDate: String) -> Set<Period> {
+        guard state.date == localDate else { return [] }
+        return Set(Period.allCases.filter { isComplete($0) })
+    }
 
     func countersComplete(_ period: Period) -> Bool { state.countersComplete(period, in: collections) }
 
@@ -365,7 +376,8 @@ final class AdhkarDeckModel: DeckModel {
     func resetConfirmation(forCardAt index: Int) -> DeckConfirmation? { session.resetConfirmation(period, at: index) }
     func resetCard(at index: Int) { session.resetCard(period, at: index) }
     func confirmation(for scope: ResetScope) -> DeckConfirmation? { session.confirmation(for: scope) }
-    func reset(_ scope: ResetScope) { session.reset(scope) }
+    @discardableResult
+    func reset(_ scope: ResetScope) -> Bool { session.reset(scope) }
 }
 
 extension Array {

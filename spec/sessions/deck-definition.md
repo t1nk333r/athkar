@@ -399,6 +399,7 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `deck.index.adhkar.title` / `.hint` | فهرس الورد / يعرض فهرس الورد للانتقال إلى ذكر |
 | `deck.index.ruqyah.title` / `.hint` | فهرس الرقية / يعرض فهرس الرقية للانتقال إلى مقطع |
 | `deck.index.row.hint` | ينتقل إلى هذه البطاقة |
+| `deck.index.lock` | يُتاح بعد إكمال {noun} {n} |
 | `deck.hint.adhkar` | اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال. |
 | `deck.hint.ruqyah` | اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع. |
 | `card.single.pending` / `card.single.done` / `card.ruqyah.single.done` | اضغط بعد القراءة / تمت القراءة / تمت |

@@ -22,7 +22,7 @@ final class DeckIndexUITests: DeckTestCase {
         XCTAssertFalse(second.isEnabled, "locked behind card 1")
         XCTAssertFalse(second.isSelected)
         XCTAssertEqual(second.label, "ذكر ٢، تم تكراره ٠ من أصل ٣ مرات")
-        expectLabel(app.staticTexts["deck.index.lock"], "يُتاح بعد إكمال الذكر ١")
+        expectLabel(lockNote, "يُتاح بعد إكمال الذكر ١")
         XCTAssertFalse(revealRow("morning-25").isEnabled, "the last row is listed, disabled")
 
         revealRow("morning-02").tap()
@@ -68,7 +68,7 @@ final class DeckIndexUITests: DeckTestCase {
         markMorningCompleteManually()
         openIndex()
         XCTAssertEqual(row("morning-01").label, "ذكر ١، لم يُعلَّم كمقروء", "rows keep their counters")
-        XCTAssertFalse(app.staticTexts["deck.index.lock"].exists)
+        XCTAssertFalse(lockNote.exists)
         let last = revealRow("morning-25")
         XCTAssertTrue(last.isEnabled)
         last.tap()
@@ -94,7 +94,7 @@ final class DeckIndexUITests: DeckTestCase {
         XCTAssertTrue(first.isSelected)
         XCTAssertEqual(first.label, "المقطع ١: سورة ق الآيات ١ – ٨. لم تُقرأ بعد")
         XCTAssertEqual(first.value as? String, "١ من ١٥")
-        XCTAssertFalse(app.staticTexts["deck.index.lock"].exists, "the ruqyah never locks")
+        XCTAssertFalse(lockNote.exists, "the ruqyah never locks")
         let last = revealRow("nas-1-6")
         XCTAssertTrue(last.isEnabled)
         last.tap()
@@ -168,7 +168,7 @@ final class DeckIndexUITests: DeckTestCase {
         launch(environment: ["ATHKAR_UITEST_CONTENT_DIR": pack.path])
         openIndex()
         XCTAssertFalse(row("morning-90").isEnabled)
-        expectLabel(app.staticTexts["deck.index.lock"], "يُتاح بعد إكمال الذكر ١")
+        expectLabel(lockNote, "يُتاح بعد إكمال الذكر ١")
         closeIndex()
 
         tapCard()
@@ -218,6 +218,11 @@ final class DeckIndexUITests: DeckTestCase {
     // MARK: Helpers
 
     private func row(_ id: String) -> XCUIElement { app.buttons["deck.index.row.\(id)"] }
+
+    /// The note above the locked rows, a combined element whose type the query does not assume.
+    private var lockNote: XCUIElement {
+        app.descendants(matching: .any).matching(identifier: "deck.index.lock").firstMatch
+    }
 
     private func openIndex(_ title: String = DeckIndexUITests.adhkarIndex, file: StaticString = #filePath,
                            line: UInt = #line) {

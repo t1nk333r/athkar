@@ -108,9 +108,12 @@ struct SettingsView: View {
         let status = byCounters ? "اكتملت داخل التطبيق" : manually ? "اكتملت خارج التطبيق" : "لم تُسجل كمكتملة"
         return Toggle(isOn: Binding(get: { byCounters || manually }, set: { completed in
             guard app.adhkar.setManualCompletion(period, completed: completed) else {
-                announce("\(title) مكتملة داخل التطبيق")
+                // Refused because the counters complete the period, or not saved: a failure is reported, and a
+                // change that did not happen is not announced.
+                if app.adhkar.countersComplete(period) { announce("\(title) مكتملة داخل التطبيق") }
                 return
             }
+            guard app.adhkar.isManuallyComplete(period) == completed else { return }
             announce(completed ? "سُجلت \(title) مكتملة خارج التطبيق" : "أُلغي الإكمال اليدوي لـ\(title)")
         })) {
             toggleCopy(title, status)
