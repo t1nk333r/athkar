@@ -30,7 +30,7 @@ let package = Package(
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla", "Reminders", "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
-                      "OneShotLocationRequest.swift"]
+                      "OneShotLocationRequest.swift", "App/SettingsModel.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),

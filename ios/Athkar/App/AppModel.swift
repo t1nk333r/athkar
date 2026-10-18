@@ -2,52 +2,6 @@ import AthkarCore
 import Foundation
 import Observation
 
-/// Reading and appearance settings (`settings` table). Each change is written at once; SQLite is the only store.
-@MainActor
-@Observable
-final class SettingsModel {
-    var theme: Theme { didSet { write(theme, .theme) } }
-    var textSize: TextSize { didSet { write(textSize, .textSize) } }
-    var lineSpacing: LineSpacing { didSet { write(lineSpacing, .lineSpacing) } }
-    var haptics: Bool { didSet { write(haptics, .haptics) } }
-    var homePrayerRow: Bool { didSet { write(homePrayerRow, .homePrayerRow) } }
-    private(set) var longOrder: LongOrder
-    private(set) var longOrderPromptAnswered: Bool
-
-    @ObservationIgnored private let repository: SettingsRepository
-    @ObservationIgnored private let report: (any Error) -> Void
-
-    init(repository: SettingsRepository, report: @escaping (any Error) -> Void) throws {
-        self.repository = repository
-        self.report = report
-        theme = try repository.value(for: .theme)
-        textSize = try repository.value(for: .textSize)
-        lineSpacing = try repository.value(for: .lineSpacing)
-        haptics = try repository.value(for: .haptics)
-        homePrayerRow = try repository.value(for: .homePrayerRow)
-        longOrder = try repository.value(for: .longOrder)
-        longOrderPromptAnswered = try repository.value(for: .longOrderPromptAnswered)
-    }
-
-    fileprivate func setLongOrder(_ value: LongOrder) {
-        longOrder = value
-        write(value, .longOrder)
-    }
-
-    fileprivate func markLongOrderPromptAnswered() {
-        longOrderPromptAnswered = true
-        write(true, .longOrderPromptAnswered)
-    }
-
-    private func write<Value>(_ value: Value, _ key: SettingKey<Value>) {
-        do {
-            try repository.set(value, for: key)
-        } catch {
-            report(error)
-        }
-    }
-}
-
 /// The running app: database, bundled content, settings and the three decks, plus the day they belong to.
 @MainActor
 @Observable
@@ -170,16 +124,17 @@ final class AppModel {
         return true
     }
 
-    /// The settings toggle «تأخير الأذكار الطويلة».
+    /// The settings toggle «تأخير الأذكار الطويلة». The decks are reordered only once the choice is saved.
     func setLongOrder(_ enabled: Bool) {
-        settings.setLongOrder(enabled ? .last : .original)
+        guard settings.setLongOrder(enabled ? .last : .original) else { return }
         adhkar.applyLongOrder(enabled, active: lastPeriod)
     }
 
-    /// The one-time question «تأجيل الأذكار الطويلة؟».
+    /// The one-time question «تأجيل الأذكار الطويلة؟». The answer and the order are saved together, then applied; a
+    /// failed save leaves the decks as they are and the question unanswered.
     func answerLongOrderPrompt(moveLongLast: Bool) {
-        settings.markLongOrderPromptAnswered()
-        setLongOrder(moveLongLast)
+        guard settings.answerLongOrderPrompt(moveLongLast ? .last : .original) else { return }
+        adhkar.applyLongOrder(moveLongLast, active: lastPeriod)
     }
 
     private static func today() -> String {
