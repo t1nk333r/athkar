@@ -1,5 +1,9 @@
 import AthkarCore
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
 
 /// An adhkar item as the card shows it (`content/adhkar.v1.json`). The fields the rules read come from

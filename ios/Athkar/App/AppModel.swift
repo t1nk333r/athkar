@@ -95,7 +95,7 @@ final class AppModel {
     /// Set when a database write fails; the screen shows it once.
     var failure: String?
 
-    private init(database: AppDatabase, content: BundledContent, today: String) throws {
+    init(database: AppDatabase, content: BundledContent, today: String) throws {
         var reportFailure: (any Error) -> Void = { _ in }
         let report: (any Error) -> Void = { reportFailure($0) }
         settings = try SettingsModel(repository: database.settings, report: report)

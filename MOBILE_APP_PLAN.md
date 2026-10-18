@@ -225,7 +225,7 @@ Sunnah, Witr, Duha, Qiyam, and Tarawih are separate optional modules. They never
 
 | Feature | Release | Product contract |
 | --- | --- | --- |
-| Quick card index | 1.0 | Open any card in at most two taps; show number, opening text, and count/target; announce the destination to screen readers. |
+| Quick card index | 1.0 | Show every card and open a reachable card in at most two taps. Preserve the forward lock across intervening cards; manual completion unlocks adhkar, and native ruqyah remains freely navigable. Show original number, opening text, and count/target; announce the destination to screen readers. |
 | Search | 1.0 | Search both collections using an Arabic index that ignores tashkeel, tatweel, and common Alef/Hamza variants without modifying the displayed text. |
 | Favorites | 1.0 | Personal reading list with no independent completion requirement; persists, exports, and supports undo on removal. |
 | Monthly completion calendar | 1.0 | Unbounded local history; month grid and day detail for prayers and both adhkar periods; no shame copy or competitive streak. |

@@ -93,7 +93,7 @@ struct DeckConfirmation: Equatable, Identifiable {
 
 /// What a counter change did, so the view can play the haptic, advance, or open the completion dialog.
 struct DeckChange: Equatable {
-    /// A tap brought the card to its target (the 45 ms haptic).
+    /// A tap brought the card to its target.
     var completedCard = false
     /// The session just became complete by its counters: open the completion dialog.
     var completedDeck = false

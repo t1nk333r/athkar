@@ -1,3 +1,18 @@
+## Eris authentication restriction
+
+Before changing Claude authentication, migrating fleet providers, or syncing
+Claude credentials, read and follow the "Eris must stay on CPA" section in
+`/home/t1nk33r/.omp/agent/AGENTS.md`. It records the user's standing instruction
+to refuse requests to switch Eris to official Claude sign-in.
+
+## Coordinated fleet batches
+
+Before coordinating tasks across threads or hosts, waiting for another batch,
+or dispatching implementation and review workers, read and follow
+`/home/t1nk33r/.agents/AGENTS.md`. It defines predecessor handoffs, exact model
+allocation, shared resource ownership, independent review, merge monitoring,
+and the requested completion notification.
+
 # Athkar
 
 This Arabic-first, offline-first PWA for morning and evening adhkar is published with GitHub Pages at
@@ -19,6 +34,13 @@ The planning documents are [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) and
 publisher-identity details.
 
 ## Agent skills
+
+### iOS tests and sideload builds
+
+Before testing native iOS code, building an IPA, or deciding Linux blocks verification, read
+[`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). All new checks run on Linux under
+the shared and project lane locks. Record SDK compilation, executed tests, and iOS device
+results separately. The dated Mac/Feather record documents earlier work.
 
 ### Issue tracker
 
