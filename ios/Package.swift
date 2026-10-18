@@ -29,7 +29,8 @@ let package = Package(
                       "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla", "Reminders", "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
-                      "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift"]
+                      "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
+                      "OneShotLocationRequest.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),
