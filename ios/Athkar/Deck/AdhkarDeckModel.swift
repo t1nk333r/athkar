@@ -4,6 +4,10 @@ import Observation
 
 /// Today's adhkar session for both periods: the PWA's `athkar-progress-v2` state, kept in the database through
 /// `AdhkarSessionStore` after every change, with the deck order (`buildDeck`) and each period's current card.
+///
+/// Each change is worked out on a copy of the state, saved, and shown only once the database has accepted it. A
+/// rejected save is reported and leaves the committed state, cards and positions as they were, with no change to
+/// act on (no haptic, advance or completion dialog).
 @MainActor
 @Observable
 final class AdhkarSessionModel {
@@ -12,6 +16,8 @@ final class AdhkarSessionModel {
     private(set) var indices = SessionPeriods(morning: 0, evening: 0)
     private(set) var longAdhkarLast: Bool
 
+    /// The date ``roll(to:)`` could not load. Until it loads, ``state`` is still the earlier day's.
+    @ObservationIgnored private var pendingDay: String?
     @ObservationIgnored private var decks = SessionPeriods<[SessionItem]>(morning: [], evening: [])
     @ObservationIgnored private let database: AppDatabase
     @ObservationIgnored private let store: AdhkarSessionStore
@@ -43,14 +49,25 @@ final class AdhkarSessionModel {
 
     /// `ensureCurrentDay`: a new local date starts from that date's rows (none yet, on a real rollover), each
     /// deck on its first unread card. Nothing is deleted; the finished day is already history in the database.
+    ///
+    /// If the rows cannot be read, the earlier day stays on screen with its date, so the caller's next
+    /// `ensureCurrentDay` tries again. An empty state for `today` would look loaded, and its first save would
+    /// delete that date's saved rows.
     func roll(to today: String) {
-        guard today != state.date else { return }
-        do {
-            state = try store.load(date: today)
-        } catch {
-            report(error)
-            state = .empty(date: today)
+        guard today != state.date else {
+            pendingDay = nil
+            return
         }
+        let loaded: SessionState
+        do {
+            loaded = try store.load(date: today)
+        } catch {
+            pendingDay = today
+            report(error)
+            return
+        }
+        pendingDay = nil
+        state = loaded
         rebuildDecks()
         indices = SessionPeriods(morning: firstIncompleteIndex(.morning), evening: firstIncompleteIndex(.evening))
         refresh()
@@ -59,13 +76,14 @@ final class AdhkarSessionModel {
     // MARK: Counters
 
     func tap(_ period: Period, at index: Int) -> DeckChange? {
-        guard let item = decks[period][safe: index], !item.review else { return nil }
+        guard let item = decks[period][safe: index], !item.review, dayIsCurrent() else { return nil }
         let target = state.target(for: item, in: period)
         let before = state.count(for: item, in: period)
         guard before < target else { return nil }
-        state.progress[period][item.id] = .number(Double(before + 1))
-        let sync = state.syncCompletion(period, in: collections, now: Date())
-        persist()
+        var candidate = state
+        candidate.progress[period][item.id] = .number(Double(before + 1))
+        let sync = candidate.syncCompletion(period, in: collections, now: Date())
+        guard commit(candidate) else { return nil }
         refresh()
         let completesItem = before + 1 == target
         return DeckChange(completedCard: completesItem, completedDeck: sync.newlyCompleted,
@@ -76,13 +94,15 @@ final class AdhkarSessionModel {
     /// deck is rebuilt around the item (its length may have changed), otherwise a target that completes the item
     /// advances.
     func setTarget(_ target: Int, _ period: Period, at index: Int) -> DeckChange? {
-        guard let item = decks[period][safe: index], let options = item.targetOptions, options.contains(target)
+        guard let item = decks[period][safe: index], let options = item.targetOptions, options.contains(target),
+              dayIsCurrent()
         else { return nil }
         let wasComplete = state.count(for: item, in: period) >= state.target(for: item, in: period)
-        state.targets[period][item.id] = .number(Double(target))
-        state.progress[period][item.id] = .number(Double(min(state.count(for: item, in: period), target)))
-        let sync = state.syncCompletion(period, in: collections, now: Date())
-        persist()
+        var candidate = state
+        candidate.targets[period][item.id] = .number(Double(target))
+        candidate.progress[period][item.id] = .number(Double(min(candidate.count(for: item, in: period), target)))
+        let sync = candidate.syncCompletion(period, in: collections, now: Date())
+        guard commit(candidate) else { return nil }
         if sync.newlyCompleted {
             refresh()
             return DeckChange(completedDeck: true)
@@ -106,10 +126,12 @@ final class AdhkarSessionModel {
     }
 
     func resetCard(_ period: Period, at index: Int) {
-        guard let item = decks[period][safe: index], state.count(for: item, in: period) > 0 else { return }
-        state.progress[period][item.id] = .number(0)
-        _ = state.syncCompletion(period, in: collections, now: Date())
-        persist()
+        guard let item = decks[period][safe: index], state.count(for: item, in: period) > 0, dayIsCurrent()
+        else { return }
+        var candidate = state
+        candidate.progress[period][item.id] = .number(0)
+        _ = candidate.syncCompletion(period, in: collections, now: Date())
+        guard commit(candidate) else { return }
         refresh()
     }
 
@@ -125,13 +147,14 @@ final class AdhkarSessionModel {
 
     // MARK: Manual completion and long order
 
-    /// `setManualCompletion`: `false` when the counters already complete the period, which the toggle cannot undo.
+    /// `setManualCompletion`: `false` when nothing changed: the counters already complete the period, which the
+    /// toggle cannot undo, or the change was not saved.
     @discardableResult
     func setManualCompletion(_ period: Period, completed: Bool) -> Bool {
-        guard state.setManualCompletion(period, completed: completed, in: collections, now: Date()) else {
-            return false
-        }
-        persist()
+        var candidate = state
+        guard candidate.setManualCompletion(period, completed: completed, in: collections, now: Date()),
+              dayIsCurrent(), commit(candidate)
+        else { return false }
         refresh()
         return true
     }
@@ -166,24 +189,41 @@ final class AdhkarSessionModel {
         return scope.confirmation(recordedDays: recorded)
     }
 
+    /// A rejected save leaves every record, the cards and their positions as they were. After a saved week or
+    /// everything reset, history is reread from the database; if that read fails, the saved state stays shown.
     func reset(_ scope: ResetScope) {
+        guard dayIsCurrent() else { return }
         let now = Date()
+        var candidate = state
+        let removal: HistoryRemoval?
+        switch scope {
+        case .day:
+            candidate.resetDay()
+            removal = nil
+        case .week:
+            candidate.resetWeek(now: now, timeZone: .current)
+            removal = .week(endingAt: now, in: .current)
+        case .everything:
+            candidate.resetEverything()
+            removal = .all
+        }
         do {
-            switch scope {
-            case .day:
-                state.resetDay()
-                try store.save(state, at: now)
-            case .week:
-                state.resetWeek(now: now, timeZone: .current)
-                try store.save(state, removing: .week(endingAt: now, in: .current), at: now)
-                state = try store.load(date: state.date)
-            case .everything:
-                state.resetEverything()
-                try store.save(state, removing: .all, at: now)
-                state = try store.load(date: state.date)
+            if let removal {
+                try store.save(candidate, removing: removal, at: now)
+            } else {
+                try store.save(candidate, at: now)
             }
         } catch {
             report(error)
+            return
+        }
+        state = candidate
+        if removal != nil {
+            do {
+                state = try store.load(date: state.date)
+            } catch {
+                report(error)
+            }
         }
         indices = SessionPeriods(morning: 0, evening: 0)
         refresh()
@@ -244,12 +284,25 @@ final class AdhkarSessionModel {
         }
     }
 
-    private func persist() {
+    /// Saves `candidate`, then makes it the state. A rejected save is reported once and changes nothing.
+    private func commit(_ candidate: SessionState) -> Bool {
         do {
-            try store.save(state)
+            try store.save(candidate)
         } catch {
             report(error)
+            return false
         }
+        state = candidate
+        return true
+    }
+
+    /// `false` while a day ``roll(to:)`` could not load is pending: ``state`` still belongs to the day before, and
+    /// saving a change would write that day's rows. The load is retried, and the change is dropped either way, as a
+    /// tap that rolls the day is.
+    private func dayIsCurrent() -> Bool {
+        guard let day = pendingDay else { return true }
+        roll(to: day)
+        return false
     }
 
     private func refresh() {
