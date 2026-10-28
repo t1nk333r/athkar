@@ -249,7 +249,9 @@ SYNTHETIC = {
         """,
     CORE + "String+Probe.swift": """\
         extension String {
-            public init(probeRepeating count: Int) { self = String(repeating: "x", count: count) }
+            public init<Count: BinaryInteger>(
+                probeRepeating count: Count
+            ) { self = String(repeating: "x", count: Int(count)) }
         }
         """,
     CORE + "Int+Plus.swift": """\
@@ -259,7 +261,9 @@ SYNTHETIC = {
         """,
     CORE + "Widget+Named.swift": """\
         extension Widget {
-            public init(named: String) { self.init() }
+            public init<S: StringProtocol>(
+                named: S
+            ) { self.init() }
         }
         """,
     CORE + "Widget+Index.swift": """\
@@ -269,7 +273,12 @@ SYNTHETIC = {
         """,
     CORE + "Array+Position.swift": """\
         extension Array {
-            public subscript(position: Int) -> Element? { indices.contains(position) ? self[position] : nil }
+            public subscript(_ position: Int) -> Element? { indices.contains(position) ? self[position] : nil }
+        }
+        """,
+    CORE + "Dictionary+Slot.swift": """\
+        extension Dictionary {
+            public subscript(slot: Int) -> Value? { nil }
         }
         """,
     CORE_TESTS + "WidgetNameTests.swift": """\
@@ -278,6 +287,14 @@ SYNTHETIC = {
 
         struct WidgetNameTests {
             @Test func names() { #expect(["a"].map(Widget.init).count == 1) }
+        }
+        """,
+    CORE_TESTS + "ArrayPositionTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct ArrayPositionTests {
+            @Test func outOfRange() { #expect([1, 2, 3][7] == nil) }
         }
         """,
     CORE_TESTS + "WidgetIndexTests.swift": """\
@@ -400,8 +417,15 @@ SYNTHETIC = {
     "ios/Athkar/Probe/Deck.swift": 'struct Deck {\n    let next = "deck.next"\n}\n',
     "ios/Athkar/Probe/Settings.swift": 'struct Settings {\n    let close = "settings.close"\n}\n',
     "ios/Athkar/Probe/Prayer.swift": 'struct Prayer {\n    let city = "prayer.\\(1)"\n}\n',
+    "ios/Athkar/Probe/Leave.swift": 'struct Leave {\n    let now = "leave.now"\n}\n',
     "ios/AthkarUITests/Support.swift": """\
         import XCTest
+
+        protocol Probing {
+            func probe()
+        }
+
+        func leaveNow() { XCUIApplication().buttons["leave.now"].tap() }
 
         enum Screen: String {
             case home = "home.ready"
@@ -438,7 +462,7 @@ SYNTHETIC = {
         import XCTest
 
         final class PlainUITests: ProbeCase {
-            func testLaunch() {}
+            func testLaunch() { leaveNow() }
         }
         """,
     "ios/AthkarPortableTests/DeckModelTests.swift": """\
@@ -519,9 +543,9 @@ class SyntheticRepositoryTests(unittest.TestCase):
 
     def test_labelled_init_of_an_outside_type_runs_its_users(self):
         self.write(CORE + "String+Probe.swift", textwrap.dedent(SYNTHETIC[CORE + "String+Probe.swift"]).replace('"x"', '"y"'))
-        # CityTests names String, so a String.init without the label could be this one.
-        self.assertEqual(self.units("core"), {"ProbeStringTests", "CityTests", "WidgetTests", "WidgetNameTests",
-                                              "WidgetIndexTests"})
+        # The init is generic and its label is on the next line. CityTests names String, so a
+        # String.init without the label could be this one.
+        self.assertEqual(self.units("core"), {"ProbeStringTests", "CityTests"})
 
     def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
         self.write(CORE + "Int+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Int+Plus.swift"]).replace("+ 1", "+ 2"))
@@ -535,7 +559,13 @@ class SyntheticRepositoryTests(unittest.TestCase):
     def test_subscript_parameter_name_is_not_a_label(self):
         self.write(CORE + "Widget+Index.swift", "extension Widget {\n    public subscript(index: Int) -> Int { index + 0 }\n}\n")
         self.assertIn("WidgetIndexTests", self.units("core"))  # `makeWidget()[2]`
-        self.write(CORE + "Array+Position.swift", "extension Array {\n    public subscript(position: Int) -> Element? { nil }\n}\n")
+        for subscript in ("subscript(position: Int)", "subscript(_ position: Int)"):
+            with self.subTest(subscript=subscript):
+                self.write(CORE + "Array+Position.swift",
+                           f"extension Array {{\n    public {subscript} -> Element? {{ nil }}\n}}\n")
+                self.assertEqual(self.units("core"), self.units("core", "--all"))
+        self.git("checkout", "--", ".")
+        self.write(CORE + "Dictionary+Slot.swift", "extension Dictionary {\n    public subscript(slot: Int) -> Value? { nil ?? nil }\n}\n")
         self.assertEqual(self.units("core"), self.units("core", "--all"))
 
     def test_class_extended_in_another_file_runs_from_either(self):
@@ -555,6 +585,10 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.write("ios/Athkar/Probe/Prayer.swift", textwrap.dedent(SYNTHETIC["ios/Athkar/Probe/Prayer.swift"]))
         self.write("ios/Athkar/Probe/Settings.swift", 'struct Settings {\n    let close = "settings.close"; let x = 1\n}\n')
         self.assertEqual(self.units("ui"), {"PrayerUITests"})
+
+    def test_helper_after_a_protocol_requirement_keeps_its_identifiers(self):
+        self.write("ios/Athkar/Probe/Leave.swift", 'struct Leave {\n    let now = "leave.now"; let x = 1\n}\n')
+        self.assertEqual(self.units("ui"), {"PlainUITests"})
 
     def test_support_setup_and_loose_identifiers_run_every_ui_test(self):
         for path in ("ios/Athkar/Probe/Deck.swift", "ios/Athkar/Probe/Home.swift"):  # setUp(); an enum case
@@ -655,7 +689,8 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual((values["ATHKAR_TEST_FULL"], values["ATHKAR_TEST_FILTER"]), ("1", ""))
         self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
                          {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests",
-                          "WidgetTests", "ProbeStringTests", "SplitTests", "WidgetNameTests", "WidgetIndexTests"})
+                          "WidgetTests", "ProbeStringTests", "SplitTests", "WidgetNameTests", "WidgetIndexTests",
+                          "ArrayPositionTests"})
 
 
 if __name__ == "__main__":

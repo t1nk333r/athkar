@@ -284,7 +284,8 @@ class SwiftFile:
         self.platform_if = bool(PLATFORM_IF.search(code))
         self.uses_file_path = "URL(fileURLWithPath: #filePath)" in code
         depth, current, extended, test_attribute, suite_attribute = 0, None, (), False, False
-        for line in code.split("\n"):
+        lines = code.split("\n")
+        for i, line in enumerate(lines):
             decl = DECL.match(line)
             if depth == 0:
                 if decl:
@@ -325,9 +326,16 @@ class SwiftFile:
                         self.members.add((extended, decl.group(3), "member"))
                     elif WHOLE_TYPE.match(line):
                         # An init's first parameter name is its label; a subscript has one only when
-                        # it spells two names (`subscript(safe index:)`).
-                        label = (re.search(r"\binit\s*[?!]?\s*\(\s*([A-Za-z_]\w*)\b", line)
-                                 or re.search(r"\bsubscript\s*\(\s*([A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:", line))
+                        # it spells two names (`subscript(safe index:)`). Generic parameters may come
+                        # first, and the parameters may continue on the following lines.
+                        signature = line
+                        for more in lines[i + 1:i + 20]:
+                            if signature.count("(") <= signature.count(")"):
+                                break
+                            signature += " " + more
+                        label = (re.search(r"\binit\s*[?!]?\s*(?:<.*?>)?\s*\(\s*([A-Za-z_]\w*)\b", signature)
+                                 or re.search(r"\bsubscript\s*(?:<.*?>)?\s*\(\s*([A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:",
+                                              signature))
                         if label and label.group(1) != "_":
                             self.members.add((extended, label.group(1), "label"))  # init(hex:), subscript(safe i:)
                         else:
@@ -433,8 +441,9 @@ def support_members(text):
         depth += code.count("{") - code.count("}")
         parens += code.count("(") - code.count(")")
         body = body or "{" in code
-        # A member ends with its body; a signature may span lines before the body opens.
-        if current and depth <= opened and parens <= 0 and (body or kind != "func"):
+        # A member ends with its body, or with the scope holding it (a protocol requirement has no
+        # body); a signature may span lines before the body opens.
+        if current and (depth < opened or depth <= opened and parens <= 0 and (body or kind != "func")):
             current = None
     return members, outside
 
