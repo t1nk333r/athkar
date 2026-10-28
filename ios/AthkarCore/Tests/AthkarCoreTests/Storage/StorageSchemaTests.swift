@@ -13,20 +13,24 @@ struct StorageSchemaTests {
         var description: String { "\(name) \(type)\(notNull ? " NOT NULL" : "") pk=\(primaryKeyIndex)" }
     }
 
-    /// The column tables under "## Tables (migration v1)" in spec/schema.md.
-    static func documentedTables() throws -> [String: [Column]] {
+    /// The column tables under each "## Tables (migration vN)" in spec/schema.md, with the migration that creates
+    /// them.
+    static func documentedTables() throws -> [String: (migration: String, columns: [Column])] {
         let text = String(decoding: try RepoFile.data("spec/schema.md"), as: UTF8.self)
-        var tables: [String: [Column]] = [:]
-        var inV1 = false
+        var tables: [String: (migration: String, columns: [Column])] = [:]
+        var migration: String?
         var table: String?
         var inColumnTable = false
         for line in text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init) {
             if line.hasPrefix("## ") {
-                inV1 = line == "## Tables (migration v1)"
+                let prefix = "## Tables (migration "
+                migration = line.hasPrefix(prefix) && line.hasSuffix(")")
+                    ? String(line.dropFirst(prefix.count).dropLast()) : nil
                 table = nil
-            } else if inV1, line.hasPrefix("### `"), line.hasSuffix("`") {
+            } else if let migration, line.hasPrefix("### `"), line.hasSuffix("`") {
                 table = String(line.dropFirst(5).dropLast())
-                tables[table!] = []
+                #expect(tables[table!] == nil, "\(table!) is documented twice")
+                tables[table!] = (migration, [])
             } else if line == "| Column | Type | Null | Key | Notes |" {
                 inColumnTable = table != nil
             } else if line.isEmpty {
@@ -35,7 +39,7 @@ struct StorageSchemaTests {
                 let cells = line.split(separator: "|", omittingEmptySubsequences: false)
                     .map { $0.trimmingCharacters(in: .whitespaces) }
                 let key = cells[4]
-                tables[table]!.append(Column(
+                tables[table]!.columns.append(Column(
                     name: cells[1].trimmingCharacters(in: CharacterSet(charactersIn: "`")),
                     type: cells[2],
                     notNull: cells[3] == "no",
@@ -45,9 +49,28 @@ struct StorageSchemaTests {
         return tables
     }
 
-    @Test func migrationV1CreatesExactlyTheDocumentedSchema() throws {
+    /// The identifiers in the "## Migrations" table of spec/schema.md, in order.
+    static func documentedMigrations() throws -> [String] {
+        let text = String(decoding: try RepoFile.data("spec/schema.md"), as: UTF8.self)
+        var migrations: [String] = []
+        var inMigrations = false
+        for line in text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init) {
+            if line.hasPrefix("## ") {
+                inMigrations = line == "## Migrations"
+            } else if inMigrations, line.hasPrefix("| `") {
+                let cell = line.split(separator: "|")[0].trimmingCharacters(in: .whitespaces)
+                migrations.append(cell.trimmingCharacters(in: CharacterSet(charactersIn: "`")))
+            }
+        }
+        return migrations
+    }
+
+    @Test func migrationsCreateExactlyTheDocumentedSchema() throws {
         let documented = try Self.documentedTables()
-        #expect(documented.count == 9)
+        #expect(documented.count == 10)
+        #expect(try Self.documentedMigrations() == ["v1", "v2"])
+        #expect(Set(documented.values.map(\.migration)) == Set(try Self.documentedMigrations()))
+        #expect(documented["ruqyah_sura_days"]?.migration == "v2")
 
         let database = try AppDatabase.inMemory()
         let actual = try database.reader.read { db in
@@ -62,8 +85,8 @@ struct StorageSchemaTests {
             })
         }
         #expect(Set(actual.keys) == Set(documented.keys))
-        for (table, columns) in documented {
-            #expect(actual[table] == columns, "\(table)")
+        for (table, documentedTable) in documented {
+            #expect(actual[table] == documentedTable.columns, "\(table)")
         }
     }
 
@@ -82,7 +105,8 @@ struct StorageSchemaTests {
              try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations"))
         }
         #expect(journalMode == "wal")
-        #expect(migrations == ["v1"])
+        #expect(migrations == ["v1", "v2"])
+        #expect(migrations == (try Self.documentedMigrations()))
         #expect(try reopened.settings.value(for: .theme) == .dark)
     }
 
@@ -95,6 +119,10 @@ struct StorageSchemaTests {
             ("INSERT INTO adhkar_item_progress VALUES ('2026-09-23', 'morning', 'morning-01', NULL, NULL, ?)",
              ["2026-09-23T10:00:00.000Z"]),
             ("INSERT INTO ruqyah_days VALUES ('2026-09-23', ?, 'manual')", ["2026-09-23T10:00:00.000Z"]),
+            ("INSERT INTO ruqyah_sura_days VALUES (?, 'qaf', '2026-09-23T10:00:00.000Z')", ["2026-9-23"]),
+            ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', 'qaf', ?)", ["2026-09-23T10:00:00Z"]),
+            ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', 'qaf', NULL)", []),
+            ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', NULL, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO location_profiles VALUES (2, NULL, 21.42, 39.83, NULL, 'device', NULL)", []),
         ]
         for (sql, arguments) in rows {

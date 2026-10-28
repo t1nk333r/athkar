@@ -34,6 +34,24 @@ public struct RuqyahSegmentProgress: Equatable, Sendable, StoredRecord {
     }
 }
 
+/// One sura of the ruqyah completed on one local date (the ruqyah PWA's `ruqyah-suwar-v1`: `completedAt` for today,
+/// `history` for earlier days). The row keeps when the sura's segments first all reached their repeats that day; a
+/// segment reset or a scoped reset removes it, as the PWA's `applyOp` clears `completedAt`.
+public struct RuqyahSuraDay: Equatable, Sendable, StoredRecord {
+    public static let databaseTableName = "ruqyah_sura_days"
+
+    public var localDate: String
+    /// The segment-ID prefix: `qaf`, `jinn`, `takwir`, `kafirun`, `nas`.
+    public var suraId: String
+    public var completedAt: Date
+
+    public init(localDate: String, suraId: String, completedAt: Date) {
+        self.localDate = localDate
+        self.suraId = suraId
+        self.completedAt = completedAt
+    }
+}
+
 public struct RuqyahRepository: Sendable {
     let writer: any DatabaseWriter
 
@@ -42,16 +60,39 @@ public struct RuqyahRepository: Sendable {
         try writer.read { try Self.counts(in: $0, on: localDate) }
     }
 
-    /// Stores one segment's count. With `completingDayAt`, also records `localDate` as complete unless it already
-    /// is (the ruqyah PWA's `recordToday` keeps the first completion time), in the same transaction.
+    /// Stores one segment's count, in one transaction with what it completes (the ruqyah PWA's `applyOp`). With
+    /// `completingSura`, also records that sura complete at `now`; with `completingDayAt`, records `localDate` as
+    /// complete. Each is recorded only when it is not already: the first completion time is kept.
     public func setCount(_ count: Int, for segmentId: String, on localDate: String,
-                         completingDayAt completedAt: Date? = nil, at now: Date = Date()) throws {
+                         completingSura suraId: String? = nil, completingDayAt completedAt: Date? = nil,
+                         at now: Date = Date()) throws {
         try writer.write { db in
             try RuqyahSegmentProgress(localDate: localDate, segmentId: segmentId, count: count, updatedAt: now)
                 .upsert(db)
+            if let suraId, try RuqyahSuraDay.fetchOne(db, key: ["local_date": localDate, "sura_id": suraId]) == nil {
+                try RuqyahSuraDay(localDate: localDate, suraId: suraId, completedAt: now).insert(db)
+            }
             if let completedAt, try RuqyahDay.fetchOne(db, key: localDate) == nil {
                 try RuqyahDay(localDate: localDate, completedAt: completedAt, completionOrigin: .counters).insert(db)
             }
+        }
+    }
+
+    /// `resetSegment`: one segment's count back to 0 and its sura no longer complete on `localDate`, in one
+    /// transaction. The day's record stays, as every reset keeps it.
+    public func resetSegment(_ segmentId: String, of suraId: String, on localDate: String,
+                             at now: Date = Date()) throws {
+        try writer.write { db in
+            try RuqyahSegmentProgress(localDate: localDate, segmentId: segmentId, count: 0, updatedAt: now).upsert(db)
+            _ = try RuqyahSuraDay.deleteOne(db, key: ["local_date": localDate, "sura_id": suraId])
+        }
+    }
+
+    /// Sura ID → when it was completed on `localDate` (`ruqyah-suwar-v1.completedAt`).
+    public func suraDays(on localDate: String) throws -> [String: Date] {
+        try writer.read { db in
+            let rows = try RuqyahSuraDay.filter(Column("local_date") == localDate).fetchAll(db)
+            return Dictionary(uniqueKeysWithValues: rows.map { ($0.suraId, $0.completedAt) })
         }
     }
 
@@ -65,18 +106,34 @@ public struct RuqyahRepository: Sendable {
         try writer.read { try RuqyahDay.filter(removal.covers()).fetchCount($0) }
     }
 
-    /// The ruqyah PWA's scoped reset in one transaction: every stored segment count of `localDate` becomes 0
-    /// (`resetDayProgress`), and the completed days `removal` covers are deleted (`resetWeek`,
-    /// `resetEverything`). Without a removal, a completed `localDate` stays complete: resetting the day keeps
-    /// its history, as in the PWA.
+    /// How many recorded days `removal` covers, as the ruqyah PWA's reset confirmations count them
+    /// (`historyDates`): completed days, and days before `today` with a completed sura.
+    public func recordedDayCount(_ removal: HistoryRemoval, before today: String) throws -> Int {
+        try writer.read { db in
+            let days = try RuqyahDay.select(Column("local_date"), as: String.self)
+                .filter(removal.covers())
+                .fetchSet(db)
+            let suras = try RuqyahSuraDay.select(Column("local_date"), as: String.self)
+                .filter(removal.covers() && Column("local_date") < today)
+                .fetchSet(db)
+            return days.union(suras).count
+        }
+    }
+
+    /// The ruqyah PWA's scoped reset in one transaction: every stored segment count of `localDate` becomes 0 and
+    /// none of its suras is complete any more (`resetDayProgress`, `clearDay`), and the completed days and suras
+    /// `removal` covers are deleted (`resetWeek`, `resetEverything`). Without a removal, a completed `localDate`
+    /// stays complete: resetting the day keeps its history, as in the PWA.
     public func resetCounts(on localDate: String, removing removal: HistoryRemoval? = nil,
                             at now: Date = Date()) throws {
         try writer.write { db in
             try db.execute(sql: """
                 UPDATE ruqyah_segment_progress SET count = 0, updated_at = ? WHERE local_date = ? AND count <> 0
                 """, arguments: [ISOInstant.format(now), localDate])
+            try RuqyahSuraDay.filter(Column("local_date") == localDate).deleteAll(db)
             if let removal {
                 try RuqyahDay.filter(removal.covers()).deleteAll(db)
+                try RuqyahSuraDay.filter(removal.covers()).deleteAll(db)
             }
         }
     }

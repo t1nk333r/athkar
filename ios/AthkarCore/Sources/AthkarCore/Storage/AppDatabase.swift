@@ -40,6 +40,7 @@ public struct AppDatabase: Sendable {
     static var migrator: DatabaseMigrator {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1") { db in try db.execute(sql: Schema.v1) }
+        migrator.registerMigration("v2") { db in try db.execute(sql: Schema.v2) }
         return migrator
     }
 }
@@ -124,6 +125,16 @@ private enum Schema {
             zone_id TEXT,
             source TEXT NOT NULL CHECK (source IN ('device', 'manual', 'import')),
             updated_at TEXT CHECK (updated_at \(instant))
+        );
+        """
+
+    /// The ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`).
+    static let v2 = """
+        CREATE TABLE ruqyah_sura_days (
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            sura_id TEXT NOT NULL,
+            completed_at TEXT NOT NULL CHECK (completed_at \(instant)),
+            PRIMARY KEY (local_date, sura_id)
         );
         """
 }

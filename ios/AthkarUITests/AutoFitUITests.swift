@@ -9,7 +9,26 @@ final class AutoFitUITests: DeckTestCase {
         launch()
         let screen = app.windows.firstMatch.frame.size
         var report: [String] = ["screen \(Int(screen.width))×\(Int(screen.height)) pt"]
-        var index = 1
+        // Each sura's repeats, numbered 1…15 across the pack. Every segment is read first, so «التالي» never waits
+        // and each sura's chip reopens the card it showed last.
+        let suwar: [(id: String, first: Int, repeats: [Int])] = [
+            ("qaf", 1, [1, 1, 1, 7, 1, 1]), ("jinn", 7, [1, 1, 1, 1]), ("takwir", 11, [1, 1, 1]),
+            ("kafirun", 14, [7]), ("nas", 15, [7]),
+        ]
+        selectTab("ruqyah")
+        let dialog = app.staticTexts["completion.title"]
+        for sura in suwar {
+            selectSection(sura.id)
+            for (index, times) in sura.repeats.enumerated() {
+                expectPosition(index + 1, of: sura.repeats.count, noun: "المقطع")
+                tapCard(times)
+            }
+            XCTAssertTrue(dialog.waitForExistence(timeout: 4), "\(sura.id) dialog")
+            app.buttons["completion.dismiss"].tap()
+            XCTAssertTrue(wait { !dialog.exists })
+        }
+        selectTab("morning")
+
         var pass = 0
         for (spacing, spacingName) in [("مريح", "comfortable"), ("واسع", "wide")] {
             for (size, sizeName) in [("صغير", "small"), ("متوسط", "medium"), ("كبير", "large")] {
@@ -19,25 +38,31 @@ final class AutoFitUITests: DeckTestCase {
                 choose(spacing, in: "settings.lineSpacing")
                 closeSettings()
                 selectTab("ruqyah")
-                // Walk forward on even passes and back on odd ones, so no pass starts by walking back.
-                let order = pass.isMultiple(of: 2) ? Array(1...15) : Array((1...15).reversed())
+                // Each sura is left on its last card, so walk back on even passes and forward on odd ones: no pass
+                // starts by walking.
+                let backward = pass.isMultiple(of: 2)
                 pass += 1
                 var steps: [Int: String] = [:]
-                for (visit, segment) in order.enumerated() {
-                    if visit > 0 {
-                        (segment > index ? nextButton : previousButton).tap()
+                for sura in suwar {
+                    selectSection(sura.id)
+                    let count = sura.repeats.count
+                    let order = backward ? Array((1...count).reversed()) : Array(1...count)
+                    for (visit, segment) in order.enumerated() {
+                        if visit > 0 {
+                            (backward ? previousButton : nextButton).tap()
+                        }
+                        expectPosition(segment, of: count, noun: "المقطع")
+                        let number = sura.first + segment - 1
+                        let text = app.staticTexts
+                            .matching(NSPredicate(format: "identifier BEGINSWITH 'deck.card.text.fit-'")).firstMatch
+                        let overflow = app.scrollViews["deck.card.overflow"]
+                        XCTAssertTrue(wait { text.exists || overflow.exists }, "\(name): segment \(number) has no text")
+                        XCTAssertFalse(overflow.exists, "\(name): segment \(number) scrolls")
+                        let card = tapTarget.frame
+                        XCTAssertTrue(card.contains(text.frame),
+                                      "\(name): segment \(number) text \(text.frame) outside card \(card)")
+                        steps[number] = String(text.identifier.dropFirst("deck.card.text.fit-".count))
                     }
-                    index = segment
-                    expectPosition(segment, of: 15, noun: "المقطع")
-                    let text = app.staticTexts
-                        .matching(NSPredicate(format: "identifier BEGINSWITH 'deck.card.text.fit-'")).firstMatch
-                    let overflow = app.scrollViews["deck.card.overflow"]
-                    XCTAssertTrue(wait { text.exists || overflow.exists }, "\(name): segment \(segment) has no text")
-                    XCTAssertFalse(overflow.exists, "\(name): segment \(segment) scrolls")
-                    let card = tapTarget.frame
-                    XCTAssertTrue(card.contains(text.frame),
-                                  "\(name): segment \(segment) text \(text.frame) outside card \(card)")
-                    steps[segment] = String(text.identifier.dropFirst("deck.card.text.fit-".count))
                 }
                 report.append("\(name): fit step per segment 1…15 = "
                     + (1...15).map { steps[$0] ?? "?" }.joined(separator: " "))

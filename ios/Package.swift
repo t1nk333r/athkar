@@ -26,7 +26,7 @@ let package = Package(
         .target(
             name: "AthkarModels", dependencies: [core, crypto], path: "Athkar",
             exclude: ["App/AppModel.swift", "Assets.xcassets", "AthkarApp.swift", "Deck/DeckCardView.swift",
-                      "Deck/DeckIndexView.swift",
+                      "Deck/DeckIndexView.swift", "Deck/SectionChips.swift",
                       "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",

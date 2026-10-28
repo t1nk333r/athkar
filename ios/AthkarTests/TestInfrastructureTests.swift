@@ -48,13 +48,22 @@ final class TestInfrastructureTests: XCTestCase {
             }
             XCTAssertFalse(deck.isComplete)
         }
+        // The ruqyah deck shows one sura at a time; its sections together are the bundled pack, in order.
         XCTAssertFalse(support.content.ruqyah.isEmpty)
-        XCTAssertEqual(app.ruqyah.cards.map(\.id), support.content.ruqyah.map(\.id))
-        for (card, content) in zip(app.ruqyah.cards, support.content.ruqyah) {
+        XCTAssertEqual(app.ruqyah.sections.map(\.id), support.content.ruqyahSuwar.map(\.id))
+        XCTAssertEqual(app.ruqyah.selectedSectionID, support.content.ruqyahSuwar.first?.id)
+        var cards: [DeckCard] = []
+        for section in app.ruqyah.sections {
+            app.ruqyah.selectSection(section.id)
+            cards += app.ruqyah.cards
+            XCTAssertFalse(app.ruqyah.isComplete)
+        }
+        XCTAssertEqual(cards.map(\.id), support.content.ruqyah.map(\.id))
+        for (card, content) in zip(cards, support.content.ruqyah) {
             XCTAssertEqual(card.content, .ruqyah(content))
             XCTAssertEqual(card.count, 0)
         }
-        XCTAssertFalse(app.ruqyah.isComplete)
+        XCTAssertFalse(app.ruqyah.isDayComplete)
     }
 
     @MainActor

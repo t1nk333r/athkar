@@ -52,8 +52,9 @@ final class DeckRegressionUITests: DeckTestCase {
         expectLabel(summary, "١ من ٢٦ ذكرًا")
         selectTab("ruqyah")
         tapCard()
-        expectPosition(2, of: 15, noun: "المقطع")
-        expectLabel(summary, "١ من ٣٣ تكرارًا")
+        expectPosition(2, of: 6, noun: "المقطع")
+        expectLabel(summary, "١ من ١٢ تكرارًا")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ١ من ٣٣ تكرارًا")
         selectTab("morning")
 
         XCUIDevice.shared.press(.home)
@@ -62,14 +63,16 @@ final class DeckRegressionUITests: DeckTestCase {
         expectLabel(summary, "٠ من ٢٦ ذكرًا")
         expectPosition(1, of: 26)
         selectTab("ruqyah")
-        expectLabel(summary, "٠ من ٣٣ تكرارًا")
-        expectPosition(1, of: 15, noun: "المقطع")
+        expectLabel(summary, "٠ من ١٢ تكرارًا")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ٠ من ٣٣ تكرارًا")
+        expectPosition(1, of: 6, noun: "المقطع")
 
         XCUIDevice.shared.press(.home)
         try setDayOffset(0, clock)
         app.activate()
-        expectLabel(summary, "١ من ٣٣ تكرارًا")
-        expectPosition(2, of: 15, noun: "المقطع")
+        expectLabel(summary, "١ من ١٢ تكرارًا")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ١ من ٣٣ تكرارًا")
+        expectPosition(2, of: 6, noun: "المقطع")
         selectTab("morning")
         expectLabel(summary, "١ من ٢٦ ذكرًا")
         expectPosition(2, of: 26)
@@ -181,7 +184,8 @@ final class DeckRegressionUITests: DeckTestCase {
         XCTAssertTrue(title.waitForExistence(timeout: 4), "no dialog on completing the evening again")
     }
 
-    /// Every completion of the ruqyah opens its dialog, not only the first of the day; a segment reset always asks.
+    /// Every completion of the ruqyah opens the day's dialog, not only the first of the day (and not the sura's,
+    /// which the PWA opens then); a segment reset always asks.
     func testCompletingTheRuqyahAgainReopensTheDialog() throws {
         let pack = try makeContentPack(morning: ["morning-05"], evening: ["evening-05"],
                                        ruqyah: ["qaf-1-8", "qaf-9-14"])
@@ -202,8 +206,10 @@ final class DeckRegressionUITests: DeckTestCase {
         XCTAssertTrue(question.staticTexts["سيعود عداد سورة ق الآيات ٩ – ١٤ إلى الصفر."].exists)
         question.buttons["إعادة"].tap()
         expectLabel(summary, "١ من ٢ تكرارًا")
+        XCTAssertEqual(sectionChip("qaf").label, "سورة ق", "the reset clears the sura's completion")
         tapCard()
         XCTAssertTrue(title.waitForExistence(timeout: 4), "no dialog on completing the ruqyah again")
+        XCTAssertEqual(title.label, "تمت الرقية بحمد الله")
     }
 
     /// A review item (`kind: review`) loads, and its card shows the badge, `reviewTitle` and `reviewCopy` with no

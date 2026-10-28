@@ -42,7 +42,7 @@ struct DeckIndexView<Model: DeckModel>: View {
                 }
             }
             .background(palette.background)
-            .navigationTitle(model.definition.id == .ruqyah ? "فهرس الرقية" : "فهرس الورد")
+            .navigationTitle(model.definition.indexTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

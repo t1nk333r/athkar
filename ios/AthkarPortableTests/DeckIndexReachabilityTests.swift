@@ -102,17 +102,55 @@ final class DeckIndexReachabilityTests: XCTestCase {
         XCTAssertFalse(deck.canReach(3))
     }
 
+    /// As «التالي» in the ruqyah PWA's `updateDeckNavigation`: a segment opens once the one before it is read.
     @MainActor
-    func testRuqyahIndexOpensEverySegment() throws {
+    func testRuqyahIndexOpensEachSegmentOnceTheOneBeforeIsRead() throws {
         let support = try PortableTestSupport()
         let deck = try support.makeRuqyah()
-        XCTAssertGreaterThan(deck.cards.count, 1)
+        XCTAssertEqual(deck.selectedSectionID, "qaf")
+        XCTAssertGreaterThan(deck.cards.count, 2)
+        XCTAssertEqual(deck.currentIndex, 0)
         XCTAssertEqual(deck.cards.filter(\.isComplete).map(\.id), [])
-        XCTAssertEqual(deck.cards.indices.filter { !deck.canReach($0) }, [])
-        deck.show(deck.cards.count / 2)
-        XCTAssertEqual(deck.cards.indices.filter { !deck.canReach($0) }, [])
+        XCTAssertEqual(deck.cards.indices.filter { deck.canReach($0) }, [0], "every later segment waits for the first")
+
+        read(deck, 0)
+        XCTAssertTrue(deck.canReach(1))
+        XCTAssertFalse(deck.cards[1].isComplete)
+        XCTAssertFalse(deck.canReach(2))
+
+        deck.show(1)
+        XCTAssertTrue(deck.canReach(0), "an earlier segment")
+        XCTAssertTrue(deck.canReach(1), "the current segment")
+        XCTAssertFalse(deck.canMoveForward(from: 1))
+        XCTAssertFalse(deck.canReach(2))
         XCTAssertFalse(deck.canReach(-1))
         XCTAssertFalse(deck.canReach(deck.cards.count))
+    }
+
+    /// Each sura's chip opens that sura on its first segment, and reading its segments in order through «التالي»
+    /// reaches each of them; together the suras reach every segment of the pack, once and in order.
+    @MainActor
+    func testEverySegmentIsReachedThroughItsSuraChip() throws {
+        let support = try PortableTestSupport()
+        let deck = try support.makeRuqyah()
+        XCTAssertEqual(deck.sections.map(\.id), ["qaf", "jinn", "takwir", "kafirun", "nas"])
+        var reached: [String] = []
+        for section in deck.sections {
+            deck.selectSection(section.id)
+            XCTAssertEqual(deck.selectedSectionID, section.id)
+            XCTAssertEqual(deck.currentIndex, 0)
+            while true {
+                let index = deck.currentIndex
+                XCTAssertTrue(deck.canReach(index))
+                reached.append(deck.cards[index].id)
+                read(deck, index)
+                XCTAssertEqual(deck.canMoveForward(from: index), index < deck.cards.count - 1)
+                guard deck.canMoveForward(from: index) else { break }
+                deck.show(index + 1)
+            }
+            XCTAssertEqual(deck.sections.first { $0.id == section.id }?.isComplete, true)
+        }
+        XCTAssertEqual(reached, support.content.packs.ruqyahSegments.map(\.id))
     }
 
     /// With long adhkar last, rows follow the deck order and keep their numbers; reading the cards in that order
