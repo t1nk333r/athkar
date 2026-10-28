@@ -10,7 +10,8 @@ Lanes (tools/test.sh runs them; the native runners select for themselves too):
   content    Linux   the Node checks in NODE_CHECKS
   core       Linux   AthkarCore Swift Testing suites (tools/test-native-core.sh)
   models     Linux   portable production-model XCTest classes (tools/test-native-models.sh)
-  ios-build  Linux   the app, and optionally AthkarTests, compiled for iOS (tools/ios-linux-compile.sh)
+  ios-build  Linux   the app compiled for iOS (tools/ios-linux-compile.sh); compiling AthkarTests
+                     is listed: its bundle cannot be packaged on Linux yet
   app-unit   device  hosted AthkarTests classes              } listed: Linux cannot run them.
   ui         Mac     AthkarUITests classes                    } tools/ios-mac-run.sh test selects both
 
@@ -709,8 +710,8 @@ def lane_values(sel, lane):
     elif lane == "ios-build":
         values["ATHKAR_TEST_BUILD_APP"] = "1" if "app" in picked else "0"
         values["ATHKAR_TEST_BUILD_TESTS"] = "1" if "tests" in picked else "0"
-        what = {("app", "tests"): "compile the app and AthkarTests", ("app",): "compile the app",
-                ("tests",): "compile AthkarTests", (): ""}[tuple(sorted(picked))]
+        what = {("app", "tests"): "compile the app; AthkarTests listed", ("app",): "compile the app",
+                ("tests",): "AthkarTests listed", (): ""}[tuple(sorted(picked))]
     else:
         what = "tools/affected-tests-test.py"
     return runs, what, values

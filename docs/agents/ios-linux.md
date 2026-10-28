@@ -76,7 +76,8 @@ paths. Scratch, dependency caches, test bundles and logs belong to that run.
 `tools/test.sh` runs every lane, each for only what the changes since the merge base with
 `origin/main` reach: the selector's own tests, the Node content checks, the core and portable
 suites and the app's SDK compilation. It lists the app-unit and UI classes that need a device or
-the Mac, and the AthkarTests compilation, whose bundle packaging still fails on Linux (below). `tools/test.sh --plan` prints each lane's selection and the reason without running anything.
+the Mac, and the AthkarTests compilation, whose bundle packaging still fails on Linux (below).
+`tools/test.sh --plan` prints each lane's selection and the reason without running anything.
 `--base REF` compares with another branch or commit, and `--all` runs every lane in full. The
 last line is `RESULT status=pass|fail|incomplete lanes=<lane>:<outcome>,...`. A busy build lane
 is `busy`, and uncommitted changes leave the native lanes `unavailable`.
