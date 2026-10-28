@@ -81,7 +81,15 @@ final class PortableModelTests: XCTestCase {
         let first = try PortableTestSupport()
         let second = try PortableTestSupport()
         let deck = try first.makeRuqyah()
-        XCTAssertEqual(deck.cards.map(\.id), first.content.ruqyah.map(\.id))
+        // One section per sura, in pack order; together their cards are the pack's segments, each once.
+        var ids: [String] = []
+        for section in deck.sections {
+            deck.selectSection(section.id)
+            XCTAssertEqual(deck.cards.map(\.number), Array(1...deck.cards.count), "numbered within \(section.id)")
+            ids += deck.cards.map(\.id)
+        }
+        XCTAssertEqual(ids, first.content.ruqyah.map(\.id))
+        deck.selectSection("qaf")
         let index = try XCTUnwrap(deck.cards.firstIndex { $0.target > 1 })
         let itemId = deck.cards[index].id
         XCTAssertNotNil(deck.tap(cardAt: index))
@@ -92,26 +100,40 @@ final class PortableModelTests: XCTestCase {
         XCTAssertTrue(try second.database.ruqyah.counts(on: second.today).isEmpty)
     }
 
+    /// Each sura is recorded once its last reading is counted, and the day once every sura is; each completion opens
+    /// a dialog, and every completed segment plays the haptic.
     @MainActor
     func testRuqyahRecordsCompletionOnlyAfterEveryRequiredReading() throws {
         let support = try PortableTestSupport()
         let deck = try support.makeRuqyah()
-        XCTAssertFalse(deck.cards.isEmpty)
-        for index in deck.cards.indices {
-            let target = deck.cards[index].target
-            for count in 1...target {
-                let isLastReading = index == deck.cards.count - 1 && count == target
-                let change = try XCTUnwrap(deck.tap(cardAt: index))
-                XCTAssertEqual(change.completedCard, count == target)
-                XCTAssertEqual(change.completedDeck, isLastReading)
-                XCTAssertEqual(deck.isComplete, isLastReading)
-                XCTAssertEqual(try support.database.ruqyah.day(on: support.today) != nil, isLastReading)
+        XCTAssertFalse(deck.sections.isEmpty)
+        for (position, section) in deck.sections.enumerated() {
+            deck.selectSection(section.id)
+            XCTAssertFalse(deck.cards.isEmpty)
+            for index in deck.cards.indices {
+                let target = deck.cards[index].target
+                for count in 1...target {
+                    let completesSura = index == deck.cards.count - 1 && count == target
+                    let isLastReading = completesSura && position == deck.sections.count - 1
+                    let change = try XCTUnwrap(deck.tap(cardAt: index))
+                    XCTAssertEqual(change.completedCard, count == target)
+                    XCTAssertEqual(change.haptic, count == target)
+                    XCTAssertEqual(change.completedDeck, completesSura)
+                    XCTAssertEqual(change.advance, count == target && !completesSura)
+                    XCTAssertEqual(deck.isComplete, completesSura)
+                    XCTAssertEqual(deck.isDayComplete, isLastReading)
+                    XCTAssertEqual(try support.database.ruqyah.suraDays(on: support.today)[section.id] != nil,
+                                   completesSura)
+                    XCTAssertEqual(try support.database.ruqyah.day(on: support.today) != nil, isLastReading)
+                }
+                XCTAssertNil(deck.tap(cardAt: index))
             }
-            XCTAssertNil(deck.tap(cardAt: index))
         }
         let day = try XCTUnwrap(support.database.ruqyah.day(on: support.today))
         XCTAssertEqual(day.completedAt.timeIntervalSince1970,
                        try XCTUnwrap(deck.completedAt).timeIntervalSince1970, accuracy: 0.001)
-        XCTAssertTrue(try support.makeRuqyah().isComplete)
+        XCTAssertEqual(Set(try support.database.ruqyah.suraDays(on: support.today).keys),
+                       Set(deck.sections.map(\.id)))
+        XCTAssertTrue(try support.makeRuqyah().isDayComplete)
     }
 }

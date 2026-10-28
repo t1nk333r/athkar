@@ -16,8 +16,9 @@ executed portable tests and iOS device results are separate evidence. The earlie
 Feather publish was verified against the downloaded IPA's checksum.
 That historical 1.0/1 IPA predates the current native haptics and follow-up changes.
 Dhikr counters vibrate only on the tap that completes a target greater than one,
-in both the PWA and native decks, including native ruqyah counters. Single-count
-cards and earlier taps stay quiet.
+in both the PWA and native decks. Native ruqyah, like the ruqyah PWA, vibrates on
+the tap that completes any segment. Single-count dhikr cards and earlier taps stay
+quiet.
 
 ## [ARCHITECTURE]
 

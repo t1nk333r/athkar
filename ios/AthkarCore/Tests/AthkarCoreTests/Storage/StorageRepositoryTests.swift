@@ -127,6 +127,85 @@ struct StorageRepositoryTests {
         #expect(try ruqyah.dayCount(.all) == 0)
     }
 
+    /// The ruqyah PWA's `applyOp`: a reading that completes a sura records it, once; the day is recorded only with
+    /// `completingDayAt`, and each keeps its first time.
+    @Test func ruqyahSuraCompletionIsRecordedOnceWithItsReading() throws {
+        let ruqyah = database.ruqyah
+        try ruqyah.setCount(7, for: "kafirun-1-6", on: "2026-09-23", completingSura: "kafirun", at: t0)
+        try ruqyah.setCount(7, for: "kafirun-1-6", on: "2026-09-23", completingSura: "kafirun", at: t1)
+        #expect(try ruqyah.suraDays(on: "2026-09-23") == ["kafirun": t0])
+        #expect(try ruqyah.day(on: "2026-09-23") == nil)
+        #expect(try ruqyah.suraDays(on: "2026-09-22") == [:])
+
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-23", completingSura: "nas", completingDayAt: t1, at: t1)
+        #expect(try ruqyah.suraDays(on: "2026-09-23") == ["kafirun": t0, "nas": t1])
+        #expect(try ruqyah.day(on: "2026-09-23")?.completedAt == t1)
+        #expect(try ruqyah.counts(on: "2026-09-23") == ["kafirun-1-6": 7, "nas-1-6": 7])
+    }
+
+    /// `resetSegment`: the counter returns to 0 and its sura is no longer complete that day; other suras, other days
+    /// and the day's record stay.
+    @Test func ruqyahSegmentResetClearsOnlyItsSura() throws {
+        let ruqyah = database.ruqyah
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-22", completingSura: "nas", at: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-23", completingSura: "nas", at: t0)
+        try ruqyah.setCount(7, for: "kafirun-1-6", on: "2026-09-23", completingSura: "kafirun",
+                            completingDayAt: t0, at: t0)
+        try ruqyah.resetSegment("nas-1-6", of: "nas", on: "2026-09-23", at: t1)
+        #expect(try ruqyah.counts(on: "2026-09-23") == ["kafirun-1-6": 7, "nas-1-6": 0])
+        #expect(try ruqyah.suraDays(on: "2026-09-23") == ["kafirun": t0])
+        #expect(try ruqyah.suraDays(on: "2026-09-22") == ["nas": t0])
+        #expect(try ruqyah.day(on: "2026-09-23")?.completedAt == t0)
+
+        // A segment never read gets its zero row; a sura with no record has nothing to delete.
+        try ruqyah.resetSegment("jinn-1-7", of: "jinn", on: "2026-09-23", at: t1)
+        #expect(try ruqyah.counts(on: "2026-09-23")["jinn-1-7"] == 0)
+    }
+
+    /// The day reset clears today's sura completions and keeps the day's record (`clearDay`); week and everything
+    /// delete the sura completions in their scope as well.
+    @Test func ruqyahScopedResetsClearSuraCompletions() throws {
+        let ruqyah = database.ruqyah
+        for day in ["2026-09-10", "2026-09-17", "2026-09-22", "2026-09-23"] {
+            try ruqyah.setCount(7, for: "nas-1-6", on: day, completingSura: "nas", at: t0)
+        }
+        try ruqyah.markComplete(on: "2026-09-23", completedAt: t0)
+
+        try ruqyah.resetCounts(on: "2026-09-23", at: t1)
+        #expect(try ruqyah.suraDays(on: "2026-09-23") == [:])
+        #expect(try ruqyah.suraDays(on: "2026-09-22") == ["nas": t0])
+        #expect(try ruqyah.day(on: "2026-09-23") != nil)
+
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        try ruqyah.resetCounts(on: "2026-09-23", removing: week, at: t1)
+        #expect(try ruqyah.suraDays(on: "2026-09-22") == [:])
+        #expect(try ruqyah.suraDays(on: "2026-09-17") == [:])
+        #expect(try ruqyah.suraDays(on: "2026-09-10") == ["nas": t0])
+        #expect(try ruqyah.day(on: "2026-09-23") == nil)
+
+        try ruqyah.resetCounts(on: "2026-09-23", removing: .all, at: t1)
+        #expect(try ruqyah.suraDays(on: "2026-09-10") == [:])
+    }
+
+    /// The PWA's `historyDates`: completed days in scope, today included, and earlier days in scope with a completed
+    /// sura, each date once.
+    @Test func ruqyahRecordedDayCountUnitesDaysAndEarlierSuras() throws {
+        let ruqyah = database.ruqyah
+        try ruqyah.markComplete(on: "2026-09-23", completedAt: t0)
+        try ruqyah.markComplete(on: "2026-09-20", completedAt: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-20", completingSura: "nas", at: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-21", completingSura: "nas", at: t0)
+        try ruqyah.setCount(7, for: "kafirun-1-6", on: "2026-09-21", completingSura: "kafirun", at: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-10", completingSura: "nas", at: t0)
+        try ruqyah.setCount(7, for: "nas-1-6", on: "2026-09-24", completingSura: "nas", at: t0)
+
+        #expect(try ruqyah.recordedDayCount(.all, before: "2026-09-23") == 4)
+        #expect(try ruqyah.recordedDayCount(.all, before: "2026-09-25") == 5)
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        #expect(try ruqyah.recordedDayCount(week, before: "2026-09-23") == 3)
+        #expect(try ruqyah.dayCount(.all) == 2, "completed days alone")
+    }
+
     @Test func adhkarCompletedDayCountIsDistinctEarlierDates() throws {
         let adhkar = database.adhkar
         for date in ["2026-09-15", "2026-09-20", "2026-09-22", "2026-09-23"] {

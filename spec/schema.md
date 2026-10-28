@@ -3,7 +3,8 @@
 The native apps' SQLite database (NATIVE_APP_PLAN.md §6). iOS implements it with GRDB migrations in
 `ios/AthkarCore/Sources/AthkarCore/Storage/AppDatabase.swift`. Android will implement the final schema here
 when it starts (§9.2). A test (`StorageSchemaTests`) checks that every table, column, type, nullability and
-primary key below matches what migration `v1` creates. Update this file in the same commit as any migration.
+primary key below matches what the migrations create, and that the migrations applied are the ones listed below.
+Update this file in the same commit as any migration.
 
 ## Conventions
 
@@ -35,7 +36,8 @@ primary key below matches what migration `v1` creates. Update this file in the s
 
 | Migration | Contents |
 | --- | --- |
-| `v1` | All tables below. |
+| `v1` | The tables under "Tables (migration v1)". |
+| `v2` | `ruqyah_sura_days`: the ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`). |
 
 ## Tables (migration v1)
 
@@ -177,7 +179,21 @@ Version 1.0 allows at most one profile.
 Rounding is JavaScript/Kotlin `Math.round(x × 100) / 100`, computed as `floor(x × 100 + 0.5) / 100` in IEEE
 doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` → `33.87`.
 
-## Future tables (not in v1)
+## Tables (migration v2)
+
+### `ruqyah_sura_days`
+
+This table stores one row per local date and ruqyah sura completed on it (`ruqyah-suwar-v1`: `completedAt` for
+today, `history` for earlier days). A sura is the segments whose IDs share its prefix (`qaf`, `jinn`, `takwir`,
+`kafirun`, `nas`), as `RUQYAH_SUWAR` groups the pack.
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `local_date` | TEXT | no | PK 1 | Local date. |
+| `sura_id` | TEXT | no | PK 2 | The sura's segment-ID prefix. |
+| `completed_at` | TEXT | no | | Instant. When the sura's segments first all reached their `repeat` that day. |
+
+## Future tables (not in v2)
 
 - 1.0, added by later slices' migrations: `prayer_records` (unique on `(calculation_date, prayer_key)`, per
   MOBILE_APP_PLAN.md §11 `prayer_logs`) and `notification_audit` (redacted).
@@ -192,6 +208,10 @@ doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` →
 - A `review`-kind item never takes part in completion (`periodCountersComplete`).
 - Rollover is a pure function of `local_date`. Nothing is deleted at midnight.
 - A ruqyah date is complete if and only if a `ruqyah_days` row exists.
+- A ruqyah sura is recorded complete on a date if and only if a `ruqyah_sura_days` row exists. Today's chip «✓»
+  comes from the counters (the PWA's `suraIsComplete`); the row keeps the completion time. A sura complete by its
+  counters with no row takes today's `ruqyah_days` time, in memory only (`backfillSuwarCompletions`); with no day
+  row it has no time.
 
 ## Session state bridge
 
@@ -260,20 +280,27 @@ it.
 
 ### Ruqyah counters and reset
 
-The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repeat` on read) and today's
-`ruqyah_days` row.
+The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repeat` on read), today's
+`ruqyah_days` row and today's `ruqyah_sura_days` rows (`suraDays(on:)`).
 
-- **Counting.** `setCount(_:for:on:completingDayAt:)` upserts the segment row. When that reading completes every
-  segment, the method also inserts today's `ruqyah_days` row with `completion_origin = counters` in the same
-  transaction. It never replaces an existing `ruqyah_days` row, preserving the first completion time as in the
-  PWA's `recordToday`. Resetting one segment sets `count = 0`.
+- **Counting.** `setCount(_:for:on:completingSura:completingDayAt:at:)` upserts the segment row in one
+  transaction with what the reading completes, as the PWA's `applyOp` does:
+  - When the reading completes its sura, it inserts that sura's `ruqyah_sura_days` row for the date.
+  - When it completes every segment, it inserts today's `ruqyah_days` row with `completion_origin = counters`.
+  - It never replaces either row, preserving the first completion time as in the PWA.
+- **Segment reset.** `resetSegment(_:of:on:)` sets the segment's `count = 0` and deletes its sura's
+  `ruqyah_sura_days` row for the date, in one transaction (`resetSegment`). The `ruqyah_days` row stays.
 - **Scoped reset.** `resetCounts(on:removing:)` runs in one transaction:
-  - It sets every non-zero count of that date to 0 (`resetDayProgress`). The rows are kept.
-  - With `.week(...)` or `.all`, it also deletes the `ruqyah_days` rows in scope, today included.
+  - It sets every non-zero count of that date to 0 and deletes that date's `ruqyah_sura_days` rows
+    (`resetDayProgress`, `clearDay`). The count rows are kept.
+  - With `.week(...)` or `.all`, it also deletes the `ruqyah_days` and `ruqyah_sura_days` rows in scope, today
+    included.
   - With no removal (تقدم اليوم, or «بدء رقية جديدة» in the completion dialog), today's `ruqyah_days` row
     stays. Today remains recorded complete.
-- **Confirmation copy.** The confirmation copy uses `dayCount(removal)`, which counts days including today, as in
-  the PWA.
+- **Confirmation copy.** The confirmation copy uses `recordedDayCount(removal, before: today)`: the distinct dates
+  in scope with a `ruqyah_days` row, today included, together with the earlier dates with a `ruqyah_sura_days`
+  row, as the PWA's `historyDates` counts them. Today's completed suras are today's progress, not history.
+  `dayCount(removal)` still counts `ruqyah_days` rows alone.
 
 ## Backup import (envelope v1)
 
@@ -350,6 +377,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `adhkar.history` lists the dates before `today` that have any adhkar row, newest first, capped at 7. A period
   is `true` if and only if its `adhkar_days` row exists.
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
+- `ruqyah_sura_days` is not exported, and import writes none: the ruqyah PWA's backup leaves out
+  `ruqyah-suwar-v1` (its `ruqyah` object is closed).
 - `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
   already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.

@@ -50,7 +50,7 @@ struct HomeView: View {
                 QiblaView(prayer: app.prayer, haptics: app.settings.haptics) { app.otherSection = .prayerTimes }
                     .frame(maxHeight: .infinity, alignment: .top)
             } else {
-                summary(deck.summary, palette: palette)
+                summary(deck, palette: palette)
                     .padding(.top, 5.6)
                     .padding(.bottom, 16)
                 deckView
@@ -91,6 +91,7 @@ struct HomeView: View {
                 switch app.deck(id).completion.primary {
                 case let .open(other): app.selection = other
                 case .restart: app.deck(id).reset(.day)
+                case let .openSection(section): app.deck(id).selectSection(section)
                 }
             }
             .environment(\.palette, palette)
@@ -284,8 +285,14 @@ struct HomeView: View {
 
     // MARK: Summary (`.session-summary`)
 
-    private func summary(_ summary: DeckSummary, palette: Palette) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+    /// The deck's section chips, if it has sections, above its summary row and today line.
+    private func summary(_ deck: any DeckModel, palette: Palette) -> some View {
+        let summary = deck.summary
+        return VStack(alignment: .leading, spacing: 3) {
+            if !deck.sections.isEmpty {
+                SectionChips(model: deck)
+                    .padding(.bottom, 4.2)
+            }
             HStack(spacing: 9.6) {
                 Text(summary.copy)
                     .font(.caption.weight(.heavy))
@@ -304,7 +311,7 @@ struct HomeView: View {
             if let status = summary.status {
                 Text(status)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(summary.isComplete ? palette.completed : palette.textSecondary)
+                    .foregroundStyle(summary.statusIsComplete ? palette.completed : palette.textSecondary)
                     .accessibilityIdentifier("summary.status")
             }
         }
@@ -331,7 +338,8 @@ struct HomeView: View {
         case .ruqyah:
             DeckView(model: app.ruqyah, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .ruqyah) },
                      onDeckCompleted: { completedDeck = .ruqyah })
-            .id(DeckID.ruqyah)
+            // One deck view per sura, so a chip switch also cancels a pending auto-advance.
+            .id("\(DeckID.ruqyah.rawValue).\(app.ruqyah.selectedSuraID)")
         }
     }
 

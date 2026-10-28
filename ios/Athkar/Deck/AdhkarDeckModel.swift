@@ -86,8 +86,9 @@ final class AdhkarSessionModel {
         guard commit(candidate) else { return nil }
         refresh()
         let completesItem = before + 1 == target
+        // The haptic marks a repeated counter reaching its target; single-count cards stay quiet.
         return DeckChange(completedCard: completesItem, completedDeck: sync.newlyCompleted,
-                          advance: completesItem && !sync.newlyCompleted)
+                          advance: completesItem && !sync.newlyCompleted, haptic: completesItem && target > 1)
     }
 
     /// The target picker's `change` handler: the count is clamped to the new target; with long adhkar last the

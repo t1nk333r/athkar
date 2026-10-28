@@ -184,46 +184,89 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(wait { !self.resetEnabled() })
     }
 
-    /// Ruqyah: segments repeat 1 or 7 times, advance when done; all 33 readings record the day and open the
-    /// dialog; «بدء رقية جديدة» restarts the counters but keeps today's record; «كل شيء» removes it.
+    /// Ruqyah: one section per sura, picked by its chip. Segments repeat 1 or 7 times, «التالي» waits for each, and
+    /// the deck advances when one is done. Completing a sura records it and opens its dialog, whose «الانتقال إلى …»
+    /// opens the next incomplete sura; the 33rd reading records the day and opens the day's dialog; «بدء رقية جديدة»
+    /// restarts the counters on ق but keeps today's record; «كل شيء» removes it.
     func testRuqyahRepeatCountingToCompletion() {
         launch()
         selectTab("ruqyah")
-        expectPosition(1, of: 15, noun: "المقطع")
-        expectLabel(summary, "٠ من ٣٣ تكرارًا")
-        expectLabel(app.staticTexts["summary.status"], "رقية اليوم لم تكتمل بعد.")
+        XCTAssertTrue(sectionChip("qaf").waitForExistence(timeout: 3))
+        XCTAssertTrue(sectionChip("qaf").isSelected, "opens on ق")
+        XCTAssertEqual(sectionChip("qaf").label, "سورة ق")
+        expectPosition(1, of: 6, noun: "المقطع")
+        expectLabel(summary, "٠ من ١٢ تكرارًا")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ٠ من ٣٣ تكرارًا")
+        XCTAssertFalse(nextButton.isEnabled, "next waits for the segment to be read")
 
-        let repeats = [1, 1, 1, 7, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7, 7]
-        for (index, times) in repeats.enumerated() {
-            expectPosition(index + 1, of: 15, noun: "المقطع")
-            if times > 1 {
-                tapCard(times - 1)
-                XCTAssertTrue(counter.label.hasSuffix("تم \(ar(times - 1)) من \(ar(times))"), counter.label)
-                expectPosition(index + 1, of: 15, noun: "المقطع")
+        let suwar: [(id: String, surah: String, repeats: [Int])] = [
+            ("qaf", "سورة ق", [1, 1, 1, 7, 1, 1]),
+            ("jinn", "سورة الجن", [1, 1, 1, 1]),
+            ("takwir", "سورة التكوير", [1, 1, 1]),
+            ("kafirun", "سورة الكافرون", [7]),
+            ("nas", "سورة الناس", [7]),
+        ]
+        let title = app.staticTexts["completion.title"]
+        var read = 0
+        for (position, sura) in suwar.enumerated() {
+            XCTAssertTrue(wait { self.sectionChip(sura.id).isSelected }, "\(sura.id) shown")
+            expectLabel(summary, "٠ من \(ar(sura.repeats.reduce(0, +))) تكرارًا")
+            for (index, times) in sura.repeats.enumerated() {
+                expectPosition(index + 1, of: sura.repeats.count, noun: "المقطع")
+                if times > 1 {
+                    tapCard(times - 1)
+                    XCTAssertTrue(counter.label.hasSuffix("تم \(ar(times - 1)) من \(ar(times))"), counter.label)
+                    expectPosition(index + 1, of: sura.repeats.count, noun: "المقطع")
+                    XCTAssertFalse(nextButton.isEnabled, "next waits for every repeat")
+                }
+                tapCard(times > 1 ? 1 : times)
+                read += times
             }
-            tapCard(times > 1 ? 1 : times)
+            XCTAssertTrue(title.waitForExistence(timeout: 4), "\(sura.id) dialog")
+            XCTAssertTrue(app.staticTexts["completion.time"].label.hasPrefix("وقت الإكمال: "))
+            guard position + 1 < suwar.count else { break }
+            XCTAssertEqual(title.label, "اكتملت قراءة \(sura.surah) بحمد الله")
+            let next = app.buttons["completion.primary"]
+            XCTAssertEqual(next.label, "الانتقال إلى \(suwar[position + 1].surah)")
+            if position == 0 {
+                // «تم» keeps the completed sura on screen; its chip then opens the next one.
+                app.buttons["completion.dismiss"].tap()
+                XCTAssertTrue(wait { !title.exists })
+                expectLabel(summary, "اكتملت سورة ق اليوم")
+                XCTAssertFalse(tapTarget.isEnabled, "a completed segment no longer counts")
+                selectSection(suwar[position + 1].id)
+            } else {
+                next.tap()
+                XCTAssertTrue(wait { !title.exists })
+            }
+            XCTAssertEqual(sectionChip(sura.id).label, "\(sura.surah)، مكتملة اليوم")
+            expectLabel(app.staticTexts["summary.status"], "رقية اليوم: \(ar(read)) من ٣٣ تكرارًا")
         }
 
-        let title = app.staticTexts["completion.title"]
-        XCTAssertTrue(title.waitForExistence(timeout: 4))
         XCTAssertEqual(title.label, "تمت الرقية بحمد الله")
-        expectLabel(summary, "٣٣ من ٣٣ تكرارًا")
+        expectLabel(summary, "اكتملت سورة الناس اليوم")
         XCTAssertTrue(app.staticTexts["summary.status"].label.hasPrefix("تمت رقية اليوم في"))
 
         app.buttons["completion.primary"].tap()
-        expectLabel(summary, "٠ من ٣٣ تكرارًا")
-        expectPosition(1, of: 15, noun: "المقطع")
+        XCTAssertTrue(wait { self.sectionChip("qaf").isSelected }, "a new reading opens ق")
+        expectLabel(summary, "٠ من ١٢ تكرارًا")
+        expectPosition(1, of: 6, noun: "المقطع")
         XCTAssertTrue(app.staticTexts["summary.status"].label.hasPrefix("تمت رقية اليوم في"), "history kept")
+        for sura in suwar {
+            XCTAssertEqual(sectionChip(sura.id).label, sura.surah, "\(sura.id) restarted")
+        }
 
-        // The أخرى list marks the section done; its row reopens the deck.
+        // The أخرى list marks the section done and gives the whole day's count; its row reopens the deck.
         app.buttons["header.back"].tap()
         XCTAssertEqual(app.buttons["tab.other"].label, "أخرى")
         XCTAssertTrue(app.buttons["other.ruqyah"].waitForExistence(timeout: 3))
         XCTAssertEqual(app.buttons["other.ruqyah"].label, "رقية القرين، مكتملة اليوم")
+        XCTAssertEqual(app.buttons["other.ruqyah"].value as? String, "٠ من ٣٣ تكرارًا")
         XCTAssertFalse(app.buttons["other.sleep"].isEnabled, "not built yet")
         XCTAssertFalse(resetEnabled(), "nothing to reset on the list")
         app.buttons["other.ruqyah"].tap()
-        expectPosition(1, of: 15, noun: "المقطع")
+        expectPosition(1, of: 6, noun: "المقطع")
+        XCTAssertTrue(sectionChip("qaf").isSelected)
 
         headerReset.tap()
         app.buttons["reset.everything"].tap()
@@ -231,7 +274,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(everything.waitForExistence(timeout: 3))
         XCTAssertTrue(everything.staticTexts["ستُعاد العدادات وسيُحذف السجل كاملًا (يوم واحد). لا يمكن التراجع."].exists)
         everything.buttons["إعادة"].tap()
-        expectLabel(app.staticTexts["summary.status"], "رقية اليوم لم تكتمل بعد.")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ٠ من ٣٣ تكرارًا")
         XCTAssertTrue(wait { !self.resetEnabled() })
     }
 
@@ -252,7 +295,7 @@ final class DeckUITests: DeckTestCase {
         closeSettings()
         selectTab("ruqyah")
         tapCard()
-        expectPosition(2, of: 15, noun: "المقطع")
+        expectPosition(2, of: 6, noun: "المقطع")
 
         app.terminate()
         launch(reset: false, answer: nil)
@@ -272,7 +315,9 @@ final class DeckUITests: DeckTestCase {
         closeSettings()
 
         selectTab("ruqyah")
-        expectPosition(2, of: 15, noun: "المقطع")
-        expectLabel(summary, "١ من ٣٣ تكرارًا")
+        XCTAssertTrue(sectionChip("qaf").isSelected)
+        expectPosition(2, of: 6, noun: "المقطع")
+        expectLabel(summary, "١ من ١٢ تكرارًا")
+        expectLabel(app.staticTexts["summary.status"], "رقية اليوم: ١ من ٣٣ تكرارًا")
     }
 }

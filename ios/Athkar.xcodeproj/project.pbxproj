@@ -52,6 +52,7 @@
 		B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4A7DAF059476E447785AE3 /* QiblaView.swift */; };
 		B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */; };
 		BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69E443B335C7F687972315F /* AdhkarDeckModel.swift */; };
+		BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4122DE1C89CDB311B8848C /* SectionChips.swift */; };
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
@@ -113,6 +114,7 @@
 		5F05E54F6F784321446FD2E9 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 		6134B2928ABCD0502572ED37 /* DayRollover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayRollover.swift; sourceTree = "<group>"; };
 		69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D4122DE1C89CDB311B8848C /* SectionChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionChips.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
 		6F4A7DAF059476E447785AE3 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				CC4723AB110276E031039F64 /* DeckModel.swift */,
 				B714704C81ED5A22715203DD /* DeckView.swift */,
 				E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */,
+				6D4122DE1C89CDB311B8848C /* SectionChips.swift */,
 			);
 			path = Deck;
 			sourceTree = "<group>";
@@ -518,6 +521,7 @@
 				3B0D6C5A279DA3F7D9D178A6 /* ReminderNotifications.swift in Sources */,
 				37B7CFF6BEA627BDF70F5534 /* ReminderViews.swift in Sources */,
 				D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */,
+				BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */,
 				A07159CDBE18B815AED58E9F /* SettingsModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
 				FCA6B5C02D47830635FFFFE5 /* TestHooks.swift in Sources */,

@@ -9,9 +9,13 @@ final class ScreenshotUITests: DeckTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         launch()
 
-        // A ruqyah page mid-count: segment 4 (سورة ق ٢٣–٢٩, seven readings), three read.
+        // A ruqyah page mid-count: segment 4 (سورة ق ٢٣–٢٩, seven readings), three read once 1–3 are read.
         selectTab("ruqyah")
-        next(3, count: 15, from: 1, noun: "المقطع")
+        for segment in 1...3 {
+            expectPosition(segment, of: 6, noun: "المقطع")
+            tapCard()
+        }
+        expectPosition(4, of: 6, noun: "المقطع")
         tapCard(3)
         selectTab("morning")
 
@@ -24,7 +28,7 @@ final class ScreenshotUITests: DeckTestCase {
                 selectTab("morning")
                 shot("adhkar-deck-\(themeName)-\(sizeName)")
                 selectTab("ruqyah")
-                expectPosition(4, of: 15, noun: "المقطع")
+                expectPosition(4, of: 6, noun: "المقطع")
                 shot("ruqyah-page-\(themeName)-\(sizeName)")
             }
         }

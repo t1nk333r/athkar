@@ -20,18 +20,37 @@ struct DeckDefinition: Sendable {
     var cardsLabel: String
     var navigationLabel: String
     var hint: String
+    /// The quick index's title, and the position button's hint that opens it.
+    var indexTitle: String
+    var indexHint: String
+    /// Section chips start from their content's width and share the rest of the row (the ruqyah PWA's `.sura-chip`,
+    /// `flex: 1 1 auto`, since «ق» and «الكافرون ✓» differ so much); otherwise they take equal shares (`flex: 1 1 0`).
+    var chipsGrowFromContent = false
 
     static let morning = adhkar(.morning, "أذكار الصباح")
     static let evening = adhkar(.evening, "أذكار المساء")
     static let ruqyah = DeckDefinition(
         id: .ruqyah, title: "رقية القرين", cardNoun: "المقطع", cardsLabel: "مقاطع رقية القرين",
-        navigationLabel: "التنقل بين مقاطع الرقية", hint: "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع.")
+        navigationLabel: "التنقل بين مقاطع الرقية", hint: "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع.",
+        indexTitle: "فهرس الرقية", indexHint: "يعرض فهرس الرقية للانتقال إلى مقطع", chipsGrowFromContent: true)
 
     private static func adhkar(_ period: Period, _ title: String) -> DeckDefinition {
         DeckDefinition(id: period == .morning ? .morning : .evening, title: title, cardNoun: "الذكر",
                        cardsLabel: "بطاقات \(title)", navigationLabel: "التنقل بين بطاقات الأذكار",
-                       hint: "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.")
+                       hint: "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.",
+                       indexTitle: "فهرس الورد", indexHint: "يعرض فهرس الورد للانتقال إلى ذكر")
     }
+}
+
+/// One part of a deck the reader picks with a chip (the ruqyah PWA's `.sura-chip`): a sura of the ruqyah.
+struct DeckSection: Identifiable, Equatable {
+    var id: String
+    /// The chip's text: the sura's name without «سورة ».
+    var title: String
+    /// Complete today (the chip's «✓»).
+    var isComplete: Bool
+    /// «سورة ق», or «سورة ق، مكتملة اليوم».
+    var accessibilityLabel: String
 }
 
 /// A card as ``DeckView`` shows it: its content, counter state and spoken labels.
@@ -78,8 +97,11 @@ struct DeckSummary: Equatable {
     var total: Int
     var isComplete: Bool
     var accessibilityLabel: String
-    /// The ruqyah deck's today line («رقية اليوم لم تكتمل بعد.»).
+    /// The ruqyah deck's today line («رقية اليوم: ٣ من ٣٣ تكرارًا»), which keeps the whole day while the row above
+    /// follows the shown sura.
     var status: String?
+    /// Whether the today line reads as complete.
+    var statusIsComplete = false
 }
 
 /// A question asked before a destructive change.
@@ -95,10 +117,12 @@ struct DeckConfirmation: Equatable, Identifiable {
 struct DeckChange: Equatable {
     /// A tap brought the card to its target.
     var completedCard = false
-    /// The session just became complete by its counters: open the completion dialog.
+    /// The session, or the section on screen, just became complete by its counters: open the completion dialog.
     var completedDeck = false
     /// Move to the next card after the auto-advance delay.
     var advance = false
+    /// Play the 45 ms completion haptic (when the haptics setting is on). Each deck decides when.
+    var haptic = false
 }
 
 /// The completion dialog of a deck.
@@ -106,6 +130,8 @@ struct DeckCompletion: Equatable {
     enum Primary: Equatable {
         case open(DeckID)
         case restart
+        /// Another section of the same deck (the ruqyah PWA's «الانتقال إلى …» to the next incomplete sura).
+        case openSection(String)
     }
 
     var title: String
@@ -198,6 +224,27 @@ protocol DeckModel: AnyObject {
     /// Whether the reset was stored: `false` when it was refused and changed nothing, so it is not announced.
     @discardableResult
     func reset(_ scope: ResetScope) -> Bool
+
+    /// The chips above the summary; empty for a deck without sections. ``cards``, ``summary``, ``isComplete`` and
+    /// ``completion`` then describe the selected section.
+    var sections: [DeckSection] { get }
+    var selectedSectionID: String? { get }
+    func selectSection(_ id: String)
+    /// The card list's spoken name: ``DeckDefinition/cardsLabel``, or the selected section's («مقاطع سورة ق»).
+    var cardsLabel: String { get }
+    /// The whole deck's summary and completion, for the أخرى list: ``summary`` and ``isComplete`` unless the deck
+    /// has sections.
+    var listSummary: DeckSummary { get }
+    var isDayComplete: Bool { get }
+}
+
+extension DeckModel {
+    var sections: [DeckSection] { [] }
+    var selectedSectionID: String? { nil }
+    func selectSection(_ id: String) {}
+    var cardsLabel: String { definition.cardsLabel }
+    var listSummary: DeckSummary { summary }
+    var isDayComplete: Bool { isComplete }
 }
 
 /// A card chosen in the quick index, with the deck as the reader saw it when choosing.
@@ -218,7 +265,8 @@ extension DeckModel {
 
     /// Whether the quick index may open the card at `index`: only a card «السابق» and «التالي» could reach from the
     /// current one. Earlier cards always; a later card only when every card from the current one up to it may be
-    /// left forward, so the adhkar lock holds until the period is marked complete manually and ruqyah stays free.
+    /// left forward, so the adhkar lock holds until the period is marked complete manually, and the ruqyah lock until
+    /// each segment is read.
     func canReach(_ index: Int) -> Bool {
         guard cards.indices.contains(index) else { return false }
         return index <= currentIndex || (currentIndex..<index).allSatisfy { canMoveForward(from: $0) }

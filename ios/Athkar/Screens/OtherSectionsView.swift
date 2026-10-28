@@ -89,7 +89,7 @@ struct OtherSectionsView: View {
     private func cell(_ section: OtherSection) -> some View {
         let deck = section.deck.map(app.deck)
         let available = section.isAvailable
-        let complete = deck?.isComplete == true
+        let complete = deck?.isDayComplete == true
         return Button {
             guard available else { return }
             app.ensureCurrentDay()
@@ -132,7 +132,7 @@ struct OtherSectionsView: View {
 
     /// The deck's summary, the next prayer, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
-        if let deck { return deck.summary.copy }
+        if let deck { return deck.listSummary.copy }
         if section == .qibla {
             guard let location = app.prayer.location else { return "حدّد موقعك" }
             let place = GeoCoordinates(latitude: location.latitude, longitude: location.longitude)

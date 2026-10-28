@@ -51,10 +51,28 @@ struct RuqyahSegmentContent: Decodable, Equatable, Sendable {
 
     var id: String
     var surah: String
+    var surahNumber: Int
     var range: String
     var `repeat`: Int
     var basmala: Bool
     var ayahs: [Ayah]
+
+    /// The sura the segment belongs to: its ID up to the first «-» (`qaf-1-8` → `qaf`).
+    var suraID: String { String(id.prefix { $0 != "-" }) }
+}
+
+/// One sura of the ruqyah, as the ruqyah PWA groups the pack (`RUQYAH_SUWAR`, `ruqyahContentJs` in
+/// `tools/content-lib.mjs`): its segments are consecutive in the pack and share their sura's name.
+struct RuqyahSura: Equatable, Sendable {
+    /// `qaf`, `jinn`, `takwir`, `kafirun`, `nas`: the deep-link and storage key.
+    var id: String
+    /// «سورة ق».
+    var surah: String
+    /// The segments' positions in the pack (``BundledContent/ruqyah`` and `packs.ruqyahSegments`).
+    var segments: Range<Int>
+
+    /// The chip's name, without «سورة » (`suraShortName`).
+    var shortName: String { surah.hasPrefix("سورة ") ? String(surah.dropFirst(5)) : surah }
 }
 
 /// The packs bundled with the app (NATIVE_APP_PLAN.md §5.4), read from the repository's `content/` at build time.
@@ -64,6 +82,19 @@ struct BundledContent: Sendable {
     var adhkar: SessionPeriods<[AdhkarItemContent]>
     var ruqyah: [RuqyahSegmentContent]
     var manifest: ContentManifest
+
+    /// The ruqyah's suras in pack order.
+    var ruqyahSuwar: [RuqyahSura] {
+        var suwar: [RuqyahSura] = []
+        for (index, segment) in ruqyah.enumerated() {
+            if let last = suwar.last, last.id == segment.suraID {
+                suwar[suwar.count - 1].segments = last.segments.lowerBound..<(index + 1)
+            } else {
+                suwar.append(RuqyahSura(id: segment.suraID, surah: segment.surah, segments: index..<(index + 1)))
+            }
+        }
+        return suwar
+    }
 
     static func load(from bundle: Bundle = .main) throws -> BundledContent {
         let manifest = try JSONDecoder().decode(ContentManifest.self, from: try resource("manifest.json", in: bundle))
@@ -117,6 +148,15 @@ struct BundledContent: Sendable {
         }
         for (index, segment) in packs.ruqyahSegments.enumerated() where ruqyah[safe: index]?.id != segment.id {
             throw BundledContentError.missingContent(id: segment.id)
+        }
+        // As `ruqyahContentJs`: every segment ID names its sura, whose segments are consecutive and share one name
+        // and number, so the per-sura decks cover the pack exactly once.
+        var suraIDs = Set<String>()
+        for sura in ruqyahSuwar {
+            let segments = ruqyah[sura.segments]
+            guard !sura.id.isEmpty, sura.id.count < segments.first!.id.count, suraIDs.insert(sura.id).inserted,
+                  segments.allSatisfy({ $0.surah == sura.surah && $0.surahNumber == segments.first!.surahNumber })
+            else { throw BundledContentError.invalidSura(id: segments.first!.id) }
         }
     }
 
@@ -189,6 +229,8 @@ enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedEr
     case duplicateID(id: String)
     /// An item's `noteIndex` is not the index of one of its details.
     case invalidNoteIndex(id: String, noteIndex: Int)
+    /// A ruqyah segment's ID names no sura, or its sura's segments are not consecutive or disagree on its name.
+    case invalidSura(id: String)
 
     var description: String {
         switch self {
@@ -199,6 +241,7 @@ enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedEr
             "\(file) has SHA-256 \(actual), not \(expected) as content/manifest.json gives"
         case let .duplicateID(id): "Bundled content has more than one item or segment with the ID \(id)"
         case let .invalidNoteIndex(id, noteIndex): "\(id) has noteIndex \(noteIndex), outside its details"
+        case let .invalidSura(id): "Ruqyah segment \(id) does not continue one sura of the pack"
         }
     }
 

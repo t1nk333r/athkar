@@ -17,10 +17,21 @@ Session rules that already have fixtures (`spec/sessions/fixtures/`) are the con
 | --- | --- | --- | --- |
 | `morning` | `content/adhkar.v1.json` → `periods.morning` (26 items) | Content order, or long-order (§3) | Shared adhkar session (both periods) |
 | `evening` | `content/adhkar.v1.json` → `periods.evening` (24 items) | Content order, or long-order (§3) | Shared adhkar session |
-| `ruqyah` | `content/ruqyah.v1.json` → `segments` (15 segments, 33 readings) | Pack order, never reordered | Own session |
+| `ruqyah` | `content/ruqyah.v1.json` → `segments` (15 segments, 33 readings) in five sections, one per sura | Pack order, never reordered | Own session |
 
-A **card's number** is its 1-based position in content order, in Arabic-Indic digits. Long-order never changes
-it. **Positions** («٢ من ٢٦») are 1-based positions in the deck as currently ordered.
+A **card's number** is its 1-based position in content order, in Arabic-Indic digits; a ruqyah segment's is its
+position in its sura. Long-order never changes it. **Positions** («٢ من ٢٦») are 1-based positions in the deck as
+currently ordered, the shown sura for ruqyah.
+
+**Ruqyah sections.** The ruqyah deck has one section per sura, as the ruqyah PWA's `RUQYAH_SUWAR` groups the pack:
+the segments whose IDs share a prefix (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`), consecutive in the pack. Chips
+above the summary pick the sura shown (`.sura-picker`, spoken «اختيار السورة»). Each chip shows the sura's name
+without «سورة », and «✓» once its segments are all complete today; it is spoken «<surah>», or «<surah>، مكتملة
+اليوم», and the shown sura's chip is selected. Each chip starts from its text's width and the chips share the rest of
+the row (`flex: 1 1 auto`), so «الكافرون ✓» is not cut where «ق» needs little. The cards, position, lock, summary row
+and sura dialog are the shown sura's; the today line, the أخرى row and its «✓» are the whole day's. The deck opens on
+ق (the PWA opens there unless a sura deep link names another; the native app has no deep links). Each sura keeps the
+card it showed last until the day changes or the ruqyah is reset.
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
 list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app opens
@@ -28,7 +39,8 @@ list of sections (رقية القرين, أذكار النوم, أذكار بع�
 once today is complete. The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض المواقيت».
 When a section is open, the header replaces its title with a back button labeled with the section's title. Tapping
 أخرى again returns to the list. The list has no summary, and its reset button is disabled. The أخرى tab never shows
-«✓»; each row shows completion. Each deck keeps its current card while another deck is open.
+«✓»; each row shows completion. Each deck keeps its current card while another deck is open. The رقية القرين row
+shows the whole day's «N من ٣٣ تكرارًا».
 
 ### Adhkar item fields
 
@@ -90,7 +102,9 @@ Layout:
 - **Complete segment.** `count >= repeat`.
 - **Display.** When `repeat == 1`: «اضغط بعد القراءة», which becomes «تمت». Otherwise «count/repeat».
 - **Requirement line.** «مرة واحدة» (repeat 1), «مرتان» (repeat 2), «N مرات» (otherwise).
-- **Progress.** The sum of counts, out of the sum of `repeat` (33).
+- **Progress.** The sum of counts, out of the sum of `repeat`: the shown sura's in the summary row, the whole
+  day's (33) in the today line and the أخرى row.
+- **Complete sura.** Every segment of the sura is complete (`suraIsComplete`).
 
 ## 3. Long-order (adhkar only)
 
@@ -118,25 +132,24 @@ The setting is `long_order` (`last` | `original`; default `original`).
 - **Opening card.**
   - Adhkar: `firstIncompleteIndex`. That is the first non-review item below its target. If there is none, it is
     the last index; for an empty deck it is 0. Manual completion does not change it.
-  - Ruqyah: the first incomplete segment, or 0 when all are complete.
+  - Ruqyah: the shown sura's last card since the deck opened, otherwise its first incomplete segment, or 0 when
+    the sura is complete (`renderSuraDeck`). A day rollover forgets the last cards and keeps the shown sura. A
+    reset reopens ق on its first segment (`showDayCleared`).
 - **Back** («السابق», and a swipe back) is enabled when `index > 0`.
 - **Forward** («التالي», and a swipe forward) is enabled when `index < count − 1`, and additionally:
   - Adhkar: the current item is complete, or is a review item, or the period is manually complete (the lock).
-  - Ruqyah: no other condition; never locked.
-  - The ruqyah PWA differs here. Since it gained one tab per sura (ruqyah-al-qareen 7973628), each sura is its own
-    deck, and forward is also locked until the current segment's repeats are complete, as in the adhkar PWA's «سور»
-    tab. The sura chips still switch suras at any time, and the PWA opens on ق at its first incomplete segment
-    unless a sura deep link (`#qaf`, `#jinn`, `#takwir`, `#kafirun`, `#nas`) names another. The native app keeps
-    the single unlocked deck described above until it gets sura tabs.
-- **Position.** Shown as «N من M». Spoken as «الذكر N من M» for adhkar and «المقطع N من M» for ruqyah, and
-  announced after every navigation.
+  - Ruqyah: the current segment's repeats are complete (`updateDeckNavigation`, as in the adhkar PWA's «سور» tab).
+    The lock holds within the shown sura; the chips switch suras at any time.
+- **Position.** Shown as «N من M». Spoken as «الذكر N من M» for adhkar and «المقطع N من M» for ruqyah, where M
+  counts the shown sura's segments, and announced after every navigation. The card list is spoken
+  «<cards>، <position>»: «بطاقات <section>» for adhkar, «مقاطع <surah>» for ruqyah.
 - **Native quick index.** The position is a button at least 44 pt tall. It opens an RTL sheet titled
   «فهرس الورد» for adhkar or «فهرس الرقية» for ruqyah, with «إغلاق» and every card in current deck order.
   Each row shows its original number, existing opening text or surah/range, counter status and current-row marker.
   Review rows show their warning and no counter. Quran text uses the same rendering as the card.
   - Earlier and current rows are selectable. A later row is selectable only when every intervening forward
     step satisfies the existing lock. Keep unavailable rows visible and disabled. Manual completion unlocks
-    adhkar; native ruqyah remains freely navigable.
+    adhkar. A ruqyah segment opens once every segment before it in its sura is read.
   - Opening the index cancels pending auto-advance. Closing it does not reschedule advance. Selection never
     changes counts, targets or completion. Dismiss first, resolve the selected card ID against the current deck,
     recheck day rollover and reachability, then navigate and announce. If rollover changed the deck or the chosen
@@ -161,14 +174,23 @@ A tap does nothing when:
 Otherwise:
 
 1. `count += 1`, and the new count is saved.
-2. If the card just reached a target greater than one, play the completion haptic: 45 ms, only when `haptics`
-   is true. This applies to adhkar and native ruqyah counters. Single-count cards and intermediate taps stay quiet.
+2. Play the completion haptic, 45 ms, only when `haptics` is true:
+   - Adhkar: when the card just reached a target greater than one. Single-count cards stay quiet.
+   - Ruqyah: when the segment just completed, whatever its `repeat` (`if (completesSegment) triggerHaptic`).
+   - Intermediate taps stay quiet.
 3. **Adhkar:** run `syncCompletionState(period)`. If it returns `newlyCompleted`, open the completion dialog and
    do not auto-advance. Otherwise, if the card just completed, auto-advance.
-4. **Ruqyah:**
-   - If every segment is now complete, record today as complete (once; the first completion time is kept) and
-     open the completion dialog. This also happens when today was already recorded.
+4. **Ruqyah** (`applyOp`, `showReading`):
+   - If the segment just completed its sura, record the sura complete today (once; the first time is kept), in
+     the same transaction as the count.
+   - If every segment is now complete, also record today as complete (once; the first completion time is kept) and
+     open the day's completion dialog. This also happens when today was already recorded.
+   - Otherwise, if the sura just completed, open its completion dialog (§7).
    - Otherwise, if the segment just completed, auto-advance.
+   - The PWA opens the day's dialog only when this reading records the day. When today was already recorded (a
+     new reading after «بدء رقية جديدة», or after a restart), it opens the sura dialog instead, whose
+     «الانتقال إلى …» then finds no incomplete sura and fails. The native app opens the day's dialog whenever
+     every segment is complete.
 5. Announce the card's counter label (§9).
 
 **Auto-advance** (`scheduleAdvance`). After 320 ms (20 ms with Reduce Motion), move to `index + 1`, but only if:
@@ -188,8 +210,8 @@ Any navigation cancels a pending advance.
 4. If newly completed, open the dialog. Else, if long-order is on, rebuild the order (§3). Else, if the item went
    from incomplete to complete, auto-advance.
 
-**Card reset.** Enabled when `count > 0`. It sets `count = 0` and then runs `syncCompletionState` (adhkar) or saves
-the segment (ruqyah).
+**Card reset.** Enabled when `count > 0`. It sets `count = 0` and then runs `syncCompletionState` (adhkar), or
+saves the segment and clears its sura's completion today (ruqyah), in one transaction.
 
 - Adhkar asks first only when `target >= 50`:
   - Title: `card.reset.confirm.adhkar.title` («إعادة عداد الذكر N؟»).
@@ -266,10 +288,17 @@ The tab (adhkar) or the أخرى row (ruqyah) shows «✓» and is spoken «<sec
 
 ### Ruqyah
 
+- A sura is complete once its segments are all complete. It is recorded in `ruqyah_sura_days` once a day, and its
+  segment's card reset clears the record.
+- The sura dialog (`openSuraCompletionDialog`) shows `completion.ruqyah.sura.title`,
+  `completion.ruqyah.sura.message` and the sura's completion time, «وقت الإكمال: h:mm», with the buttons
+  `completion.ruqyah.sura.done` and `completion.ruqyah.sura.switch`. The switch opens the next sura in pack order
+  that is still incomplete today, wrapping round. A sura complete by its counters with no record of its own shows
+  the day's record time, or no time without one (`backfillSuwarCompletions`); nothing is written.
 - The day is complete once every segment is complete. It is recorded in `ruqyah_days` once.
-- The dialog shows `completion.ruqyah.title` and `completion.ruqyah.message`, with the buttons
-  `completion.ruqyah.close` and `completion.ruqyah.restart`. «بدء رقية جديدة» is a day reset (§8); today stays
-  recorded.
+- The day dialog shows `completion.ruqyah.title`, `completion.ruqyah.message` and today's completion time, with
+  the buttons `completion.ruqyah.close` and `completion.ruqyah.restart`. «بدء رقية جديدة» is a day reset (§8);
+  today stays recorded.
 - Its أخرى row shows «✓» once today is recorded.
 
 ## 8. Scoped reset
@@ -281,21 +310,22 @@ It is enabled when:
 
 - **Adhkar** (`hasResettableState`): any non-review count > 0 in either period, or any manual completion, or any
   earlier completed day.
-- **Ruqyah:** today's readings > 0, or any recorded day.
+- **Ruqyah:** today's readings > 0, or any recorded day: a completed day, or an earlier day with a completed sura.
 
 | Choice | Adhkar | Ruqyah | Asks first |
 | --- | --- | --- | --- |
-| «تقدم اليوم» | Today's counts, `completedAt` and manual flags cleared; chosen targets kept. | Today's counts set to 0; today's record kept. | No |
-| «هذا الأسبوع» | Day reset, plus every adhkar record dated in the last 7 local dates (today included) deleted. | Day reset, plus recorded days in the last 7 local dates (today included) deleted. | Yes |
-| «كل شيء» | Day reset, plus every adhkar record deleted. | Day reset, plus every recorded day deleted. | Yes |
+| «تقدم اليوم» | Today's counts, `completedAt` and manual flags cleared; chosen targets kept. | Today's counts set to 0 and today's sura completions deleted; today's record kept. | No |
+| «هذا الأسبوع» | Day reset, plus every adhkar record dated in the last 7 local dates (today included) deleted. | Day reset, plus recorded days and sura completions in the last 7 local dates (today included) deleted. | Yes |
+| «كل شيء» | Day reset, plus every adhkar record deleted. | Day reset, plus every recorded day and sura completion deleted. | Yes |
 
-After any reset, every deck of the pillar goes back to card 1.
+After any reset, every deck of the pillar goes back to card 1; the ruqyah deck reopens ق.
 
 The confirmations use `reset.confirm.week.*` and `reset.confirm.everything.*`, with the recorded-day count `N` from
 `dayCountLabel`:
 
 - `dayCountLabel(N)` is: 1 → «يوم واحد», 2 → «يومين», 3–10 → «N أيام», 11 and more → «N يومًا».
-- Adhkar counts earlier days with a completion. Ruqyah counts recorded days, today included.
+- Adhkar counts earlier days with a completion. Ruqyah counts completed days, today included, together with
+  earlier days with a completed sura (`historyDates`).
 
 The storage for all of this is in `spec/schema.md`.
 
@@ -309,14 +339,17 @@ The storage for all of this is in `spec/schema.md`.
   - «اكتملت <section> خارج التطبيق» when manually complete.
   - The progress bar is full when the period is complete.
 - Ruqyah:
-  - «N من ٣٣ تكرارًا».
-  - A second line: «رقية اليوم لم تكتمل بعد.», or «تمت رقية اليوم في h:mm.» once today is recorded.
+  - The chips (§1), then the shown sura: «N من M تكرارًا», or «اكتملت <surah> اليوم» once it is complete. The
+    progress bar is spoken «<surah>: N من M تكرارًا».
+  - A second line for the whole day (`updateTodayStatus`): «رقية اليوم: N من ٣٣ تكرارًا», or «تمت رقية اليوم في
+    h:mm» once today is recorded, in the completed colour.
 
 **Day rollover.** It runs at local midnight, when the app returns to the foreground, when the clock or time zone
 changes, and before each tap, card reset (including a confirmed one), and target change. When the check finds a
 new date, ignore the tap, reset, or target change because it belongs to the previous day's card.
 
-- When the local date changes, load its rows and open each deck on its first unread card.
+- When the local date changes, load its rows and open each deck on its first unread card. The ruqyah deck keeps
+  the shown sura.
 - Nothing is deleted. The previous day is already history.
 
 **Labels to speak.** These are the PWAs' live-region strings; announce them after the change.
@@ -327,8 +360,8 @@ new date, ignore the tap, reset, or target change because it belongs to the prev
 - Adhkar tap target:
   - Counted items: «زيادة عداد الذكر N. <label>».
   - Other items: «تحديد كمقروء، الذكر N. <label>», or «اكتمل، الذكر N. <label>» once read.
-- Ruqyah counter (`segmentLabel`): «المقطع N: <surah> <range>. <status>». The status is «لم تُقرأ بعد» or «تمت
-  القراءة» when repeat is 1, and «تم X من Y» otherwise.
+- Ruqyah counter (`segmentLabel`): «المقطع N: <surah> <range>. <status>», N within the sura. The status is
+  «لم تُقرأ بعد» or «تمت القراءة» when repeat is 1, and «تم X من Y» otherwise.
 - Ruqyah tap target: «تسجيل قراءة المقطع N. <label>», or «اكتمل. <label>» once complete.
 - Reset buttons: «إعادة عداد الذكر N» / «إعادة عداد المقطع N».
 - Target picker: «اختيار عدد تكرار الذكر N».
@@ -402,6 +435,7 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `deck.index.lock` | يُتاح بعد إكمال {noun} {n} |
 | `deck.hint.adhkar` | اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال. |
 | `deck.hint.ruqyah` | اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع. |
+| `deck.sections.ruqyah` / `deck.cards.ruqyah` | اختيار السورة / مقاطع {surah} |
 | `card.single.pending` / `card.single.done` / `card.ruqyah.single.done` | اضغط بعد القراءة / تمت القراءة / تمت |
 | `card.requirement.once` / `card.requirement.twice` / `card.requirement.times` | مرة واحدة / مرتان / {n} مرات |
 | `card.target` | الهدف |
@@ -412,11 +446,15 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `card.reset.confirm.ruqyah.title` / `.message` | إعادة العداد؟ / سيعود عداد {surah} {range} إلى الصفر. |
 | `deck.more` / `deck.more.hint` | المزيد / يعرض بقية البطاقة |
 | `summary.adhkar.progress` / `.done` / `.manual` | {x} من {y} ذكرًا / اكتملت {section} اليوم / اكتملت {section} خارج التطبيق |
-| `summary.ruqyah.progress` / `.pending` / `.done` | {x} من {y} تكرارًا / رقية اليوم لم تكتمل بعد. / تمت رقية اليوم في {time}. |
+| `summary.ruqyah.progress` / `.done` / `.label` | {x} من {y} تكرارًا / اكتملت {surah} اليوم / {surah}: {x} من {y} تكرارًا |
+| `summary.ruqyah.today.pending` / `.done` | رقية اليوم: {x} من {y} تكرارًا / تمت رقية اليوم في {time} |
+| `summary.ruqyah.list.label` | تقدم رقية اليوم: {x} من {y} تكرارًا |
 | `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / وقت الإكمال: {time} |
 | `completion.adhkar.done` / `.switch` | تم / الانتقال إلى {otherSection} |
 | `completion.ruqyah.title` / `.message` | تمت الرقية بحمد الله / اكتملت جميع المقاطع بتكراراتها. |
 | `completion.ruqyah.close` / `.restart` | إغلاق / بدء رقية جديدة |
+| `completion.ruqyah.sura.title` / `.message` | اكتملت قراءة {surah} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. |
+| `completion.ruqyah.sura.done` / `.switch` | تم / الانتقال إلى {nextSurah} |
 | `reset.title` / `reset.copy` | ما الذي تريد إعادته؟ / اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز. |
 | `reset.day` / `.detail` | تقدم اليوم / إعادة عدادات اليوم فقط مع بقاء السجل كما هو. |
 | `reset.week` / `.detail` | هذا الأسبوع / إعادة عدادات اليوم وحذف سجل آخر سبعة أيام. |
@@ -433,6 +471,6 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |

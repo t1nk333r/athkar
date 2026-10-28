@@ -52,7 +52,8 @@ struct SettingsView: View {
                         if enabled { Haptics.shared.playCompletion() }
                         announce(enabled ? "تم تشغيل الاهتزاز" : "تم إيقاف الاهتزاز")
                     })) {
-                        toggleCopy("الاهتزاز عند إكمال العداد", "اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة.")
+                        toggleCopy("الاهتزاز عند إكمال العداد",
+                                   "اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية.")
                     }
                     .accessibilityIdentifier("settings.haptics")
                 }

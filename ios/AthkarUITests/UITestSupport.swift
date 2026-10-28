@@ -157,6 +157,19 @@ class DeckTestCase: XCTestCase {
         if row.waitForExistence(timeout: 1) { row.tap() }
     }
 
+    /// A ruqyah sura's chip above the summary (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`).
+    func sectionChip(_ id: String) -> XCUIElement {
+        app.buttons["deck.section.\(id)"]
+    }
+
+    /// Shows a ruqyah sura through its chip and waits for the chip to be selected.
+    func selectSection(_ id: String, file: StaticString = #filePath, line: UInt = #line) {
+        let chip = sectionChip(id)
+        XCTAssertTrue(chip.waitForExistence(timeout: 3), "chip \(id)", file: file, line: line)
+        chip.tap()
+        XCTAssertTrue(wait { chip.isSelected }, "chip \(id) not selected", file: file, line: line)
+    }
+
     /// Settings → manual completion of the morning, so the deck can be browsed freely.
     func markMorningCompleteManually() {
         openSettings()

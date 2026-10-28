@@ -66,7 +66,9 @@ final class AdhkarPersistenceTests: XCTestCase {
         XCTAssertTrue(reports.messages.first?.contains(Faults.marker) == true)
 
         try faults.allowWrites(to: "adhkar_days")
-        XCTAssertEqual(deck.tap(cardAt: index), DeckChange(completedCard: true, completedDeck: true, advance: false))
+        XCTAssertEqual(deck.tap(cardAt: index),
+                       DeckChange(completedCard: true, completedDeck: true, advance: false, haptic: true),
+                       "morning-02 is read three times, so completing it plays the haptic")
         XCTAssertTrue(deck.isComplete)
         let saved = try support.database.adhkar.session(on: support.today, period: .morning)
         XCTAssertEqual(saved.progress["morning-02"], 3)
@@ -152,7 +154,9 @@ final class AdhkarPersistenceTests: XCTestCase {
         let session = try makeSession(support, reports)
         let deck = AdhkarDeckModel(period: .morning, session: session)
         let index = try position(of: "morning-02", in: session)
-        XCTAssertEqual(deck.tap(cardAt: index), DeckChange(completedCard: true, completedDeck: true, advance: false))
+        XCTAssertEqual(deck.tap(cardAt: index),
+                       DeckChange(completedCard: true, completedDeck: true, advance: false, haptic: true),
+                       "morning-02 is read three times, so completing it plays the haptic")
         let committed = Snapshot(session)
         let stored = try records(support.database, [support.today])
 
