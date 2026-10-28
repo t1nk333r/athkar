@@ -57,8 +57,9 @@ public struct TasbihRepository: Sendable {
         }
     }
 
-    /// Every phrase key with a count on any date, in code-unit order. An array, not a set: Swift equates canonically
-    /// equivalent strings, and two keys that differ only in the order of their tashkeel are two rows.
+    /// Every phrase key with a count on any date, in SQLite's byte order (UTF-8, so code points). An array, not a
+    /// set: Swift equates canonically equivalent strings, and two keys that differ only in the order of their tashkeel
+    /// are two rows.
     public func phraseKeys() throws -> [String] {
         try writer.read { db in
             try String.fetchAll(db, sql: "SELECT DISTINCT phrase_key FROM tasbih_counts ORDER BY phrase_key")

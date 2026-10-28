@@ -6,8 +6,14 @@ struct TasbihPhraseSheet: View {
     let model: TasbihModel
     let apply: (TasbihModel.Change) -> Void
 
+    /// Where VoiceOver goes: by position, since Swift equates canonically equivalent phrases.
+    private enum Focus: Hashable {
+        case preset(Int), custom(Int), input
+    }
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
+    @AccessibilityFocusState private var focus: Focus?
     @State private var text = ""
 
     var body: some View {
@@ -15,8 +21,9 @@ struct TasbihPhraseSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     section("أذكار مقترحة") {
-                        ForEach(model.presetOptions) { option in
+                        ForEach(Array(model.presetOptions.enumerated()), id: \.element.id) { index, option in
                             optionButton(option, identifier: "tasbih.preset.\(option.key)")
+                                .accessibilityFocused($focus, equals: .preset(index))
                         }
                     }
                     if !model.customOptions.isEmpty {
@@ -24,7 +31,9 @@ struct TasbihPhraseSheet: View {
                             ForEach(Array(model.customOptions.enumerated()), id: \.element.id) { index, option in
                                 HStack(spacing: 8) {
                                     optionButton(option, identifier: "tasbih.custom.\(index)")
-                                    deleteButton(model.custom[index], identifier: "tasbih.custom.\(index).delete")
+                                        .accessibilityFocused($focus, equals: .custom(index))
+                                    deleteButton(model.custom[index], index: index,
+                                                 identifier: "tasbih.custom.\(index).delete")
                                 }
                             }
                         }
@@ -41,6 +50,7 @@ struct TasbihPhraseSheet: View {
                 .padding()
             }
             .background(palette.background)
+            .onAppear(perform: focusSelected)
             .navigationTitle("اختيار الذكر")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -97,10 +107,14 @@ struct TasbihPhraseSheet: View {
         .accessibilityIdentifier(identifier)
     }
 
-    /// `deleteTasbihPhrase`: the phrase leaves the list; its counts stay.
-    private func deleteButton(_ phrase: String, identifier: String) -> some View {
+    /// `deleteTasbihPhrase`: the phrase leaves the list; its counts stay. VoiceOver moves to the saved phrase now
+    /// in its place, or the one before it, or the typed phrase once none is left.
+    private func deleteButton(_ phrase: String, index: Int, identifier: String) -> some View {
         Button {
-            if let change = model.deletePhrase(phrase) { apply(change) }
+            guard let change = model.deletePhrase(phrase) else { return }
+            apply(change)
+            let left = model.customOptions.count
+            focus = left > 0 ? .custom(min(index, left - 1)) : .input
         } label: {
             Text("×")
                 .font(.title3.weight(.bold))
@@ -130,6 +144,7 @@ struct TasbihPhraseSheet: View {
                     .accessibilityLabel("اكتب الذكر")
                     .accessibilityHint("تُحفظ العبارة على هذا الجهاز لتختارها لاحقًا.")
                     .accessibilityIdentifier("tasbih.custom.input")
+                    .accessibilityFocused($focus, equals: .input)
                     // `maxlength="60"`, in UTF-16 code units.
                     .onChange(of: text) { _, value in
                         var cut = value
@@ -154,9 +169,22 @@ struct TasbihPhraseSheet: View {
             .foregroundStyle(palette.textSecondary)
     }
 
+    /// `openTasbihPhraseSheet`: VoiceOver starts on the phrase counted.
+    private func focusSelected() {
+        if let index = model.presetOptions.firstIndex(where: \.isSelected) {
+            focus = .preset(index)
+        } else if let index = model.customOptions.firstIndex(where: \.isSelected) {
+            focus = .custom(index)
+        }
+    }
+
     /// `addTasbihPhrase`: a phrase already listed is chosen instead; a new one is saved and chosen.
     private func add() {
-        guard let change = model.addPhrase(text) else { return }
+        guard let change = model.addPhrase(text) else {
+            // With eight phrases saved the PWA empties the field too; the limit note replaces it.
+            if !model.canAddPhrase { text = "" }
+            return
+        }
         text = ""
         dismiss()
         apply(change)
@@ -171,6 +199,8 @@ struct TasbihTargetSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @FocusState private var inputFocused: Bool
+    /// The option VoiceOver is on, by identifier.
+    @AccessibilityFocusState private var focusedOption: String?
     @State private var showsInput: Bool
     @State private var input: String
     @State private var showsError = false
@@ -208,6 +238,7 @@ struct TasbihTargetSheet: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
+            .onAppear(perform: focusPressed)
             Button("إلغاء") { dismiss() }
                 .buttonStyle(DialogButtonStyle(palette: palette))
                 .accessibilityIdentifier("tasbih.target.cancel")
@@ -235,6 +266,17 @@ struct TasbihTargetSheet: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(pressed ? [.isSelected] : [])
         .accessibilityIdentifier(identifier)
+        .accessibilityFocused($focusedOption, equals: identifier)
+    }
+
+    /// `openTasbihTargetDialog`: VoiceOver starts on the pressed option.
+    private func focusPressed() {
+        focusedOption = switch model.target {
+        case nil: "tasbih.target.none"
+        case 33: "tasbih.target.33"
+        case 100: "tasbih.target.100"
+        default: "tasbih.target.custom"
+        }
     }
 
     private var customForm: some View {

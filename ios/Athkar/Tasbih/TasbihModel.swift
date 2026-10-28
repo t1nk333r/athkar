@@ -326,10 +326,16 @@ final class TasbihModel: ResettableSection {
     /// `tasbihHasResettableState`.
     var canReset: Bool { !counts.isEmpty || hasHistory }
 
+    /// «تقدم اليوم» asks while a phrase is counted today: those counts cannot be rebuilt (the PWA's `resetDayButton`).
     func confirmation(for scope: ResetScope) -> DeckConfirmation? {
         let removal: HistoryRemoval
         switch scope {
-        case .day: return nil
+        case .day:
+            guard dayTotal > 0 else { return nil }
+            return DeckConfirmation(
+                title: "إعادة تقدم اليوم؟",
+                message: "ستُعاد عدادات المسبحة اليوم (\(ArabicFormat.number(dayTotal)))، مع بقاء السجل كما هو."
+                    + " لا يمكن التراجع.")
         case .week: removal = .week(endingAt: Date(), in: .current)
         case .everything: removal = .all
         }

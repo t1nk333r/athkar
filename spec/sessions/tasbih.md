@@ -55,7 +55,8 @@ what the PWA returns, and `TasbihTextTests` holds the native port to it.
 - A row shows today's count when it is not zero and is spoken «<short>، اليوم N»; the phrase counted is selected.
 - «عبارة جديدة»: «اكتب الذكر» (`tasbih.custom.input`, at most 60 UTF-16 code units), «إضافة»
   (`tasbih.custom.add`, disabled until the text cleans to something) and «تُحفظ العبارة على هذا الجهاز لتختارها
-  لاحقًا.». With eight saved, «يمكن حفظ ٨ عبارات. احذف واحدة لإضافة غيرها.» (`tasbih.custom.limit`) replaces it.
+  لاحقًا.». With eight saved, «يمكن حفظ ٨ عبارات. احذف واحدة لإضافة غيرها.» (`tasbih.custom.limit`) replaces it,
+  and the typed text is cleared, as `addTasbihPhrase` clears it at the limit.
 - **Choosing** (`selectTasbihPhrase`) stores the phrase and announces «الذكر: <short>، العدد N». Choosing or adding
   closes the sheet; deleting keeps it open.
 - **Adding** (`addTasbihPhrase`) saves the cleaned spelling (`cleanTasbihPhrase`). A phrase that names a preset or a
@@ -89,12 +90,15 @@ when a phrase is counted today or an earlier day has a count (`tasbihHasResettab
 
 | Choice | «مسبحة» | Asks first |
 | --- | --- | --- |
-| «تقدم اليوم» | No phrase is counted today (`resetTasbihProgress`). | No |
+| «تقدم اليوم» | No phrase is counted today (`resetTasbihProgress`). | While a phrase is counted today |
 | «هذا الأسبوع» | The day reset, plus the counts dated in the last 7 local dates (`deleteTasbihHistory`). | Yes |
 | «كل شيء» | The day reset, plus every count. | Yes |
 
-The confirmations count the earlier days with a count (`tasbihState.history`). The phrase counted, the target and
-the saved phrases are preferences: no reset changes them.
+Today's counts cannot be rebuilt, so «تقدم اليوم» asks while a phrase is counted today (`resetDayButton`):
+«إعادة تقدم اليوم؟» / «ستُعاد عدادات المسبحة اليوم (N)، مع بقاء السجل كما هو. لا يمكن التراجع.», with N the day's
+total; with nothing counted today it resets at once. The week and everything confirmations count the earlier days
+with a count (`tasbihState.history`). The phrase counted, the target and the saved phrases are preferences: no reset
+changes them.
 
 ## 7. Native differences
 
@@ -110,7 +114,11 @@ the saved phrases are preferences: no reset changes them.
   whose tashkeel is only ordered differently, which the PWA keeps apart.
 - **The 60-unit cut.** Where it would split a surrogate pair, the PWA keeps the pair's first half alone; native
   drops it, so no saved phrase holds a lone surrogate.
-- **The header reset** resets «مسبحة» alone; the PWA's clears every store at once.
+- **The header reset** resets «مسبحة» alone; the PWA's clears every store at once. Its «تقدم اليوم» question
+  therefore names the counter alone: the PWA asks «ستُعاد عدادات اليوم، ومنها المسبحة (N)، …».
+- **VoiceOver focus** follows the PWA's: «اختيار الذكر» opens on the phrase counted (`openTasbihPhraseSheet`) and
+  «الهدف» on the pressed option (`openTasbihTargetDialog`); after a delete it moves to the saved phrase now in that
+  place, or the one before it, or «اكتب الذكر» once none is left (`deleteTasbihPhrase`).
 
 ## 8. Tests
 

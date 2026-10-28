@@ -203,7 +203,7 @@ enum ResetScope: CaseIterable, Identifiable {
 protocol ResettableSection: AnyObject {
     /// Whether the scoped reset has anything to reset (`hasResettableState`).
     var canReset: Bool { get }
-    /// The question to ask before a scoped reset, or `nil` to reset at once.
+    /// The question to ask before a scoped reset, or `nil` to reset at once. Only «مسبحة» asks before «تقدم اليوم».
     func confirmation(for scope: ResetScope) -> DeckConfirmation?
     /// Whether the reset was stored: `false` when it was refused and changed nothing, so it is not announced.
     @discardableResult

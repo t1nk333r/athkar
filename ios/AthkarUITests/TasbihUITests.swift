@@ -99,7 +99,7 @@ final class TasbihUITests: DeckTestCase {
     }
 
     /// A target outside ١–٩٩٩٩ is refused in place; «بلا هدف», the counts and the phrase survive a relaunch; the
-    /// header's «تقدم اليوم» clears today's counts and keeps the target.
+    /// header's «تقدم اليوم» asks first, then clears today's counts and keeps the target.
     func testTargetSurvivesRelaunchAndTheDayResetKeepsIt() {
         launch()
         selectTab("tasbih")
@@ -139,6 +139,17 @@ final class TasbihUITests: DeckTestCase {
 
         headerReset.tap()
         app.buttons["reset.day"].tap()
+        let alert = app.alerts["إعادة تقدم اليوم؟"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 3), "today's counts cannot be rebuilt: it asks first")
+        XCTAssertTrue(alert.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "(٢)")).count > 0)
+        alert.buttons["إلغاء"].tap()
+        XCTAssertTrue(wait { !alert.exists })
+        expectLabel(total, "مجموع المسبحة اليوم: ٢")
+
+        headerReset.tap()
+        app.buttons["reset.day"].tap()
+        XCTAssertTrue(alert.waitForExistence(timeout: 3))
+        alert.buttons["إعادة"].tap()
         expectLabel(total, "مجموع المسبحة اليوم: ٠")
         expectLabel(targetChip, "تغيير الهدف، الحالي: بلا هدف")
         XCTAssertTrue(wait { !self.resetEnabled() }, "nothing left to reset")

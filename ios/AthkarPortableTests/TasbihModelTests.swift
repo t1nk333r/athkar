@@ -370,7 +370,8 @@ final class TasbihModelTests: XCTestCase {
     }
 
     /// `resetTasbihProgress` and `deleteTasbihHistory`: no phrase is counted today, and the history the scope covers
-    /// goes; the phrase, target and saved phrases stay. The confirmations count the earlier days with a count.
+    /// goes; the phrase, target and saved phrases stay. The confirmations count the earlier days with a count;
+    /// «تقدم اليوم» asks only while a phrase is counted today (`resetDayButton`).
     @MainActor
     func testScopedResetsKeepThePreferences() throws {
         let support = try PortableTestSupport()
@@ -389,8 +390,12 @@ final class TasbihModelTests: XCTestCase {
         XCTAssertEqual(model.confirmation(for: .everything)?.message,
                        "ستُعاد العدادات وسيُحذف السجل كاملًا (يوم واحد). لا يمكن التراجع.",
                        "today's counts are today's progress")
+        XCTAssertEqual(model.confirmation(for: .day), DeckConfirmation(
+            title: "إعادة تقدم اليوم؟",
+            message: "ستُعاد عدادات المسبحة اليوم (٣)، مع بقاء السجل كما هو. لا يمكن التراجع."))
 
         XCTAssertTrue(model.reset(.day))
+        XCTAssertNil(model.confirmation(for: .day), "nothing counted today")
         XCTAssertEqual(model.counts, [])
         XCTAssertEqual(model.dayTotal, 0)
         XCTAssertTrue(model.hasHistory)

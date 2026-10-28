@@ -358,7 +358,8 @@ The tab (adhkar) or the أخرى row (ruqyah, «سور») shows «✓» and is s
 
 The header button «↻ إعادة», spoken «خيارات الإعادة», opens a picker for the pillar on screen. Both adhkar periods
 reset together; ruqyah, «سور» and «مسبحة» each reset alone (the PWA's header reset clears every store at once). The
-button first runs the day rollover. «مسبحة» resets as [`tasbih.md`](tasbih.md) §6 describes.
+button first runs the day rollover. «مسبحة» resets as [`tasbih.md`](tasbih.md) §6 describes: unlike the decks, its
+«تقدم اليوم» asks first while a phrase is counted today.
 
 It is enabled when:
 

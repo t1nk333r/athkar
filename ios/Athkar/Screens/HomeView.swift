@@ -80,7 +80,8 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showsResetScope, onDismiss: confirmChosenScope) {
             ResetScopeSheet { scope in
-                if scope == .day {
+                // A scope with a question asks once this sheet is gone; a deck's «تقدم اليوم» resets at once.
+                if scope == .day, app.resettable?.confirmation(for: .day) == nil {
                     if app.resettable?.reset(.day) == true {
                         AccessibilityNotification.Announcement(scope.announcement).post()
                     }
@@ -361,6 +362,9 @@ struct HomeView: View {
         chosenScope = nil
         if let confirmation = app.resettable?.confirmation(for: scope) {
             scopeConfirmation = ScopeConfirmation(scope: scope, confirmation: confirmation)
+        } else if app.resettable?.reset(scope) == true {
+            // Nothing left to ask about (a new day rolled while the sheet was open): reset as chosen.
+            AccessibilityNotification.Announcement(scope.announcement).post()
         }
     }
 
