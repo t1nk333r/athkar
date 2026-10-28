@@ -21,18 +21,23 @@ untracked files included. The base branch is --base REF, else $ATHKAR_TEST_BASE,
 
 How a change reaches tests:
   - Swift: a file depends on another when it names something the other declares at the top level,
-    or uses a member the other's extensions add: it names the member and the extended type, or a type
-    conforming to it. A member added to a type the repository doesn't declare (Array, View) counts
-    where a file uses it as `.member`. A test runs when it depends on a changed file, directly or
-    through other files compiled into the same target. A name a changed file no longer declares
-    counts too, so a removal reaches the files still using it. AthkarCore can't see the app, and
-    production code can't see tests, so neither depends on them.
+    or uses a member the other's extensions add: as `.member`, or naming both the member and the
+    extended type (or a type conforming to it). A labelled init or subscript counts wherever its
+    label appears, and a conformance, an unlabelled init, subscript or operator wherever the type is
+    named; on a type the repository doesn't declare (Array, View), the last three reach every file.
+    A test runs when it depends on a changed file, directly or through other files compiled into the
+    same target. A name a changed file no longer declares counts too, so a removal reaches the files
+    still using it. AthkarCore can't see the app, and production code can't see tests, so neither
+    depends on them. A test suite or class counts every file that declares or extends it.
   - A file a Swift file reads counts as a change to that Swift file: a repository path or directory
     in one of its string literals, the bare name of a repository file, or its READS entry.
   - UI tests drive the built app, which no code links them to: UI_BLACK_BOX names the app files and
-    resources each one checks. App files reached through the app's own code count too, but the walk
-    stops at the composition roots in UI_ROOTS, which use nearly every app file: a root selects UI
-    tests only when it changes itself, or uses a name the change removed.
+    resources each one checks, and a UI test also checks every app file that spells an accessibility
+    identifier it uses (`deck.card.counter`, or `tab.` for "tab.\\(id)"), in its own file or in a
+    UITestSupport.swift helper it calls. App files reached through the app's own code count too, but
+    the walk stops at the composition roots in UI_ROOTS, which use nearly every app file: a root
+    selects UI tests only when it changes itself, or uses a name the change removed. An app resource
+    no UI_BLACK_BOX entry names runs every UI test.
   - The Node checks run when one of their inputs, or a script they load, changes.
   - SHARED build and toolchain inputs, a file no rule knows and any selector error run every lane
     in full. Documentation (NO_TESTS) runs nothing, and nothing tests the UNTESTED files.
@@ -150,6 +155,9 @@ LITERAL = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
 PLATFORM_IF = re.compile(r"^\s*#(?:if|elseif)\b.*\b(?:os|canImport|targetEnvironment|arch)\(", re.M)
 PRIVATE = re.compile(r"\b(?:private|fileprivate)\s")
 XCTEST_METHOD = re.compile(r"\bfunc\s+test\w*\s*\(")
+# An accessibility identifier's spelling: `deck.card.counter`, or the fixed start of "tab.\(id)".
+IDENTIFIER = re.compile(r"[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9_-]+)+\Z")
+IDENTIFIER_START = re.compile(r"[a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9_-]+)*\.?\Z")
 
 
 class SelectorError(Exception):
@@ -265,7 +273,7 @@ class SwiftFile:
         self.refs = set(IDENT.findall(code))
         self.dotted = set(DOTTED.findall(code))  # names used as `.name`: members, cases, key paths
         self.names = set()       # top-level declarations other files can use
-        self.members = set()     # (extended type and its enclosing types, member) its extensions add
+        self.members = set()     # (extended type and its enclosing types, member, kind) its extensions add
         self.inherits = {}       # declared or extended type -> the types it conforms to or inherits
         self.literals = set(LITERAL.findall(text))
         self.suites = {}         # Swift Testing suite type or "function()" -> its @Test count
@@ -288,7 +296,7 @@ class SwiftFile:
                     if kind == "extension":
                         extended = qualified
                         if supers:
-                            self.members.add((extended, qualified[-1]))  # a conformance: any use of the type
+                            self.members.add((extended, qualified[-1], "type"))  # a conformance
                     elif not PRIVATE.search(modifiers + " "):
                         self.names.add(name)
                     if kind == "class":
@@ -312,12 +320,13 @@ class SwiftFile:
                     self.test_methods[name] = self.test_methods.get(name, 0) + 1
                 if kind == "extension" and depth == 1:
                     if decl and decl.group(2) != "extension" and not PRIVATE.search(decl.group(1) + " "):
-                        self.members.add((extended, decl.group(3)))
+                        self.members.add((extended, decl.group(3), "member"))
                     elif WHOLE_TYPE.match(line):
-                        self.members.add((extended, extended[-1]))
                         label = re.search(r"\b(?:init|subscript)\s*[?!]?\s*\(\s*([A-Za-z_]\w*)\b", line)
                         if label and label.group(1) != "_":
-                            self.members.add((extended, label.group(1)))  # init(hex:), subscript(safe:)
+                            self.members.add((extended, label.group(1), "label"))  # init(hex:), subscript(safe:)
+                        else:
+                            self.members.add((extended, extended[-1], "type"))  # init(_:), subscript, operators
             depth += line.count("{") - line.count("}")
             if depth <= 0:
                 depth, current = 0, None
@@ -357,15 +366,18 @@ class Tree:
         for name in sorted(f.names if names is None else names):
             for path in self.users.get(name, ()):
                 found.setdefault(path, name)
-        for types, member in sorted(f.members if members is None else members):
+        for types, member, kind in sorted(f.members if members is None else members):
             known = [t for t in types if t in self.declared]
-            if known:
-                anchors = set().union(*(self.conformers.get(t, {t}) for t in known))
-                users = self.users.get(member, set()) & set().union(*(self.users.get(a, set()) for a in anchors))
-            else:  # View, Array: a member of a type declared elsewhere is used as `.member`
-                users = set(self.dotted.get(member, ()))
+            anchors = set().union(*(self.conformers.get(t, {t}) for t in known))
+            named = set().union(*(self.users.get(a, set()) for a in anchors))  # name the type or a conformer
+            if kind == "label":
+                users = set(self.users.get(member, ()))
+            elif kind == "type":  # View, Array: an operator or subscript on a type declared elsewhere
+                users = named if known else set(self.files)
+            else:
+                users = set(self.dotted.get(member, ())) | (self.users.get(member, set()) & named)
             for path in users:
-                found.setdefault(path, member if member == types[-1] else f"{types[-1]}.{member}")
+                found.setdefault(path, types[-1] if kind == "type" else f"{types[-1]}.{member}")
         found.pop(skip, None)
         return {path: name for path, name in found.items() if layer(path) >= layer(f.path)}
 
@@ -383,6 +395,51 @@ class Tree:
                     reached[user] = (path, f"uses {name}")
                     queue.append(user)
         return reached
+
+
+def identifier_keys(literals):
+    """The accessibility identifiers string literals spell: (text, whether only its start is fixed)."""
+    keys = set()
+    for literal in literals:
+        if "\\(" in literal:
+            start = literal.split("\\(")[0]
+            if "." in start and IDENTIFIER_START.match(start):
+                keys.add((start, True))
+        elif IDENTIFIER.match(literal):
+            keys.add((literal, False))
+    return keys
+
+
+def support_members(text):
+    """A UI support file's members: name -> (literals, names used), and the literals outside them."""
+    members, outside = {}, set()
+    depth, current, opened = 0, None, 0
+    for code, raw in zip(strip_swift(text).split("\n"), text.split("\n")):
+        decl = DECL.match(code)
+        if current is None and decl and decl.group(2) in ("func", "var", "let") and depth <= 1:
+            current, opened = decl.group(3), depth
+            members.setdefault(current, (set(), set()))
+        literals = set(LITERAL.findall(raw))
+        if current:
+            members[current][0].update(literals)
+            members[current][1].update(IDENT.findall(code))
+        else:
+            outside.update(literals)
+        depth += code.count("{") - code.count("}")
+        if current and depth <= opened:
+            current = None
+    return members, outside
+
+
+def same_identifier(a, b):
+    """Whether two spellings can name the same identifier: "tab.\\(id)" and "tab.other" can."""
+    (text_a, open_a), (text_b, open_b) = a, b
+    if open_a and open_b:
+        return text_a.startswith(text_b) or text_b.startswith(text_a)
+    if open_a or open_b:
+        whole, start = (text_b, text_a) if open_a else (text_a, text_b)
+        return whole.startswith(start)
+    return text_a == text_b
 
 
 def layer(path):
@@ -442,19 +499,28 @@ class Index:
         }
         self.trees = {name: Tree({p: self.swift[p] for p in paths}) for name, paths in scopes.items()}
         self.test_dirs = {"core": CORE_TESTS, "models": PORTABLE_TESTS, "app-unit": APP_TESTS, "ui": UI_TESTS}
-        self.units = {lane: self._units(lane) for lane in self.test_dirs}  # lane -> unit -> (file, count)
+        self.units = {lane: self._units(lane) for lane in self.test_dirs}  # lane -> unit -> (files, count)
         self.reads = {p: self._reads(f) for p, f in self.swift.items()}
+        self.ui_identifiers = self._ui_identifiers()  # UI class or "*" -> app file -> identifier
         self.node_inputs = {name: local_imports(script, read) + reads
                             for name, (script, reads) in NODE_CHECKS.items()}
         self.node_inputs["content-review-test"] += local_imports("tools/content-validate.mjs", read)
 
     def _units(self, lane):
         files = {p: f for p, f in self.swift.items() if p.startswith(self.test_dirs[lane])}
-        if lane == "core":
-            return {u: (p, n) for p, f in files.items() for u, n in f.suites.items()}
-        bases = {c: b for f in files.values() for c, b in f.classes.items()}
-        methods = {c: n for f in files.values() for c, n in f.test_methods.items()}
         units = {}
+        if lane == "core":  # a suite's tests may sit in extensions in other files
+            for p, f in files.items():
+                for u, n in f.suites.items():
+                    paths, count = units.get(u, ((), 0))
+                    units[u] = (paths + (p,), count + n)
+            return units
+        bases = {c: b for f in files.values() for c, b in f.classes.items()}
+        methods, owners = {}, {}
+        for p, f in files.items():
+            for c, n in f.test_methods.items():
+                methods[c] = methods.get(c, 0) + n
+                owners.setdefault(c, set()).add(p)
         for p, f in files.items():
             for cls in f.classes:
                 ancestor, chain, count = cls, set(), 0
@@ -463,8 +529,45 @@ class Index:
                     count += methods.get(ancestor, 0)
                     ancestor = bases[ancestor]
                 if ancestor == "XCTestCase" and count:
-                    units[cls] = (p, count)
+                    units[cls] = (tuple(sorted({p, *owners.get(cls, ())})), count)
         return units
+
+    def _ui_identifiers(self):
+        """The app files that spell an accessibility identifier a UI test uses: in its own file, or in
+        a member of the shared support (UI test files with no test class) it uses. "*", every UI test:
+        the support's set-up, and what its files spell outside any member."""
+        app = {p: identifier_keys(f.literals) for p, f in self.swift.items() if p.startswith(APP)}
+        files = {p: f for p, f in self.swift.items() if p.startswith(UI_TESTS)}
+        owned = {p for paths, _ in self.units["ui"].values() for p in paths}
+        support, everywhere = {}, set()  # member -> (identifiers, names it uses)
+        for path in sorted(set(files) - owned):
+            members, outside = support_members(self.read(path))
+            everywhere |= identifier_keys(outside)
+            for name, (literals, refs) in members.items():
+                keys, uses = support.setdefault(name, (set(), set()))
+                keys |= identifier_keys(literals)
+                uses |= refs
+
+        def through_support(refs):
+            seen, queue = set(), [n for n in refs if n in support]
+            while queue:
+                name = queue.pop()
+                if name not in seen:
+                    seen.add(name)
+                    queue.extend(n for n in support[name][1] if n in support)
+            return set().union(*(support[n][0] for n in seen))
+
+        spelled = {"*": everywhere | through_support({"setUp", "setUpWithError", "tearDown", "tearDownWithError"})}
+        for cls, (paths, _) in self.units["ui"].items():
+            spelled[cls] = set().union(*(identifier_keys(files[p].literals) | through_support(files[p].refs)
+                                         for p in paths))
+        found = {}
+        for cls, keys in spelled.items():
+            for key in sorted(keys):
+                for app_path, app_keys in sorted(app.items()):
+                    if any(same_identifier(key, k) for k in app_keys):
+                        found.setdefault(cls, {}).setdefault(app_path, key[0] + ("…" if key[1] else ""))
+        return found
 
     def _reads(self, f):
         if f.path in READS:
@@ -549,6 +652,12 @@ class Selection:
                 if not path.startswith(APP) and matches(path, patterns):
                     self._ui(cls, f"it checks {path}")
                     hit = True
+            if path.startswith(APP) and not path.endswith(".swift"):
+                # A resource the app bundles: the UI tests that name it, else every UI test.
+                classes = [c for c, patterns in UI_BLACK_BOX.items() if matches(path, patterns)]
+                for cls in classes or ["*"]:
+                    self._ui(cls, f"it checks {path}" if classes else f"the app bundles {path}")
+                hit = True
             if not hit:
                 if matches(path, NO_TESTS):
                     self.docs.append(path)
@@ -565,11 +674,14 @@ class Selection:
         self._swift("models", "models", seeds, old)
         start = self._swift("app", "app-unit", seeds, old)
         reached = self.index.trees["app"].closure(start, stop=UI_ROOTS)
+        identifiers = self.index.ui_identifiers
         for path in reached:
-            if path.startswith(APP):
-                for cls, patterns in UI_BLACK_BOX.items():
-                    if matches(path, patterns) and (cls != "*" or path in start or not matches(path, UI_ROOTS)):
+            if path.startswith(APP) and (path in start or not matches(path, UI_ROOTS)):
+                for cls in sorted(set(UI_BLACK_BOX) | set(identifiers)):
+                    if matches(path, UI_BLACK_BOX.get(cls, ())):
                         self._ui(cls, f"it checks {chain(reached, path)}")
+                    elif path in identifiers.get(cls, {}):
+                        self._ui(cls, f"it uses {identifiers[cls][path]}, which {chain(reached, path)}")
         self._swift("ui", "ui", seeds, old)
 
     def _swift(self, scope, lane, seeds, old):
@@ -584,8 +696,8 @@ class Selection:
                 start.setdefault(user, (path, f"used {name}, which the change removed"))
         reached = tree.closure(start)
         for path in reached:
-            for unit, (file, _) in self.index.units[lane].items():
-                if file == path:
+            for unit, (files, _) in self.index.units[lane].items():
+                if path in files:
                     self.units[lane].setdefault(unit, chain(reached, path))
         return start
 
@@ -644,7 +756,10 @@ def read_worktree(path):
 
 def resolve_base(base):
     ref = base or os.environ.get("ATHKAR_TEST_BASE") or DEFAULT_BASE
-    commit = git("rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").strip()
+    try:
+        commit = git("rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").strip()
+    except SelectorError:
+        raise SelectorError(f"the base {ref} is not a branch or commit here") from None
     merge_base = git("merge-base", commit, "HEAD").strip()
     return merge_base, f"{ref} (merge base {merge_base[:7]})"
 
@@ -680,7 +795,8 @@ def load(base, select_all):
 
 
 def unit_filter(lane, units):
-    names = "|".join(re.escape(u) for u in units)
+    # A free @Test function's identifier carries its argument labels: name() or name(_:).
+    names = "|".join(re.escape(u[:-2]) + r"\([^/]*\)" if u.endswith("()") else re.escape(u) for u in units)
     return rf"{TEST_MODULE[lane]}[./]({names})(/|$)"
 
 
@@ -762,6 +878,8 @@ def cmd_plan(args):
         print(json.dumps(report, indent=2))
         return
     print(f"{len(sel.changes)} changed since {label}")
+    if not sel.changes and not sel.full:
+        print(f"No changes since {label}, so nothing runs. --all runs every lane.")
     for status, path in sel.changes:
         print(f"  {status} {path}")
     for lane, entry in report["lanes"].items():
@@ -797,7 +915,7 @@ def cmd_select(args):
         print(f"{lane}: {what}", file=sys.stderr)
         for unit, why in sel.picked(lane).items():
             print(f"  {unit}: {why}", file=sys.stderr)
-    values.update({"ATHKAR_TEST_LANE": lane, "ATHKAR_TEST_BASE": label, "ATHKAR_TEST_RUN": "1" if runs else "0",
+    values.update({"ATHKAR_TEST_LANE": lane, "ATHKAR_TEST_BASE_LABEL": label, "ATHKAR_TEST_RUN": "1" if runs else "0",
                    "ATHKAR_TEST_WHAT": (("everything: " if full else "") + what) if runs else "nothing to run",
                    "ATHKAR_TEST_REASON": sel.full.get(lane, "the changes reach these" if runs else "no change reaches it")})
     for key, value in values.items():
@@ -825,8 +943,9 @@ def check_problems(index):
     for cls in sorted(set(ui) - set(UI_BLACK_BOX)):
         problems.append(f"{cls} is not in UI_BLACK_BOX: say which app files it checks")
     covered = [p for patterns in UI_BLACK_BOX.values() for p in patterns]
+    spelled = {p for files in index.ui_identifiers.values() for p in files}
     for path in sorted(index.swift):
-        if path.startswith(APP) and not matches(path, covered):
+        if path.startswith(APP) and not matches(path, covered) and path not in spelled:
             problems.append(f"{path} is in no UI_BLACK_BOX entry, so no UI test runs for it")
     for path in index.models:
         if path not in index.swift:

@@ -28,12 +28,12 @@ See `spec/README.md`.
 
 Test with `tools/test.sh`. It runs only the checks the change reaches since the merge base with `origin/main`,
 and says which and why: the content checks (`content-validate`, `content-review-test`, the
-`content-export-pwa --check` against `../ruqyah-al-qareen/content.js`, the fixture check and backup
-validation), and the AthkarCore, portable and iOS-build lanes. Docs-only changes run nothing, and shared build
-inputs or unknown files run everything. `--plan` shows the selection without running it, `--lanes content`
-limits it to some lanes, and `--all` runs everything. `tools/affected-tests.py` holds the rules, and
-`tools/affected-tests-test.py` tests them. The native lanes need a commit and a native grant; see
-`docs/agents/ios-linux.md`.
+`content-export-pwa --check` against `../ruqyah-al-qareen/content.js` or `$ATHKAR_RUQYAH_CONTENT`, the fixture
+check and backup validation; without the ruqyah PWA the content lane is incomplete), and the AthkarCore, portable
+and iOS-build lanes. Docs-only changes run nothing, and shared build inputs or unknown files run everything. `--plan` shows
+the selection without running it, `--lanes content` limits it to some lanes, and `--all` runs everything.
+`tools/affected-tests.py` holds the rules, and `tools/affected-tests-test.py` tests them. The native lanes need
+a commit and a native grant; see `docs/agents/ios-linux.md`.
 
 The planning documents are [`NATIVE_APP_PLAN.md`](NATIVE_APP_PLAN.md) and
 [`MOBILE_APP_PLAN.md`](MOBILE_APP_PLAN.md). The first sets the current stack and sequencing decision

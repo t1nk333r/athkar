@@ -5,8 +5,8 @@
 
 RepositoryTests select for changes to this repository's own files. SyntheticRepositoryTests run
 the command line in small Git repositories, for the rules this repository doesn't exercise today:
-removed names, deleted files, member scoping, module layers, untracked files, the merge base and
-selector errors.
+removed names, deleted files, extension members, module layers, split test suites, untracked files,
+the merge base, the base variable and selector errors.
 """
 
 import importlib.util
@@ -83,7 +83,11 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(lanes["models"], {"QiblaHeadingTests"})
         self.assertEqual(lanes["ios-build"], {"app", "tests"})
         self.assertIn("QiblaUITests", lanes["ui"])
-        self.assertNotIn("DeckIndexUITests", lanes["ui"])
+        # OtherSectionsView.swift uses Qibla, and the deck UI tests open its ruqyah row; the home screen
+        # tests never leave the morning deck.
+        self.assertIn("DeckIndexUITests", lanes["ui"])
+        self.assertNotIn("LaunchTests", lanes["ui"])
+        self.assertNotIn("HomePrayerRowUITests", lanes["ui"])
         self.assertEqual(sel.full, {})
 
     def test_test_support_runs_the_suites_that_use_it(self):
@@ -97,6 +101,31 @@ class RepositoryTests(unittest.TestCase):
 
     def test_ui_walk_stops_at_the_composition_roots(self):
         self.assertEqual(picked(self.select("ios/Athkar/Deck/DeckIndexView.swift"))["ui"], {"DeckIndexUITests"})
+
+    def test_identifier_a_ui_test_uses_runs_it(self):
+        # Settings: DeckUITests toggles manual completion through UITestSupport's
+        # markMorningCompleteManually(); HomePrayerRowUITests toggles `settings.homePrayerRow` itself.
+        settings = picked(self.select("ios/Athkar/Screens/SettingsView.swift"))["ui"]
+        self.assertLessEqual({"DeckUITests", "HomePrayerRowUITests", "DeckRegressionUITests", "DeckIndexUITests",
+                              "ReminderUITests"}, settings)
+        self.assertNotIn("LaunchTests", settings)
+        # The ruqyah deck opens from «أخرى»: UITestSupport's selectTab("ruqyah") taps `other.ruqyah`.
+        other = picked(self.select("ios/Athkar/Screens/OtherSectionsView.swift"))["ui"]
+        self.assertLessEqual({"DeckUITests", "DeckRegressionUITests", "DeckIndexUITests", "AutoFitUITests"}, other)
+        self.assertNotIn("HomePrayerRowUITests", other)
+
+    def test_identifier_spellings(self):
+        keys = at.identifier_keys(["deck.card.counter", "tab.\\(id)", "settings.", "مرة", "\\(id).x"])
+        self.assertEqual(keys, {("deck.card.counter", False), ("tab.", True)})
+        self.assertTrue(at.same_identifier(("tab.", True), ("tab.other", False)))
+        self.assertTrue(at.same_identifier(("deck.card.", True), ("deck.", True)))
+        self.assertFalse(at.same_identifier(("tab.other", False), ("tab.others", False)))
+        self.assertFalse(at.same_identifier(("tab.", True), ("other.ruqyah", False)))
+
+    def test_app_resource_no_entry_names_runs_every_ui_test(self):
+        sel = self.select("ios/Athkar/Assets.xcassets/Contents.json")
+        self.assertEqual(picked(sel)["ui"], self.all_units("ui"))
+        self.assertIn("app", picked(sel)["ios-build"])
 
     def test_composition_root_runs_every_ui_test(self):
         self.assertEqual(picked(self.select("ios/Athkar/Screens/HomeView.swift"))["ui"], self.all_units("ui"))
@@ -158,6 +187,10 @@ class RepositoryTests(unittest.TestCase):
         models = re.compile(at.unit_filter("models", ["QiblaHeadingTests"]))
         self.assertTrue(models.search("AthkarPortableTests.QiblaHeadingTests/testStaleHeading"))
         self.assertFalse(models.search("AthkarPortableTests.QiblaHeadingTestsExtra/testStaleHeading"))
+        free = re.compile(at.unit_filter("core", ["legacyNow()"]))
+        self.assertTrue(free.search("AthkarCoreTests.legacyNow()"))
+        self.assertTrue(free.search("AthkarCoreTests.legacyNow(_:)"))  # parameterized
+        self.assertFalse(free.search("AthkarCoreTests.legacyNowIsZero()"))
 
 
 # A minimal repository with the same layout: AthkarCore, app files compiled into AthkarModels
@@ -200,6 +233,58 @@ SYNTHETIC = {
     CORE + "Angles.swift": """\
         extension Double {
             public var degrees: Double { self }
+        }
+        """,
+    CORE + "Widget.swift": """\
+        public struct Widget {
+            public init() {}
+        }
+
+        public func makeWidget() -> Widget { Widget() }
+        """,
+    CORE + "Widget+Probe.swift": """\
+        extension Widget {
+            public func quuxify() -> Int { 1 }
+        }
+        """,
+    CORE + "String+Probe.swift": """\
+        extension String {
+            public init(probeRepeating count: Int) { self = String(repeating: "x", count: count) }
+        }
+        """,
+    CORE + "Int+Plus.swift": """\
+        extension Int {
+            public static func + (lhs: Int, rhs: Bool) -> Int { rhs ? lhs + 1 : lhs }
+        }
+        """,
+    CORE_TESTS + "WidgetTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct WidgetTests {
+            @Test func quuxify() { #expect(makeWidget().quuxify() == 1) }
+        }
+        """,
+    CORE_TESTS + "ProbeStringTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct ProbeStringTests {
+            @Test func repeats() { #expect(String(probeRepeating: 2) == "xx") }
+        }
+        """,
+    CORE_TESTS + "SplitTests.swift": """\
+        import Testing
+
+        struct SplitTests {
+            @Test func one() {}
+        }
+        """,
+    CORE_TESTS + "SplitTests+More.swift": """\
+        import Testing
+
+        extension SplitTests {
+            @Test func two() { #expect(1 + true == 2) }
         }
         """,
     CORE_TESTS + "QiblaTests.swift": """\
@@ -329,14 +414,36 @@ class SyntheticRepositoryTests(unittest.TestCase):
         values = self.select(lane, *mode)
         return set(values["ATHKAR_TEST_UNITS"].split()) if values["ATHKAR_TEST_RUN"] == "1" else set()
 
-    def test_member_edit_runs_users_of_that_type_only(self):
+    def test_member_edit_runs_the_users_of_that_member(self):
         self.write(CORE + "Clock+Days.swift", "extension Clock {\n    public var tomorrow: Int { now + 2 }\n}\n")
-        self.assertEqual(self.units("core"), {"ClockTests"})  # LedgerTests uses another type's `tomorrow`
-        self.assertEqual(self.units("models"), set())         # DeckModel uses Clock, not `tomorrow`
+        # `.tomorrow` could be Clock's: LedgerTests' and LedgerPortableTests' run too, but not
+        # DeckModelTests, which uses Clock and not `tomorrow`.
+        self.assertEqual(self.units("core"), {"ClockTests", "LedgerTests"})
+        self.assertEqual(self.units("models"), {"LedgerPortableTests"})
+
+    def test_member_used_on_a_value_whose_type_is_not_named(self):
+        self.write(CORE + "Widget+Probe.swift", "extension Widget {\n    public func quuxify() -> Int { 2 }\n}\n")
+        self.assertEqual(self.units("core"), {"WidgetTests"})
+
+    def test_labelled_init_of_an_outside_type_runs_its_users(self):
+        self.write(CORE + "String+Probe.swift", textwrap.dedent(SYNTHETIC[CORE + "String+Probe.swift"]).replace('"x"', '"y"'))
+        self.assertEqual(self.units("core"), {"ProbeStringTests"})
+
+    def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
+        self.write(CORE + "Int+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Int+Plus.swift"]).replace("+ 1", "+ 2"))
+        self.assertEqual(self.units("core"), self.units("core", "--all"))
+        self.assertEqual(self.units("models"), self.units("models", "--all"))
+
+    def test_suite_extended_in_another_file_runs_from_either(self):
+        self.write(CORE_TESTS + "SplitTests+More.swift", "import Testing\n\nextension SplitTests {\n"
+                   "    @Test func two() {}\n}\n")
+        self.assertEqual(self.units("core"), {"SplitTests"})
+        self.assertEqual(self.select("core")["ATHKAR_TEST_COUNT"], "2")
 
     def test_removed_name_reaches_the_files_still_using_it(self):
         self.write(CORE + "Clock.swift", "public struct Clock {\n    public var now = 0\n    public init() {}\n}\n")
-        self.assertEqual(self.units("core"), {"ClockTests", "legacyNowIsZero()"})
+        # Clock+Days.swift extends Clock with `tomorrow`, which LedgerTests also spells as `.tomorrow`.
+        self.assertEqual(self.units("core"), {"ClockTests", "LedgerTests", "legacyNowIsZero()"})
 
     def test_member_of_an_outside_type_runs_its_dotted_users(self):
         self.write(CORE + "Angles.swift", "extension Double {\n    public var degrees: Double { self * 1 }\n}\n")
@@ -358,7 +465,7 @@ class SyntheticRepositoryTests(unittest.TestCase):
 
     def test_core_change_reaches_portable_tests_through_the_app(self):
         self.write(CORE + "Clock.swift", textwrap.dedent(SYNTHETIC[CORE + "Clock.swift"]).replace("now = 0", "now = 1"))
-        self.assertEqual(self.units("models"), {"DeckModelTests"})
+        self.assertEqual(self.units("models"), {"DeckModelTests", "LedgerPortableTests"})  # `.tomorrow`, as above
 
     def test_data_file_runs_its_readers(self):
         self.write("data/cities.tsv", "Riyadh\nMakkah\n")
@@ -394,13 +501,24 @@ class SyntheticRepositoryTests(unittest.TestCase):
     def test_selector_error_runs_everything(self):
         values = self.select("core", "--base", "no-such-branch")
         self.assertEqual((values["ATHKAR_TEST_RUN"], values["ATHKAR_TEST_FULL"]), ("1", "1"))
-        self.assertIn("selector error", values["ATHKAR_TEST_REASON"])
+        self.assertIn("selector error: the base no-such-branch is not", values["ATHKAR_TEST_REASON"])
+
+    def test_base_variable_survives_each_lane(self):
+        # The runners eval one lane's selection before asking for the next, with ATHKAR_TEST_BASE set.
+        self.write(CORE + "Qibla.swift", "public enum Qibla {\n    public static func bearing() -> Double { 1 }\n}\n")
+        script = ('for lane in core models; do eval "$("$PYTHON" tools/affected-tests.py select $lane)"; '
+                  'echo "$lane $ATHKAR_TEST_FULL $ATHKAR_TEST_UNITS"; done')
+        result = subprocess.run(["bash", "-c", script], cwd=self.repo, capture_output=True, text=True,
+                                env={**self.env, "ATHKAR_TEST_BASE": self.base, "PYTHON": sys.executable})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), ["core 0 LedgerTests QiblaTests", "models 0 LedgerPortableTests"])
 
     def test_all_runs_everything(self):
         values = self.select("core", "--all")
         self.assertEqual((values["ATHKAR_TEST_FULL"], values["ATHKAR_TEST_FILTER"]), ("1", ""))
         self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
-                         {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests"})
+                         {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests",
+                          "WidgetTests", "ProbeStringTests", "SplitTests"})
 
 
 if __name__ == "__main__":

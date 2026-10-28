@@ -27,7 +27,7 @@ if [[ $action == test && ( $# == 0 || $1 == --base ) ]]; then
     [[ $ATHKAR_TEST_RUN == 0 ]] || only+=("${picked[@]}")
   done
   if ((${#only[@]} == 0)); then
-    echo "Nothing to run: no change since $ATHKAR_TEST_BASE reaches AthkarTests or AthkarUITests. --all runs them."
+    echo "Nothing to run: no change since $ATHKAR_TEST_BASE_LABEL reaches AthkarTests or AthkarUITests. --all runs them."
     exit 0
   fi
   set -- "${only[@]}"

@@ -84,9 +84,11 @@ is `busy`, and uncommitted changes leave the native lanes `unavailable`.
 
 `tools/affected-tests.py` makes the selection. A test runs when it depends on a changed file
 through the Swift code compiled into its target, or reads a changed fixture, pack or data file.
-A removal also reaches the files still using the removed name. UI tests use the per-class map in
-`UI_BLACK_BOX`. Documentation runs nothing. `ios/Package.swift`, `ios/project.yml`,
-the lockfiles, these runners, any file no rule maps and any selector error run everything.
+A removal also reaches the files still using the removed name. A UI test checks the app files in
+its `UI_BLACK_BOX` entry and every app file that spells an accessibility identifier it uses,
+directly or through a `UITestSupport.swift` helper. Documentation runs nothing.
+`ios/Package.swift`, `ios/project.yml`, the lockfiles, these runners, any file no rule maps and
+any selector error run everything.
 `python3 tools/affected-tests.py check` fails when a rule no longer matches the repository.
 `python3 tools/affected-tests-test.py` tests the rules against fixture changes.
 
@@ -296,8 +298,9 @@ integrates reviewed source serially; workers do not merge or settle themselves.
 `tools/ios-mac-run.sh` is retired from current verification. Its historical
 signal cleanup does not provide the required process-tree and marker lifetime.
 Its `test` action passes `-only-testing` for just the app-unit and UI classes the
-changes reach. `--all` runs both targets, and a single test identifier still selects
-that test.
+changes reach. The selection compares with `origin/main`, so it needs a Git
+checkout with that branch, or `--base REF`. `--all` runs both targets, and a single
+test identifier still selects that test.
 Leave existing historical jobs and their running copies untouched. Do not use
 the runner for new checks or request Mac keys, wake-up or provisioning. Preserve the
 user's physical-device data and the existing signing/publisher identity.

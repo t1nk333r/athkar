@@ -60,7 +60,7 @@ if [[ $suite != sdk && -z $filter && $select_all == 0 ]]; then
     || fail 'The affected-test selection failed; --all runs the whole suite.'
   eval "$selection"
   if [[ $ATHKAR_TEST_RUN == 0 ]]; then
-    echo "Nothing to run: no change since $ATHKAR_TEST_BASE reaches the $suite suite. --all runs it in full."
+    echo "Nothing to run: no change since $ATHKAR_TEST_BASE_LABEL reaches the $suite suite. --all runs it in full."
     exit 0
   fi
   filter=$ATHKAR_TEST_FILTER
