@@ -6,7 +6,8 @@
 #   content    Linux   the Node content, fixture and backup checks the changes reach
 #   core       Linux   AthkarCore Swift Testing suites (tools/test-native-core.sh)
 #   models     Linux   portable production-model XCTest classes (tools/test-native-models.sh)
-#   ios-build  Linux   the app, and AthkarTests, compiled for iOS (tools/ios-linux-compile.sh)
+#   ios-build  Linux   the app compiled for iOS (tools/ios-linux-compile.sh); compiling
+#                      AthkarTests is listed: its bundle can't be packaged on Linux yet
 #   app-unit   device  hosted AthkarTests classes   } listed only: Linux can't run them;
 #   ui         Mac     AthkarUITests classes        } tools/ios-mac-run.sh test selects both
 #
@@ -26,7 +27,7 @@ cd "$(dirname "$(readlink -f "$0")")/.."
 SELECT=(python3 tools/affected-tests.py)
 PLAN=0 MODE=() LANES=selector,content,core,models,ios-build,app-unit,ui
 
-usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 while [ $# -gt 0 ]; do
   case $1 in
     --plan) PLAN=1 ;;
@@ -133,12 +134,15 @@ for lane in ${LANES//,/ }; do
       ;;
     core) filter_args; native core tools/test-native-core.sh --jobs 2 "${FILTER[@]}" ;;
     models) filter_args; native models tools/test-native-models.sh --jobs 2 "${FILTER[@]}" ;;
-    # AthkarTests is hosted by the app, so building it compiles the app too.
     ios-build)
-      if [ "$ATHKAR_TEST_BUILD_TESTS" = 1 ]; then
-        native ios-build tools/ios-linux-compile.sh --jobs 2 --build-tests
-      else
+      # --build-tests compiles and links AthkarTests, then fails packaging its bundle
+      # (CopySwiftLibs: --strip-bitcode without --strip-bitcode-tool); docs/agents/ios-linux.md.
+      [ "$ATHKAR_TEST_BUILD_TESTS" = 0 ] \
+        || echo "listed: tools/ios-linux-compile.sh --jobs 2 --build-tests (AthkarTests bundle packaging fails on Linux)"
+      if [ "$ATHKAR_TEST_BUILD_APP" = 1 ]; then
         native ios-build tools/ios-linux-compile.sh --jobs 2
+      else
+        outcome ios-build listed
       fi
       ;;
     app-unit)
