@@ -129,6 +129,12 @@ class RepositoryTests(unittest.TestCase):
         self.assertLessEqual({"DeckUITests", "DeckRegressionUITests", "DeckIndexUITests", "AutoFitUITests"}, other)
         self.assertNotIn("HomePrayerRowUITests", other)
 
+    def test_section_chips_run_the_ui_tests_that_pick_a_sura(self):
+        # The chips the ruqyah UI tests tap (`deck.section.<id>`) to reach each sura's segments.
+        chips = picked(self.select("ios/Athkar/Deck/SectionChips.swift"))["ui"]
+        self.assertLessEqual({"AutoFitUITests", "DeckIndexUITests", "DeckRegressionUITests", "DeckUITests",
+                              "ScreenshotUITests"}, chips)
+
     def test_identifier_spellings(self):
         keys = at.identifier_keys(["deck.card.counter", "tab.\\(id)", "settings.", "مرة", "\\(id).x"])
         self.assertEqual(keys, {("deck.card.counter", False), ("tab.", True)})
