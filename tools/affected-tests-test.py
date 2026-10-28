@@ -254,9 +254,12 @@ SYNTHETIC = {
             ) { self = String(repeating: "x", count: Int(count)) }
         }
         """,
-    CORE + "Int+Plus.swift": """\
-        extension Int {
-            public static func + (lhs: Int, rhs: Bool) -> Int { rhs ? lhs + 1 : lhs }
+    CORE + "Bool+Plus.swift": """\
+        extension Bool {
+            public static func + (
+                lhs: Int,
+                rhs: Bool
+            ) -> Int { rhs ? lhs + 1 : (Int.init(radix: 2) ?? lhs) }
         }
         """,
     CORE + "Widget+Named.swift": """\
@@ -548,7 +551,8 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual(self.units("core"), {"ProbeStringTests", "CityTests"})
 
     def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
-        self.write(CORE + "Int+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Int+Plus.swift"]).replace("+ 1", "+ 2"))
+        # Its body spells `Int.init(radix:)`, which is no label of the operator.
+        self.write(CORE + "Bool+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Bool+Plus.swift"]).replace("+ 1", "+ 2"))
         self.assertEqual(self.units("core"), self.units("core", "--all"))
         self.assertEqual(self.units("models"), self.units("models", "--all"))
 

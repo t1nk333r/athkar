@@ -151,6 +151,11 @@ MODIFIER = (r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|internal|private|filepr
 DECL = re.compile(r"\s*" + MODIFIER + r"(class|struct|enum|protocol|actor|typealias|extension|func|var|let)\s+"
                   r"([A-Za-z_]\w*)(.*)")
 WHOLE_TYPE = re.compile(r"\s*" + MODIFIER + r"(?:init\b|subscript\b|(?:static\s+)?func\s+[^\w\s(])")
+# The label of an init (its first parameter name) or a subscript (only when it spells two names,
+# `subscript(safe index:)`), after any generic parameters.
+INIT_LABEL = re.compile(r"\s*" + MODIFIER + r"init\s*[?!]?\s*(?:<.*?>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\b")
+SUBSCRIPT_LABEL = re.compile(r"\s*" + MODIFIER
+                             + r"subscript\s*(?:<.*?>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:")
 IDENT = re.compile(r"[A-Za-z_]\w*")
 DOTTED = re.compile(r"\.\s*([A-Za-z_]\w*)")
 LITERAL = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
@@ -325,19 +330,16 @@ class SwiftFile:
                     if decl and decl.group(2) != "extension" and not PRIVATE.search(decl.group(1) + " "):
                         self.members.add((extended, decl.group(3), "member"))
                     elif WHOLE_TYPE.match(line):
-                        # An init's first parameter name is its label; a subscript has one only when
-                        # it spells two names (`subscript(safe index:)`). Generic parameters may come
-                        # first, and the parameters may continue on the following lines.
+                        # The parameters may continue on the following lines. The label is matched
+                        # from the declaration's start, so a body's `.init(radix:)` is not one.
                         signature = line
                         for more in lines[i + 1:i + 20]:
                             if signature.count("(") <= signature.count(")"):
                                 break
                             signature += " " + more
-                        label = (re.search(r"\binit\s*[?!]?\s*(?:<.*?>)?\s*\(\s*([A-Za-z_]\w*)\b", signature)
-                                 or re.search(r"\bsubscript\s*(?:<.*?>)?\s*\(\s*([A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:",
-                                              signature))
-                        if label and label.group(1) != "_":
-                            self.members.add((extended, label.group(1), "label"))  # init(hex:), subscript(safe i:)
+                        label = INIT_LABEL.match(signature) or SUBSCRIPT_LABEL.match(signature)
+                        if label and label.group("label") != "_":  # init(hex:), subscript(safe i:)
+                            self.members.add((extended, label.group("label"), "label"))
                         else:
                             self.members.add((extended, extended[-1], "type"))  # init(_:), subscript, operators
             depth += line.count("{") - line.count("}")
