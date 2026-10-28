@@ -71,20 +71,47 @@ the exact clean Git HEAD into a fresh directory outside the checkout. Tests reta
 the whole repository because core fixtures and portable content use repository
 paths. Scratch, dependency caches, test bundles and logs belong to that run.
 
+### Affected tests
+
+`tools/test.sh` runs every lane, each for only what the changes since the merge base with
+`origin/main` reach: the selector's own tests, the Node content checks, the core and portable
+suites and the app's SDK compilation. It lists the app-unit and UI classes that need a device or
+the Mac, and the AthkarTests compilation, whose bundle packaging still fails on Linux (below).
+`tools/test.sh --plan` prints each lane's selection and the reason without running anything.
+`--base REF` compares with another branch or commit, and `--all` runs every lane in full. The
+last line is `RESULT status=pass|fail|incomplete lanes=<lane>:<outcome>,...`. A busy build lane
+is `busy`, and uncommitted changes leave the native lanes `unavailable`. Without the ruqyah PWA's
+`content.js` (`$ATHKAR_RUQYAH_CONTENT`, default `../ruqyah-al-qareen/content.js`), the content
+lane checks `index.html` only and is `unavailable`. Any of these makes the run `incomplete`.
+
+`tools/affected-tests.py` makes the selection. A test runs when it depends on a changed file
+through the Swift code compiled into its target, or reads a changed fixture, pack or data file.
+A removal also reaches the files still using the removed name. A UI test checks the app files in
+its `UI_BLACK_BOX` entry and every app file that spells an accessibility identifier it uses,
+directly or through a `UITestSupport.swift` helper; an identifier a change renames or removes
+reaches the UI tests that use it. Documentation runs nothing.
+`ios/Package.swift`, `ios/project.yml`, the lockfiles, these runners, any file no rule maps and
+any selector error run everything.
+`python3 tools/affected-tests.py check` fails when a rule no longer matches the repository.
+`python3 tools/affected-tests-test.py` tests the rules against fixture changes.
+
 After the coordinator grants the selected check, run from the checkout:
 
 ```bash
 ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/test-native-core.sh --jobs 2
+
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
+  tools/test-native-models.sh --jobs 2 -c release
+
+ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
   tools/test-native-core.sh --jobs 2 --filter 'Storage|BackupContentTests'
-
-ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
-  tools/test-native-models.sh --jobs 2 --filter PortableModelTests
-
-ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
-  tools/test-native-models.sh --jobs 2 -c release --filter PortableModelTests
 ```
 
-Omit `--filter` for the full selected suite. The full core suite follows Task
+Without `--filter`, each runner runs only the suites or classes the committed changes reach.
+It prints them with the reason, and exits 0 with "Nothing to run" when no change reaches the
+suite. `--base REF` changes the comparison, `--all` runs the whole suite, and `--filter REGEX`
+runs an explicit selection. The full core suite follows Task
 001's integrated history fix. `--results /absolute/new-directory` selects a fresh
 output directory with an existing parent. Otherwise the runner creates a unique
 directory under `$XDG_CACHE_HOME/athkar-native-checks` or
@@ -273,6 +300,10 @@ integrates reviewed source serially; workers do not merge or settle themselves.
 
 `tools/ios-mac-run.sh` is retired from current verification. Its historical
 signal cleanup does not provide the required process-tree and marker lifetime.
+Its `test` action passes `-only-testing` for just the app-unit and UI classes the
+changes reach. The selection compares with `origin/main`, so it needs a Git
+checkout with that branch, or `--base REF`. `--all` runs both targets, and a single
+test identifier still selects that test.
 Leave existing historical jobs and their running copies untouched. Do not use
 the runner for new checks or request Mac keys, wake-up or provisioning. Preserve the
 user's physical-device data and the existing signing/publisher identity.

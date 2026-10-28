@@ -24,6 +24,8 @@ cards and earlier taps stay quiet.
 - `content/`, `data/`, `fonts/` and `spec/` hold shared inputs and behaviour fixtures.
 - `ios/AthkarCore/` holds domain logic and storage without UI framework dependencies.
 - `ios/Athkar/` and `ios/AthkarUITests/` hold the app and its UI tests.
+- `tools/test.sh` runs only the checks a change reaches, lane by lane; `tools/affected-tests.py`
+  selects them and `tools/affected-tests-test.py` tests the selection.
 - `tools/ios-mac-run.sh` is retained for historical provenance; current checks use Linux.
 - [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md) owns the build/test procedure
   and recorded verification limits.

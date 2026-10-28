@@ -5,12 +5,16 @@ set +m # The owned setsid child must get its own process group, not a job-contro
 
 usage() {
   cat <<'USAGE'
-usage: test-native-core.sh [--filter REGEX] [--jobs 1|2] [--results NEW_DIRECTORY]
-                          [-c debug|release]
+usage: test-native-core.sh [--filter REGEX | --all | --base REF] [--jobs 1|2]
+                          [--results NEW_DIRECTORY] [-c debug|release]
                           [--caller-held-locks SHARED_FD PROJECT_FD]
        test-native-models.sh [same options]
-       ios-linux-compile.sh [--build-tests] [same options except --filter]
+       ios-linux-compile.sh [--build-tests] [same options except --filter, --all and --base]
 
+Without --filter or --all, the suite runs only the tests the changes since the merge
+base with origin/main (--base REF, or $ATHKAR_TEST_BASE) reach, and exits 0 when no
+change reaches it; tools/affected-tests.py prints the selection and why.
+--all runs the whole suite.
 ATHKAR_SWIFT selects an installed Swift executable. No tools are installed.
 Results and scratch are retained outside the checkout. Exit 3 means a busy lane.
 Caller-held descriptors must already hold exclusive locks on the two fixed lanes.
@@ -19,10 +23,13 @@ USAGE
 }
 fail() { echo "$*" >&2; exit 2; }
 suite=core jobs=2 configuration=debug filter='' results='' shared_fd='' project_fd='' build_tests=0
+select_all=0 base=
 while (($#)); do
   case "$1" in
     --suite) (($# >= 2)) || fail 'Missing suite.'; suite=$2; shift 2 ;;
     --filter) (($# >= 2)) && [[ -n $2 && -z $filter ]] || fail 'Supply one nonempty filter.'; filter=$2; shift 2 ;;
+    --all) select_all=1; shift ;;
+    --base) (($# >= 2)) && [[ -n $2 && -z $base ]] || fail 'Supply one base branch or commit.'; base=$2; shift 2 ;;
     --jobs) (($# >= 2)) || fail 'Missing job count.'; jobs=$2; shift 2 ;;
     -c|--configuration) (($# >= 2)) || fail 'Missing configuration.'; configuration=$2; shift 2 ;;
     --results) (($# >= 2)) && [[ -n $2 && -z $results ]] || fail 'Supply one new results directory.'; results=$2; shift 2 ;;
@@ -39,11 +46,25 @@ done
 [[ $configuration == debug || $configuration == release ]] || fail 'Use debug or release configuration.'
 [[ $suite != sdk || -z $filter ]] || fail 'SDK compilation executes no tests and takes no filter.'
 [[ $suite == sdk || $build_tests == 0 ]] || fail '--build-tests is only for SDK compilation.'
+[[ $suite != sdk || ( $select_all == 0 && -z $base ) ]] \
+  || fail 'SDK compilation builds what it is asked to; tools/test.sh decides whether it is needed.'
+(( (${#filter} > 0) + select_all + (${#base} > 0) <= 1 )) || fail 'Use one of --filter, --all and --base.'
 [[ $(uname -s) == Linux ]] || fail 'New native checks run on Linux.'
 for tool in flock setsid realpath git tar grep python3; do command -v "$tool" >/dev/null || fail "Missing installed tool: $tool"; done
 repo=$(cd "$(dirname "$0")/.." && pwd -P)
 [[ -z $(git -C "$repo" status --porcelain) ]] || fail 'Commit source first; the runner archives the exact clean HEAD.'
 head=$(git -C "$repo" rev-parse HEAD)
+if [[ $suite != sdk && -z $filter && $select_all == 0 ]]; then
+  # The selection prints what it picked and why; a selector error selects the whole suite.
+  selection=$(python3 "$repo/tools/affected-tests.py" select "$suite" ${base:+--base "$base"}) \
+    || fail 'The affected-test selection failed; --all runs the whole suite.'
+  eval "$selection"
+  if [[ $ATHKAR_TEST_RUN == 0 ]]; then
+    echo "Nothing to run: no change since $ATHKAR_TEST_BASE_LABEL reaches the $suite suite. --all runs it in full."
+    exit 0
+  fi
+  filter=$ATHKAR_TEST_FILTER
+fi
 swift=${ATHKAR_SWIFT:-$(command -v swift || true)}
 [[ -n $swift ]] || swift="$HOME/.local/share/swift-6.4.0/usr/bin/swift"
 swift=$(command -v "$swift") || fail 'Select an installed Swift with ATHKAR_SWIFT.'

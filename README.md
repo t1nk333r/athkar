@@ -8,7 +8,8 @@ A mobile-first Arabic PWA for morning and evening adhkar.
 
 [Native verification from Linux](docs/agents/ios-linux.md). The coordinator queues bounded
 AthkarCore Swift Testing, portable production-model XCTest and iOS SDK compilation through
-the repository runners. App-unit and UI runtime gates remain open until an authorized iOS
+the repository runners. `tools/test.sh` runs only the checks a change reaches, and
+`tools/test.sh --plan` shows which and why. App-unit and UI runtime gates remain open until an authorized iOS
 device run. Historical Mac jobs are preserved; the Mac runner is retired from new
 verification.
 Hosted app-unit tests start the normal app database and reminders. They require an
