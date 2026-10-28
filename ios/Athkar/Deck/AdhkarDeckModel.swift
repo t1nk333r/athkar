@@ -277,7 +277,8 @@ final class AdhkarSessionModel {
         return DeckCompletion(
             title: "اكتملت \(Self.title(period)) بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
             time: completedAt.map { "وقت الإكمال: \(ArabicFormat.time($0))" }, dismissTitle: "تم",
-            primaryTitle: "الانتقال إلى \(Self.title(other))", primary: .open(other == .morning ? .morning : .evening))
+            primary: (title: "الانتقال إلى \(Self.title(other))",
+                      action: .open(other == .morning ? .morning : .evening)))
     }
 
     static func title(_ period: Period) -> String {

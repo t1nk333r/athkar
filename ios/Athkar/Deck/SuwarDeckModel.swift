@@ -133,7 +133,7 @@ final class SuwarDeckModel: DeckModel {
         return DeckCompletion(title: "اكتملت قراءة \(sura.surah) بحمد الله",
                               message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
                               time: completedSuwar[sura.id].map { "وقت الإكمال: \(ArabicFormat.time($0))" },
-                              dismissTitle: "تم", primaryTitle: nil, primary: nil)
+                              dismissTitle: "تم", primary: nil)
     }
 
     // MARK: Cards

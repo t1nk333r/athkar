@@ -65,8 +65,9 @@ final class DayRolloverTests: XCTestCase {
         // The ruqyah deck shows the new day: readings, card resets and index choices apply to it. Every segment
         // before the repeated one is read first, as the «التالي» lock requires to reach it.
         let repeated = try XCTUnwrap(decks.ruqyah.cards.firstIndex { $0.target > 2 })
+        XCTAssertGreaterThan(repeated, 0, "the shown sura opens on a segment read once")
         XCTAssertEqual(decks.tap(.ruqyah, at: 0), DeckChange(completedCard: true, advance: true, haptic: true))
-        for index in 1..<repeated {
+        for index in stride(from: 1, to: repeated, by: 1) {
             XCTAssertEqual(decks.tap(.ruqyah, at: index), DeckChange(completedCard: true, advance: true, haptic: true))
         }
         XCTAssertEqual(decks.tap(.ruqyah, at: repeated), DeckChange())

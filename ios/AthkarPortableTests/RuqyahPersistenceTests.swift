@@ -351,7 +351,7 @@ final class RuqyahPersistenceTests: XCTestCase {
         XCTAssertEqual(deck.completion, DeckCompletion(
             title: "اكتملت قراءة سورة ق بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
             time: "وقت الإكمال: \(ArabicFormat.time(qaf))", dismissTitle: "تم",
-            primaryTitle: "الانتقال إلى سورة الجن", primary: .openSection("jinn")))
+            primary: (title: "الانتقال إلى سورة الجن", action: .openSection("jinn"))))
 
         // The next incomplete sura in order, wrapping past the end: after الناس, ق and الجن are done, so التكوير.
         XCTAssertNotNil(try read(deck, sura: "jinn"))

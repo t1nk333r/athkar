@@ -142,7 +142,7 @@ final class RuqyahDeckModel: DeckModel {
         if progress.allComplete(segments) {
             return DeckCompletion(title: "تمت الرقية بحمد الله", message: "اكتملت جميع المقاطع بتكراراتها.",
                                   time: completedAt.map { "وقت الإكمال: \(ArabicFormat.time($0))" },
-                                  dismissTitle: "إغلاق", primaryTitle: "بدء رقية جديدة", primary: .restart)
+                                  dismissTitle: "إغلاق", primary: (title: "بدء رقية جديدة", action: .restart))
         }
         let sura = selectedSura
         let position = suwar.firstIndex(of: sura) ?? 0
@@ -150,8 +150,8 @@ final class RuqyahDeckModel: DeckModel {
         return DeckCompletion(title: "اكتملت قراءة \(sura.surah) بحمد الله",
                               message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
                               time: suraCompletedAt(sura).map { "وقت الإكمال: \(ArabicFormat.time($0))" },
-                              dismissTitle: "تم", primaryTitle: "الانتقال إلى \(next.surah)",
-                              primary: .openSection(next.id))
+                              dismissTitle: "تم",
+                              primary: (title: "الانتقال إلى \(next.surah)", action: .openSection(next.id)))
     }
 
     // MARK: Cards

@@ -123,8 +123,8 @@ struct CompletionSheet: View {
                 Button(completion.dismissTitle) { dismiss() }
                     .buttonStyle(DialogButtonStyle(palette: palette))
                     .accessibilityIdentifier("completion.dismiss")
-                if completion.primary != nil {
-                    Button(completion.primaryTitle ?? "", action: primary)
+                if let title = completion.primaryTitle {
+                    Button(title, action: primary)
                         .buttonStyle(DialogButtonStyle(palette: palette, primary: true))
                         .accessibilityIdentifier("completion.primary")
                 }
