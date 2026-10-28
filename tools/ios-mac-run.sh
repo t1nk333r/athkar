@@ -7,10 +7,34 @@ if [[ $(uname -s) != Darwin ]]; then
   exit 2
 fi
 action=${1:-}
-case "$action" in test|ipa) shift ;; *) echo "usage: $0 test [test identifier] | ipa" >&2; exit 2 ;; esac
-if [[ $action == ipa && $# != 0 ]] || [[ $action == test && $# -gt 1 ]]; then
-  echo "ipa takes no arguments; test takes at most one test identifier." >&2
+case "$action" in test|ipa) shift ;; *) echo "usage: $0 test [--all | --base REF | test identifier] | ipa" >&2; exit 2 ;; esac
+if [[ $action == ipa && $# != 0 ]] || [[ $action == test && $# -gt 2 ]] \
+  || [[ $action == test && $# == 2 && $1 != --base ]] || [[ $action == test && $* == --base ]]; then
+  echo "ipa takes no arguments; test takes --all, --base REF or one test identifier." >&2
   exit 2
+fi
+repo=$(cd "$(dirname "$0")/.." && pwd)
+# Without an argument, test runs only the app-unit and UI classes the changes since the merge
+# base with origin/main reach (tools/affected-tests.py prints which and why); --all runs both
+# targets in full.
+if [[ $action == test && ( $# == 0 || $1 == --base ) ]]; then
+  only=()
+  for lane in app-unit ui; do
+    selection=$(python3 "$repo/tools/affected-tests.py" select "$lane" "$@") || exit 2
+    eval "$selection"
+    # Test identifiers have no spaces.
+    [[ $ATHKAR_TEST_RUN == 0 ]] || read -ra picked <<< "$ATHKAR_TEST_ONLY_TESTING"
+    [[ $ATHKAR_TEST_RUN == 0 ]] || only+=("${picked[@]}")
+  done
+  if ((${#only[@]} == 0)); then
+    echo "Nothing to run: no change since $ATHKAR_TEST_BASE reaches AthkarTests or AthkarUITests. --all runs them."
+    exit 0
+  fi
+  set -- "${only[@]}"
+elif [[ $action == test && $1 == --all ]]; then
+  set --
+elif [[ $action == test && $# == 1 ]]; then
+  set -- "-only-testing:$1"
 fi
 simulator=${ATHKAR_SIMULATOR:-Athkar-Agent}
 if [[ $action == test && $simulator != Athkar-* ]]; then
@@ -18,7 +42,6 @@ if [[ $action == test && $simulator != Athkar-* ]]; then
   exit 2
 fi
 results=${ATHKAR_RESULTS:?Set ATHKAR_RESULTS to a fresh results directory}
-repo=$(cd "$(dirname "$0")/.." && pwd)
 mkdir -p "$results"
 results=$(cd "$results" && pwd)
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -62,7 +85,6 @@ if not r: sys.exit("Install an iOS simulator runtime in Xcode first")
 print(max(r,key=lambda x:tuple(map(int,x["version"].split("."))))["identifier"])')
     device=$(xcrun simctl create "$simulator" com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro "$runtime")
   fi
-  if [[ $# == 1 ]]; then set -- "-only-testing:$1"; fi
   caffeinate -i xcodebuild -project Athkar.xcodeproj -scheme Athkar \
     -destination "platform=iOS Simulator,id=$device" -parallel-testing-enabled NO \
     -derivedDataPath "$results/DerivedData" -resultBundlePath "$results/test.xcresult" \

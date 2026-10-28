@@ -1,0 +1,407 @@
+#!/usr/bin/env python3
+"""Tests for tools/affected-tests.py: changes mapped to the selection they must produce.
+
+  python3 tools/affected-tests-test.py [-v]
+
+RepositoryTests select for changes to this repository's own files. SyntheticRepositoryTests run
+the command line in small Git repositories, for the rules this repository doesn't exercise today:
+removed names, deleted files, member scoping, module layers, untracked files, the merge base and
+selector errors.
+"""
+
+import importlib.util
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
+import unittest
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+HERE = Path(__file__).resolve().parent
+_spec = importlib.util.spec_from_file_location("affected_tests", HERE / "affected-tests.py")
+at = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(at)
+
+CORE = "ios/AthkarCore/Sources/AthkarCore/"
+CORE_TESTS = "ios/AthkarCore/Tests/AthkarCoreTests/"
+
+
+def picked(sel):
+    """lane -> the units it runs, for the lanes that run."""
+    return {lane: set(sel.picked(lane)) for lane in at.LANES if sel.runs(lane)}
+
+
+class RepositoryTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.index = at.Index(at.worktree_files(), at.read_worktree)
+
+    def select(self, *paths, status="M"):
+        # An edit that keeps every name: the old version is the current one.
+        return at.Selection(self.index, [(status, p) for p in paths], at.read_worktree)
+
+    def all_units(self, lane):
+        return set(self.index.units[lane])
+
+    def test_documentation_runs_nothing(self):
+        sel = self.select("README.md", "docs/agents/ios-linux.md", "NATIVE_APP_PLAN.md")
+        self.assertEqual(picked(sel), {})
+        self.assertEqual(sel.docs, ["README.md", "docs/agents/ios-linux.md", "NATIVE_APP_PLAN.md"])
+
+    def test_review_record_runs_the_checks_that_read_it(self):
+        self.assertEqual(picked(self.select("content/REVIEW.md")),
+                         {"content": {"content-validate", "content-review-test"}})
+
+    def test_pack_the_app_does_not_bundle(self):
+        self.assertEqual(picked(self.select("content/suwar.v1.json")), {
+            "content": {"content-validate", "content-review-test", "content-export-pwa", "fixtures"},
+            "models": {"BundledIntegrityTests"},
+        })
+
+    def test_fixture_runs_the_generator_check_and_the_suites_that_read_it(self):
+        self.assertEqual(picked(self.select("spec/reminders/fixtures/next-reminder-time.json")), {
+            "content": {"fixtures"},
+            "core": {"ReminderFixtureTests", "ReminderPlannerTests"},
+        })
+
+    def test_pwa_page_runs_the_export_and_fixture_checks(self):
+        self.assertEqual(picked(self.select("index.html")), {"content": {"content-export-pwa", "fixtures"}})
+
+    def test_shared_node_module_runs_each_check_that_loads_it(self):
+        self.assertEqual(picked(self.select("tools/content-lib.mjs")), {
+            "content": {"content-validate", "content-review-test", "content-export-pwa", "backup-validate"},
+        })
+
+    def test_core_source_runs_the_tests_that_depend_on_it(self):
+        sel = self.select(CORE + "PrayerTimes/Qibla.swift")
+        lanes = picked(sel)
+        self.assertEqual(lanes["core"], {"QiblaTests"})
+        self.assertEqual(lanes["models"], {"QiblaHeadingTests"})
+        self.assertEqual(lanes["ios-build"], {"app", "tests"})
+        self.assertIn("QiblaUITests", lanes["ui"])
+        self.assertNotIn("DeckIndexUITests", lanes["ui"])
+        self.assertEqual(sel.full, {})
+
+    def test_test_support_runs_the_suites_that_use_it(self):
+        core = picked(self.select(CORE_TESTS + "Storage/StorageTestSupport.swift"))["core"]
+        self.assertIn("StorageSchemaTests", core)
+        self.assertNotIn("QiblaTests", core)
+
+    def test_test_file_runs_itself(self):
+        self.assertEqual(picked(self.select(CORE_TESTS + "PrayerTimes/QiblaTests.swift")), {"core": {"QiblaTests"}})
+        self.assertEqual(picked(self.select("ios/AthkarUITests/QiblaUITests.swift")), {"ui": {"QiblaUITests"}})
+
+    def test_ui_walk_stops_at_the_composition_roots(self):
+        self.assertEqual(picked(self.select("ios/Athkar/Deck/DeckIndexView.swift"))["ui"], {"DeckIndexUITests"})
+
+    def test_composition_root_runs_every_ui_test(self):
+        self.assertEqual(picked(self.select("ios/Athkar/Screens/HomeView.swift"))["ui"], self.all_units("ui"))
+
+    def test_shared_build_input_runs_everything(self):
+        for path in ("ios/Package.swift", "ios/project.yml", "ios/Package.resolved", "tools/test-native-core.sh"):
+            with self.subTest(path=path):
+                sel = self.select(path)
+                self.assertEqual(set(sel.full), set(at.LANES))
+                self.assertEqual(picked(sel)["core"], self.all_units("core"))
+
+    def test_unknown_file_runs_everything(self):
+        sel = self.select("tools/new-check.rb", status="A")
+        self.assertEqual(sel.unmapped, ["tools/new-check.rb"])
+        self.assertEqual(set(sel.full), set(at.LANES))
+        self.assertIn("matches no rule", sel.full["core"])
+
+    def test_untested_file_runs_nothing(self):
+        sel = self.select("sw.js", "icons/icon.svg")
+        self.assertEqual(picked(sel), {})
+        self.assertEqual(sel.untested, ["sw.js", "icons/icon.svg"])
+
+    def test_mac_runner_runs_every_app_unit_and_ui_test(self):
+        sel = self.select("tools/ios-mac-run.sh")
+        self.assertEqual(set(sel.full), {"app-unit", "ui"})
+        self.assertEqual(set(picked(sel)), {"app-unit", "ui"})
+
+    def test_selector_runs_its_own_tests(self):
+        for path in ("tools/affected-tests.py", "tools/affected-tests-test.py", "tools/test.sh"):
+            with self.subTest(path=path):
+                self.assertEqual(picked(self.select(path)), {"selector": {"self-test"}})
+
+    def test_all_runs_everything(self):
+        sel = at.Selection(self.index, [], everything="--all")
+        self.assertEqual(set(sel.full), set(at.LANES))
+        for lane in ("core", "models", "app-unit", "ui"):
+            self.assertEqual(set(sel.picked(lane)), self.all_units(lane))
+
+    def test_lane_values(self):
+        sel = self.select(CORE + "PrayerTimes/Qibla.swift")
+        _, _, core = at.lane_values(sel, "core")
+        self.assertEqual(core["ATHKAR_TEST_FULL"], "0")
+        self.assertEqual(core["ATHKAR_TEST_FILTER"], r"AthkarCoreTests[./](QiblaTests)(/|$)")
+        self.assertEqual(core["ATHKAR_TEST_COUNT"], str(self.index.units["core"]["QiblaTests"][1]))
+        _, _, ui = at.lane_values(sel, "ui")
+        self.assertIn("-only-testing:AthkarUITests/QiblaUITests", ui["ATHKAR_TEST_ONLY_TESTING"].split())
+        _, _, build = at.lane_values(sel, "ios-build")
+        self.assertEqual((build["ATHKAR_TEST_BUILD_APP"], build["ATHKAR_TEST_BUILD_TESTS"]), ("1", "1"))
+        _, _, full = at.lane_values(at.Selection(self.index, [], everything="--all"), "core")
+        self.assertEqual((full["ATHKAR_TEST_FULL"], full["ATHKAR_TEST_FILTER"]), ("1", ""))
+
+    def test_filter_matches_whole_test_identifiers(self):
+        import re
+        core = re.compile(at.unit_filter("core", ["QiblaTests", "periodRawValuesMatchPWA()"]))
+        self.assertTrue(core.search("AthkarCoreTests.QiblaTests/bearingFromRiyadh()"))
+        self.assertTrue(core.search("AthkarCoreTests.periodRawValuesMatchPWA()"))
+        self.assertFalse(core.search("AthkarCoreTests.QiblaTestsSlow/bearingFromRiyadh()"))
+        self.assertFalse(core.search("AthkarCoreTests.NextPrayerTests/qiblaTests()"))
+        models = re.compile(at.unit_filter("models", ["QiblaHeadingTests"]))
+        self.assertTrue(models.search("AthkarPortableTests.QiblaHeadingTests/testStaleHeading"))
+        self.assertFalse(models.search("AthkarPortableTests.QiblaHeadingTestsExtra/testStaleHeading"))
+
+
+# A minimal repository with the same layout: AthkarCore, app files compiled into AthkarModels
+# (one adds a conformance to a core type), core suites and portable test classes.
+SYNTHETIC = {
+    "README.md": "# Fixture\n",
+    "data/cities.tsv": "Riyadh\n",
+    "ios/Package.swift": """\
+        let package = Package(name: "Athkar", targets: [
+            .target(name: "AthkarModels", path: "Athkar",
+                    sources: ["Deck/DeckModel.swift", "Qibla/QiblaDescription.swift"]),
+            .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels"], path: "AthkarPortableTests"),
+        ])
+        """,
+    CORE + "Qibla.swift": """\
+        public enum Qibla {
+            public static func bearing() -> Double { 0 }
+        }
+        """,
+    CORE + "Clock.swift": """\
+        public struct Clock {
+            public var now = 0
+            public init() {}
+        }
+
+        public func legacyNow() -> Int { 0 }
+        """,
+    CORE + "Clock+Days.swift": """\
+        extension Clock {
+            public var tomorrow: Int { now + 1 }
+        }
+        """,
+    CORE + "Ledger.swift": """\
+        public struct Ledger {
+            public var tomorrow = 0
+            public var bearing = Qibla.bearing()
+            public init() {}
+        }
+        """,
+    CORE + "Angles.swift": """\
+        extension Double {
+            public var degrees: Double { self }
+        }
+        """,
+    CORE_TESTS + "QiblaTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        @Suite struct QiblaTests {
+            @Test func bearing() {
+                let degrees = Qibla.bearing()
+                #expect(degrees == 0)
+            }
+        }
+        """,
+    CORE_TESTS + "AngleTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct AngleTests {
+            @Test func degrees() { #expect(1.0.degrees == 1) }
+        }
+        """,
+    CORE_TESTS + "ClockTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct ClockTests {
+            @Test func tomorrow() { #expect(Clock().tomorrow == 1) }
+        }
+        """,
+    CORE_TESTS + "LedgerTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct LedgerTests {
+            @Test func tomorrow() { #expect(Ledger().tomorrow == 0) }
+        }
+        """,
+    CORE_TESTS + "LegacyTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        @Test func legacyNowIsZero() { #expect(legacyNow() == 0) }
+        """,
+    CORE_TESTS + "CityTests.swift": """\
+        import Testing
+
+        struct CityTests {
+            @Test func loads() throws { _ = try String(contentsOfFile: "data/cities.tsv", encoding: .utf8) }
+        }
+        """,
+    "ios/Athkar/Deck/DeckModel.swift": """\
+        import AthkarCore
+
+        final class DeckModel {
+            let clock = Clock()
+        }
+        """,
+    "ios/Athkar/Qibla/QiblaDescription.swift": """\
+        import AthkarCore
+
+        extension Qibla: CustomStringConvertible {
+            public var description: String { "qibla" }
+        }
+        """,
+    "ios/AthkarPortableTests/DeckModelTests.swift": """\
+        import XCTest
+        @testable import AthkarModels
+
+        final class DeckModelTests: XCTestCase {
+            func testClock() { XCTAssertEqual(DeckModel().clock.now, 0) }
+        }
+        """,
+    "ios/AthkarPortableTests/LedgerPortableTests.swift": """\
+        import XCTest
+        @testable import AthkarModels
+
+        final class LedgerPortableTests: XCTestCase {
+            func testLedger() { XCTAssertEqual(Ledger().tomorrow, 0) }
+        }
+        """,
+}
+
+
+class SyntheticRepositoryTests(unittest.TestCase):
+    def setUp(self):
+        self.repo = Path(tempfile.mkdtemp(prefix="athkar-affected-"))
+        self.addCleanup(shutil.rmtree, self.repo)
+        self.env = {**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
+                    "GIT_AUTHOR_NAME": "Fixture", "GIT_AUTHOR_EMAIL": "fixture@example.invalid",
+                    "GIT_COMMITTER_NAME": "Fixture", "GIT_COMMITTER_EMAIL": "fixture@example.invalid",
+                    "PYTHONDONTWRITEBYTECODE": "1"}
+        self.env.pop("ATHKAR_TEST_BASE", None)
+        for path, text in SYNTHETIC.items():
+            self.write(path, textwrap.dedent(text))
+        (self.repo / "tools").mkdir()
+        shutil.copy(HERE / "affected-tests.py", self.repo / "tools/affected-tests.py")
+        self.git("init", "-q", "-b", "main")
+        self.base = self.commit("base")
+
+    def write(self, path, text):
+        target = self.repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text)
+
+    def git(self, *args):
+        return subprocess.run(["git", "-C", str(self.repo), *args], env=self.env, check=True,
+                              capture_output=True, text=True).stdout.strip()
+
+    def commit(self, message):
+        self.git("add", "-A")
+        self.git("commit", "-q", "--no-verify", "-m", message)
+        return self.git("rev-parse", "HEAD")
+
+    def select(self, lane, *mode):
+        """The lane's shell assignments, as a dict."""
+        mode = mode or ("--base", self.base)
+        result = subprocess.run([sys.executable, str(self.repo / "tools/affected-tests.py"), "select", lane, *mode],
+                                env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        values = {}
+        for line in result.stdout.splitlines():
+            key, value = line.split("=", 1)
+            values[key] = shlex.split(value)[0] if value else ""
+        return values
+
+    def units(self, lane, *mode):
+        values = self.select(lane, *mode)
+        return set(values["ATHKAR_TEST_UNITS"].split()) if values["ATHKAR_TEST_RUN"] == "1" else set()
+
+    def test_member_edit_runs_users_of_that_type_only(self):
+        self.write(CORE + "Clock+Days.swift", "extension Clock {\n    public var tomorrow: Int { now + 2 }\n}\n")
+        self.assertEqual(self.units("core"), {"ClockTests"})  # LedgerTests uses another type's `tomorrow`
+        self.assertEqual(self.units("models"), set())         # DeckModel uses Clock, not `tomorrow`
+
+    def test_removed_name_reaches_the_files_still_using_it(self):
+        self.write(CORE + "Clock.swift", "public struct Clock {\n    public var now = 0\n    public init() {}\n}\n")
+        self.assertEqual(self.units("core"), {"ClockTests", "legacyNowIsZero()"})
+
+    def test_member_of_an_outside_type_runs_its_dotted_users(self):
+        self.write(CORE + "Angles.swift", "extension Double {\n    public var degrees: Double { self * 1 }\n}\n")
+        self.assertEqual(self.units("core"), {"AngleTests"})  # QiblaTests names a local `degrees`
+
+    def test_deleted_file_reaches_its_users(self):
+        (self.repo / CORE / "Qibla.swift").unlink()
+        self.assertEqual(self.units("core"), {"QiblaTests", "LedgerTests"})
+        self.assertEqual(self.select("ios-build")["ATHKAR_TEST_BUILD_APP"], "1")
+
+    def test_app_extension_does_not_reach_core(self):
+        # Ledger.swift uses Qibla, but AthkarCore can't see the app's conformance.
+        self.write("ios/Athkar/Qibla/QiblaDescription.swift",
+                   "import AthkarCore\n\nextension Qibla: CustomStringConvertible {\n"
+                   "    public var description: String { \"Qibla\" }\n}\n")
+        self.assertEqual(self.units("core"), set())
+        self.assertEqual(self.units("models"), set())
+        self.assertEqual(self.select("ios-build")["ATHKAR_TEST_RUN"], "1")
+
+    def test_core_change_reaches_portable_tests_through_the_app(self):
+        self.write(CORE + "Clock.swift", textwrap.dedent(SYNTHETIC[CORE + "Clock.swift"]).replace("now = 0", "now = 1"))
+        self.assertEqual(self.units("models"), {"DeckModelTests"})
+
+    def test_data_file_runs_its_readers(self):
+        self.write("data/cities.tsv", "Riyadh\nMakkah\n")
+        self.assertEqual(self.units("core"), {"CityTests"})
+
+    def test_untracked_test_file_runs(self):
+        self.write(CORE_TESTS + "NewTests.swift", "import Testing\n\nstruct NewTests {\n    @Test func runs() {}\n}\n")
+        self.assertEqual(self.units("core"), {"NewTests"})
+
+    def test_untracked_unknown_file_runs_everything(self):
+        self.write("notes.xyz", "?\n")
+        values = self.select("core")
+        self.assertEqual((values["ATHKAR_TEST_FULL"], values["ATHKAR_TEST_FILTER"]), ("1", ""))
+        self.assertIn("notes.xyz matches no rule", values["ATHKAR_TEST_REASON"])
+
+    def test_documentation_runs_nothing(self):
+        self.write("README.md", "# Fixture, edited\n")
+        for lane in at.LANES:
+            with self.subTest(lane=lane):
+                self.assertEqual(self.select(lane)["ATHKAR_TEST_RUN"], "0")
+
+    def test_changes_count_from_the_merge_base(self):
+        self.git("checkout", "-q", "-b", "feature")
+        self.write(CORE + "Qibla.swift", "public enum Qibla {\n    public static func bearing() -> Double { 1 }\n}\n")
+        self.commit("feature")
+        self.git("checkout", "-q", "main")
+        self.write("data/cities.tsv", "Riyadh\nMakkah\n")
+        self.commit("main moves on")
+        self.git("checkout", "-q", "feature")
+        # main's cities.tsv change is not on this branch, so CityTests doesn't run.
+        self.assertEqual(self.units("core", "--base", "main"), {"QiblaTests", "LedgerTests"})
+
+    def test_selector_error_runs_everything(self):
+        values = self.select("core", "--base", "no-such-branch")
+        self.assertEqual((values["ATHKAR_TEST_RUN"], values["ATHKAR_TEST_FULL"]), ("1", "1"))
+        self.assertIn("selector error", values["ATHKAR_TEST_REASON"])
+
+    def test_all_runs_everything(self):
+        values = self.select("core", "--all")
+        self.assertEqual((values["ATHKAR_TEST_FULL"], values["ATHKAR_TEST_FILTER"]), ("1", ""))
+        self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
+                         {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests"})
+
+
+if __name__ == "__main__":
+    unittest.main()
