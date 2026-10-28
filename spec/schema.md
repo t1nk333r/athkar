@@ -39,6 +39,7 @@ Update this file in the same commit as any migration.
 | `v1` | The tables under "Tables (migration v1)". |
 | `v2` | `ruqyah_sura_days`: the ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`). |
 | `v3` | `suwar_page_reads` and `suwar_sura_days`: the athkar PWA's «سور» (`athkar-suwar-v1`). |
+| `v4` | `tasbih_counts`: the athkar PWA's «مسبحة» (`athkar-tasbih-v1`). |
 
 ## Tables (migration v1)
 
@@ -69,6 +70,9 @@ for the calculation profile (`CalculationSettings`, spec/prayer-times/README.md)
 | `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |
 | `hijri_offset` | integer days | `0` | none |
 | `suwar_selected_sura` | a sura ID of the suwar pack | `"kahf"` (a stored ID the pack no longer has reads as its first sura) | `athkar-suwar-v1.selected` |
+| `tasbih_selected` | a preset ID, or `"c:"` and a saved phrase | `"subhan"` (a key that is neither a preset nor a saved phrase reads as `"subhan"`) | `athkar-tasbih-v1.selected` |
+| `tasbih_target` | integer 1–9999, or `0` for «بلا هدف» (the PWA's `null`) | `33` (any other value reads as `33`) | `athkar-tasbih-v1.target` |
+| `tasbih_custom_phrases` | array of saved phrases, newest first | `[]` (phrases past the eighth, or that clean to nothing or repeat an earlier one or a preset, are dropped on read) | `athkar-tasbih-v1.custom` |
 
 Apply defaults when reading settings, and never write them. A row exists only after the user or an import sets a
 value. This prevents an onboarding import from being shadowed by rows the app created.
@@ -220,7 +224,22 @@ today, `history` for earlier days).
 | `sura_id` | TEXT | no | PK 2 | The pack's sura ID. |
 | `completed_at` | TEXT | no | | Instant. When the sura's last page was read that day. |
 
-## Future tables (not in v3)
+## Tables (migration v4)
+
+### `tasbih_counts`
+
+This table stores one row per local date and «مسبحة» phrase counted on it (`athkar-tasbih-v1`: `counts` and
+`firstUse` for today, `history` for earlier days). A phrase whose count goes back to zero has no row.
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `local_date` | TEXT | no | PK 1 | Local date. |
+| `phrase_key` | TEXT | no | PK 2 | A preset ID (`subhan`, `hamd`, `takbir`, `tahlil`, `istighfar`, `subhan-bihamdih`, `hawqala`, `salawat`), or `c:` and a saved phrase (at most 60 UTF-16 code units). 1–62 characters. |
+| `count` | INTEGER | no | | 1–99999 (`tasbihMaxCount`). |
+| `first_use` | INTEGER | no | | The phrase's place in the day's order of first counts (`firstUse`), from 1; unique within the date. |
+| `updated_at` | TEXT | no | | Instant. |
+
+## Future tables (not in v4)
 
 - 1.0, added by later slices' migrations: `prayer_records` (unique on `(calculation_date, prayer_key)`, per
   MOBILE_APP_PLAN.md §11 `prayer_logs`) and `notification_audit` (redacted).
@@ -243,6 +262,10 @@ today, `history` for earlier days).
   only if a `suwar_sura_days` row exists; the app writes the row with the read that completes the sura and deletes
   it with any of its pages, as the PWA keeps `completedAt` only while every page is read. A page ID the current
   pack does not have is ignored on read.
+- A «مسبحة» phrase is counted on a date if and only if a `tasbih_counts` row exists, with a count of at least 1.
+  A date holds at most one key per phrase as `tasbihIdentity` reads it: a saved phrase that matches an earlier
+  spelling's counts takes them over (`canonicalTasbihDays`). The stored keys are already the cleaned spelling, so
+  the PWA's load-time key migration has nothing to do.
 
 ## Session state bridge
 
@@ -350,6 +373,28 @@ The «سور» section reads today's `suwar_page_reads` (`readPages(on:)`) and `
   a `suwar_sura_days` row, as the PWA counts `suwarState.history`. Today's completed suras are today's progress.
 - `suwar_selected_sura` is a preference: no reset changes it.
 
+### Tasbih counts and reset
+
+The «مسبحة» section reads today's `tasbih_counts` in `first_use` order (`counts(on:)`).
+
+- **Counting.** `setCount(_:for:on:at:)` sets the phrase's count for the date (`setTasbihCount`). A phrase counted
+  for the first time that day takes the next `first_use`. A count of zero (an undo to zero, or the phrase's reset)
+  deletes the row, so its next count puts it last again. The app never writes a count above 99999.
+- **Phrases.** `savePhrases(_:selected:adopting:at:)` writes `tasbih_custom_phrases` and `tasbih_selected` in one
+  transaction, as the PWA stores them in one value. A phrase saved in a new spelling of one whose counts remain
+  (a deleted phrase keeps its counts) adopts them: on every date the earlier key's row moves to the new key. A date
+  that already counts the new key sums the two, up to 99999, and keeps the earlier `first_use`. Deleting a saved
+  phrase keeps its counts. The target is `tasbih_target`, written alone.
+- **Scoped reset.** `reset(on:removing:)` runs in one transaction:
+  - It deletes that date's rows (`resetTasbihProgress`).
+  - With `.week(...)` or `.all`, it also deletes the rows in scope (`deleteTasbihHistory`).
+  - With no removal (تقدم اليوم), earlier days keep their rows.
+- **Confirmation copy.** `recordedDayCount(removal, before: today)` counts the distinct earlier dates in scope with
+  a row, as the PWA counts `tasbihState.history`. Today's counts are today's progress.
+- `tasbih_selected`, `tasbih_target` and `tasbih_custom_phrases` are preferences: no reset changes them.
+- A later stored date than today (the clock moved back) is not merged into today, as for the other sections: each
+  date reads its own rows. The PWA sums such days into today's counts (`rollTasbihStateToDate`).
+
 ## Backup import (envelope v1)
 
 Import validates the whole file first. It rejects everything that `spec/backup/envelope-v1.schema.json` and
@@ -429,6 +474,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
   `ruqyah-suwar-v1` (its `ruqyah` object is closed).
 - `suwar_page_reads`, `suwar_sura_days` and `suwar_selected_sura` are not exported, and import writes none:
   envelope v1 does not carry `athkar-suwar-v1` (NATIVE_APP_PLAN.md, owner-approved exceptions).
+- `tasbih_counts`, `tasbih_selected`, `tasbih_target` and `tasbih_custom_phrases` are not exported, and import
+  writes none: envelope v1 does not carry `athkar-tasbih-v1` either.
 - `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
   already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.

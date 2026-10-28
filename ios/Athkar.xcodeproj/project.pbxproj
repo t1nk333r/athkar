@@ -13,12 +13,14 @@
 		0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501E35E5E819164510431A3C /* DeviceLocationTests.swift */; };
 		0EA61B25B39E91EADE9C0ED9 /* NativeTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */; };
 		1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC80EB016E62A55F7388473 /* DeckCardView.swift */; };
+		1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC25390B547669C1BA3AF86 /* TasbihModel.swift */; };
 		2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAF5DB1A7749351672C27D /* LaunchTests.swift */; };
 		31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = C91EA781FB90F2751708543C /* adhkar.v1.json */; };
 		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
 		37B7CFF6BEA627BDF70F5534 /* ReminderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F334FF1145895D5E01B03C01 /* ReminderViews.swift */; };
 		393E5863E65F5FB131563FA4 /* QiblaUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150FDEA907C03DC351639CA /* QiblaUITests.swift */; };
 		3B0D6C5A279DA3F7D9D178A6 /* ReminderNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E500B0D3D703EAE93C102C /* ReminderNotifications.swift */; };
+		3CC0339AE09659567C8A73F8 /* TasbihUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B986808159F0763FD4792458 /* TasbihUITests.swift */; };
 		41F5E5DA3582116BEFB260AF /* SettingsPersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EB5A3E5D6C97EC5C9CF437 /* SettingsPersistenceTests.swift */; };
 		4601A45BF76255D3154C3760 /* TestInfrastructureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43C31A32C7B6AE7288E793A /* TestInfrastructureTests.swift */; };
 		480B42DD3FC4646A95151223 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = 15B13C389B55D96EC0545171 /* AthkarCore */; };
@@ -39,6 +41,9 @@
 		7D215945F044DE54FD0AF17D /* cities.tsv in Resources */ = {isa = PBXBuildFile; fileRef = B70A4FE7DB61A178262341A0 /* cities.tsv */; };
 		83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = CE857DADF37638C3F15FE817 /* ruqyah.v1.json */; };
 		86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */; };
+		8A3D58026FC84A79980871E7 /* TasbihText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8191873837858F429947CAAC /* TasbihText.swift */; };
+		8BE21B5B46C84CD0ADF15BDF /* TasbihView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20697D6F353875EC43A63CD0 /* TasbihView.swift */; };
+		90AB3DA847704DAD8569BBA9 /* TasbihSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */; };
 		932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */; };
 		94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */; };
 		99BA870781EAC9D1CEAE720A /* CityDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3323EC2D7C5109C2B7FFB57A /* CityDirectory.swift */; };
@@ -101,6 +106,7 @@
 		17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingMetrics.swift; sourceTree = "<group>"; };
 		1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeading.swift; sourceTree = "<group>"; };
 		204F141E2D9C1C962271896B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		20697D6F353875EC43A63CD0 /* TasbihView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihView.swift; sourceTree = "<group>"; };
 		27D2779D803C0DEA8171968D /* AthkarCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AthkarCore; path = AthkarCore; sourceTree = SOURCE_ROOT; };
 		3323EC2D7C5109C2B7FFB57A /* CityDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CityDirectory.swift; sourceTree = "<group>"; };
 		3CADA9419CAC70B90CD19CFD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../content/manifest.json; sourceTree = "<group>"; };
@@ -118,15 +124,18 @@
 		5F05E54F6F784321446FD2E9 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 		6134B2928ABCD0502572ED37 /* DayRollover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayRollover.swift; sourceTree = "<group>"; };
 		69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6BC25390B547669C1BA3AF86 /* TasbihModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihModel.swift; sourceTree = "<group>"; };
 		6D4122DE1C89CDB311B8848C /* SectionChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionChips.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
 		6F4A7DAF059476E447785AE3 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesUITests.swift; sourceTree = "<group>"; };
+		8191873837858F429947CAAC /* TasbihText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihText.swift; sourceTree = "<group>"; };
 		862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckIndexView.swift; sourceTree = "<group>"; };
 		894967E326786673B5F4981D /* ReminderNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotificationsTests.swift; sourceTree = "<group>"; };
 		90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarDeckModel.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihSheets.swift; sourceTree = "<group>"; };
 		A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTestSupport.swift; sourceTree = "<group>"; };
 		A69E443B335C7F687972315F /* AdhkarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdhkarDeckModel.swift; sourceTree = "<group>"; };
 		A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-hafs-v30.ttf"; path = "../fonts/kfgqpc-hafs-v30.ttf"; sourceTree = "<group>"; };
@@ -136,6 +145,7 @@
 		B70A4FE7DB61A178262341A0 /* cities.tsv */ = {isa = PBXFileReference; name = cities.tsv; path = ../data/cities.tsv; sourceTree = "<group>"; };
 		B714704C81ED5A22715203DD /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
 		B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoFitUITests.swift; sourceTree = "<group>"; };
+		B986808159F0763FD4792458 /* TasbihUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihUITests.swift; sourceTree = "<group>"; };
 		BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		C91EA781FB90F2751708543C /* adhkar.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = adhkar.v1.json; path = ../content/adhkar.v1.json; sourceTree = "<group>"; };
 		CB093C7B73DF50B939CB0E4C /* PrayerTimesModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesModel.swift; sourceTree = "<group>"; };
@@ -217,6 +227,7 @@
 				6899972F3AB9680ACD22A641 /* Qibla */,
 				FDD547B092311CE8B9BE90D7 /* Reminders */,
 				4A19A294B20B9DCEC455FD7F /* Screens */,
+				5CF9A5DD529A0C93E92A35FC /* Tasbih */,
 			);
 			path = Athkar;
 			sourceTree = "<group>";
@@ -272,6 +283,17 @@
 				90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */,
 			);
 			path = Deck;
+			sourceTree = "<group>";
+		};
+		5CF9A5DD529A0C93E92A35FC /* Tasbih */ = {
+			isa = PBXGroup;
+			children = (
+				6BC25390B547669C1BA3AF86 /* TasbihModel.swift */,
+				9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */,
+				8191873837858F429947CAAC /* TasbihText.swift */,
+				20697D6F353875EC43A63CD0 /* TasbihView.swift */,
+			);
+			path = Tasbih;
 			sourceTree = "<group>";
 		};
 		6899972F3AB9680ACD22A641 /* Qibla */ = {
@@ -355,6 +377,7 @@
 				E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */,
 				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
 				163466F44FCE8FF9E95437AD /* SuwarUITests.swift */,
+				B986808159F0763FD4792458 /* TasbihUITests.swift */,
 				042329F8B233CEB3D355A537 /* UITestSupport.swift */,
 			);
 			path = AthkarUITests;
@@ -535,6 +558,10 @@
 				A07159CDBE18B815AED58E9F /* SettingsModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
 				D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */,
+				1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */,
+				90AB3DA847704DAD8569BBA9 /* TasbihSheets.swift in Sources */,
+				8A3D58026FC84A79980871E7 /* TasbihText.swift in Sources */,
+				8BE21B5B46C84CD0ADF15BDF /* TasbihView.swift in Sources */,
 				FCA6B5C02D47830635FFFFE5 /* TestHooks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -554,6 +581,7 @@
 				9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */,
 				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
 				6B168BA3F2BD04284522302C /* SuwarUITests.swift in Sources */,
+				3CC0339AE09659567C8A73F8 /* TasbihUITests.swift in Sources */,
 				D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

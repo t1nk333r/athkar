@@ -126,18 +126,64 @@ final class DayRolloverTests: XCTestCase {
         XCTAssertEqual(try decks.database.suwar.readPages(on: Day.today), [])
     }
 
+    /// «مسبحة» is no deck: a day it cannot read leaves every deck working, and drops a count until the day can be
+    /// read. Then the count that reads the day applies to it, as `addTasbihCount` counts after `ensureCurrentDay`.
+    @MainActor
+    func testUnreadableTasbihDayLeavesTheDecksWorking() throws {
+        let decks = try Decks()
+        XCTAssertNotNil(decks.countTasbih())
+        try decks.hide("tasbih_counts")
+        decks.today = Day.tomorrow
+        XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
+        XCTAssertEqual(decks.adhkar.state.date, Day.tomorrow)
+        XCTAssertEqual(decks.ruqyah.progress.date, Day.tomorrow)
+        XCTAssertEqual(decks.suwar.date, Day.tomorrow)
+        XCTAssertEqual(decks.tasbih.date, Day.today)
+        XCTAssertEqual(decks.reports.messages.count, 1)
+
+        let first = try decks.position(of: "morning-01", .morning)
+        XCTAssertEqual(decks.tap(.morning, at: first), DeckChange(completedCard: true, advance: true))
+        XCTAssertNil(decks.countTasbih())
+        XCTAssertEqual(decks.tasbih.count, 1, "the day before stays on screen")
+        XCTAssertEqual(decks.reports.messages.count, 3, "every gate tried the unreadable day again")
+
+        try decks.restore("tasbih_counts")
+        XCTAssertNotNil(decks.countTasbih())
+        XCTAssertEqual(decks.tasbih.date, Day.tomorrow)
+        XCTAssertEqual(decks.tasbih.count, 1)
+        XCTAssertEqual(try decks.database.tasbih.counts(on: Day.tomorrow).map(\.count), [1])
+        XCTAssertEqual(try decks.database.tasbih.counts(on: Day.today).map(\.count), [1])
+    }
+
+    /// Unlike a deck's tap, a count made as the day turns is not dropped: it is the new day's first.
+    @MainActor
+    func testTasbihCountsOnTheNewDayAfterMidnight() throws {
+        let decks = try Decks()
+        XCTAssertNotNil(decks.countTasbih())
+        XCTAssertNotNil(decks.countTasbih())
+        decks.today = Day.tomorrow
+        XCTAssertNotNil(decks.countTasbih())
+        XCTAssertEqual(decks.tasbih.date, Day.tomorrow)
+        XCTAssertEqual(decks.tasbih.count, 1)
+        XCTAssertTrue(decks.tasbih.hasHistory)
+        XCTAssertEqual(try decks.database.tasbih.counts(on: Day.today).map(\.count), [2])
+        XCTAssertEqual(try decks.database.tasbih.counts(on: Day.tomorrow).map(\.count), [1])
+        XCTAssertEqual(decks.reports.messages, [])
+    }
+
     /// Every session's day fails to load at midnight, then the clock goes back to the day on screen. The rollover ends
     /// the pending adhkar load, so Settings and the decks change the day on screen instead of loading the later one.
     @MainActor
     func testReturningToTheShownDayEndsAPendingAdhkarLoad() throws {
         let decks = try Decks()
-        let tables = ["adhkar_item_progress", "ruqyah_segment_progress", "suwar_page_reads"]
+        let tables = ["adhkar_item_progress", "ruqyah_segment_progress", "suwar_page_reads", "tasbih_counts"]
         for table in tables { try decks.hide(table) }
         decks.today = Day.tomorrow
         XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
         XCTAssertEqual(decks.adhkar.state.date, Day.today)
         XCTAssertEqual(decks.ruqyah.progress.date, Day.today)
         XCTAssertEqual(decks.suwar.date, Day.today)
+        XCTAssertEqual(decks.tasbih.date, Day.today)
         XCTAssertEqual(decks.reports.messages.count, tables.count)
         for table in tables { try decks.restore(table) }
 
@@ -183,6 +229,7 @@ private final class Decks {
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
     let suwar: SuwarDeckModel
+    let tasbih: TasbihModel
     /// The local date the clock shows.
     var today: String
 
@@ -201,11 +248,12 @@ private final class Decks {
                                      report: reports.record)
         suwar = try SuwarDeckModel(database: support.database, content: support.content, today: support.today,
                                    report: reports.record)
+        tasbih = try TasbihModel(database: support.database, today: support.today, report: reports.record)
         today = support.today
     }
 
     var database: AppDatabase { support.database }
-    var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar) }
+    var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, tasbih: tasbih) }
 
     func deck(_ id: DeckID) -> any DeckModel {
         switch id {
@@ -222,6 +270,12 @@ private final class Decks {
 
     /// `true` when `deck`'s day changed or still cannot be read, so the gesture belongs to the day before.
     func gate(_ deck: DeckID) -> Bool { rollover.roll(to: today).contains(deck) }
+
+    /// `AppModel.ensureTasbihDay` and a tap on «مسبحة»: counted once the counter shows today.
+    func countTasbih() -> TasbihModel.Change? {
+        _ = rollover.roll(to: today)
+        return tasbih.date == today ? tasbih.add() : nil
+    }
 
     func tap(_ id: DeckID, at index: Int) -> DeckChange? {
         gate(id) ? nil : deck(id).tap(cardAt: index)

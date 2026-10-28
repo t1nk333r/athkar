@@ -52,6 +52,7 @@ The output is byte-identical on every run, whatever the host time zone. Regenera
 | `sessions/fixtures/scoped-reset.json` | `resetDayProgress` / `resetWeek` / `resetEverything`, `hasResettableState` | `now`, `timeZone`, `scope` (`day`/`week`/`everything`), `state` | `hasResettableStateBefore`, `deletedHistoryDates` (week), resulting `state` with the reset epochs each scope records |
 | `sessions/fixtures/tasbih-load-state.json` | `loadTasbihState` (`normalizeTasbihState`, phrase-key migration, rollover) | `now`, `timeZone`, `storage` (`athkar-tasbih-v1` raw string) | resulting `state` (`{date, selected, target, counts, firstUse, custom, history, resets}`), and `reloaded`: the same load on the saved result, equal to `state` |
 | `sessions/fixtures/tasbih-load-migration.json` | `loadTasbihState` | a stored `athkar-tasbih-v1` with aliases, optionally another tab's write between this tab's reads, or a write-ahead record holding the key → the loaded state, the writes made, the stored value after, and a second load (once only) |
+| `sessions/fixtures/tasbih-text.json` | `tasbihMatchKey`, `cleanTasbihPhrase`, `findTasbihPhrase`, `tasbihIdentity`, `parseTasbihTarget`, `tasbihStatusText` | `function`, and `text`, `custom`, `key`, `value`, or `count` and `target` | the string (`null` when the PWA returns `null`), the target or `null`, or `{text, check}`; strings compare as UTF-16 code units ([`sessions/tasbih.md`](sessions/tasbih.md)) |
 | `reminders/fixtures/next-reminder-time.json` | `nextReminderTime`, `scheduleReminders`, `prayerTimesForDate` | `now`, `timeZone`, `preferences` (the `athkar-reminders-v2` shape), `state`, `notificationPermission` | `todaySchedule`, per period `nextReminderTime`, and per period `scheduled: {delayMs, fireAt}` or `null` |
 
 ### Reminder notes
@@ -115,4 +116,4 @@ trips use the host's `CompressionStream` and record only the container.
 
 ## Deck definition
 
-`sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2).
+`sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2). `sessions/tasbih.md` describes the «مسبحة» counter (counting, phrases, target, day and reset) and where the native app differs from the PWA.

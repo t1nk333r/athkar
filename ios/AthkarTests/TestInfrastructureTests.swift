@@ -79,6 +79,13 @@ final class TestInfrastructureTests: XCTestCase {
         XCTAssertEqual(pages.map(\.id), support.content.suwar.suwar.flatMap { $0.pages.map(\.id) })
         XCTAssertEqual(pages.map(\.count), Array(repeating: 0, count: pages.count))
         XCTAssertFalse(app.suwar.isDayComplete)
+
+        // «مسبحة» counts «سبحان الله» towards ٣٣, with nothing counted today.
+        XCTAssertEqual(app.tasbih.date, support.today)
+        XCTAssertEqual(app.tasbih.selected, "subhan")
+        XCTAssertEqual(app.tasbih.target, 33)
+        XCTAssertEqual(app.tasbih.counts, [])
+        XCTAssertFalse(app.showsTasbih)
         XCTAssertNil(app.failure)
     }
 

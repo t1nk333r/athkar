@@ -12,6 +12,7 @@ final class AppModel {
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
     let suwar: SuwarDeckModel
+    let tasbih: TasbihModel
     let prayer: PrayerTimesModel
     let reminders: ReminderModel
     /// The tab on screen: الصباح, المساء or أخرى.
@@ -48,6 +49,13 @@ final class AppModel {
     var showsOtherList: Bool { tab == .other && otherSection == nil }
     /// A deck is on screen (not the أخرى list, nor a section without a deck such as أوقات الصلاة).
     var showsDeck: Bool { tab != .other || otherSection?.deck != nil }
+    /// «مسبحة» is on screen.
+    var showsTasbih: Bool { tab == .other && otherSection == .tasbih }
+    /// What «⋯»'s «إعادة» resets: the deck or «مسبحة» on screen, or nothing elsewhere.
+    var resettable: (any ResettableSection)? {
+        if showsTasbih { return tasbih }
+        return showsDeck ? deck(selection) : nil
+    }
     /// The adhkar period last on screen (`activePeriod`): long-order keeps its current card.
     private(set) var lastPeriod: Period = .morning
     /// Set when a database write fails; the screen shows it once.
@@ -63,6 +71,7 @@ final class AppModel {
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
         suwar = try SuwarDeckModel(database: database, content: content, today: today, report: report)
+        tasbih = try TasbihModel(database: database, today: today, report: report)
         prayer = try PrayerTimesModel(database: database, report: report)
         reminders = try ReminderModel(repository: database.reminders, report: report)
         reportFailure = { [weak self] error in
@@ -141,7 +150,16 @@ final class AppModel {
         rollover.roll(to: Self.today()).contains(deck)
     }
 
-    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar) }
+    /// «مسبحة»'s gate: the same rollover, answering whether the counter shows today. Unlike a deck's, a change made as
+    /// the day turns applies to the new day (`addTasbihCount` counts after `ensureCurrentDay`); only a day that cannot
+    /// be read drops it.
+    func ensureTasbihDay() -> Bool {
+        let today = Self.today()
+        _ = rollover.roll(to: today)
+        return tasbih.date == today
+    }
+
+    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, tasbih: tasbih) }
 
     /// The settings toggle «تأخير الأذكار الطويلة». The decks are reordered only once the choice is saved.
     func setLongOrder(_ enabled: Bool) {

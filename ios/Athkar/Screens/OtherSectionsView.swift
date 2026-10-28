@@ -8,9 +8,9 @@ enum HomeTab: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
 }
 
-/// The sections of the أخرى tab, in list order. Only those with a ``deck`` open yet; the rest are listed as «قريبًا».
+/// The sections of the أخرى tab, in list order. Those not ``isAvailable`` yet are listed as «قريبًا».
 enum OtherSection: String, CaseIterable, Identifiable, Sendable {
-    case ruqyah, suwar, sleep, afterPrayer, waking, prayerTimes, qibla
+    case ruqyah, suwar, tasbih, sleep, afterPrayer, waking, prayerTimes, qibla
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: "رقية القرين"
         case .suwar: "سور"
+        case .tasbih: "مسبحة"
         case .sleep: "أذكار النوم"
         case .afterPrayer: "أذكار بعد الصلاة"
         case .waking: "أذكار الاستيقاظ"
@@ -30,6 +31,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: "shield"
         case .suwar: "book"
+        case .tasbih: "circle.dashed"
         case .sleep: "bed.double"
         case .afterPrayer: "hands.and.sparkles"
         case .waking: "sunrise"
@@ -43,7 +45,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: .ruqyah
         case .suwar: .suwar
-        case .sleep, .afterPrayer, .waking, .prayerTimes, .qibla: nil
+        case .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla: nil
         }
     }
 
@@ -52,6 +54,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: .teal
         case .suwar: .brown
+        case .tasbih: .cyan
         case .sleep: .purple
         case .afterPrayer: .blue
         case .waking: .orange
@@ -61,7 +64,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
     }
 
     /// Whether the section opens yet; the rest are listed as «قريبًا».
-    var isAvailable: Bool { deck != nil || self == .prayerTimes || self == .qibla }
+    var isAvailable: Bool { deck != nil || self == .tasbih || self == .prayerTimes || self == .qibla }
 }
 
 /// The أخرى tab: a two-column grid of its sections, each title in its own colour, with its progress today where it
@@ -134,9 +137,10 @@ struct OtherSectionsView: View {
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
 
-    /// The deck's summary, the next prayer, or «قريبًا».
+    /// The deck's summary, today's «مسبحة» total, the next prayer, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
         if let deck { return deck.listSummary.copy }
+        if section == .tasbih { return app.tasbih.totalText }
         if section == .qibla {
             guard let location = app.prayer.location else { return "حدّد موقعك" }
             let place = GeoCoordinates(latitude: location.latitude, longitude: location.longitude)

@@ -141,6 +141,8 @@ UI_BLACK_BOX = {
     "SuwarUITests": [APP + "Deck/SuwarDeckModel.swift", APP + "Deck/SectionChips.swift",
                      APP + "Screens/OtherSectionsView.swift", APP + "Screens/DeckDialogs.swift",
                      APP + "Platform/Haptics.swift", "fonts/*.ttf"],
+    "TasbihUITests": [APP + "Tasbih/*.swift", APP + "Screens/OtherSectionsView.swift",
+                      APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
 }
 
 # The views and model that assemble the whole app. Every app file reaches one of them, so reaching one

@@ -373,8 +373,8 @@ struct DeckView<Model: DeckModel>: View {
     }
 }
 
-/// `.deck-button:active { transform: scale(0.97) }`.
-private struct DeckButtonStyle: ButtonStyle {
+/// `.deck-button:active { transform: scale(0.97) }`, also on «مسبحة»'s buttons.
+struct DeckButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.scaleEffect(configuration.isPressed ? 0.97 : 1)
     }

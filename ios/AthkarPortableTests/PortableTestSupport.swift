@@ -63,4 +63,10 @@ final class PortableTestSupport {
         try SuwarDeckModel(database: database, content: content, today: today,
                            report: { XCTFail("Production database write failed: \($0)") })
     }
+
+    @MainActor
+    func makeTasbih(on date: String? = nil) throws -> TasbihModel {
+        try TasbihModel(database: database, today: date ?? today,
+                        report: { XCTFail("Production database write failed: \($0)") })
+    }
 }

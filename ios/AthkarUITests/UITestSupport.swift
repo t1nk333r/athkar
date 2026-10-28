@@ -146,10 +146,10 @@ class DeckTestCase: XCTestCase {
         XCTAssertTrue(wait { control.buttons[option].isSelected }, "\(identifier) → \(option)")
     }
 
-    /// `morning`, `evening`, `other` (its list or last section), or a deck of أخرى (`ruqyah`, `suwar`): أخرى, then its
-    /// row when the list shows.
+    /// `morning`, `evening`, `other` (its list or last section), or a section of أخرى (`ruqyah`, `suwar`, `tasbih`):
+    /// أخرى, then its row when the list shows.
     func selectTab(_ id: String) {
-        guard id == "ruqyah" || id == "suwar" else {
+        guard ["ruqyah", "suwar", "tasbih"].contains(id) else {
             app.buttons["tab.\(id)"].tap()
             return
         }
