@@ -27,10 +27,11 @@ currently ordered, the shown sura for ruqyah.
 the segments whose IDs share a prefix (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`), consecutive in the pack. Chips
 above the summary pick the sura shown (`.sura-picker`, spoken «اختيار السورة»). Each chip shows the sura's name
 without «سورة », and «✓» once its segments are all complete today; it is spoken «<surah>», or «<surah>، مكتملة
-اليوم», and the shown sura's chip is selected. The cards, position, lock, summary row and sura dialog are the shown
-sura's; the today line, the أخرى row and its «✓» are the whole day's. The deck opens on ق (the PWA opens there
-unless a sura deep link names another; the native app has no deep links). Each sura keeps the card it showed last
-until the day changes or the ruqyah is reset.
+اليوم», and the shown sura's chip is selected. Each chip starts from its text's width and the chips share the rest of
+the row (`flex: 1 1 auto`), so «الكافرون ✓» is not cut where «ق» needs little. The cards, position, lock, summary row
+and sura dialog are the shown sura's; the today line, the أخرى row and its «✓» are the whole day's. The deck opens on
+ق (the PWA opens there unless a sura deep link names another; the native app has no deep links). Each sura keeps the
+card it showed last until the day changes or the ruqyah is reset.
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
 list of sections (رقية القرين, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app opens

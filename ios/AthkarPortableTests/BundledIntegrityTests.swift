@@ -150,6 +150,27 @@ final class BundledIntegrityTests: XCTestCase {
         }
     }
 
+    /// As `ruqyahContentJs`: a sura's segments are consecutive, name it before a «-», and share its name and number.
+    func testSuraThatDoesNotHoldTogetherIsRefused() throws {
+        let cases: [(target: String, replacement: String, refused: String)] = [
+            // A segment of الجن named for ق: ق appears twice.
+            (#""id": "jinn-8-13""#, #""id": "qaf-8-13""#, "qaf-8-13"),
+            // The first of الجن's segments numbers another sura.
+            (#""surahNumber": 72"#, #""surahNumber": 73"#, "jinn-1-7"),
+            // The first of التكوير's segments names another sura.
+            (#""surah": "سورة التكوير""#, #""surah": "سورة الانفطار""#, "takwir-1-10"),
+            // An ID without «-» names no sura.
+            (#""id": "kafirun-1-6""#, #""id": "kafirun""#, "kafirun"),
+        ]
+        for (target, replacement, refused) in cases {
+            let fixture = try ContentFixture()
+            let file = try XCTUnwrap(fixture.manifest().packs["ruqyah"]).file
+            try fixture.replaceFirst(target, with: replacement, in: file)
+            try fixture.redigest("ruqyah")
+            try assertRefused(fixture, .invalidSura(id: refused))
+        }
+    }
+
     /// `load(from:)` and `recordInstalls` both refuse the edited bundle with `expected`, and the older installs, which
     /// an accepted bundle replaces, keep every row as it was.
     private func assertRefused(_ fixture: ContentFixture, _ expected: BundledContentError,

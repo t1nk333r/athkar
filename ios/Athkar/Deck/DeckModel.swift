@@ -23,13 +23,16 @@ struct DeckDefinition: Sendable {
     /// The quick index's title, and the position button's hint that opens it.
     var indexTitle: String
     var indexHint: String
+    /// Section chips start from their content's width and share the rest of the row (the ruqyah PWA's `.sura-chip`,
+    /// `flex: 1 1 auto`, since «ق» and «الكافرون ✓» differ so much); otherwise they take equal shares (`flex: 1 1 0`).
+    var chipsGrowFromContent = false
 
     static let morning = adhkar(.morning, "أذكار الصباح")
     static let evening = adhkar(.evening, "أذكار المساء")
     static let ruqyah = DeckDefinition(
         id: .ruqyah, title: "رقية القرين", cardNoun: "المقطع", cardsLabel: "مقاطع رقية القرين",
         navigationLabel: "التنقل بين مقاطع الرقية", hint: "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع.",
-        indexTitle: "فهرس الرقية", indexHint: "يعرض فهرس الرقية للانتقال إلى مقطع")
+        indexTitle: "فهرس الرقية", indexHint: "يعرض فهرس الرقية للانتقال إلى مقطع", chipsGrowFromContent: true)
 
     private static func adhkar(_ period: Period, _ title: String) -> DeckDefinition {
         DeckDefinition(id: period == .morning ? .morning : .evening, title: title, cardNoun: "الذكر",
