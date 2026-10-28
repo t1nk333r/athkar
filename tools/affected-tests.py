@@ -22,22 +22,24 @@ untracked files included. The base branch is --base REF, else $ATHKAR_TEST_BASE,
 How a change reaches tests:
   - Swift: a file depends on another when it names something the other declares at the top level,
     or uses a member the other's extensions add: as `.member`, or naming both the member and the
-    extended type (or a type conforming to it). A labelled init or subscript counts wherever its
-    label appears, and a conformance, an unlabelled init, subscript or operator wherever the type is
-    named; on a type the repository doesn't declare (Array, View), the last three reach every file.
-    A test runs when it depends on a changed file, directly or through other files compiled into the
-    same target. A name a changed file no longer declares counts too, so a removal reaches the files
-    still using it. AthkarCore can't see the app, and production code can't see tests, so neither
-    depends on them. A test suite or class counts every file that declares or extends it.
+    extended type (or a type conforming to it). An init or subscript with a label (`init(hex:)`,
+    `subscript(safe index:)`) counts wherever its label appears or the type is named, since
+    `Type.init` drops the label. A conformance, an unlabelled init, subscript or operator counts
+    wherever the type is named, or, on a type the repository doesn't declare (Array, View), in every
+    file. A test runs when it depends on a changed file, directly or through other files compiled
+    into the same target. A name a changed file no longer declares counts too, so a removal reaches
+    the files still using it. AthkarCore can't see the app, and production code can't see tests, so
+    neither depends on them. A test suite or class counts every file that declares or extends it.
   - A file a Swift file reads counts as a change to that Swift file: a repository path or directory
     in one of its string literals, the bare name of a repository file, or its READS entry.
   - UI tests drive the built app, which no code links them to: UI_BLACK_BOX names the app files and
     resources each one checks, and a UI test also checks every app file that spells an accessibility
     identifier it uses (`deck.card.counter`, or `tab.` for "tab.\\(id)"), in its own file or in a
-    UITestSupport.swift helper it calls. App files reached through the app's own code count too, but
-    the walk stops at the composition roots in UI_ROOTS, which use nearly every app file: a root
-    selects UI tests only when it changes itself, or uses a name the change removed. An app resource
-    no UI_BLACK_BOX entry names runs every UI test.
+    UITestSupport.swift helper it calls. An identifier a changed app file spelled before the change
+    counts too, so renaming or removing one reaches the UI tests using it. App files reached through
+    the app's own code count, but the walk stops at the composition roots in UI_ROOTS, which use
+    nearly every app file: a root selects UI tests only when it changes itself, or uses a name the
+    change removed. An app resource no UI_BLACK_BOX entry names runs every UI test.
   - The Node checks run when one of their inputs, or a script they load, changes.
   - SHARED build and toolchain inputs, a file no rule knows and any selector error run every lane
     in full. Documentation (NO_TESTS) runs nothing, and nothing tests the UNTESTED files.
@@ -322,9 +324,12 @@ class SwiftFile:
                     if decl and decl.group(2) != "extension" and not PRIVATE.search(decl.group(1) + " "):
                         self.members.add((extended, decl.group(3), "member"))
                     elif WHOLE_TYPE.match(line):
-                        label = re.search(r"\b(?:init|subscript)\s*[?!]?\s*\(\s*([A-Za-z_]\w*)\b", line)
+                        # An init's first parameter name is its label; a subscript has one only when
+                        # it spells two names (`subscript(safe index:)`).
+                        label = (re.search(r"\binit\s*[?!]?\s*\(\s*([A-Za-z_]\w*)\b", line)
+                                 or re.search(r"\bsubscript\s*\(\s*([A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:", line))
                         if label and label.group(1) != "_":
-                            self.members.add((extended, label.group(1), "label"))  # init(hex:), subscript(safe:)
+                            self.members.add((extended, label.group(1), "label"))  # init(hex:), subscript(safe i:)
                         else:
                             self.members.add((extended, extended[-1], "type"))  # init(_:), subscript, operators
             depth += line.count("{") - line.count("}")
@@ -370,8 +375,8 @@ class Tree:
             known = [t for t in types if t in self.declared]
             anchors = set().union(*(self.conformers.get(t, {t}) for t in known))
             named = set().union(*(self.users.get(a, set()) for a in anchors))  # name the type or a conformer
-            if kind == "label":
-                users = set(self.users.get(member, ()))
+            if kind == "label":  # or Type.init, a trailing closure, defaulted arguments: the type named
+                users = set(self.users.get(member, ())) | (named if known else set(self.users.get(types[-1], ())))
             elif kind == "type":  # View, Array: an operator or subscript on a type declared elsewhere
                 users = named if known else set(self.files)
             else:
@@ -413,11 +418,11 @@ def identifier_keys(literals):
 def support_members(text):
     """A UI support file's members: name -> (literals, names used), and the literals outside them."""
     members, outside = {}, set()
-    depth, current, opened = 0, None, 0
+    depth, current, opened, parens, body, kind = 0, None, 0, 0, False, None
     for code, raw in zip(strip_swift(text).split("\n"), text.split("\n")):
         decl = DECL.match(code)
         if current is None and decl and decl.group(2) in ("func", "var", "let") and depth <= 1:
-            current, opened = decl.group(3), depth
+            current, opened, parens, body, kind = decl.group(3), depth, 0, False, decl.group(2)
             members.setdefault(current, (set(), set()))
         literals = set(LITERAL.findall(raw))
         if current:
@@ -426,7 +431,10 @@ def support_members(text):
         else:
             outside.update(literals)
         depth += code.count("{") - code.count("}")
-        if current and depth <= opened:
+        parens += code.count("(") - code.count(")")
+        body = body or "{" in code
+        # A member ends with its body; a signature may span lines before the body opens.
+        if current and depth <= opened and parens <= 0 and (body or kind != "func"):
             current = None
     return members, outside
 
@@ -501,6 +509,7 @@ class Index:
         self.test_dirs = {"core": CORE_TESTS, "models": PORTABLE_TESTS, "app-unit": APP_TESTS, "ui": UI_TESTS}
         self.units = {lane: self._units(lane) for lane in self.test_dirs}  # lane -> unit -> (files, count)
         self.reads = {p: self._reads(f) for p, f in self.swift.items()}
+        self.ui_spelled = {}  # UI class or "*" -> the identifier spellings it uses
         self.ui_identifiers = self._ui_identifiers()  # UI class or "*" -> app file -> identifier
         self.node_inputs = {name: local_imports(script, read) + reads
                             for name, (script, reads) in NODE_CHECKS.items()}
@@ -561,6 +570,7 @@ class Index:
         for cls, (paths, _) in self.units["ui"].items():
             spelled[cls] = set().union(*(identifier_keys(files[p].literals) | through_support(files[p].refs)
                                          for p in paths))
+        self.ui_spelled = spelled
         found = {}
         for cls, keys in spelled.items():
             for key in sorted(keys):
@@ -682,6 +692,14 @@ class Selection:
                         self._ui(cls, f"it checks {chain(reached, path)}")
                     elif path in identifiers.get(cls, {}):
                         self._ui(cls, f"it uses {identifiers[cls][path]}, which {chain(reached, path)}")
+        for path, f in sorted(old.items()):  # an identifier the change renamed or removed
+            if path.startswith(APP):
+                before = identifier_keys(f.literals)
+                for cls, keys in sorted(self.index.ui_spelled.items()):
+                    used = [k for k in sorted(keys) if any(same_identifier(k, b) for b in before)]
+                    if used:
+                        self._ui(cls, f"it uses {used[0][0]}{'…' if used[0][1] else ''}, "
+                                      f"which {Path(path).name} spelled before the change")
         self._swift("ui", "ui", seeds, old)
 
     def _swift(self, scope, lane, seeds, old):

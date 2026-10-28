@@ -5,8 +5,8 @@
 
 RepositoryTests select for changes to this repository's own files. SyntheticRepositoryTests run
 the command line in small Git repositories, for the rules this repository doesn't exercise today:
-removed names, deleted files, extension members, module layers, split test suites, untracked files,
-the merge base, the base variable and selector errors.
+removed names, deleted files, extension members, module layers, split test suites and classes, UI
+identifiers and support helpers, untracked files, the merge base, the base variable and selector errors.
 """
 
 import importlib.util
@@ -257,6 +257,37 @@ SYNTHETIC = {
             public static func + (lhs: Int, rhs: Bool) -> Int { rhs ? lhs + 1 : lhs }
         }
         """,
+    CORE + "Widget+Named.swift": """\
+        extension Widget {
+            public init(named: String) { self.init() }
+        }
+        """,
+    CORE + "Widget+Index.swift": """\
+        extension Widget {
+            public subscript(index: Int) -> Int { index }
+        }
+        """,
+    CORE + "Array+Position.swift": """\
+        extension Array {
+            public subscript(position: Int) -> Element? { indices.contains(position) ? self[position] : nil }
+        }
+        """,
+    CORE_TESTS + "WidgetNameTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct WidgetNameTests {
+            @Test func names() { #expect(["a"].map(Widget.init).count == 1) }
+        }
+        """,
+    CORE_TESTS + "WidgetIndexTests.swift": """\
+        import Testing
+        @testable import AthkarCore
+
+        struct WidgetIndexTests {
+            @Test func subscripts() { #expect(makeWidget()[2] == 2) }
+        }
+        """,
     CORE_TESTS + "WidgetTests.swift": """\
         import Testing
         @testable import AthkarCore
@@ -349,6 +380,67 @@ SYNTHETIC = {
             public var description: String { "qibla" }
         }
         """,
+    "ios/AthkarPortableTests/SplitPortableTests.swift": """\
+        import XCTest
+
+        final class SplitPortableTests: XCTestCase {
+            func testOne() {}
+        }
+        """,
+    "ios/AthkarPortableTests/SplitPortableTests+More.swift": """\
+        import XCTest
+
+        extension SplitPortableTests {
+            func testTwo() {}
+            func testThree() {}
+        }
+        """,
+    # UI tests: app screens spelling accessibility identifiers, a support file and two UI classes.
+    "ios/Athkar/Probe/Home.swift": 'struct Home {\n    let id = "home.ready"\n}\n',
+    "ios/Athkar/Probe/Deck.swift": 'struct Deck {\n    let next = "deck.next"\n}\n',
+    "ios/Athkar/Probe/Settings.swift": 'struct Settings {\n    let close = "settings.close"\n}\n',
+    "ios/Athkar/Probe/Prayer.swift": 'struct Prayer {\n    let city = "prayer.\\(1)"\n}\n',
+    "ios/AthkarUITests/Support.swift": """\
+        import XCTest
+
+        enum Screen: String {
+            case home = "home.ready"
+        }
+
+        class ProbeCase: XCTestCase {
+            var app = XCUIApplication()
+
+            override func setUp() {
+                app.buttons["deck.next"].tap()
+            }
+
+            func closeSettings() { app.buttons["settings.close"].tap() }
+
+            func leaveSettings(
+                pause: Double,
+                done: () -> Void = {}
+            ) {
+                closeSettings()
+            }
+        }
+        """,
+    "ios/AthkarUITests/PrayerUITests.swift": """\
+        import XCTest
+
+        final class PrayerUITests: ProbeCase {
+            func testCity() {
+                leaveSettings(pause: 1)
+                app.buttons["prayer.city"].tap()
+            }
+        }
+        """,
+    "ios/AthkarUITests/PlainUITests.swift": """\
+        import XCTest
+
+        final class PlainUITests: ProbeCase {
+            func testLaunch() {}
+        }
+        """,
     "ios/AthkarPortableTests/DeckModelTests.swift": """\
         import XCTest
         @testable import AthkarModels
@@ -427,12 +519,53 @@ class SyntheticRepositoryTests(unittest.TestCase):
 
     def test_labelled_init_of_an_outside_type_runs_its_users(self):
         self.write(CORE + "String+Probe.swift", textwrap.dedent(SYNTHETIC[CORE + "String+Probe.swift"]).replace('"x"', '"y"'))
-        self.assertEqual(self.units("core"), {"ProbeStringTests"})
+        # CityTests names String, so a String.init without the label could be this one.
+        self.assertEqual(self.units("core"), {"ProbeStringTests", "CityTests", "WidgetTests", "WidgetNameTests",
+                                              "WidgetIndexTests"})
 
     def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
         self.write(CORE + "Int+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Int+Plus.swift"]).replace("+ 1", "+ 2"))
         self.assertEqual(self.units("core"), self.units("core", "--all"))
         self.assertEqual(self.units("models"), self.units("models", "--all"))
+
+    def test_labelled_init_counts_where_the_type_is_named(self):
+        self.write(CORE + "Widget+Named.swift", "extension Widget {\n    public init(named: String) { self.init(); _ = 1 }\n}\n")
+        self.assertIn("WidgetNameTests", self.units("core"))  # `Widget.init`, with no label
+
+    def test_subscript_parameter_name_is_not_a_label(self):
+        self.write(CORE + "Widget+Index.swift", "extension Widget {\n    public subscript(index: Int) -> Int { index + 0 }\n}\n")
+        self.assertIn("WidgetIndexTests", self.units("core"))  # `makeWidget()[2]`
+        self.write(CORE + "Array+Position.swift", "extension Array {\n    public subscript(position: Int) -> Element? { nil }\n}\n")
+        self.assertEqual(self.units("core"), self.units("core", "--all"))
+
+    def test_class_extended_in_another_file_runs_from_either(self):
+        self.write("ios/AthkarPortableTests/SplitPortableTests+More.swift",
+                   "import XCTest\n\nextension SplitPortableTests {\n    func testTwo() {}\n}\n")
+        self.assertEqual(self.units("models"), {"SplitPortableTests"})
+        self.assertEqual(self.select("models")["ATHKAR_TEST_COUNT"], "2")
+        self.git("checkout", "--", ".")
+        self.assertEqual(self.select("models", "--all")["ATHKAR_TEST_COUNT"],
+                         str(len(self.git("grep", "-h", "func test", "--", "ios/AthkarPortableTests").splitlines())))
+
+    def test_ui_test_runs_for_the_identifiers_it_uses(self):
+        # Its own `prayer.city` (the screen spells `prayer.\(…)`), and `settings.close` through
+        # leaveSettings, whose signature spans lines and opens a default closure, and closeSettings.
+        self.write("ios/Athkar/Probe/Prayer.swift", 'struct Prayer {\n    let city = "prayer.\\(2)"\n}\n')
+        self.assertEqual(self.units("ui"), {"PrayerUITests"})
+        self.write("ios/Athkar/Probe/Prayer.swift", textwrap.dedent(SYNTHETIC["ios/Athkar/Probe/Prayer.swift"]))
+        self.write("ios/Athkar/Probe/Settings.swift", 'struct Settings {\n    let close = "settings.close"; let x = 1\n}\n')
+        self.assertEqual(self.units("ui"), {"PrayerUITests"})
+
+    def test_support_setup_and_loose_identifiers_run_every_ui_test(self):
+        for path in ("ios/Athkar/Probe/Deck.swift", "ios/Athkar/Probe/Home.swift"):  # setUp(); an enum case
+            with self.subTest(path=path):
+                self.write(path, (self.repo / path).read_text() + "// edited\n")
+                self.assertEqual(self.units("ui"), {"PrayerUITests", "PlainUITests"})
+                self.git("checkout", "--", path)
+
+    def test_renamed_identifier_runs_the_ui_tests_using_the_old_one(self):
+        self.write("ios/Athkar/Probe/Settings.swift", 'struct Settings {\n    let close = "settings.done"\n}\n')
+        self.assertEqual(self.units("ui"), {"PrayerUITests"})
 
     def test_suite_extended_in_another_file_runs_from_either(self):
         self.write(CORE_TESTS + "SplitTests+More.swift", "import Testing\n\nextension SplitTests {\n"
@@ -444,6 +577,10 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.write(CORE + "Clock.swift", "public struct Clock {\n    public var now = 0\n    public init() {}\n}\n")
         # Clock+Days.swift extends Clock with `tomorrow`, which LedgerTests also spells as `.tomorrow`.
         self.assertEqual(self.units("core"), {"ClockTests", "LedgerTests", "legacyNowIsZero()"})
+
+    def test_renamed_member_reaches_the_files_still_using_it(self):
+        self.write(CORE + "Widget+Probe.swift", "extension Widget {\n    public func frobnicate() -> Int { 1 }\n}\n")
+        self.assertEqual(self.units("core"), {"WidgetTests"})  # `.quuxify()`
 
     def test_member_of_an_outside_type_runs_its_dotted_users(self):
         self.write(CORE + "Angles.swift", "extension Double {\n    public var degrees: Double { self * 1 }\n}\n")
@@ -518,7 +655,7 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual((values["ATHKAR_TEST_FULL"], values["ATHKAR_TEST_FILTER"]), ("1", ""))
         self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
                          {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests",
-                          "WidgetTests", "ProbeStringTests", "SplitTests"})
+                          "WidgetTests", "ProbeStringTests", "SplitTests", "WidgetNameTests", "WidgetIndexTests"})
 
 
 if __name__ == "__main__":

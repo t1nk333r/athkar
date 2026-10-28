@@ -80,13 +80,16 @@ the Mac, and the AthkarTests compilation, whose bundle packaging still fails on 
 `tools/test.sh --plan` prints each lane's selection and the reason without running anything.
 `--base REF` compares with another branch or commit, and `--all` runs every lane in full. The
 last line is `RESULT status=pass|fail|incomplete lanes=<lane>:<outcome>,...`. A busy build lane
-is `busy`, and uncommitted changes leave the native lanes `unavailable`.
+is `busy`, and uncommitted changes leave the native lanes `unavailable`. Without the ruqyah PWA's
+`content.js` (`$ATHKAR_RUQYAH_CONTENT`, default `../ruqyah-al-qareen/content.js`), the content
+lane checks `index.html` only and is `unavailable`. Any of these makes the run `incomplete`.
 
 `tools/affected-tests.py` makes the selection. A test runs when it depends on a changed file
 through the Swift code compiled into its target, or reads a changed fixture, pack or data file.
 A removal also reaches the files still using the removed name. A UI test checks the app files in
 its `UI_BLACK_BOX` entry and every app file that spells an accessibility identifier it uses,
-directly or through a `UITestSupport.swift` helper. Documentation runs nothing.
+directly or through a `UITestSupport.swift` helper; an identifier a change renames or removes
+reaches the UI tests that use it. Documentation runs nothing.
 `ios/Package.swift`, `ios/project.yml`, the lockfiles, these runners, any file no rule maps and
 any selector error run everything.
 `python3 tools/affected-tests.py check` fails when a rule no longer matches the repository.
