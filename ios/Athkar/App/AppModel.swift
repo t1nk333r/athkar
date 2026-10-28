@@ -2,7 +2,7 @@ import AthkarCore
 import Foundation
 import Observation
 
-/// The running app: database, bundled content, settings and the three decks, plus the day they belong to.
+/// The running app: database, bundled content, settings and the decks, plus the day they belong to.
 @MainActor
 @Observable
 final class AppModel {
@@ -11,6 +11,7 @@ final class AppModel {
     let morning: AdhkarDeckModel
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
+    let suwar: SuwarDeckModel
     let prayer: PrayerTimesModel
     let reminders: ReminderModel
     /// The tab on screen: الصباح, المساء or أخرى.
@@ -37,6 +38,9 @@ final class AppModel {
             case .ruqyah:
                 tab = .other
                 otherSection = .ruqyah
+            case .suwar:
+                tab = .other
+                otherSection = .suwar
             }
         }
     }
@@ -58,6 +62,7 @@ final class AppModel {
         morning = AdhkarDeckModel(period: .morning, session: adhkar)
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
+        suwar = try SuwarDeckModel(database: database, content: content, today: today, report: report)
         prayer = try PrayerTimesModel(database: database, report: report)
         reminders = try ReminderModel(repository: database.reminders, report: report)
         reportFailure = { [weak self] error in
@@ -112,6 +117,7 @@ final class AppModel {
         case .morning: morning
         case .evening: evening
         case .ruqyah: ruqyah
+        case .suwar: suwar
         }
     }
 
@@ -135,7 +141,7 @@ final class AppModel {
         rollover.roll(to: Self.today()).contains(deck)
     }
 
-    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah) }
+    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar) }
 
     /// The settings toggle «تأخير الأذكار الطويلة». The decks are reordered only once the choice is saved.
     func setLongOrder(_ enabled: Bool) {

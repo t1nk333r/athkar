@@ -11,6 +11,12 @@
       "version": "1.0.1",
       "sha256": "6f84db7ade29161d3b7ae756fe8a6ba45b962c35225e33cdd891cba013e5ff89",
       "reviewRecord": "R4"
+    },
+    "suwar": {
+      "file": "suwar.v1.json",
+      "version": "1.1.2",
+      "sha256": "10c549780cd8e2cf0574d1627141f176f2a5b710a9acecc1ca26f2eb91d110dc",
+      "reviewRecord": "R12"
     }
   }
 }

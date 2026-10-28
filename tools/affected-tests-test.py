@@ -57,10 +57,25 @@ class RepositoryTests(unittest.TestCase):
                          {"content": {"content-validate", "content-review-test"}})
 
     def test_pack_the_app_does_not_bundle(self):
-        self.assertEqual(picked(self.select("content/suwar.v1.json")), {
-            "content": {"content-validate", "content-review-test", "content-export-pwa", "fixtures"},
+        # Every pack in content/ is bundled today, so a new one stands in: only the checks that read every pack.
+        self.assertEqual(picked(self.select("content/tasbih.v1.json", status="A")), {
+            "content": {"content-validate", "content-review-test"},
             "models": {"BundledIntegrityTests"},
         })
+
+    def test_bundled_pack_runs_its_readers_and_the_app(self):
+        sel = self.select("content/suwar.v1.json")
+        self.assertEqual(picked(sel)["content"],
+                         {"content-validate", "content-review-test", "content-export-pwa", "fixtures"})
+        self.assertEqual(picked(sel)["models"], {
+            "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
+            "PortableModelTests", "ReminderReplanTests", "RuqyahPersistenceTests", "SettingsPersistenceTests",
+            "SuwarDeckModelTests", "SuwarPersistenceTests",
+        })
+        self.assertEqual(picked(sel)["ios-build"], {"app", "tests"})
+        self.assertIn("TestInfrastructureTests", picked(sel)["app-unit"])
+        self.assertEqual(picked(sel)["ui"], self.all_units("ui"))
+        self.assertNotIn("core", picked(sel))
 
     def test_fixture_runs_the_generator_check_and_the_suites_that_read_it(self):
         self.assertEqual(picked(self.select("spec/reminders/fixtures/next-reminder-time.json")), {

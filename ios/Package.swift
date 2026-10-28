@@ -32,6 +32,7 @@ let package = Package(
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
                       "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
+                      "Deck/SuwarDeckModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
                       "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
                       "Reminders/ReminderModel.swift", "App/DayRollover.swift"]

@@ -38,6 +38,7 @@ Update this file in the same commit as any migration.
 | --- | --- |
 | `v1` | The tables under "Tables (migration v1)". |
 | `v2` | `ruqyah_sura_days`: the ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`). |
+| `v3` | `suwar_page_reads` and `suwar_sura_days`: the athkar PWA's «سور» (`athkar-suwar-v1`). |
 
 ## Tables (migration v1)
 
@@ -67,6 +68,7 @@ for the calculation profile (`CalculationSettings`, spec/prayer-times/README.md)
 | `high_latitude_rule` | `"twilight-angle"` \| `"middle-of-the-night"` \| `"seventh-of-the-night"` | `"twilight-angle"` | none (the PWA's fixed clamp is the twilight-angle rule) |
 | `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |
 | `hijri_offset` | integer days | `0` | none |
+| `suwar_selected_sura` | a sura ID of the suwar pack | `"kahf"` (a stored ID the pack no longer has reads as its first sura) | `athkar-suwar-v1.selected` |
 
 Apply defaults when reading settings, and never write them. A row exists only after the user or an import sets a
 value. This prevents an onboarding import from being shadowed by rows the app created.
@@ -193,7 +195,32 @@ today, `history` for earlier days). A sura is the segments whose IDs share its p
 | `sura_id` | TEXT | no | PK 2 | The sura's segment-ID prefix. |
 | `completed_at` | TEXT | no | | Instant. When the sura's segments first all reached their `repeat` that day. |
 
-## Future tables (not in v2)
+## Tables (migration v3)
+
+### `suwar_page_reads`
+
+This table stores one row per local date and «سور» page marked read on it (`athkar-suwar-v1.read`). Page IDs are
+unique across the suwar pack, so the page keys the row without its sura.
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `local_date` | TEXT | no | PK 1 | Local date. |
+| `sura_id` | TEXT | no | | The pack's sura ID (`kahf`, `yasin`, `saffat`, `waqiah`, `mulk`). |
+| `page_id` | TEXT | no | PK 2 | The pack's page ID. |
+| `read_at` | TEXT | no | | Instant. When the page was first marked read that day. |
+
+### `suwar_sura_days`
+
+This table stores one row per local date and «سور» sura completed on it (`athkar-suwar-v1`: `completedAt` for
+today, `history` for earlier days).
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `local_date` | TEXT | no | PK 1 | Local date. |
+| `sura_id` | TEXT | no | PK 2 | The pack's sura ID. |
+| `completed_at` | TEXT | no | | Instant. When the sura's last page was read that day. |
+
+## Future tables (not in v3)
 
 - 1.0, added by later slices' migrations: `prayer_records` (unique on `(calculation_date, prayer_key)`, per
   MOBILE_APP_PLAN.md §11 `prayer_logs`) and `notification_audit` (redacted).
@@ -212,6 +239,10 @@ today, `history` for earlier days). A sura is the segments whose IDs share its p
   comes from the counters (the PWA's `suraIsComplete`); the row keeps the completion time. A sura complete by its
   counters with no row takes today's `ruqyah_days` time, in memory only (`backfillSuwarCompletions`); with no day
   row it has no time.
+- A «سور» page is read on a date if and only if a `suwar_page_reads` row exists. A sura is complete on a date if and
+  only if a `suwar_sura_days` row exists; the app writes the row with the read that completes the sura and deletes
+  it with any of its pages, as the PWA keeps `completedAt` only while every page is read. A page ID the current
+  pack does not have is ignored on read.
 
 ## Session state bridge
 
@@ -302,6 +333,23 @@ The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repe
   row, as the PWA's `historyDates` counts them. Today's completed suras are today's progress, not history.
   `dayCount(removal)` still counts `ruqyah_days` rows alone.
 
+### Suwar reads and reset
+
+The «سور» section reads today's `suwar_page_reads` (`readPages(on:)`) and `suwar_sura_days` (`suraDays(on:)`).
+
+- **Reading.** `markRead(_:of:on:completingSura:at:)` inserts the page's row in one transaction with what it
+  completes, as the PWA's `markPageRead` does. When the read completes its sura, it also inserts that sura's
+  `suwar_sura_days` row for the date. It never replaces either row, preserving the first time.
+- **Page reset.** `unmarkRead(_:of:on:)` deletes the page's row and its sura's `suwar_sura_days` row for the date,
+  in one transaction (`resetSuraPage`).
+- **Scoped reset.** `reset(on:removing:)` runs in one transaction:
+  - It deletes that date's `suwar_page_reads` and `suwar_sura_days` rows (`resetSuwarProgress`).
+  - With `.week(...)` or `.all`, it also deletes both tables' rows in scope (`deleteSuwarHistory`).
+  - With no removal (تقدم اليوم), earlier days keep their rows.
+- **Confirmation copy.** `recordedDayCount(removal, before: today)` counts the distinct earlier dates in scope with
+  a `suwar_sura_days` row, as the PWA counts `suwarState.history`. Today's completed suras are today's progress.
+- `suwar_selected_sura` is a preference: no reset changes it.
+
 ## Backup import (envelope v1)
 
 Import validates the whole file first. It rejects everything that `spec/backup/envelope-v1.schema.json` and
@@ -379,6 +427,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
 - `ruqyah_sura_days` is not exported, and import writes none: the ruqyah PWA's backup leaves out
   `ruqyah-suwar-v1` (its `ruqyah` object is closed).
+- `suwar_page_reads`, `suwar_sura_days` and `suwar_selected_sura` are not exported, and import writes none:
+  envelope v1 does not carry `athkar-suwar-v1` (NATIVE_APP_PLAN.md, owner-approved exceptions).
 - `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
   already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.

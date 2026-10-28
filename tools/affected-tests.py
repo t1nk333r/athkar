@@ -83,10 +83,10 @@ SELECTOR = ["tools/affected-tests.py", "tools/affected-tests-test.py", "tools/te
 MAC_RUNNER = ["tools/ios-mac-run.sh"]
 # Copied into the app bundle. tools/test-native-core.sh stages these for the SDK build, and
 # ios/project.yml bundles them; `check` compares all three.
-APP_RESOURCES = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json",
+APP_RESOURCES = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json",
                  "fonts/kfgqpc-uthman-taha-naskh.ttf", "fonts/kfgqpc-hafs-v30.ttf", "data/cities.tsv"]
 # The manifest and the packs it lists, which the app bundles and the bundle tests read.
-BUNDLED_PACKS = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json"]
+BUNDLED_PACKS = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json"]
 # What the iOS build compiles or bundles.
 APP_INPUTS = [APP + "**", CORE_SOURCES + "**", *APP_RESOURCES]
 
@@ -138,6 +138,9 @@ UI_BLACK_BOX = {
     "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *PRAYER],
     "ScreenshotUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", APP + "Screens/*.swift",
                           "fonts/*.ttf"],
+    "SuwarUITests": [APP + "Deck/SuwarDeckModel.swift", APP + "Deck/SectionChips.swift",
+                     APP + "Screens/OtherSectionsView.swift", APP + "Screens/DeckDialogs.swift",
+                     APP + "Platform/Haptics.swift", "fonts/*.ttf"],
 }
 
 # The views and model that assemble the whole app. Every app file reaches one of them, so reaching one

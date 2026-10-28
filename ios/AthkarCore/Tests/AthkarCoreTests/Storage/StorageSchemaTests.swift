@@ -67,10 +67,12 @@ struct StorageSchemaTests {
 
     @Test func migrationsCreateExactlyTheDocumentedSchema() throws {
         let documented = try Self.documentedTables()
-        #expect(documented.count == 10)
-        #expect(try Self.documentedMigrations() == ["v1", "v2"])
+        #expect(documented.count == 12)
+        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3"])
         #expect(Set(documented.values.map(\.migration)) == Set(try Self.documentedMigrations()))
         #expect(documented["ruqyah_sura_days"]?.migration == "v2")
+        #expect(documented["suwar_page_reads"]?.migration == "v3")
+        #expect(documented["suwar_sura_days"]?.migration == "v3")
 
         let database = try AppDatabase.inMemory()
         let actual = try database.reader.read { db in
@@ -105,7 +107,7 @@ struct StorageSchemaTests {
              try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations"))
         }
         #expect(journalMode == "wal")
-        #expect(migrations == ["v1", "v2"])
+        #expect(migrations == ["v1", "v2", "v3"])
         #expect(migrations == (try Self.documentedMigrations()))
         #expect(try reopened.settings.value(for: .theme) == .dark)
     }
@@ -123,6 +125,15 @@ struct StorageSchemaTests {
             ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', 'qaf', ?)", ["2026-09-23T10:00:00Z"]),
             ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', 'qaf', NULL)", []),
             ("INSERT INTO ruqyah_sura_days VALUES ('2026-09-23', NULL, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO suwar_page_reads VALUES (?, 'kahf', 'kahf-1-4', '2026-09-23T10:00:00.000Z')",
+             ["2026/09/23"]),
+            ("INSERT INTO suwar_page_reads VALUES ('2026-09-23', 'kahf', 'kahf-1-4', ?)", ["2026-09-23T10:00Z"]),
+            ("INSERT INTO suwar_page_reads VALUES ('2026-09-23', NULL, 'kahf-1-4', '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO suwar_page_reads VALUES ('2026-09-23', 'kahf', NULL, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO suwar_page_reads VALUES ('2026-09-23', 'kahf', 'kahf-1-4', NULL)", []),
+            ("INSERT INTO suwar_sura_days VALUES (?, 'kahf', '2026-09-23T10:00:00.000Z')", ["2026-09-3"]),
+            ("INSERT INTO suwar_sura_days VALUES ('2026-09-23', 'kahf', ?)", ["2026-09-23"]),
+            ("INSERT INTO suwar_sura_days VALUES ('2026-09-23', NULL, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO location_profiles VALUES (2, NULL, 21.42, 39.83, NULL, 'device', NULL)", []),
         ]
         for (sql, arguments) in rows {

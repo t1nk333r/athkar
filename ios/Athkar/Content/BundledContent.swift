@@ -75,12 +75,41 @@ struct RuqyahSura: Equatable, Sendable {
     var shortName: String { surah.hasPrefix("سورة ") ? String(surah.dropFirst(5)) : surah }
 }
 
+/// A «سور» page (`content/suwar.v1.json`): consecutive ayahs of one sura, read as one card.
+struct SuwarPageContent: Decodable, Equatable, Sendable {
+    var id: String
+    /// «الآيات ١ – ٤».
+    var range: String
+    var ayahs: [RuqyahSegmentContent.Ayah]
+}
+
+/// One sura of «سور» (`suwarContent.suwar`): its pages in reading order.
+struct SuwarSura: Decodable, Equatable, Sendable {
+    /// `kahf`, `yasin`, `saffat`, `waqiah`, `mulk`: the storage key.
+    var id: String
+    /// «سورة الكهف».
+    var surah: String
+    var surahNumber: Int
+    var pages: [SuwarPageContent]
+
+    /// The chip's name, without «سورة » (`suraShortName`).
+    var shortName: String { surah.hasPrefix("سورة ") ? String(surah.dropFirst(5)) : surah }
+}
+
+/// The «سور» pack as the section shows it.
+struct SuwarContent: Decodable, Equatable, Sendable {
+    /// Printed above each sura's first page (`suraPageMarkup`), in the pack's mushaf text.
+    var basmala: String
+    var suwar: [SuwarSura]
+}
+
 /// The packs bundled with the app (NATIVE_APP_PLAN.md §5.4), read from the repository's `content/` at build time.
 struct BundledContent: Sendable {
     /// What the session rules read.
     var packs: ContentPacks
     var adhkar: SessionPeriods<[AdhkarItemContent]>
     var ruqyah: [RuqyahSegmentContent]
+    var suwar: SuwarContent
     var manifest: ContentManifest
 
     /// The ruqyah's suras in pack order.
@@ -116,12 +145,14 @@ struct BundledContent: Sendable {
         }
         guard let adhkarData = files["adhkar"] else { throw BundledContentError.missingPack(id: "adhkar") }
         guard let ruqyahData = files["ruqyah"] else { throw BundledContentError.missingPack(id: "ruqyah") }
+        guard let suwarData = files["suwar"] else { throw BundledContentError.missingPack(id: "suwar") }
         let adhkar = try JSONDecoder().decode(AdhkarPack.self, from: adhkarData)
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
         let content = BundledContent(
             packs: try ContentPacks(adhkarPack: adhkarData, ruqyahPack: ruqyahData),
             adhkar: SessionPeriods(morning: adhkar.periods.morning, evening: adhkar.periods.evening),
             ruqyah: ruqyah.segments,
+            suwar: try JSONDecoder().decode(SuwarContent.self, from: suwarData),
             manifest: manifest)
         try content.validate()
         return content
@@ -158,6 +189,20 @@ struct BundledContent: Sendable {
                   segments.allSatisfy({ $0.surah == sura.surah && $0.surahNumber == segments.first!.surahNumber })
             else { throw BundledContentError.invalidSura(id: segments.first!.id) }
         }
+        // «سور» keys reads by page and completions by sura, so both are unique, and every sura has a page to show and
+        // every page an ayah, as `tools/content-validate.mjs` requires.
+        var suwarIDs = Set<String>()
+        var pageIDs = Set<String>()
+        for sura in suwar.suwar {
+            guard !sura.id.isEmpty, suwarIDs.insert(sura.id).inserted, !sura.pages.isEmpty else {
+                throw BundledContentError.invalidSuwarSura(id: sura.id)
+            }
+            for page in sura.pages {
+                guard pageIDs.insert(page.id).inserted else { throw BundledContentError.duplicateID(id: page.id) }
+                guard !page.ayahs.isEmpty else { throw BundledContentError.missingContent(id: page.id) }
+            }
+        }
+        guard !suwar.suwar.isEmpty else { throw BundledContentError.invalidSuwarSura(id: "") }
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack
@@ -231,6 +276,8 @@ enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedEr
     case invalidNoteIndex(id: String, noteIndex: Int)
     /// A ruqyah segment's ID names no sura, or its sura's segments are not consecutive or disagree on its name.
     case invalidSura(id: String)
+    /// A «سور» sura has no ID, shares one with another sura, or has no pages; or the pack has no sura.
+    case invalidSuwarSura(id: String)
 
     var description: String {
         switch self {
@@ -242,6 +289,7 @@ enum BundledContentError: Error, Equatable, CustomStringConvertible, LocalizedEr
         case let .duplicateID(id): "Bundled content has more than one item or segment with the ID \(id)"
         case let .invalidNoteIndex(id, noteIndex): "\(id) has noteIndex \(noteIndex), outside its details"
         case let .invalidSura(id): "Ruqyah segment \(id) does not continue one sura of the pack"
+        case let .invalidSuwarSura(id): "Suwar pack sura «\(id)» is not a sura with pages and a unique ID"
         }
     }
 

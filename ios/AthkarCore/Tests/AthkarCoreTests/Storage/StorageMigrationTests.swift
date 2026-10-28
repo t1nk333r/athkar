@@ -65,7 +65,41 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2"])
+        #expect(migrations == ["v1", "v2", "v3"])
+    }
+
+    @Test func v3KeepsEveryV2RowAndAddsEmptySuwarTables() throws {
+        var configuration = Configuration()
+        configuration.foreignKeysEnabled = true
+        let queue = try DatabaseQueue(configuration: configuration)
+        try AppDatabase.migrator.migrate(queue, upTo: "v2")
+        let v2Tables = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%' ORDER BY name
+                """)
+        }
+        #expect(v2Tables.count == Self.v1Rows.count + 1)
+        #expect(!v2Tables.contains("suwar_page_reads"))
+        #expect(!v2Tables.contains("suwar_sura_days"))
+        try queue.write { db in
+            for sql in Self.v1Rows { try db.execute(sql: sql) }
+            try db.execute(sql: "INSERT INTO ruqyah_sura_days VALUES ('2026-09-21', 'qaf', '2026-09-21T05:00:00.000Z')")
+        }
+        let before = try Self.rows(of: v2Tables, in: queue)
+        #expect(before.values.allSatisfy { $0.count == 1 })
+
+        let database = try AppDatabase(queue)
+        #expect(try Self.rows(of: v2Tables, in: queue) == before)
+        #expect(try database.ruqyah.recordedDayCount(.all, before: "2026-09-23") == 2)
+        #expect(try database.suwar.readPages(on: "2026-09-23").isEmpty)
+        #expect(try database.suwar.suraDays(on: "2026-09-23") == [:])
+        #expect(try database.suwar.recordedDayCount(.all, before: "2026-09-24") == 0)
+        #expect(try database.settings.value(for: .suwarSelectedSura) == "kahf")
+        let migrations = try queue.read { db in
+            try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
+        }
+        #expect(migrations == ["v1", "v2", "v3"])
     }
 
     /// Every row of each table, in rowid order.

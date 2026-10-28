@@ -104,6 +104,22 @@ struct ReadingMetrics: Equatable, Sendable {
         if #available(iOS 26.0, *) { return steps }
         return steps + [RuqyahStep(scale: 0.58, lead: 0.54), RuqyahStep(scale: 0.54, lead: 0.54)]
     }
+
+    // MARK: «سور» pages (`.sura-page`, `fitSuraPage`)
+
+    /// One `fitSuraPage` step: `data-fit="N"` scales the athkar PWA's Quran text and prefix by `scale` and its Quran
+    /// line height by `lead`, never below 1.6.
+    struct SuraPageStep: Equatable {
+        var scale: CGFloat
+        var lead: CGFloat
+    }
+
+    /// `data-fit` 0 … 6, as the athkar PWA steps them.
+    static let suraPageSteps = [
+        SuraPageStep(scale: 1, lead: 1), SuraPageStep(scale: 0.94, lead: 0.97), SuraPageStep(scale: 0.88, lead: 0.94),
+        SuraPageStep(scale: 0.82, lead: 0.91), SuraPageStep(scale: 0.76, lead: 0.88),
+        SuraPageStep(scale: 0.70, lead: 0.85), SuraPageStep(scale: 0.64, lead: 0.82),
+    ]
 }
 
 extension EnvironmentValues {
