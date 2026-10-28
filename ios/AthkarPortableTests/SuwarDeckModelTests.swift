@@ -123,7 +123,7 @@ final class SuwarDeckModelTests: XCTestCase {
                                                      accessibilityLabel: "سورة الملك، مكتملة اليوم"))
         XCTAssertEqual(deck.completion, DeckCompletion(
             title: "اكتملت قراءة سورة الملك بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
-            time: "وقت الإكمال: \(ArabicFormat.time(mulk))", dismissTitle: "تم", primaryTitle: nil, primary: nil))
+            time: "وقت الإكمال: \(ArabicFormat.time(mulk))", dismissTitle: "تم", primary: nil))
 
         // A sura completed out of order is complete once its last unread page is read.
         deck.selectSection("waqiah")

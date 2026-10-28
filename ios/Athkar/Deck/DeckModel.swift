@@ -142,13 +142,24 @@ struct DeckCompletion: Equatable {
         case openSection(String)
     }
 
-    var title: String
-    var message: String
-    var time: String?
-    var dismissTitle: String
-    /// The second button; a dialog without one has «تم» only (the «سور» sura dialog hides `completionSwitch`).
-    var primaryTitle: String?
-    var primary: Primary?
+    let title: String
+    let message: String
+    let time: String?
+    let dismissTitle: String
+    /// The second button's title and action, set together; a dialog without one has «تم» only (the «سور» sura dialog
+    /// hides `completionSwitch`).
+    let primaryTitle: String?
+    let primary: Primary?
+
+    init(title: String, message: String, time: String?, dismissTitle: String,
+         primary: (title: String, action: Primary)?) {
+        self.title = title
+        self.message = message
+        self.time = time
+        self.dismissTitle = dismissTitle
+        primaryTitle = primary?.title
+        self.primary = primary?.action
+    }
 }
 
 /// The scoped reset picker's three choices (`resetDayProgress`, `resetWeek`, `resetEverything`).

@@ -239,10 +239,13 @@ today, `history` for earlier days).
   comes from the counters (the PWA's `suraIsComplete`); the row keeps the completion time. A sura complete by its
   counters with no row takes today's `ruqyah_days` time, in memory only (`backfillSuwarCompletions`); with no day
   row it has no time.
-- A «سور» page is read on a date if and only if a `suwar_page_reads` row exists. A sura is complete on a date if and
-  only if a `suwar_sura_days` row exists; the app writes the row with the read that completes the sura and deletes
-  it with any of its pages, as the PWA keeps `completedAt` only while every page is read. A page ID the current
-  pack does not have is ignored on read.
+- A «سور» page is read on a date if and only if a `suwar_page_reads` row exists, and a page ID the current pack does
+  not have is ignored on read. A sura is complete on a date when every page the current pack has for it is read; its
+  `suwar_sura_days` row records when, and counts the date as history. The app writes the row with the read that
+  completes the sura (keeping a row already there) and deletes it with any of its pages, so the two agree while the
+  pack keeps its page IDs. After a pack changes them, a sura can be complete with no row, and so shows no time, or
+  keep a row with pages unread; the row still makes «سور» resettable, and its recorded time is the one shown once
+  every page is read. The PWA drops such a `completedAt` when it loads (`normalizeSuwarState`).
 
 ## Session state bridge
 

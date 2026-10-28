@@ -368,15 +368,11 @@ It is enabled when:
 - **«سور»** (`suwarHasResettableState`): any page read today, any sura complete today, or an earlier day with a
   completed sura.
 
-| Choice | Adhkar | Ruqyah | Asks first |
-| --- | --- | --- | --- |
-| «تقدم اليوم» | Today's counts, `completedAt` and manual flags cleared; chosen targets kept. | Today's counts set to 0 and today's sura completions deleted; today's record kept. | No |
-| «هذا الأسبوع» | Day reset, plus every adhkar record dated in the last 7 local dates (today included) deleted. | Day reset, plus recorded days and sura completions in the last 7 local dates (today included) deleted. | Yes |
-| «كل شيء» | Day reset, plus every adhkar record deleted. | Day reset, plus every recorded day and sura completion deleted. | Yes |
-
-«سور» resets as ruqyah does (`resetSuwarProgress`, `deleteSuwarHistory`): «تقدم اليوم» deletes today's reads and
-completions; «هذا الأسبوع» also deletes the reads and completions dated in the last 7 local dates (today included);
-«كل شيء» deletes them all.
+| Choice | Adhkar | Ruqyah | «سور» | Asks first |
+| --- | --- | --- | --- | --- |
+| «تقدم اليوم» | Today's counts, `completedAt` and manual flags cleared; chosen targets kept. | Today's counts set to 0 and today's sura completions deleted; today's record kept. | Today's page reads and sura completions deleted (`resetSuwarProgress`). | No |
+| «هذا الأسبوع» | Day reset, plus every adhkar record dated in the last 7 local dates (today included) deleted. | Day reset, plus recorded days and sura completions in the last 7 local dates (today included) deleted. | Day reset, plus the page reads and sura completions in the last 7 local dates (today included) deleted (`deleteSuwarHistory`). | Yes |
+| «كل شيء» | Day reset, plus every adhkar record deleted. | Day reset, plus every recorded day and sura completion deleted. | Day reset, plus every page read and sura completion deleted. | Yes |
 
 After any reset, every deck of the pillar goes back to card 1; the ruqyah deck reopens ق, and «سور» keeps the shown
 sura.
