@@ -1,9 +1,9 @@
 import AthkarCore
 import Foundation
 
-/// The three decks of the أذكار screen (the PWA's `tabOrder`).
+/// The decks of the أذكار screen: the PWA's `tabOrder`, the ruqyah, and «سور».
 enum DeckID: String, CaseIterable, Identifiable, Sendable {
-    case morning, evening, ruqyah
+    case morning, evening, ruqyah, suwar
 
     var id: String { rawValue }
 }
@@ -12,7 +12,7 @@ enum DeckID: String, CaseIterable, Identifiable, Sendable {
 /// completion rules live behind ``DeckModel``; ``DeckView`` renders any deck from these two.
 struct DeckDefinition: Sendable {
     var id: DeckID
-    /// `sectionNames[period]`, or the ruqyah deck's name.
+    /// `sectionNames[period]`, or the ruqyah or «سور» deck's name.
     var title: String
     /// How the position is spoken: «الذكر ٢ من ٢٦», «المقطع ٢ من ١٥».
     var cardNoun: String
@@ -33,6 +33,12 @@ struct DeckDefinition: Sendable {
         id: .ruqyah, title: "رقية القرين", cardNoun: "المقطع", cardsLabel: "مقاطع رقية القرين",
         navigationLabel: "التنقل بين مقاطع الرقية", hint: "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع.",
         indexTitle: "فهرس الرقية", indexHint: "يعرض فهرس الرقية للانتقال إلى مقطع", chipsGrowFromContent: true)
+    /// The athkar PWA's «سور» tab, which keeps the adhkar decks' navigation label and hint. Its chips take equal
+    /// shares, as the athkar PWA's `.sura-chip` does (`flex: 1 1 0`).
+    static let suwar = DeckDefinition(
+        id: .suwar, title: "سور", cardNoun: "الصفحة", cardsLabel: "صفحات السور",
+        navigationLabel: "التنقل بين بطاقات الأذكار", hint: "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.",
+        indexTitle: "فهرس السورة", indexHint: "يعرض فهرس السورة للانتقال إلى صفحة")
 
     private static func adhkar(_ period: Period, _ title: String) -> DeckDefinition {
         DeckDefinition(id: period == .morning ? .morning : .evening, title: title, cardNoun: "الذكر",
@@ -42,7 +48,7 @@ struct DeckDefinition: Sendable {
     }
 }
 
-/// One part of a deck the reader picks with a chip (the ruqyah PWA's `.sura-chip`): a sura of the ruqyah.
+/// One part of a deck the reader picks with a chip (`.sura-chip` in both PWAs): a sura of the ruqyah or of «سور».
 struct DeckSection: Identifiable, Equatable {
     var id: String
     /// The chip's text: the sura's name without «سورة ».
@@ -58,6 +64,8 @@ struct DeckCard: Identifiable, Equatable {
     enum Content: Equatable {
         case dhikr(AdhkarItemContent)
         case ruqyah(RuqyahSegmentContent)
+        /// A «سور» page of `surah`, with the basmala above a sura's first page only.
+        case page(SuwarPageContent, surah: String, basmala: String?)
     }
 
     enum Status: Equatable {
@@ -134,12 +142,24 @@ struct DeckCompletion: Equatable {
         case openSection(String)
     }
 
-    var title: String
-    var message: String
-    var time: String?
-    var dismissTitle: String
-    var primaryTitle: String
-    var primary: Primary
+    let title: String
+    let message: String
+    let time: String?
+    let dismissTitle: String
+    /// The second button's title and action, set together; a dialog without one has «تم» only (the «سور» sura dialog
+    /// hides `completionSwitch`).
+    let primaryTitle: String?
+    let primary: Primary?
+
+    init(title: String, message: String, time: String?, dismissTitle: String,
+         primary: (title: String, action: Primary)?) {
+        self.title = title
+        self.message = message
+        self.time = time
+        self.dismissTitle = dismissTitle
+        primaryTitle = primary?.title
+        self.primary = primary?.action
+    }
 }
 
 /// The scoped reset picker's three choices (`resetDayProgress`, `resetWeek`, `resetEverything`).

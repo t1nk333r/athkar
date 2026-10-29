@@ -1,8 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// One card: the PWAs' `.dhikr-card` / `.surah-card`. The whole card is the tap target (a button under the
-/// content, as `.card-tap-target` is); the reset button, the target picker and «المصدر والتفاصيل» sit above it.
+/// One card: the PWAs' `.dhikr-card` (an adhkar item, or a «سور» `.sura-page`) / `.surah-card`. The whole card is the
+/// tap target (a button under the content, as `.card-tap-target` is); the reset button, the target picker and
+/// «المصدر والتفاصيل» sit above it.
 /// Text steps down through the PWA's fit steps until it fits the card, and scrolls only if none fits.
 struct DeckCardView: View {
     let card: DeckCard
@@ -19,6 +20,15 @@ struct DeckCardView: View {
         if case .dhikr = card.content { return true }
         return false
     }
+
+    /// A «سور» page: a `.dhikr-card` with a compact, centred footer (`.dhikr-card.sura-page .requirement-row`).
+    private var isPage: Bool {
+        if case .page = card.content { return true }
+        return false
+    }
+
+    /// Drawn as a `.dhikr-card`: an adhkar item or a «سور» page.
+    private var isDhikrCard: Bool { isDhikr || isPage }
 
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: metrics.viewportWidth <= 380 ? 22.4 : 28, style: .continuous)
@@ -50,6 +60,8 @@ struct DeckCardView: View {
                     DhikrCardBody(item: item, number: card.number, onTap: onTap, onSource: onSource)
                 case let .ruqyah(segment):
                     RuqyahCardBody(segment: segment, onTap: onTap)
+                case let .page(page, _, basmala):
+                    SuwarPageBody(page: page, basmala: basmala, onTap: onTap)
                 }
                 if !card.isReview {
                     footer
@@ -71,7 +83,7 @@ struct DeckCardView: View {
 
     private var padding: CGFloat {
         let vw = metrics.viewportWidth * 0.04
-        return isDhikr ? min(max(18.4, vw), 28) : min(max(16.8, vw), 25.6)
+        return isDhikrCard ? min(max(18.4, vw), 28) : min(max(16.8, vw), 25.6)
     }
 
     /// `.dhikr-card.is-complete`, and `.dhikr-card.needs-review`: a dashed warning border on a warning tint.
@@ -93,7 +105,7 @@ struct DeckCardView: View {
                 }
             }
             .overlay(alignment: .leading) {
-                if isDhikr {
+                if isDhikrCard {
                     Capsule()
                         .fill(card.isComplete && !card.isReview ? palette.completed : palette.divider)
                         .frame(width: card.isComplete && !card.isReview ? 4.8 : 3.5)
@@ -107,11 +119,11 @@ struct DeckCardView: View {
 
     private var footer: some View {
         VStack(spacing: 0) {
-            Rectangle().fill(isDhikr ? palette.divider : palette.border).frame(height: 1)
+            Rectangle().fill(isDhikrCard ? palette.divider : palette.border).frame(height: 1)
             HStack(alignment: isDhikr ? .bottom : .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(card.requirement)
-                        .font((isDhikr ? Font.footnote : .caption).weight(.semibold))
+                        .font((isDhikrCard ? Font.footnote : .caption).weight(.semibold))
                         .foregroundStyle(palette.textSecondary)
                         .allowsHitTesting(false)
                     if let options = card.targetOptions {
@@ -124,9 +136,9 @@ struct DeckCardView: View {
                     resetButton
                 }
             }
-            .padding(.top, isDhikr ? 16 : 11)
+            .padding(.top, isDhikr ? 16 : isPage ? 8 : 11)
         }
-        .padding(.top, isDhikr ? 19 : 0)
+        .padding(.top, isDhikr ? 19 : isPage ? 8.8 : 0)
     }
 
     private var counterStatus: some View {
@@ -138,24 +150,25 @@ struct DeckCardView: View {
             case let .text(copy):
                 Text(copy)
             }
-            if complete, isDhikr {
+            if complete, isDhikrCard {
                 Text("✓").foregroundStyle(palette.completed)
             }
         }
         .environment(\.layoutDirection, card.status == .numeric ? .leftToRight : .rightToLeft)
-        .font((isDhikr ? Font.subheadline : .footnote).weight(.heavy))
+        .font((isDhikrCard ? Font.subheadline : .footnote).weight(.heavy))
         .foregroundStyle(complete ? palette.completed : palette.accentStrong)
         .lineLimit(1)
         .fixedSize()
-        .padding(.horizontal, isDhikr ? 13 : 10)
-        .frame(minWidth: isDhikr ? 85 : 54, minHeight: isDhikr ? 44 : 42)
+        .padding(.horizontal, isDhikrCard ? 13 : 10)
+        .frame(minWidth: isDhikrCard ? 85 : 54, minHeight: isDhikr ? 44 : isPage ? 38.4 : 42)
         .background {
-            Capsule().fill(isDhikr ? (complete ? palette.completedSoft : palette.accentSoft) : palette.surfaceRaised)
+            Capsule()
+                .fill(isDhikrCard ? (complete ? palette.completedSoft : palette.accentSoft) : palette.surfaceRaised)
         }
         .overlay {
             Capsule().strokeBorder(complete
-                ? palette.completed.mixed(0.55, with: isDhikr ? palette.border : palette.divider)
-                : isDhikr ? palette.accent.mixed(0.45, with: palette.border) : palette.divider)
+                ? palette.completed.mixed(0.55, with: isDhikrCard ? palette.border : palette.divider)
+                : isDhikrCard ? palette.accent.mixed(0.45, with: palette.border) : palette.divider)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.progressLabel)
@@ -586,6 +599,66 @@ private struct RuqyahCardBody: View {
             result += AttributedString(MushafEncoding.kfgqpc(ayah.text) + " ")
             var marker = AttributedString("﴿\(ArabicFormat.number(ayah.number))﴾")
             marker.font = ReadingFont.quran(size * 0.78)
+            marker.foregroundColor = palette.accentStrong
+            result += marker
+        }
+        return result
+    }
+}
+
+// MARK: - «سور» page (`.sura-page`)
+
+/// A «سور» page as `suraPageMarkup` sets it: the basmala above a sura's first page, then the ayat, each followed by its
+/// ﴿number﴾ in the accent colour, centred and stepped down through `fitSuraPage` until the page fits.
+private struct SuwarPageBody: View {
+    let page: SuwarPageContent
+    let basmala: String?
+    let onTap: () -> Void
+
+    @Environment(\.palette) private var palette
+    @Environment(\.readingMetrics) private var metrics
+
+    var body: some View {
+        let steps = ReadingMetrics.suraPageSteps
+        FittedBody(steps: steps.count, alignment: .center, onTap: onTap) { index in
+            content(steps[index], step: index)
+        }
+    }
+
+    private func content(_ step: ReadingMetrics.SuraPageStep, step index: Int) -> some View {
+        let size = metrics.quranText * step.scale
+        let prefixSize = metrics.quranPrefix * step.scale
+        return VStack(spacing: 0) {
+            if let basmala {
+                Text(MushafEncoding.kfgqpc(basmala))
+                    .font(ReadingFont.mushaf(prefixSize))
+                    .cssLineHeight(1.7, size: prefixSize, face: .mushaf)
+                    .foregroundStyle(palette.accentStrong)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 5.6)
+            }
+            Text(ayat(size: size))
+                .font(ReadingFont.mushaf(size))
+                .cssLineHeight(max(1.6, metrics.quranLineHeight * step.lead), size: size, face: .mushaf)
+                .foregroundStyle(palette.textPrimary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("deck.card.text.fit-\(index)")
+        }
+        .frame(maxWidth: .infinity)
+        .allowsHitTesting(false)
+    }
+
+    /// `quranTextMarkup` of `${ayah.text} ﴿n﴾` joined by spaces: the text in the KFGQPC encoding, each number in Uthman
+    /// Taha (`.ayah-number`) in the accent colour.
+    private func ayat(size: CGFloat) -> AttributedString {
+        var result = AttributedString()
+        for (offset, ayah) in page.ayahs.enumerated() {
+            if offset > 0 { result += AttributedString(" ") }
+            result += AttributedString(MushafEncoding.kfgqpc(ayah.text) + " ")
+            var marker = AttributedString("﴿\(ArabicFormat.number(ayah.number))﴾")
+            marker.font = ReadingFont.quran(size)
             marker.foregroundColor = palette.accentStrong
             result += marker
         }

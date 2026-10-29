@@ -115,4 +115,4 @@ trips use the host's `CompressionStream` and record only the container.
 
 ## Deck definition
 
-`sessions/deck-definition.md` describes the adhkar and ruqyah decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2).
+`sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2).

@@ -25,6 +25,7 @@ public struct AppDatabase: Sendable {
 
     public var adhkar: AdhkarRepository { AdhkarRepository(writer: writer) }
     public var ruqyah: RuqyahRepository { RuqyahRepository(writer: writer) }
+    public var suwar: SuwarRepository { SuwarRepository(writer: writer) }
     public var reminders: ReminderRepository { ReminderRepository(writer: writer) }
     public var settings: SettingsRepository { SettingsRepository(writer: writer) }
     public var location: LocationRepository { LocationRepository(writer: writer) }
@@ -41,6 +42,7 @@ public struct AppDatabase: Sendable {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1") { db in try db.execute(sql: Schema.v1) }
         migrator.registerMigration("v2") { db in try db.execute(sql: Schema.v2) }
+        migrator.registerMigration("v3") { db in try db.execute(sql: Schema.v3) }
         return migrator
     }
 }
@@ -131,6 +133,24 @@ private enum Schema {
     /// The ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`).
     static let v2 = """
         CREATE TABLE ruqyah_sura_days (
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            sura_id TEXT NOT NULL,
+            completed_at TEXT NOT NULL CHECK (completed_at \(instant)),
+            PRIMARY KEY (local_date, sura_id)
+        );
+        """
+
+    /// The athkar PWA's «سور» (`athkar-suwar-v1`): the pages read today and the suras completed on each day.
+    static let v3 = """
+        CREATE TABLE suwar_page_reads (
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            sura_id TEXT NOT NULL,
+            page_id TEXT NOT NULL,
+            read_at TEXT NOT NULL CHECK (read_at \(instant)),
+            PRIMARY KEY (local_date, page_id)
+        );
+
+        CREATE TABLE suwar_sura_days (
             local_date TEXT NOT NULL CHECK (local_date \(localDate)),
             sura_id TEXT NOT NULL,
             completed_at TEXT NOT NULL CHECK (completed_at \(instant)),

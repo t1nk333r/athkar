@@ -100,6 +100,26 @@ final class PortableModelTests: XCTestCase {
         XCTAssertTrue(try second.database.ruqyah.counts(on: second.today).isEmpty)
     }
 
+    @MainActor
+    func testSuwarReadsPersistReloadAndRemainIsolated() throws {
+        let first = try PortableTestSupport()
+        let second = try PortableTestSupport()
+        let deck = try first.makeSuwar()
+        deck.selectSection("yasin")
+        XCTAssertNotNil(deck.tap(cardAt: 0))
+        XCTAssertTrue(deck.cards[0].isComplete)
+        XCTAssertEqual(try first.database.suwar.readPages(on: first.today), ["yasin-1-8"])
+        let reloaded = try first.makeSuwar()
+        XCTAssertEqual(reloaded.selectedSectionID, "yasin")
+        XCTAssertEqual(reloaded.cards.first { $0.id == "yasin-1-8" }?.count, 1)
+        XCTAssertEqual(reloaded.currentIndex, 1, "the first unread page")
+        let other = try second.makeSuwar()
+        XCTAssertEqual(other.selectedSectionID, "kahf")
+        other.selectSection("yasin")
+        XCTAssertEqual(other.cards.first { $0.id == "yasin-1-8" }?.count, 0)
+        XCTAssertTrue(try second.database.suwar.readPages(on: second.today).isEmpty)
+    }
+
     /// Each sura is recorded once its last reading is counted, and the day once every sura is; each completion opens
     /// a dialog, and every completed segment plays the haptic.
     @MainActor

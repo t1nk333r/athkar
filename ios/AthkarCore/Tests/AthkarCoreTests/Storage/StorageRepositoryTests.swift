@@ -206,6 +206,89 @@ struct StorageRepositoryTests {
         #expect(try ruqyah.dayCount(.all) == 2, "completed days alone")
     }
 
+    /// The athkar PWA's `markPageRead`: a page is read once, and the reading that completes a sura records it, once,
+    /// keeping the first time.
+    @Test func suwarReadsAndSuraCompletionAreRecordedOnce() throws {
+        let suwar = database.suwar
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-23", at: t0)
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-23", at: t1)
+        try suwar.markRead("mulk-5-8", of: "mulk", on: "2026-09-23", completingSura: true, at: t0)
+        try suwar.markRead("mulk-5-8", of: "mulk", on: "2026-09-23", completingSura: true, at: t1)
+        #expect(try suwar.readPages(on: "2026-09-23") == ["mulk-1-4", "mulk-5-8"])
+        #expect(try suwar.suraDays(on: "2026-09-23") == ["mulk": t0])
+        #expect(try suwar.readPages(on: "2026-09-22") == [])
+        #expect(try suwar.suraDays(on: "2026-09-22") == [:])
+        let readAt = try database.reader.read { db in
+            try SuwarPageRead.filter(GRDB.Column("local_date") == "2026-09-23").order(GRDB.Column("page_id"))
+                .fetchAll(db)
+        }
+        #expect(readAt == [
+            SuwarPageRead(localDate: "2026-09-23", suraId: "mulk", pageId: "mulk-1-4", readAt: t0),
+            SuwarPageRead(localDate: "2026-09-23", suraId: "mulk", pageId: "mulk-5-8", readAt: t0),
+        ])
+    }
+
+    /// `resetSuraPage`: the page is unread and its sura no longer complete that day; other days and suras keep theirs.
+    @Test func suwarUnmarkClearsOnlyThatPageAndItsSura() throws {
+        let suwar = database.suwar
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-22", completingSura: true, at: t0)
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-23", completingSura: true, at: t0)
+        try suwar.markRead("waqiah-1-11", of: "waqiah", on: "2026-09-23", completingSura: true, at: t0)
+        try suwar.unmarkRead("mulk-1-4", of: "mulk", on: "2026-09-23")
+        #expect(try suwar.readPages(on: "2026-09-23") == ["waqiah-1-11"])
+        #expect(try suwar.suraDays(on: "2026-09-23") == ["waqiah": t0])
+        #expect(try suwar.readPages(on: "2026-09-22") == ["mulk-1-4"])
+        #expect(try suwar.suraDays(on: "2026-09-22") == ["mulk": t0])
+
+        // A page never read has nothing to delete.
+        try suwar.unmarkRead("kahf-1-4", of: "kahf", on: "2026-09-23")
+        #expect(try suwar.readPages(on: "2026-09-23") == ["waqiah-1-11"])
+    }
+
+    /// `resetSuwarProgress` clears today and keeps earlier days; `deleteSuwarHistory` deletes the days in scope.
+    @Test func suwarScopedResets() throws {
+        let suwar = database.suwar
+        for day in ["2026-09-10", "2026-09-17", "2026-09-22", "2026-09-23"] {
+            try suwar.markRead("mulk-1-4", of: "mulk", on: day, completingSura: true, at: t0)
+            try suwar.markRead("kahf-1-4", of: "kahf", on: day, at: t0)
+        }
+
+        try suwar.reset(on: "2026-09-23")
+        #expect(try suwar.readPages(on: "2026-09-23") == [])
+        #expect(try suwar.suraDays(on: "2026-09-23") == [:])
+        #expect(try suwar.readPages(on: "2026-09-22") == ["kahf-1-4", "mulk-1-4"])
+        #expect(try suwar.suraDays(on: "2026-09-22") == ["mulk": t0])
+
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        try suwar.reset(on: "2026-09-23", removing: week)
+        for day in ["2026-09-17", "2026-09-22"] {
+            #expect(try suwar.readPages(on: day) == [], "\(day)")
+            #expect(try suwar.suraDays(on: day) == [:], "\(day)")
+        }
+        #expect(try suwar.readPages(on: "2026-09-10") == ["kahf-1-4", "mulk-1-4"])
+        #expect(try suwar.suraDays(on: "2026-09-10") == ["mulk": t0])
+
+        try suwar.reset(on: "2026-09-23", removing: .all)
+        #expect(try suwar.readPages(on: "2026-09-10") == [])
+        #expect(try suwar.suraDays(on: "2026-09-10") == [:])
+    }
+
+    /// The PWA counts `suwarState.history`: earlier dates with a completed sura, each once. Pages read without a
+    /// completed sura, and today's completions, are not history.
+    @Test func suwarRecordedDayCountIsEarlierDatesWithACompletedSura() throws {
+        let suwar = database.suwar
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-10", completingSura: true, at: t0)
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-20", completingSura: true, at: t0)
+        try suwar.markRead("waqiah-1-11", of: "waqiah", on: "2026-09-20", completingSura: true, at: t0)
+        try suwar.markRead("kahf-1-4", of: "kahf", on: "2026-09-21", at: t0)
+        try suwar.markRead("mulk-1-4", of: "mulk", on: "2026-09-23", completingSura: true, at: t0)
+
+        #expect(try suwar.recordedDayCount(.all, before: "2026-09-23") == 2)
+        #expect(try suwar.recordedDayCount(.all, before: "2026-09-24") == 3)
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        #expect(try suwar.recordedDayCount(week, before: "2026-09-23") == 1)
+    }
+
     @Test func adhkarCompletedDayCountIsDistinctEarlierDates() throws {
         let adhkar = database.adhkar
         for date in ["2026-09-15", "2026-09-20", "2026-09-22", "2026-09-23"] {

@@ -74,6 +74,11 @@ extension SettingKey where Value == Bool {
     public static var homePrayerRow: Self { Self(name: "home_prayer_row", defaultValue: true) }
 }
 
+extension SettingKey where Value == String {
+    /// The «سور» sura shown (`athkar-suwar-v1.selected`). A preference: resets keep it.
+    public static var suwarSelectedSura: Self { Self(name: "suwar_selected_sura", defaultValue: "kahf") }
+}
+
 /// Who wrote a `settings` row. Import precedence: native > athkar-pwa > ruqyah-pwa; ties keep the existing row.
 enum SettingOrigin: String, Codable, Sendable, DatabaseValueConvertible {
     case native

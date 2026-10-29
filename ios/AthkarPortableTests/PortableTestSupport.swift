@@ -57,4 +57,10 @@ final class PortableTestSupport {
         try RuqyahDeckModel(database: database, content: content, today: today,
                             report: { XCTFail("Production database write failed: \($0)") })
     }
+
+    @MainActor
+    func makeSuwar() throws -> SuwarDeckModel {
+        try SuwarDeckModel(database: database, content: content, today: today,
+                           report: { XCTFail("Production database write failed: \($0)") })
+    }
 }

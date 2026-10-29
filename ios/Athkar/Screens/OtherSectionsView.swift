@@ -10,13 +10,14 @@ enum HomeTab: String, CaseIterable, Identifiable, Sendable {
 
 /// The sections of the أخرى tab, in list order. Only those with a ``deck`` open yet; the rest are listed as «قريبًا».
 enum OtherSection: String, CaseIterable, Identifiable, Sendable {
-    case ruqyah, sleep, afterPrayer, waking, prayerTimes, qibla
+    case ruqyah, suwar, sleep, afterPrayer, waking, prayerTimes, qibla
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .ruqyah: "رقية القرين"
+        case .suwar: "سور"
         case .sleep: "أذكار النوم"
         case .afterPrayer: "أذكار بعد الصلاة"
         case .waking: "أذكار الاستيقاظ"
@@ -28,6 +29,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
     var icon: String {
         switch self {
         case .ruqyah: "shield"
+        case .suwar: "book"
         case .sleep: "bed.double"
         case .afterPrayer: "hands.and.sparkles"
         case .waking: "sunrise"
@@ -40,6 +42,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
     var deck: DeckID? {
         switch self {
         case .ruqyah: .ruqyah
+        case .suwar: .suwar
         case .sleep, .afterPrayer, .waking, .prayerTimes, .qibla: nil
         }
     }
@@ -48,6 +51,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
     var tint: Color {
         switch self {
         case .ruqyah: .teal
+        case .suwar: .brown
         case .sleep: .purple
         case .afterPrayer: .blue
         case .waking: .orange

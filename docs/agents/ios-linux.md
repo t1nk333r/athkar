@@ -171,7 +171,7 @@ ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
   tools/ios-linux-compile.sh --jobs 2 --build-tests
 ```
 
-The adapter stages the exact shipped manifest, adhkar/ruqyah packs, both fonts
+The adapter stages the exact shipped manifest, adhkar/ruqyah/suwar packs, both fonts
 and city list in its isolated snapshot. SDK mode selects every actual app source
 and the real assets. The adapter follows the installed xtool revision's
 [SwiftBuild settings](https://github.com/xtool-org/xtool/blob/f0a1f90efdbb0dc023e276ff529da92618da7a87/Sources/PackLib/BuildSettings.swift#L58-L70).

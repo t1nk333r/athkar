@@ -36,9 +36,8 @@ const adhkar = readJSON(join(contentDir, "adhkar.v1.json"));
 check(readJSON(join(contentDir, "schema/adhkar.schema.json")), adhkar, "adhkar");
 const ruqyah = readJSON(join(contentDir, "ruqyah.v1.json"));
 check(readJSON(join(contentDir, "schema/ruqyah.schema.json")), ruqyah, "ruqyah");
-// The suwar pack (the PWA's «سور» tab) is not in manifest.json yet: the iOS app installs every manifest pack from its
-// bundle, so the entry lands together with the iOS resource. Until then it is bound to its REVIEW.md row here.
-const suwarFile = "suwar.v1.json";
+// The suwar pack: the PWA's «سور» tab and the iOS app's «سور» section, which bundles it through manifest.json.
+const suwarFile = manifest.packs?.suwar?.file ?? "suwar.v1.json";
 const suwar = readJSON(join(contentDir, suwarFile));
 check(readJSON(join(contentDir, "schema/suwar.schema.json")), suwar, "suwar");
 const reference = Object.fromEntries(
@@ -61,8 +60,8 @@ const latestReviewed = new Map();
 // in it must parse as a review row. Anywhere in REVIEW.md, a line that looks like a review row (a fullwidth pipe, a
 // line starting with an R<n>-like ID, or a piped line with an R<n>-like cell) and is not a parsed table row is an
 // error too, as is a reused review ID: nothing review-like is ever skipped.
-// The suwar pack has never been approved, so its rows may leave Reviewer blank until a suwar row first names one;
-// every later suwar row must name one too.
+// The suwar pack's first rows (R8–R10) leave Reviewer blank: no suwar row named one until R12. Every suwar row after
+// the first that names a reviewer must name one too.
 const reviewLines = reviewLog.split("\n").map(line => line.trim());
 const tableCells = line => line.replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
 const reviewIdLike = /^[|]?\s*[RrＲｒ]\s*[0-9０-９]/;
@@ -93,10 +92,11 @@ for (const [i, line] of reviewLines.entries()) {
   else if (latestReviewed.has(pack) && !newer(version, latestReviewed.get(pack))) fail(`REVIEW.md ${id}: ${pack} ${version} does not bump ${latestReviewed.get(pack)}`);
   else latestReviewed.set(pack, version);
 }
-for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah]]) {
+for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah], ["suwar", suwar]]) {
   const ref = manifest.packs[name];
   if (!ref) continue;
   if (ref.version !== pack.version) fail(`manifest.${name}.version ${ref.version} != pack ${pack.version}`);
+  if (latestReviewed.get(name) !== pack.version) fail(`REVIEW.md: ${name} ${pack.version} is not the pack's latest reviewed version`);
   const actual = sha256(join(contentDir, ref.file));
   if (ref.sha256 !== actual) fail(`manifest.${name}.sha256 is stale (actual ${actual})`);
   const entry = reviewEntries.get(ref.reviewRecord);
@@ -105,15 +105,6 @@ for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah]]) {
     if (entry.pack !== name || entry.version !== pack.version) fail(`REVIEW.md ${ref.reviewRecord} covers ${entry.pack} ${entry.version}, not ${name} ${pack.version}`);
     if (entry.sha256 !== ref.sha256) fail(`manifest.${name}.sha256 was not reviewed: ${ref.reviewRecord} approved ${entry.sha256}; a text or order change needs a new REVIEW.md row and a version bump`);
     if (!entry.reviewer && pack.version !== "1.0.0") fail(`REVIEW.md ${ref.reviewRecord}: a named reviewer is required to ship ${name} ${pack.version}`);
-  }
-}
-{
-  const actual = sha256(join(contentDir, suwarFile));
-  const rows = [...reviewEntries].filter(([, entry]) => entry.pack === "suwar" && entry.version === suwar.version);
-  if (!rows.length) fail(`REVIEW.md: no row for suwar ${suwar.version}; a text or order change needs a new row and a version bump`);
-  else if (latestReviewed.get("suwar") !== suwar.version) fail(`REVIEW.md: suwar ${suwar.version} is not the pack's latest reviewed version`);
-  for (const [id, entry] of rows) {
-    if (entry.sha256 !== actual) fail(`${suwarFile} (sha256 ${actual}) was not reviewed: ${id} approved ${entry.sha256}`);
   }
 }
 

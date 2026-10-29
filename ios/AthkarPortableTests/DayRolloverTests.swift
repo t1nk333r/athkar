@@ -94,18 +94,52 @@ final class DayRolloverTests: XCTestCase {
         XCTAssertTrue(try decks.database.adhkar.session(on: Day.today, period: .morning).progress.isEmpty)
     }
 
-    /// Both days fail to load at midnight, then the clock goes back to the day on screen. The rollover ends the
-    /// pending adhkar load, so Settings and the decks change the day on screen instead of loading the later one.
+    @MainActor
+    func testUnreadableSuwarDayLeavesTheOtherDecksWorking() throws {
+        let decks = try Decks()
+        try decks.hide("suwar_page_reads")
+        decks.today = Day.tomorrow
+        XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
+        XCTAssertEqual(decks.adhkar.state.date, Day.tomorrow)
+        XCTAssertEqual(decks.ruqyah.progress.date, Day.tomorrow)
+        XCTAssertEqual(decks.suwar.date, Day.today)
+        XCTAssertEqual(decks.reports.messages.count, 1)
+
+        // The other decks show the new day.
+        let first = try decks.position(of: "morning-01", .morning)
+        XCTAssertEqual(decks.tap(.morning, at: first), DeckChange(completedCard: true, advance: true))
+        XCTAssertEqual(decks.tap(.ruqyah, at: 0), DeckChange(completedCard: true, advance: true, haptic: true))
+        XCTAssertEqual(try decks.database.ruqyah.counts(on: Day.tomorrow)["qaf-1-8"], 1)
+
+        // «سور» still shows the day before, so its own gate drops every change made on it.
+        let suwarCards = decks.suwar.cards
+        XCTAssertNil(decks.tap(.suwar, at: 0))
+        XCTAssertNil(decks.choose(decks.suwar.cards[1].id, on: .suwar))
+        XCTAssertEqual(decks.suwar.cards, suwarCards)
+        XCTAssertEqual(decks.reports.messages.count, 5, "every gate tried the unreadable day again")
+
+        // Once the day can be read, the gesture that loads it is dropped and the next one reads on it.
+        try decks.restore("suwar_page_reads")
+        XCTAssertNil(decks.tap(.suwar, at: 0))
+        XCTAssertEqual(decks.suwar.date, Day.tomorrow)
+        XCTAssertEqual(decks.tap(.suwar, at: 0), DeckChange(completedCard: true, advance: true, haptic: true))
+        XCTAssertEqual(try decks.database.suwar.readPages(on: Day.tomorrow), ["kahf-1-4"])
+        XCTAssertEqual(try decks.database.suwar.readPages(on: Day.today), [])
+    }
+
+    /// Every session's day fails to load at midnight, then the clock goes back to the day on screen. The rollover ends
+    /// the pending adhkar load, so Settings and the decks change the day on screen instead of loading the later one.
     @MainActor
     func testReturningToTheShownDayEndsAPendingAdhkarLoad() throws {
         let decks = try Decks()
-        let tables = ["adhkar_item_progress", "ruqyah_segment_progress"]
+        let tables = ["adhkar_item_progress", "ruqyah_segment_progress", "suwar_page_reads"]
         for table in tables { try decks.hide(table) }
         decks.today = Day.tomorrow
         XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
         XCTAssertEqual(decks.adhkar.state.date, Day.today)
         XCTAssertEqual(decks.ruqyah.progress.date, Day.today)
-        XCTAssertEqual(decks.reports.messages.count, 2)
+        XCTAssertEqual(decks.suwar.date, Day.today)
+        XCTAssertEqual(decks.reports.messages.count, tables.count)
         for table in tables { try decks.restore(table) }
 
         decks.today = Day.today
@@ -120,7 +154,7 @@ final class DayRolloverTests: XCTestCase {
         XCTAssertEqual(try decks.database.adhkar.session(on: Day.today, period: .morning).progress,
                        ["morning-02": 1])
         XCTAssertNil(try decks.database.adhkar.session(on: Day.tomorrow, period: .evening).completion)
-        XCTAssertEqual(decks.reports.messages.count, 2)
+        XCTAssertEqual(decks.reports.messages.count, tables.count)
     }
 }
 
@@ -139,7 +173,7 @@ private final class Reports {
     }
 }
 
-/// The app's three decks on one production database, a clock that shows `today`, and `DeckView`'s gestures: each
+/// The app's decks on one production database, a clock that shows `today`, and `DeckView`'s gestures: each
 /// runs its deck's gate (`ensureCurrentDay` for that deck) first and is dropped when the gate reports a changed day.
 @MainActor
 private final class Decks {
@@ -149,6 +183,7 @@ private final class Decks {
     let morning: AdhkarDeckModel
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
+    let suwar: SuwarDeckModel
     /// The local date the clock shows.
     var today: String
 
@@ -165,17 +200,20 @@ private final class Decks {
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: support.database, content: support.content, today: support.today,
                                      report: reports.record)
+        suwar = try SuwarDeckModel(database: support.database, content: support.content, today: support.today,
+                                   report: reports.record)
         today = support.today
     }
 
     var database: AppDatabase { support.database }
-    var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah) }
+    var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar) }
 
     func deck(_ id: DeckID) -> any DeckModel {
         switch id {
         case .morning: morning
         case .evening: evening
         case .ruqyah: ruqyah
+        case .suwar: suwar
         }
     }
 

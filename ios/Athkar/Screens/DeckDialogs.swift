@@ -87,7 +87,8 @@ struct ResetScopeSheet: View {
     }
 }
 
-/// The completion dialog: «اكتملت أذكار الصباح بحمد الله» or «تمت الرقية بحمد الله».
+/// The completion dialog: «اكتملت أذكار الصباح بحمد الله», «تمت الرقية بحمد الله», or a sura's. A completion without a
+/// primary action shows its dismiss button alone.
 struct CompletionSheet: View {
     let completion: DeckCompletion
     let primary: () -> Void
@@ -122,9 +123,11 @@ struct CompletionSheet: View {
                 Button(completion.dismissTitle) { dismiss() }
                     .buttonStyle(DialogButtonStyle(palette: palette))
                     .accessibilityIdentifier("completion.dismiss")
-                Button(completion.primaryTitle, action: primary)
-                    .buttonStyle(DialogButtonStyle(palette: palette, primary: true))
-                    .accessibilityIdentifier("completion.primary")
+                if let title = completion.primaryTitle {
+                    Button(title, action: primary)
+                        .buttonStyle(DialogButtonStyle(palette: palette, primary: true))
+                        .accessibilityIdentifier("completion.primary")
+                }
             }
             .padding(.top, 6)
         }

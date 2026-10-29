@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		000C2537D108015666A15547 /* suwar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = B2BFE9125316118DF1977A08 /* suwar.v1.json */; };
 		03535BE534BF0E273143EF43 /* DeviceLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */; };
 		0AA6275784C3128B0DB4484C /* DeckIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */; };
 		0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501E35E5E819164510431A3C /* DeviceLocationTests.swift */; };
@@ -31,6 +32,7 @@
 		6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */; };
 		647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11171CCC784D1B7FD1830ACE /* BundledContent.swift */; };
 		64B683DDF039D486630601E7 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B85A291084AF937C35C88A /* Haptics.swift */; };
+		6B168BA3F2BD04284522302C /* SuwarUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 163466F44FCE8FF9E95437AD /* SuwarUITests.swift */; };
 		749F95A4450C8B5F4B1C455B /* DeviceHeadingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06750E28AA29F8F17A5D8A5E /* DeviceHeadingTests.swift */; };
 		7621076F835B4009C2D7C21F /* DeckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12427B8BADEDCAF23C15E22C /* DeckUITests.swift */; };
 		7B4B08D28FA4B78C6CD87E31 /* HomePrayerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */; };
@@ -56,6 +58,7 @@
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
+		D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */; };
 		D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042329F8B233CEB3D355A537 /* UITestSupport.swift */; };
 		D64A8F7FDF8F3B54A0C66871 /* ReminderNotificationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894967E326786673B5F4981D /* ReminderNotificationsTests.swift */; };
 		D7296863146C5D31B3B8B732 /* HeadingReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D57862FC1A5212C719415B /* HeadingReading.swift */; };
@@ -93,6 +96,7 @@
 		0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArabicFormat.swift; sourceTree = "<group>"; };
 		11171CCC784D1B7FD1830ACE /* BundledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledContent.swift; sourceTree = "<group>"; };
 		12427B8BADEDCAF23C15E22C /* DeckUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckUITests.swift; sourceTree = "<group>"; };
+		163466F44FCE8FF9E95437AD /* SuwarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarUITests.swift; sourceTree = "<group>"; };
 		17D57862FC1A5212C719415B /* HeadingReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingReading.swift; sourceTree = "<group>"; };
 		17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingMetrics.swift; sourceTree = "<group>"; };
 		1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeading.swift; sourceTree = "<group>"; };
@@ -121,11 +125,13 @@
 		808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesUITests.swift; sourceTree = "<group>"; };
 		862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckIndexView.swift; sourceTree = "<group>"; };
 		894967E326786673B5F4981D /* ReminderNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotificationsTests.swift; sourceTree = "<group>"; };
+		90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarDeckModel.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTestSupport.swift; sourceTree = "<group>"; };
 		A69E443B335C7F687972315F /* AdhkarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdhkarDeckModel.swift; sourceTree = "<group>"; };
 		A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-hafs-v30.ttf"; path = "../fonts/kfgqpc-hafs-v30.ttf"; sourceTree = "<group>"; };
 		A9B85A291084AF937C35C88A /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		B2BFE9125316118DF1977A08 /* suwar.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = suwar.v1.json; path = ../content/suwar.v1.json; sourceTree = "<group>"; };
 		B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotUITests.swift; sourceTree = "<group>"; };
 		B70A4FE7DB61A178262341A0 /* cities.tsv */ = {isa = PBXFileReference; name = cities.tsv; path = ../data/cities.tsv; sourceTree = "<group>"; };
 		B714704C81ED5A22715203DD /* DeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckView.swift; sourceTree = "<group>"; };
@@ -248,6 +254,7 @@
 				3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */,
 				3CADA9419CAC70B90CD19CFD /* manifest.json */,
 				CE857DADF37638C3F15FE817 /* ruqyah.v1.json */,
+				B2BFE9125316118DF1977A08 /* suwar.v1.json */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -262,6 +269,7 @@
 				B714704C81ED5A22715203DD /* DeckView.swift */,
 				E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */,
 				6D4122DE1C89CDB311B8848C /* SectionChips.swift */,
+				90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */,
 			);
 			path = Deck;
 			sourceTree = "<group>";
@@ -346,6 +354,7 @@
 				D150FDEA907C03DC351639CA /* QiblaUITests.swift */,
 				E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */,
 				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
+				163466F44FCE8FF9E95437AD /* SuwarUITests.swift */,
 				042329F8B233CEB3D355A537 /* UITestSupport.swift */,
 			);
 			path = AthkarUITests;
@@ -482,6 +491,7 @@
 				B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */,
 				F96134CFA1F9A4AF648287CC /* manifest.json in Resources */,
 				83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */,
+				000C2537D108015666A15547 /* suwar.v1.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -524,6 +534,7 @@
 				BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */,
 				A07159CDBE18B815AED58E9F /* SettingsModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
+				D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */,
 				FCA6B5C02D47830635FFFFE5 /* TestHooks.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -542,6 +553,7 @@
 				393E5863E65F5FB131563FA4 /* QiblaUITests.swift in Sources */,
 				9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */,
 				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
+				6B168BA3F2BD04284522302C /* SuwarUITests.swift in Sources */,
 				D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

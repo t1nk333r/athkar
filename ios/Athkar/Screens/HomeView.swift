@@ -92,6 +92,7 @@ struct HomeView: View {
                 case let .open(other): app.selection = other
                 case .restart: app.deck(id).reset(.day)
                 case let .openSection(section): app.deck(id).selectSection(section)
+                case nil: break
                 }
             }
             .environment(\.palette, palette)
@@ -340,6 +341,10 @@ struct HomeView: View {
                      onDeckCompleted: { completedDeck = .ruqyah })
             // One deck view per sura, so a chip switch also cancels a pending auto-advance.
             .id("\(DeckID.ruqyah.rawValue).\(app.ruqyah.selectedSuraID)")
+        case .suwar:
+            DeckView(model: app.suwar, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .suwar) },
+                     onDeckCompleted: { completedDeck = .suwar })
+            .id("\(DeckID.suwar.rawValue).\(app.suwar.selectedSuraID)")
         }
     }
 

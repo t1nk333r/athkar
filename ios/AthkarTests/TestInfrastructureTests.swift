@@ -64,6 +64,22 @@ final class TestInfrastructureTests: XCTestCase {
             XCTAssertEqual(card.count, 0)
         }
         XCTAssertFalse(app.ruqyah.isDayComplete)
+
+        // «سور» shows one sura at a time; its sections together are the bundled pack's pages, in order.
+        XCTAssertEqual(app.suwar.date, support.today)
+        XCTAssertTrue(app.deck(.suwar) === app.suwar)
+        XCTAssertEqual(app.suwar.sections.map(\.id), support.content.suwar.suwar.map(\.id))
+        XCTAssertEqual(app.suwar.selectedSectionID, support.content.suwar.suwar.first?.id)
+        var pages: [DeckCard] = []
+        for section in app.suwar.sections {
+            app.suwar.selectSection(section.id)
+            pages += app.suwar.cards
+            XCTAssertFalse(app.suwar.isComplete)
+        }
+        XCTAssertEqual(pages.map(\.id), support.content.suwar.suwar.flatMap { $0.pages.map(\.id) })
+        XCTAssertEqual(pages.map(\.count), Array(repeating: 0, count: pages.count))
+        XCTAssertFalse(app.suwar.isDayComplete)
+        XCTAssertNil(app.failure)
     }
 
     @MainActor

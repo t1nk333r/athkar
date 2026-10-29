@@ -141,7 +141,8 @@ private struct DeckIndexRow: View {
         .accessibilityIdentifier("deck.index.row.\(card.id)")
     }
 
-    /// The card's text as the card sets it, cut to two lines by layout only; ruqyah rows show surah and range.
+    /// The card's text as the card sets it, cut to two lines by layout only; ruqyah and «سور» rows show surah and
+    /// range.
     @ViewBuilder
     private var opening: some View {
         let size = 17 * metrics.typeScale
@@ -164,14 +165,20 @@ private struct DeckIndexRow: View {
             .multilineTextAlignment(.leading)
             .lineLimit(2)
         case let .ruqyah(segment):
-            VStack(alignment: .leading, spacing: 2) {
-                Text(segment.surah)
-                    .font(.system(size: size, weight: .bold))
-                    .foregroundStyle(palette.textPrimary)
-                Text(segment.range)
-                    .font(.footnote.weight(.bold))
-                    .foregroundStyle(palette.textSecondary)
-            }
+            surahAndRange(segment.surah, segment.range, size: size)
+        case let .page(page, surah, _):
+            surahAndRange(surah, page.range, size: size)
+        }
+    }
+
+    private func surahAndRange(_ surah: String, _ range: String, size: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(surah)
+                .font(.system(size: size, weight: .bold))
+                .foregroundStyle(palette.textPrimary)
+            Text(range)
+                .font(.footnote.weight(.bold))
+                .foregroundStyle(palette.textSecondary)
         }
     }
 

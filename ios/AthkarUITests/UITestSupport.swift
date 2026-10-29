@@ -146,23 +146,25 @@ class DeckTestCase: XCTestCase {
         XCTAssertTrue(wait { control.buttons[option].isSelected }, "\(identifier) → \(option)")
     }
 
-    /// `morning`, `evening`, `other` (its list or last section), or `ruqyah`: أخرى, then its row when the list shows.
+    /// `morning`, `evening`, `other` (its list or last section), or a deck of أخرى (`ruqyah`, `suwar`): أخرى, then its
+    /// row when the list shows.
     func selectTab(_ id: String) {
-        guard id == "ruqyah" else {
+        guard id == "ruqyah" || id == "suwar" else {
             app.buttons["tab.\(id)"].tap()
             return
         }
         app.buttons["tab.other"].tap()
-        let row = app.buttons["other.ruqyah"]
+        let row = app.buttons["other.\(id)"]
         if row.waitForExistence(timeout: 1) { row.tap() }
     }
 
-    /// A ruqyah sura's chip above the summary (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`).
+    /// A sura's chip above the summary: ruqyah (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`) or «سور» (`kahf`, `yasin`,
+    /// `saffat`, `waqiah`, `mulk`).
     func sectionChip(_ id: String) -> XCUIElement {
         app.buttons["deck.section.\(id)"]
     }
 
-    /// Shows a ruqyah sura through its chip and waits for the chip to be selected.
+    /// Shows a sura through its chip and waits for the chip to be selected.
     func selectSection(_ id: String, file: StaticString = #filePath, line: UInt = #line) {
         let chip = sectionChip(id)
         XCTAssertTrue(chip.waitForExistence(timeout: 3), "chip \(id)", file: file, line: line)
@@ -210,7 +212,7 @@ class DeckTestCase: XCTestCase {
 
     /// Writes a small content pack built from the repository's packs (`ATHKAR_UITEST_CONTENT_DIR`), removed after
     /// the test. `morning`, `evening` and `ruqyah` pick items and segments by ID, in that order; an entry of
-    /// `review` puts the review item `morning-90` there.
+    /// `review` puts the review item `morning-90` there. Every other pack the manifest lists is copied unchanged.
     func makeContentPack(morning: [String], evening: [String], ruqyah: [String]) throws -> URL {
         let source = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appendingPathComponent("content")
@@ -243,6 +245,11 @@ class DeckTestCase: XCTestCase {
             let file = try XCTUnwrap(packs[packId]?["file"] as? String)
             try data.write(to: directory.appendingPathComponent(file))
             packs[packId]?["sha256"] = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        }
+        for (packId, pack) in packs where packId != "adhkar" && packId != "ruqyah" {
+            let file = try XCTUnwrap(pack["file"] as? String, packId)
+            try FileManager.default.copyItem(at: source.appendingPathComponent(file),
+                                            to: directory.appendingPathComponent(file))
         }
         manifest["packs"] = packs
         try JSONSerialization.data(withJSONObject: manifest).write(to: directory.appendingPathComponent("manifest.json"))

@@ -230,6 +230,7 @@ content/
   manifest.json          # pack ids, semantic versions, sha256 per pack, review record ids
   adhkar.v1.json         # morning + evening items, stable ids morning-NN / evening-NN
   ruqyah.v1.json         # segments, stable ids qaf-1-8 ... nas-full
+  suwar.v1.json          # «سور» pages of five suras, stable ids kahf-1-4 ... mulk-27-30
   ui-copy.json           # domain wording (section 4.1)
   schema/adhkar.schema.json
   schema/ruqyah.schema.json

@@ -77,18 +77,20 @@ final class BundledIntegrityTests: XCTestCase {
     }
 
     func testManifestWithoutARequiredPackIsRefused() throws {
-        let fixture = try ContentFixture()
-        try fixture.editManifestPacks { $0["ruqyah"] = nil }
-        try assertRefused(fixture, .missingPack(id: "ruqyah"))
+        for packId in ["ruqyah", "suwar"] {
+            let fixture = try ContentFixture()
+            try fixture.editManifestPacks { $0[packId] = nil }
+            try assertRefused(fixture, .missingPack(id: packId))
+        }
     }
 
     func testMissingLaterListedPackLeavesEarlierInstallsUnchanged() throws {
         let fixture = try ContentFixture()
-        // The manifest lists the suwar pack, which sorts after the packs the app reads, but the bundle omits its file.
-        let suwar = try Data(contentsOf: fixture.repositoryContent("suwar.v1.json"))
-        try fixture.editManifestPacks {
-            $0["suwar"] = ["file": "suwar.v1.json", "version": "1.0.0", "sha256": checksum(suwar)]
-        }
+        // The manifest lists the suwar pack, which sorts after the other packs, but the bundle omits its file.
+        let suwar = try XCTUnwrap(fixture.manifest().packs["suwar"])
+        XCTAssertEqual(suwar.file, "suwar.v1.json")
+        XCTAssertEqual(try fixture.manifest().packs.keys.sorted().last, "suwar")
+        try fixture.remove(suwar.file)
         try assertRefused(fixture, .missingResource(name: "suwar.v1.json"))
     }
 
@@ -134,6 +136,18 @@ final class BundledIntegrityTests: XCTestCase {
         try ruqyah.replaceFirst(#""id": "\#(second)""#, with: #""id": "\#(first)""#, in: ruqyahFile)
         try ruqyah.redigest("ruqyah")
         try assertRefused(ruqyah, .duplicateID(id: first))
+
+        // «سور» reads are keyed by page, and its completions by sura.
+        let page = try ContentFixture()
+        let suwarFile = try XCTUnwrap(page.manifest().packs["suwar"]).file
+        try page.replaceFirst(#""id": "kahf-5-8""#, with: #""id": "kahf-1-4""#, in: suwarFile)
+        try page.redigest("suwar")
+        try assertRefused(page, .duplicateID(id: "kahf-1-4"))
+
+        let sura = try ContentFixture()
+        try sura.replaceFirst(#""id": "yasin""#, with: #""id": "kahf""#, in: suwarFile)
+        try sura.redigest("suwar")
+        try assertRefused(sura, .invalidSuwarSura(id: "kahf"))
     }
 
     func testNoteIndexOutsideDetailsIsRefused() throws {
@@ -188,16 +202,16 @@ final class BundledIntegrityTests: XCTestCase {
         XCTAssertEqual(try database.contentInstalls.installs(), before, file: file, line: line)
     }
 
-    /// Rows from an older install of both packs the app reads, which an accepted bundle replaces.
+    /// Rows from an older install of every pack the app reads, which an accepted bundle replaces.
     private func olderInstalls() throws -> (AppDatabase, [ContentInstall]) {
         let database = try AppDatabase.inMemory()
-        for packId in ["adhkar", "ruqyah"] {
+        for packId in ["adhkar", "ruqyah", "suwar"] {
             try database.contentInstalls.record(ContentInstall(packId: packId, version: "0.9.0",
                                                                checksum: String(repeating: "0", count: 64),
                                                                installedAt: earlier))
         }
         let installs = try database.contentInstalls.installs()
-        XCTAssertEqual(installs.count, 2)
+        XCTAssertEqual(installs.count, 3)
         return (database, installs)
     }
 }

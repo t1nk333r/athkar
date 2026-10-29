@@ -153,6 +153,61 @@ final class DeckIndexReachabilityTests: XCTestCase {
         XCTAssertEqual(reached, support.content.packs.ruqyahSegments.map(\.id))
     }
 
+    /// As «التالي» in the athkar PWA's «سور» (`updateDeckNavigation`): a page opens once the one before it is read.
+    @MainActor
+    func testSuwarIndexOpensEachPageOnceTheOneBeforeIsRead() throws {
+        let support = try PortableTestSupport()
+        let deck = try support.makeSuwar()
+        XCTAssertEqual(deck.selectedSectionID, "kahf")
+        XCTAssertEqual(deck.currentIndex, 0)
+        XCTAssertEqual(deck.cards.indices.filter { deck.canReach($0) }, [0], "every later page waits for the first")
+
+        read(deck, 0)
+        XCTAssertTrue(deck.canReach(1))
+        XCTAssertFalse(deck.canReach(2))
+        let choice = deck.indexChoice(of: deck.cards[1].id)
+        XCTAssertEqual(deck.destination(of: choice), 1)
+        XCTAssertNil(deck.destination(of: deck.indexChoice(of: deck.cards[2].id)))
+
+        deck.show(1)
+        XCTAssertTrue(deck.canReach(0), "an earlier page")
+        XCTAssertTrue(deck.canReach(1), "the current page")
+        XCTAssertFalse(deck.canReach(2))
+        let reset = deck.indexChoice(of: deck.cards[0].id)
+        deck.resetCard(at: 0)
+        XCTAssertNil(deck.destination(of: reset), "the pages changed after the choice")
+        XCTAssertTrue(deck.canReach(0), "an earlier page stays reachable once unread")
+        XCTAssertFalse(deck.canReach(-1))
+        XCTAssertFalse(deck.canReach(deck.cards.count))
+    }
+
+    /// Each sura's chip opens that sura on its first page, and reading its pages in order through «التالي» reaches
+    /// each of them; together the suras reach every page of the pack, once and in order.
+    @MainActor
+    func testEveryPageIsReachedThroughItsSuraChip() throws {
+        let support = try PortableTestSupport()
+        let deck = try support.makeSuwar()
+        XCTAssertEqual(deck.sections.map(\.id), ["kahf", "yasin", "saffat", "waqiah", "mulk"])
+        var reached: [String] = []
+        for section in deck.sections {
+            deck.selectSection(section.id)
+            XCTAssertEqual(deck.selectedSectionID, section.id)
+            XCTAssertEqual(deck.currentIndex, 0)
+            while true {
+                let index = deck.currentIndex
+                XCTAssertTrue(deck.canReach(index))
+                reached.append(deck.cards[index].id)
+                read(deck, index)
+                XCTAssertEqual(deck.canMoveForward(from: index), index < deck.cards.count - 1)
+                guard deck.canMoveForward(from: index) else { break }
+                deck.show(index + 1)
+            }
+            XCTAssertEqual(deck.sections.first { $0.id == section.id }?.isComplete, true)
+        }
+        XCTAssertEqual(reached, support.content.suwar.suwar.flatMap { $0.pages.map(\.id) })
+        XCTAssertTrue(deck.isDayComplete)
+    }
+
     /// With long adhkar last, rows follow the deck order and keep their numbers; reading the cards in that order
     /// opens the next row, whatever its number.
     @MainActor

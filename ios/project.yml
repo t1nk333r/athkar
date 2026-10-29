@@ -29,6 +29,9 @@ targets:
       - path: ../content/ruqyah.v1.json
         buildPhase: resources
         group: Resources
+      - path: ../content/suwar.v1.json
+        buildPhase: resources
+        group: Resources
       - path: ../fonts/kfgqpc-uthman-taha-naskh.ttf
         buildPhase: resources
         group: Resources

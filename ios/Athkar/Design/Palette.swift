@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The PWAs' CSS colour variables: a shared base per colour scheme, with the accent family of the deck on screen
-/// (the athkar PWA's morning rose, its default teal for the evening, and the ruqyah PWA's blue).
+/// (the athkar PWA's morning rose, its default teal for the evening, its «سور» gold, and the ruqyah PWA's blue).
 struct Palette: Sendable {
     var background: Color
     var backgroundGlow: Color
@@ -35,6 +35,12 @@ struct Palette: Sendable {
         case (.ruqyah, _):
             palette.accent(0x3f6ea8, strong: 0x2f5a8f, soft: 0xe4ecf7, divider: 0xc7d3e2, reference: 0x15557a,
                            glow: 0xeef2f7)
+        case (.suwar, .dark):
+            palette.accent(0xd6b064, strong: 0xefd398, soft: 0x463b23, divider: 0x6b5a36, reference: 0x28b6d2,
+                           glow: 0x38332a)
+        case (.suwar, _):
+            palette.accent(0x8a6a24, strong: 0x6c521a, soft: 0xf4ecd8, divider: 0xe2d3ad, reference: 0x15557a,
+                           glow: 0xf8f1e1)
         case (.evening, _):
             break
         }
