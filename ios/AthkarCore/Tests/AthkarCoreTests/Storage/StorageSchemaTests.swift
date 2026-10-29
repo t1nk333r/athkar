@@ -67,12 +67,13 @@ struct StorageSchemaTests {
 
     @Test func migrationsCreateExactlyTheDocumentedSchema() throws {
         let documented = try Self.documentedTables()
-        #expect(documented.count == 12)
-        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3"])
+        #expect(documented.count == 13)
+        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3", "v4"])
         #expect(Set(documented.values.map(\.migration)) == Set(try Self.documentedMigrations()))
         #expect(documented["ruqyah_sura_days"]?.migration == "v2")
         #expect(documented["suwar_page_reads"]?.migration == "v3")
         #expect(documented["suwar_sura_days"]?.migration == "v3")
+        #expect(documented["tasbih_counts"]?.migration == "v4")
 
         let database = try AppDatabase.inMemory()
         let actual = try database.reader.read { db in
@@ -107,7 +108,7 @@ struct StorageSchemaTests {
              try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations"))
         }
         #expect(journalMode == "wal")
-        #expect(migrations == ["v1", "v2", "v3"])
+        #expect(migrations == ["v1", "v2", "v3", "v4"])
         #expect(migrations == (try Self.documentedMigrations()))
         #expect(try reopened.settings.value(for: .theme) == .dark)
     }
@@ -134,6 +135,17 @@ struct StorageSchemaTests {
             ("INSERT INTO suwar_sura_days VALUES (?, 'kahf', '2026-09-23T10:00:00.000Z')", ["2026-09-3"]),
             ("INSERT INTO suwar_sura_days VALUES ('2026-09-23', 'kahf', ?)", ["2026-09-23"]),
             ("INSERT INTO suwar_sura_days VALUES ('2026-09-23', NULL, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES (?, 'subhan', 1, 1, '2026-09-23T10:00:00.000Z')", ["2026-09-23T10"]),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, 1, ?)", ["2026-09-23"]),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', NULL, 1, 1, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', '', 1, 1, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', ?, 1, 1, '2026-09-23T10:00:00.000Z')",
+             ["c:" + String(repeating: "ذ", count: 61)]),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 0, 1, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 100000, 1, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', NULL, 1, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, 0, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, NULL, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO location_profiles VALUES (2, NULL, 21.42, 39.83, NULL, 'device', NULL)", []),
         ]
         for (sql, arguments) in rows {
@@ -141,6 +153,22 @@ struct StorageSchemaTests {
                 try database.writer.write { try $0.execute(sql: sql, arguments: arguments) }
             }
         }
+    }
+
+    /// A day's phrases have distinct first uses, so the day's order is total; other days use their own.
+    @Test func tasbihFirstUseIsUniqueWithinADay() throws {
+        let database = try AppDatabase.inMemory()
+        func insert(_ date: String, _ key: String, firstUse: Int) throws {
+            try database.writer.write {
+                try $0.execute(sql: "INSERT INTO tasbih_counts VALUES (?, ?, 1, ?, '2026-09-23T10:00:00.000Z')",
+                               arguments: [date, key, firstUse])
+            }
+        }
+        try insert("2026-09-23", "subhan", firstUse: 1)
+        try insert("2026-09-22", "hamd", firstUse: 1)
+        try insert("2026-09-23", "c:" + String(repeating: "ذ", count: 60), firstUse: 2)
+        #expect(throws: DatabaseError.self) { try insert("2026-09-23", "hamd", firstUse: 1) }
+        #expect(throws: DatabaseError.self) { try insert("2026-09-23", "subhan", firstUse: 3) }
     }
 
     @Test func localTimeMustBeAWallClockTime() throws {

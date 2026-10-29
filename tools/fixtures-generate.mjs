@@ -112,6 +112,8 @@ const functions = [
   "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
   "canonicalTasbihKey", "findTasbihPhrase", "normalizeTasbihState", "tasbihDayCounts",
   "rollTasbihStateToDate", "readTasbihState", "loadTasbihState",
+  // «مسبحة» text rules the native app ports (spec/sessions/tasbih.md)
+  "parseTasbihTarget", "tasbihStatusText",
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",
@@ -1212,6 +1214,100 @@ function tasbihLoadCases() {
   ];
 }
 
+// The text rules of «مسبحة» the native app ports: one pure function per case. `findTasbihPhrase` and
+// `tasbihIdentity` read only their arguments (`custom` is passed explicitly).
+function tasbihTextCases() {
+  const call = (name, input) => {
+    const { function: fnName } = input;
+    let expected;
+    if (fnName === "tasbihMatchKey") expected = fn.tasbihMatchKey(input.text);
+    else if (fnName === "cleanTasbihPhrase") expected = fn.cleanTasbihPhrase(input.text);
+    else if (fnName === "findTasbihPhrase") expected = fn.findTasbihPhrase(input.text, input.custom);
+    else if (fnName === "tasbihIdentity") expected = fn.tasbihIdentity(input.key);
+    else if (fnName === "parseTasbihTarget") expected = fn.parseTasbihTarget(input.value);
+    else if (fnName === "tasbihStatusText") expected = plain(fn.tasbihStatusText(input.count, input.target));
+    else throw new Error(`unknown function ${fnName}`);
+    return { name, input, expected };
+  };
+  const match = (name, text) => call(`tasbihMatchKey: ${name}`, { function: "tasbihMatchKey", text });
+  const clean = (name, text) => call(`cleanTasbihPhrase: ${name}`, { function: "cleanTasbihPhrase", text });
+  const find = (name, text, custom = []) => call(`findTasbihPhrase: ${name}`, { function: "findTasbihPhrase", text, custom });
+  const identity = (name, key) => call(`tasbihIdentity: ${name}`, { function: "tasbihIdentity", key });
+  const target = (name, value) => call(`parseTasbihTarget: ${name}`, { function: "parseTasbihTarget", value });
+  const status = (name, count, value) => call(`tasbihStatusText: ${name}`, { function: "tasbihStatusText", count, target: value });
+  const sixty = "سبحان ".repeat(10);
+  prepare({ ...sessionDefaults, now: new Date(localMs(SESSION_ZONE, 2026, 10, 4, 9, 0)).toISOString() });
+  return [
+    match("tashkeel dropped", "سُبْحَانَ اللَّهِ"),
+    match("superscript alef dropped", "إِلَٰهَ"),
+    match("hamza forms read as alef, alef maksura as ya", "أإآٱ على"),
+    match("tatweel dropped", "سبحـــان"),
+    match("ZWNJ reads as a space", "سبحان\u200Cالله"),
+    match("ZWSP, ZWJ, LRM, RLM and ALM dropped", "ذ\u200Bك\u200Dر\u200E\u200F\u061C"),
+    match("heh goal reads as heh", "يا اللہ"),
+    match("runs of JavaScript whitespace collapse and trim", " \t سبحان\u00A0\u2003 الله\n\u3000"),
+    match("ZWSP is not whitespace", "سبحان\u200B الله"),
+    match("Latin text unchanged apart from spaces", "  Subhan   Allah  "),
+    match("empty", ""),
+    clean("keeps tashkeel, collapses spaces", "  سُبْحَانَ   اللَّهِ  "),
+    clean("drops tatweel and invisible characters", "حسبـي\u200B الله\u200F"),
+    clean("ZWNJ becomes a space, heh goal heh", "يا\u200Cاللہ"),
+    clean("tashkeel only is nothing", "\u064E\u064B\u0670 "),
+    clean("invisible only is nothing", "\u200B\u200F\u0640"),
+    clean("whitespace only is nothing", " \t\n "),
+    clean("cut at 60 UTF-16 units, then trimmed", sixty + "الله"),
+    clean("exactly 60 units kept", "ب".repeat(60)),
+    clean("61 units cut to 60", "ب".repeat(61)),
+    clean("a space at the cut is trimmed", "ب".repeat(59) + " الله"),
+    clean("Latin phrase", " Subhan Allah "),
+    find("a preset by its label", "سُبْحَانَ اللَّهِ"),
+    find("a preset without tashkeel", "سبحان الله"),
+    find("a preset through hamza forms", "استغفر الله"),
+    find("a preset through ya for alef maksura", "اللهم صل علي محمد"),
+    find("tahlil written with plain alef", "لا اله الا الله"),
+    find("a preset with tatweel and extra spaces", "  الحمـد   لله "),
+    find("a saved phrase in another spelling", "يَا رَبّ", ["حسبي الله", "يا رب"]),
+    find("the first matching saved phrase", "يا رب", ["يا ربّ", "يَا رَبِّ"]),
+    find("a preset before a saved phrase", "الله أكبر", ["الله اكبر"]),
+    find("nothing matches", "يا حي يا قيوم", ["يا رب"]),
+    find("near miss is not a match", "سبحان الله العظيم"),
+    identity("a preset ID", "hamd"),
+    identity("a saved phrase spelling a preset", "c:سبحـان الله"),
+    identity("a saved phrase", "c:يَا رَبّ"),
+    identity("another spelling of the same phrase", "c:يا رب"),
+    identity("an invisible-only key keeps itself", "c:\u200B"),
+    target("Latin digits", "250"),
+    target("Arabic-Indic digits", "٢٥٠"),
+    target("Persian digits", "۲۵۰"),
+    target("mixed digit systems", "١2۳"),
+    target("surrounding spaces", "  33 "),
+    target("leading zeros", "0033"),
+    target("the maximum", "9999"),
+    target("one", "1"),
+    target("zero", "0"),
+    target("five digits", "10000"),
+    target("five digits with leading zero", "01000"),
+    target("empty", ""),
+    target("a sign", "+5"),
+    target("a decimal", "3.5"),
+    target("inner space", "3 3"),
+    target("Arabic decimal separator", "٣٫٥"),
+    target("letters", "abc"),
+    status("no target", 0, null),
+    status("no target, counted", 120, null),
+    status("zero", 0, 33),
+    status("below the target", 7, 33),
+    status("at the target", 33, 33),
+    status("first of the second lap", 34, 33),
+    status("in the second lap", 40, 33),
+    status("second lap complete", 66, 33),
+    status("third lap complete", 99, 33),
+    status("target 1", 1, 1),
+    status("target 1, third count", 3, 1),
+    status("large numbers", 99999, 9999)
+  ];
+}
+
 // ---------------------------------------------------------------------------------------------------
 // Transfer fixtures (spec/transfer/transfer-v1.md)
 // ---------------------------------------------------------------------------------------------------
@@ -2165,6 +2261,10 @@ writeCases("spec/sessions/fixtures/tasbih-load-state.json",
   sessionMeta("athkar-tasbih-v1 startup path: parse, normalize (stored phrase keys migrate to today's cleaning: tashkeel-free matching, tatweel and ZWSP/ZWJ/LRM/RLM/ALM dropped, ZWNJ as a space, ہ as ه; converging keys summed, first use kept, capped at 99,999), roll to today's local date (a later stored date, after the clock moved back, sums its history days at or after today into today's counts). `reloaded` is the same load run on the saved result and must equal `state`.",
     "loadTasbihState, normalizeTasbihState, canonicalTasbihKey, cleanTasbihPhrase, tasbihMatchKey, canonicalTasbihDays, rollTasbihStateToDate"),
   { timeZone: SESSION_ZONE }, tasbihLoadCases());
+writeCases("spec/sessions/fixtures/tasbih-text.json",
+  sessionMeta("«مسبحة» text rules: tasbihMatchKey (phrase comparison), cleanTasbihPhrase (the saved spelling; \"\" when nothing is left), findTasbihPhrase (the preset ID or \"c:\" + saved phrase a typed phrase stands for, or null), tasbihIdentity (the unit a stored key counts for), parseTasbihTarget (a typed target, or null) and tasbihStatusText (the status line and whether it shows ✓). `input.function` names the function; strings are compared in UTF-16 code units, and whitespace is JavaScript's \\s.",
+    "tasbihMatchKey, cleanTasbihPhrase, stripTasbihInvisibles, stripTashkeel, findTasbihPhrase, tasbihIdentity, parseTasbihTarget, tasbihStatusText"),
+  {}, tasbihTextCases());
 writeCases("spec/reminders/fixtures/next-reminder-time.json",
   {
     about: "Adhkar reminder timing. nextReminderTime: today's time if in the future and not shown today; now+300 ms if ≤15 min past and not shown; else tomorrow's. scheduled: scheduleReminders outcome (skipped when disabled, permission not granted, period complete, or no time).",

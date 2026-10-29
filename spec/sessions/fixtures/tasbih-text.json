@@ -1,0 +1,613 @@
+{
+  "about": "«مسبحة» text rules: tasbihMatchKey (phrase comparison), cleanTasbihPhrase (the saved spelling; \"\" when nothing is left), findTasbihPhrase (the preset ID or \"c:\" + saved phrase a typed phrase stands for, or null), tasbihIdentity (the unit a stored key counts for), parseTasbihTarget (a typed target, or null) and tasbihStatusText (the status line and whether it shows ✓). `input.function` names the function; strings are compared in UTF-16 code units, and whitespace is JavaScript's \\s.",
+  "source": "index.html: tasbihMatchKey, cleanTasbihPhrase, stripTasbihInvisibles, stripTashkeel, findTasbihPhrase, tasbihIdentity, parseTasbihTarget, tasbihStatusText",
+  "generator": "tools/fixtures-generate.mjs",
+  "defaultInput": {},
+  "cases": [
+    {
+      "name": "tasbihMatchKey: tashkeel dropped",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "سُبْحَانَ اللَّهِ"
+      },
+      "expected": "سبحان الله"
+    },
+    {
+      "name": "tasbihMatchKey: superscript alef dropped",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "إِلَٰهَ"
+      },
+      "expected": "اله"
+    },
+    {
+      "name": "tasbihMatchKey: hamza forms read as alef, alef maksura as ya",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "أإآٱ على"
+      },
+      "expected": "اااا علي"
+    },
+    {
+      "name": "tasbihMatchKey: tatweel dropped",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "سبحـــان"
+      },
+      "expected": "سبحان"
+    },
+    {
+      "name": "tasbihMatchKey: ZWNJ reads as a space",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "سبحان‌الله"
+      },
+      "expected": "سبحان الله"
+    },
+    {
+      "name": "tasbihMatchKey: ZWSP, ZWJ, LRM, RLM and ALM dropped",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "ذ​ك‍ر‎‏؜"
+      },
+      "expected": "ذكر"
+    },
+    {
+      "name": "tasbihMatchKey: heh goal reads as heh",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "يا اللہ"
+      },
+      "expected": "يا الله"
+    },
+    {
+      "name": "tasbihMatchKey: runs of JavaScript whitespace collapse and trim",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": " \t سبحان   الله\n　"
+      },
+      "expected": "سبحان الله"
+    },
+    {
+      "name": "tasbihMatchKey: ZWSP is not whitespace",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "سبحان​ الله"
+      },
+      "expected": "سبحان الله"
+    },
+    {
+      "name": "tasbihMatchKey: Latin text unchanged apart from spaces",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": "  Subhan   Allah  "
+      },
+      "expected": "Subhan Allah"
+    },
+    {
+      "name": "tasbihMatchKey: empty",
+      "input": {
+        "function": "tasbihMatchKey",
+        "text": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "cleanTasbihPhrase: keeps tashkeel, collapses spaces",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "  سُبْحَانَ   اللَّهِ  "
+      },
+      "expected": "سُبْحَانَ اللَّهِ"
+    },
+    {
+      "name": "cleanTasbihPhrase: drops tatweel and invisible characters",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "حسبـي​ الله‏"
+      },
+      "expected": "حسبي الله"
+    },
+    {
+      "name": "cleanTasbihPhrase: ZWNJ becomes a space, heh goal heh",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "يا‌اللہ"
+      },
+      "expected": "يا الله"
+    },
+    {
+      "name": "cleanTasbihPhrase: tashkeel only is nothing",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "ًَٰ "
+      },
+      "expected": ""
+    },
+    {
+      "name": "cleanTasbihPhrase: invisible only is nothing",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "​‏ـ"
+      },
+      "expected": ""
+    },
+    {
+      "name": "cleanTasbihPhrase: whitespace only is nothing",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": " \t\n "
+      },
+      "expected": ""
+    },
+    {
+      "name": "cleanTasbihPhrase: cut at 60 UTF-16 units, then trimmed",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان الله"
+      },
+      "expected": "سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان سبحان"
+    },
+    {
+      "name": "cleanTasbihPhrase: exactly 60 units kept",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "بببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"
+      },
+      "expected": "بببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"
+    },
+    {
+      "name": "cleanTasbihPhrase: 61 units cut to 60",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"
+      },
+      "expected": "بببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"
+    },
+    {
+      "name": "cleanTasbihPhrase: a space at the cut is trimmed",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": "ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب الله"
+      },
+      "expected": "ببببببببببببببببببببببببببببببببببببببببببببببببببببببببببب"
+    },
+    {
+      "name": "cleanTasbihPhrase: Latin phrase",
+      "input": {
+        "function": "cleanTasbihPhrase",
+        "text": " Subhan Allah "
+      },
+      "expected": "Subhan Allah"
+    },
+    {
+      "name": "findTasbihPhrase: a preset by its label",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "سُبْحَانَ اللَّهِ",
+        "custom": []
+      },
+      "expected": "subhan"
+    },
+    {
+      "name": "findTasbihPhrase: a preset without tashkeel",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "سبحان الله",
+        "custom": []
+      },
+      "expected": "subhan"
+    },
+    {
+      "name": "findTasbihPhrase: a preset through hamza forms",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "استغفر الله",
+        "custom": []
+      },
+      "expected": "istighfar"
+    },
+    {
+      "name": "findTasbihPhrase: a preset through ya for alef maksura",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "اللهم صل علي محمد",
+        "custom": []
+      },
+      "expected": "salawat"
+    },
+    {
+      "name": "findTasbihPhrase: tahlil written with plain alef",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "لا اله الا الله",
+        "custom": []
+      },
+      "expected": "tahlil"
+    },
+    {
+      "name": "findTasbihPhrase: a preset with tatweel and extra spaces",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "  الحمـد   لله ",
+        "custom": []
+      },
+      "expected": "hamd"
+    },
+    {
+      "name": "findTasbihPhrase: a saved phrase in another spelling",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "يَا رَبّ",
+        "custom": [
+          "حسبي الله",
+          "يا رب"
+        ]
+      },
+      "expected": "c:يا رب"
+    },
+    {
+      "name": "findTasbihPhrase: the first matching saved phrase",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "يا رب",
+        "custom": [
+          "يا ربّ",
+          "يَا رَبِّ"
+        ]
+      },
+      "expected": "c:يا ربّ"
+    },
+    {
+      "name": "findTasbihPhrase: a preset before a saved phrase",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "الله أكبر",
+        "custom": [
+          "الله اكبر"
+        ]
+      },
+      "expected": "takbir"
+    },
+    {
+      "name": "findTasbihPhrase: nothing matches",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "يا حي يا قيوم",
+        "custom": [
+          "يا رب"
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "findTasbihPhrase: near miss is not a match",
+      "input": {
+        "function": "findTasbihPhrase",
+        "text": "سبحان الله العظيم",
+        "custom": []
+      },
+      "expected": null
+    },
+    {
+      "name": "tasbihIdentity: a preset ID",
+      "input": {
+        "function": "tasbihIdentity",
+        "key": "hamd"
+      },
+      "expected": "hamd"
+    },
+    {
+      "name": "tasbihIdentity: a saved phrase spelling a preset",
+      "input": {
+        "function": "tasbihIdentity",
+        "key": "c:سبحـان الله"
+      },
+      "expected": "subhan"
+    },
+    {
+      "name": "tasbihIdentity: a saved phrase",
+      "input": {
+        "function": "tasbihIdentity",
+        "key": "c:يَا رَبّ"
+      },
+      "expected": "m:يا رب"
+    },
+    {
+      "name": "tasbihIdentity: another spelling of the same phrase",
+      "input": {
+        "function": "tasbihIdentity",
+        "key": "c:يا رب"
+      },
+      "expected": "m:يا رب"
+    },
+    {
+      "name": "tasbihIdentity: an invisible-only key keeps itself",
+      "input": {
+        "function": "tasbihIdentity",
+        "key": "c:​"
+      },
+      "expected": "c:​"
+    },
+    {
+      "name": "parseTasbihTarget: Latin digits",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "250"
+      },
+      "expected": 250
+    },
+    {
+      "name": "parseTasbihTarget: Arabic-Indic digits",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "٢٥٠"
+      },
+      "expected": 250
+    },
+    {
+      "name": "parseTasbihTarget: Persian digits",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "۲۵۰"
+      },
+      "expected": 250
+    },
+    {
+      "name": "parseTasbihTarget: mixed digit systems",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "١2۳"
+      },
+      "expected": 123
+    },
+    {
+      "name": "parseTasbihTarget: surrounding spaces",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "  33 "
+      },
+      "expected": 33
+    },
+    {
+      "name": "parseTasbihTarget: leading zeros",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "0033"
+      },
+      "expected": 33
+    },
+    {
+      "name": "parseTasbihTarget: the maximum",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "9999"
+      },
+      "expected": 9999
+    },
+    {
+      "name": "parseTasbihTarget: one",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "1"
+      },
+      "expected": 1
+    },
+    {
+      "name": "parseTasbihTarget: zero",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "0"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: five digits",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "10000"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: five digits with leading zero",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "01000"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: empty",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": ""
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: a sign",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "+5"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: a decimal",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "3.5"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: inner space",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "3 3"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: Arabic decimal separator",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "٣٫٥"
+      },
+      "expected": null
+    },
+    {
+      "name": "parseTasbihTarget: letters",
+      "input": {
+        "function": "parseTasbihTarget",
+        "value": "abc"
+      },
+      "expected": null
+    },
+    {
+      "name": "tasbihStatusText: no target",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 0,
+        "target": null
+      },
+      "expected": {
+        "text": "بلا هدف",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: no target, counted",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 120,
+        "target": null
+      },
+      "expected": {
+        "text": "بلا هدف",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: zero",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 0,
+        "target": 33
+      },
+      "expected": {
+        "text": "الهدف ٣٣",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: below the target",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 7,
+        "target": 33
+      },
+      "expected": {
+        "text": "٧ من ٣٣",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: at the target",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 33,
+        "target": 33
+      },
+      "expected": {
+        "text": "بلغت الهدف",
+        "check": true
+      }
+    },
+    {
+      "name": "tasbihStatusText: first of the second lap",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 34,
+        "target": 33
+      },
+      "expected": {
+        "text": "الدورة ٢: ١ من ٣٣",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: in the second lap",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 40,
+        "target": 33
+      },
+      "expected": {
+        "text": "الدورة ٢: ٧ من ٣٣",
+        "check": false
+      }
+    },
+    {
+      "name": "tasbihStatusText: second lap complete",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 66,
+        "target": 33
+      },
+      "expected": {
+        "text": "اكتملت الدورة ٢",
+        "check": true
+      }
+    },
+    {
+      "name": "tasbihStatusText: third lap complete",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 99,
+        "target": 33
+      },
+      "expected": {
+        "text": "اكتملت الدورة ٣",
+        "check": true
+      }
+    },
+    {
+      "name": "tasbihStatusText: target 1",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 1,
+        "target": 1
+      },
+      "expected": {
+        "text": "بلغت الهدف",
+        "check": true
+      }
+    },
+    {
+      "name": "tasbihStatusText: target 1, third count",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 3,
+        "target": 1
+      },
+      "expected": {
+        "text": "اكتملت الدورة ٣",
+        "check": true
+      }
+    },
+    {
+      "name": "tasbihStatusText: large numbers",
+      "input": {
+        "function": "tasbihStatusText",
+        "count": 99999,
+        "target": 9999
+      },
+      "expected": {
+        "text": "الدورة ١١: ٩ من ٩٩٩٩",
+        "check": false
+      }
+    }
+  ]
+}

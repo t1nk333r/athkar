@@ -213,10 +213,22 @@ enum ResetScope: CaseIterable, Identifiable {
     }
 }
 
+/// What the «⋯» menu's «إعادة» resets: the deck or the «مسبحة» on screen, one section at a time.
+@MainActor
+protocol ResettableSection: AnyObject {
+    /// Whether the scoped reset has anything to reset (`hasResettableState`).
+    var canReset: Bool { get }
+    /// The question to ask before a scoped reset, or `nil` to reset at once. Only «مسبحة» asks before «تقدم اليوم».
+    func confirmation(for scope: ResetScope) -> DeckConfirmation?
+    /// Whether the reset was stored: `false` when it was refused and changed nothing, so it is not announced.
+    @discardableResult
+    func reset(_ scope: ResetScope) -> Bool
+}
+
 /// A deck's state and rules, as ``DeckView`` drives them. The adhkar decks share one session (resets and manual
 /// completion span both periods, as in the PWA); the ruqyah deck has its own.
 @MainActor
-protocol DeckModel: AnyObject {
+protocol DeckModel: ResettableSection {
     var definition: DeckDefinition { get }
     /// In deck order.
     var cards: [DeckCard] { get }
@@ -236,14 +248,6 @@ protocol DeckModel: AnyObject {
     /// The question to ask before resetting the card's counter, or `nil` to reset at once.
     func resetConfirmation(forCardAt index: Int) -> DeckConfirmation?
     func resetCard(at index: Int)
-
-    /// Whether the scoped reset has anything to reset (`hasResettableState`).
-    var canReset: Bool { get }
-    /// The question to ask before a scoped reset, or `nil` to reset at once.
-    func confirmation(for scope: ResetScope) -> DeckConfirmation?
-    /// Whether the reset was stored: `false` when it was refused and changed nothing, so it is not announced.
-    @discardableResult
-    func reset(_ scope: ResetScope) -> Bool
 
     /// The chips above the summary; empty for a deck without sections. ``cards``, ``summary``, ``isComplete`` and
     /// ``completion`` then describe the selected section.

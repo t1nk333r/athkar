@@ -26,6 +26,7 @@ public struct AppDatabase: Sendable {
     public var adhkar: AdhkarRepository { AdhkarRepository(writer: writer) }
     public var ruqyah: RuqyahRepository { RuqyahRepository(writer: writer) }
     public var suwar: SuwarRepository { SuwarRepository(writer: writer) }
+    public var tasbih: TasbihRepository { TasbihRepository(writer: writer) }
     public var reminders: ReminderRepository { ReminderRepository(writer: writer) }
     public var settings: SettingsRepository { SettingsRepository(writer: writer) }
     public var location: LocationRepository { LocationRepository(writer: writer) }
@@ -43,6 +44,7 @@ public struct AppDatabase: Sendable {
         migrator.registerMigration("v1") { db in try db.execute(sql: Schema.v1) }
         migrator.registerMigration("v2") { db in try db.execute(sql: Schema.v2) }
         migrator.registerMigration("v3") { db in try db.execute(sql: Schema.v3) }
+        migrator.registerMigration("v4") { db in try db.execute(sql: Schema.v4) }
         return migrator
     }
 }
@@ -155,6 +157,20 @@ private enum Schema {
             sura_id TEXT NOT NULL,
             completed_at TEXT NOT NULL CHECK (completed_at \(instant)),
             PRIMARY KEY (local_date, sura_id)
+        );
+        """
+
+    /// The athkar PWA's «مسبحة» (`athkar-tasbih-v1`): each phrase's count on each day, in the order the phrases were
+    /// first used that day. A key is a preset ID or `c:` and a saved phrase of at most 60 UTF-16 code units.
+    static let v4 = """
+        CREATE TABLE tasbih_counts (
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            phrase_key TEXT NOT NULL CHECK (length(phrase_key) BETWEEN 1 AND 62),
+            count INTEGER NOT NULL CHECK (count BETWEEN 1 AND 99999),
+            first_use INTEGER NOT NULL CHECK (first_use >= 1),
+            updated_at TEXT NOT NULL CHECK (updated_at \(instant)),
+            PRIMARY KEY (local_date, phrase_key),
+            UNIQUE (local_date, first_use)
         );
         """
 }

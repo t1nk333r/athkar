@@ -65,6 +65,9 @@ extension SettingKey where Value == PrayerAdjustments {
 
 extension SettingKey where Value == Int {
     public static var hijriOffset: Self { Self(name: "hijri_offset", defaultValue: 0) }
+    /// The «مسبحة» target (`athkar-tasbih-v1.target`): 1…9999, or 0 for «بلا هدف» (the PWA's `null`). A preference:
+    /// resets keep it.
+    public static var tasbihTarget: Self { Self(name: "tasbih_target", defaultValue: 33) }
 }
 
 extension SettingKey where Value == Bool {
@@ -77,6 +80,15 @@ extension SettingKey where Value == Bool {
 extension SettingKey where Value == String {
     /// The «سور» sura shown (`athkar-suwar-v1.selected`). A preference: resets keep it.
     public static var suwarSelectedSura: Self { Self(name: "suwar_selected_sura", defaultValue: "kahf") }
+    /// The «مسبحة» phrase counted (`athkar-tasbih-v1.selected`): a preset ID, or `c:` and a saved phrase. A
+    /// preference: resets keep it.
+    public static var tasbihSelected: Self { Self(name: "tasbih_selected", defaultValue: "subhan") }
+}
+
+extension SettingKey where Value == [String] {
+    /// The «مسبحة» saved phrases (`athkar-tasbih-v1.custom`), newest first, at most eight. A preference: resets keep
+    /// them.
+    public static var tasbihCustomPhrases: Self { Self(name: "tasbih_custom_phrases", defaultValue: []) }
 }
 
 /// Who wrote a `settings` row. Import precedence: native > athkar-pwa > ruqyah-pwa; ties keep the existing row.
@@ -150,7 +162,7 @@ public struct SettingsRepository: Sendable {
         try Setting(key: key.name, valueJson: try json(value), origin: origin, updatedAt: updatedAt).upsert(db)
     }
 
-    private static func json<Value: Encodable>(_ value: Value) throws -> String {
+    static func json<Value: Encodable>(_ value: Value) throws -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return String(decoding: try encoder.encode(value), as: UTF8.self)

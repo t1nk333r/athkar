@@ -65,7 +65,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3"])
+        #expect(migrations == ["v1", "v2", "v3", "v4"])
     }
 
     @Test func v3KeepsEveryV2RowAndAddsEmptySuwarTables() throws {
@@ -99,7 +99,47 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3"])
+        #expect(migrations == ["v1", "v2", "v3", "v4"])
+    }
+
+    @Test func v4KeepsEveryV3RowAndAddsAnEmptyTasbihTable() throws {
+        var configuration = Configuration()
+        configuration.foreignKeysEnabled = true
+        let queue = try DatabaseQueue(configuration: configuration)
+        try AppDatabase.migrator.migrate(queue, upTo: "v3")
+        let v3Tables = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%' ORDER BY name
+                """)
+        }
+        #expect(v3Tables.count == Self.v1Rows.count + 3)
+        #expect(!v3Tables.contains("tasbih_counts"))
+        try queue.write { db in
+            for sql in Self.v1Rows { try db.execute(sql: sql) }
+            try db.execute(sql: "INSERT INTO ruqyah_sura_days VALUES ('2026-09-21', 'qaf', '2026-09-21T05:00:00.000Z')")
+            try db.execute(sql: """
+                INSERT INTO suwar_page_reads VALUES ('2026-09-21', 'mulk', 'mulk-1-4', '2026-09-21T05:00:00.000Z')
+                """)
+            try db.execute(sql: "INSERT INTO suwar_sura_days VALUES ('2026-09-20', 'mulk', '2026-09-20T05:00:00.000Z')")
+        }
+        let before = try Self.rows(of: v3Tables, in: queue)
+        #expect(before.values.allSatisfy { $0.count == 1 })
+
+        let database = try AppDatabase(queue)
+        #expect(try Self.rows(of: v3Tables, in: queue) == before)
+        #expect(try database.suwar.readPages(on: "2026-09-21") == ["mulk-1-4"])
+        #expect(try database.suwar.recordedDayCount(.all, before: "2026-09-24") == 1)
+        #expect(try database.tasbih.counts(on: "2026-09-23") == [])
+        #expect(try database.tasbih.phraseKeys() == [])
+        #expect(try database.tasbih.recordedDayCount(.all, before: "2026-09-24") == 0)
+        #expect(try database.settings.value(for: .tasbihSelected) == "subhan")
+        #expect(try database.settings.value(for: .tasbihTarget) == 33)
+        #expect(try database.settings.value(for: .tasbihCustomPhrases) == [])
+        let migrations = try queue.read { db in
+            try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
+        }
+        #expect(migrations == ["v1", "v2", "v3", "v4"])
     }
 
     /// Every row of each table, in rowid order.

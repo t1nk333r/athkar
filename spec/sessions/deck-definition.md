@@ -42,15 +42,16 @@ shown sura is stored (`suwar_selected_sura`, the PWA's `athkar-suwar-v1.selected
 starts on الكهف, and a stored sura the pack no longer has reads as the first (`normalizeSuwarState`). Each sura keeps
 the page it showed last until the day changes or «سور» is reset (`suwarIndices`).
 
-The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a
-list of sections (رقية القرين, سور, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app
-opens رقية القرين, سور and أوقات الصلاة, and lists the others as «قريبًا». A deck row shows the deck's summary copy and «✓»
-once today is complete. The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض المواقيت».
-When a section is open, the header replaces its title with a back button labeled with the section's title. Tapping
-أخرى again returns to the list. The list has no summary, and its reset button is disabled. The أخرى tab never shows
-«✓»; each row shows completion. Each deck keeps its current card while another deck is open. The رقية القرين row
-shows the whole day's «N من ٣٣ تكرارًا», and the سور row the suras complete today, «N من ٥ سور» (native: the PWA's
-tab has no such line); its «✓» needs all five.
+The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a list
+of sections (رقية القرين, سور, مسبحة, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app
+opens رقية القرين, سور, مسبحة, أوقات الصلاة and القبلة, and lists the others as «قريبًا». A deck row shows the deck's
+summary copy and «✓» once today is complete. «مسبحة» is a counter, not a deck ([`tasbih.md`](tasbih.md)); its row
+shows today's total, «اليوم: N». The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض
+المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title.
+Tapping أخرى again returns to the list. The list has no summary, and its reset button is disabled. The أخرى tab never
+shows «✓»; each row shows completion. Each deck keeps its current card while another deck is open. The رقية القرين row
+shows the whole day's «N من ٣٣ تكرارًا», and the سور row the suras complete today, «N من ٥ سور» (native: the PWA's tab
+has no such line); its «✓» needs all five.
 
 ### Adhkar item fields
 
@@ -357,8 +358,9 @@ The tab (adhkar) or the أخرى row (ruqyah, «سور») shows «✓» and is s
 ## 8. Scoped reset
 
 The header button «↻ إعادة», spoken «خيارات الإعادة», opens a picker for the pillar on screen. Both adhkar periods
-reset together; ruqyah and «سور» each reset alone (the PWA's header reset clears every store at once). The button
-first runs the day rollover.
+reset together; ruqyah, «سور» and «مسبحة» each reset alone (the PWA's header reset clears every store at once). The
+button first runs the day rollover. «مسبحة» resets as [`tasbih.md`](tasbih.md) §6 describes: unlike the decks, its
+«تقدم اليوم» asks first while a phrase is counted today.
 
 It is enabled when:
 
@@ -544,6 +546,6 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية، وعند قراءة كل صفحة من السور. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |

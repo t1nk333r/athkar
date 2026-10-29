@@ -25,7 +25,7 @@ struct HomeView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let palette = Palette.resolve(app.selection, colorScheme)
+            let palette = app.showsTasbih ? Palette.tasbih(colorScheme) : Palette.resolve(app.selection, colorScheme)
             let width = proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing
             content(palette: palette, width: width)
                 .environment(\.palette, palette)
@@ -38,7 +38,7 @@ struct HomeView: View {
     private func content(palette: Palette, width: CGFloat) -> some View {
         let deck = app.deck(app.selection)
         return VStack(spacing: 0) {
-            header(deck, palette: palette)
+            header(palette: palette)
             tabs(palette: palette)
             if app.showsOtherList {
                 OtherSectionsView(app: app)
@@ -49,6 +49,10 @@ struct HomeView: View {
             } else if app.tab == .other, app.otherSection == .qibla {
                 QiblaView(prayer: app.prayer, haptics: app.settings.haptics) { app.otherSection = .prayerTimes }
                     .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.showsTasbih {
+                // The PWA hides the summary row here: the chips sit above the card.
+                TasbihView(model: app.tasbih, haptics: app.settings.haptics, ensureToday: { app.ensureTasbihDay() })
+                    .frame(maxHeight: .infinity)
             } else {
                 summary(deck, palette: palette)
                     .padding(.top, 5.6)
@@ -76,8 +80,11 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showsResetScope, onDismiss: confirmChosenScope) {
             ResetScopeSheet { scope in
-                if scope == .day {
-                    if deck.reset(.day) { AccessibilityNotification.Announcement(scope.announcement).post() }
+                // A scope with a question asks once this sheet is gone; a deck's «تقدم اليوم» resets at once.
+                if scope == .day, app.resettable?.confirmation(for: .day) == nil {
+                    if app.resettable?.reset(.day) == true {
+                        AccessibilityNotification.Announcement(scope.announcement).post()
+                    }
                 } else {
                     chosenScope = scope
                 }
@@ -103,7 +110,7 @@ struct HomeView: View {
         ) { pending in
             Button(pending.confirmation.confirmTitle, role: .destructive) {
                 // A refused reset changed nothing, so there is nothing to announce.
-                if deck.reset(pending.scope) {
+                if app.resettable?.reset(pending.scope) == true {
                     AccessibilityNotification.Announcement(pending.scope.announcement).post()
                 }
             }
@@ -127,9 +134,8 @@ struct HomeView: View {
 
     // MARK: Header (`.brand-row`)
 
-    private func header(_ deck: any DeckModel, palette: Palette) -> some View {
-        let canReset = app.showsDeck && deck.canReset
-        return HStack(spacing: 9.6) {
+    private func header(palette: Palette) -> some View {
+        HStack(spacing: 9.6) {
             if let section = app.otherSection, app.tab == .other {
                 // A section of أخرى: its title leads back to the list, in the title's place so the page keeps its height.
                 Button {
@@ -162,10 +168,11 @@ struct HomeView: View {
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("title")
             }
-            // With a deck on screen the «⋯» menu sits in the summary bar; elsewhere (أخرى's list, أوقات الصلاة) here.
+            // With a deck on screen the «⋯» menu sits in the summary bar; elsewhere (أخرى's list, «مسبحة», أوقات
+            // الصلاة) here.
             if !app.showsDeck {
                 Spacer(minLength: 0)
-                moreMenu(canReset: canReset, palette: palette)
+                moreMenu(palette: palette)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -173,16 +180,16 @@ struct HomeView: View {
         .padding(.bottom, 8.8)
     }
 
-    /// «⋯»: إعادة (the scope picker) and الإعدادات.
-    private func moreMenu(canReset: Bool, palette: Palette) -> some View {
+    /// «⋯»: إعادة (the scope picker for the deck or «مسبحة» on screen) and الإعدادات.
+    private func moreMenu(palette: Palette) -> some View {
         Menu {
             Button {
                 app.ensureCurrentDay()
-                if app.deck(app.selection).canReset { showsResetScope = true }
+                if app.resettable?.canReset == true { showsResetScope = true }
             } label: {
                 Label("إعادة", systemImage: "arrow.counterclockwise")
             }
-            .disabled(!canReset)
+            .disabled(app.resettable?.canReset != true)
             .accessibilityIdentifier("header.reset")
             Button {
                 showsSettings = true
@@ -305,7 +312,7 @@ struct HomeView: View {
                     .tint(summary.isComplete ? palette.completed : palette.accent)
                     .accessibilityLabel(summary.accessibilityLabel)
                     .accessibilityValue("")
-                moreMenu(canReset: app.deck(app.selection).canReset, palette: palette)
+                moreMenu(palette: palette)
                     .padding(.vertical, -8)
                     .padding(.trailing, -6)
             }
@@ -353,8 +360,11 @@ struct HomeView: View {
     private func confirmChosenScope() {
         guard let scope = chosenScope else { return }
         chosenScope = nil
-        if let confirmation = app.deck(app.selection).confirmation(for: scope) {
+        if let confirmation = app.resettable?.confirmation(for: scope) {
             scopeConfirmation = ScopeConfirmation(scope: scope, confirmation: confirmation)
+        } else if app.resettable?.reset(scope) == true {
+            // Nothing left to ask about (a new day rolled while the sheet was open): reset as chosen.
+            AccessibilityNotification.Announcement(scope.announcement).post()
         }
     }
 

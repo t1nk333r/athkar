@@ -70,7 +70,8 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(picked(sel)["models"], {
             "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
             "PortableModelTests", "ReminderReplanTests", "RuqyahPersistenceTests", "SettingsPersistenceTests",
-            "SuwarDeckModelTests", "SuwarPersistenceTests",
+            "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
+            "TasbihTextTests",
         })
         self.assertEqual(picked(sel)["ios-build"], {"app", "tests"})
         self.assertIn("TestInfrastructureTests", picked(sel)["app-unit"])

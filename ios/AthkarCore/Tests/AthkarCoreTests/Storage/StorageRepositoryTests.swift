@@ -289,6 +289,145 @@ struct StorageRepositoryTests {
         #expect(try suwar.recordedDayCount(week, before: "2026-09-23") == 1)
     }
 
+    /// `setTasbihCount`: a phrase's first count of the day goes last in the day's order, a later count keeps its place,
+    /// and zero deletes the row, so the phrase's next count goes last again.
+    @Test func tasbihCountsKeepTheDaysFirstUseOrder() throws {
+        let tasbih = database.tasbih
+        try tasbih.setCount(1, for: "hamd", on: "2026-09-23", at: t0)
+        try tasbih.setCount(1, for: "c:يا رب", on: "2026-09-23", at: t0)
+        try tasbih.setCount(1, for: "subhan", on: "2026-09-23", at: t0)
+        try tasbih.setCount(2, for: "hamd", on: "2026-09-23", at: t1)
+        try tasbih.setCount(7, for: "subhan", on: "2026-09-22", at: t0)
+        #expect(try tasbih.counts(on: "2026-09-23") == [
+            TasbihCount(localDate: "2026-09-23", phraseKey: "hamd", count: 2, firstUse: 1, updatedAt: t1),
+            TasbihCount(localDate: "2026-09-23", phraseKey: "c:يا رب", count: 1, firstUse: 2, updatedAt: t0),
+            TasbihCount(localDate: "2026-09-23", phraseKey: "subhan", count: 1, firstUse: 3, updatedAt: t0),
+        ])
+
+        try tasbih.setCount(0, for: "hamd", on: "2026-09-23", at: t1)
+        try tasbih.setCount(0, for: "takbir", on: "2026-09-23", at: t1)
+        #expect(try tasbih.counts(on: "2026-09-23").map(\.phraseKey) == ["c:يا رب", "subhan"])
+        try tasbih.setCount(1, for: "hamd", on: "2026-09-23", at: t1)
+        #expect(try tasbih.counts(on: "2026-09-23").map(\.phraseKey) == ["c:يا رب", "subhan", "hamd"])
+        #expect(try tasbih.counts(on: "2026-09-23").map(\.firstUse) == [2, 3, 4])
+        #expect(try tasbih.counts(on: "2026-09-22").map(\.count) == [7])
+        #expect(try tasbih.phraseKeys() == ["c:يا رب", "hamd", "subhan"])
+
+        try tasbih.setCount(TasbihCount.maxCount, for: "hamd", on: "2026-09-23", at: t1)
+        #expect(throws: DatabaseError.self) {
+            try tasbih.setCount(TasbihCount.maxCount + 1, for: "hamd", on: "2026-09-23", at: t1)
+        }
+        #expect(try tasbih.counts(on: "2026-09-23").last?.count == TasbihCount.maxCount)
+    }
+
+    /// The saved phrases and the phrase counted are stored together; an adopted spelling's counts move to the phrase
+    /// on every date, summed and capped where that date already counts it, with the earlier first use.
+    @Test func tasbihPhrasesSaveTogetherAndAdoptAnEarlierSpelling() throws {
+        let tasbih = database.tasbih
+        try tasbih.setCount(5, for: "c:يا رب", on: "2026-09-22", at: t0)
+        try tasbih.setCount(3, for: "subhan", on: "2026-09-23", at: t0)
+        try tasbih.setCount(4, for: "c:يا رب", on: "2026-09-23", at: t0)
+        try tasbih.setCount(99_990, for: "c:يَا رَبّ", on: "2026-09-21", at: t0)
+        try tasbih.setCount(20, for: "c:يا ربّ", on: "2026-09-21", at: t1)
+
+        try tasbih.savePhrases(["يَا رَبّ", "حسبي الله"], selected: "c:يَا رَبّ", adopting: ["c:يا رب", "c:يا ربّ"],
+                               at: t1)
+        #expect(try database.settings.value(for: .tasbihCustomPhrases) == ["يَا رَبّ", "حسبي الله"])
+        #expect(try database.settings.value(for: .tasbihSelected) == "c:يَا رَبّ")
+        #expect(try tasbih.counts(on: "2026-09-23") == [
+            TasbihCount(localDate: "2026-09-23", phraseKey: "subhan", count: 3, firstUse: 1, updatedAt: t0),
+            TasbihCount(localDate: "2026-09-23", phraseKey: "c:يَا رَبّ", count: 4, firstUse: 2, updatedAt: t0),
+        ])
+        #expect(try tasbih.counts(on: "2026-09-22").map(\.phraseKey) == ["c:يَا رَبّ"])
+        #expect(try tasbih.counts(on: "2026-09-21") == [
+            TasbihCount(localDate: "2026-09-21", phraseKey: "c:يَا رَبّ", count: TasbihCount.maxCount, firstUse: 1,
+                        updatedAt: t1),
+        ])
+        #expect(try tasbih.phraseKeys() == ["c:يَا رَبّ", "subhan"])
+
+        // Without adoptions only the preferences change.
+        try tasbih.savePhrases([], selected: "hamd", at: t1)
+        #expect(try database.settings.value(for: .tasbihCustomPhrases) == [])
+        #expect(try database.settings.value(for: .tasbihSelected) == "hamd")
+        #expect(try tasbih.phraseKeys() == ["c:يَا رَبّ", "subhan"])
+    }
+
+    /// Keys are code units, as in the PWA's `counts` object: a spelling whose tashkeel is only ordered differently is
+    /// its own row, listed and adopted, though Swift's `==` equates the two.
+    @Test func tasbihKeysThatDifferOnlyInTashkeelOrderAreTwoRows() throws {
+        let tasbih = database.tasbih
+        let saved = "c:رب\u{0651}\u{064E}"
+        let earlier = "c:رب\u{064E}\u{0651}"
+        #expect(saved == earlier)
+        try tasbih.setCount(3, for: saved, on: "2026-09-23", at: t0)
+        try tasbih.setCount(2, for: earlier, on: "2026-09-23", at: t1)
+        let keys = try tasbih.phraseKeys()
+        #expect(keys.count == 2)
+        #expect(Set(keys.map { Array($0.utf16) }) == [Array(saved.utf16), Array(earlier.utf16)])
+
+        try tasbih.savePhrases(["رب\u{0651}\u{064E}"], selected: saved, adopting: [earlier], at: t1)
+        let rows = try tasbih.counts(on: "2026-09-23")
+        #expect(rows.count == 1)
+        #expect(rows.first.map { Array($0.phraseKey.utf16) } == Array(saved.utf16))
+        #expect(rows.first?.count == 5)
+        #expect(rows.first?.firstUse == 1)
+    }
+
+    @Test func tasbihPhrasesAreSavedWithTheirAdoptionsOrNotAtAll() throws {
+        let tasbih = database.tasbih
+        try tasbih.setCount(4, for: "c:يا رب", on: "2026-09-23", at: t0)
+        try database.writer.write { db in
+            try db.execute(sql: """
+                CREATE TRIGGER reject_adoption BEFORE INSERT ON tasbih_counts
+                WHEN NEW.phrase_key = 'c:يَا رَبّ' BEGIN SELECT RAISE(ABORT, 'test rejects the adoption'); END
+                """)
+        }
+        #expect(throws: DatabaseError.self) {
+            try tasbih.savePhrases(["يَا رَبّ"], selected: "c:يَا رَبّ", adopting: ["c:يا رب"], at: t1)
+        }
+        #expect(try database.reader.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM settings") } == 0)
+        #expect(try tasbih.counts(on: "2026-09-23").map(\.phraseKey) == ["c:يا رب"])
+    }
+
+    @Test func tasbihScopedResetsKeepThePreferences() throws {
+        let tasbih = database.tasbih
+        for day in ["2026-09-10", "2026-09-20", "2026-09-22", "2026-09-23"] {
+            try tasbih.setCount(3, for: "subhan", on: day, at: t0)
+        }
+        try tasbih.savePhrases(["يا رب"], selected: "c:يا رب", at: t0)
+        try database.settings.set(100, for: .tasbihTarget, at: t0)
+
+        try tasbih.reset(on: "2026-09-23")
+        #expect(try tasbih.counts(on: "2026-09-23") == [])
+        #expect(try tasbih.counts(on: "2026-09-22").count == 1)
+
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        try tasbih.reset(on: "2026-09-23", removing: week)
+        #expect(try tasbih.counts(on: "2026-09-22") == [])
+        #expect(try tasbih.counts(on: "2026-09-20") == [])
+        #expect(try tasbih.counts(on: "2026-09-10").count == 1)
+
+        try tasbih.reset(on: "2026-09-23", removing: .all)
+        #expect(try tasbih.phraseKeys() == [])
+        #expect(try database.settings.value(for: .tasbihCustomPhrases) == ["يا رب"])
+        #expect(try database.settings.value(for: .tasbihSelected) == "c:يا رب")
+        #expect(try database.settings.value(for: .tasbihTarget) == 100)
+    }
+
+    /// The PWA counts `tasbihState.history`: earlier dates with a count, each once. Today's counts are not history.
+    @Test func tasbihRecordedDayCountIsEarlierDatesWithACount() throws {
+        let tasbih = database.tasbih
+        try tasbih.setCount(1, for: "subhan", on: "2026-09-10", at: t0)
+        try tasbih.setCount(1, for: "subhan", on: "2026-09-20", at: t0)
+        try tasbih.setCount(2, for: "hamd", on: "2026-09-20", at: t0)
+        try tasbih.setCount(1, for: "subhan", on: "2026-09-23", at: t0)
+
+        #expect(try tasbih.recordedDayCount(.all, before: "2026-09-23") == 2)
+        #expect(try tasbih.recordedDayCount(.all, before: "2026-09-24") == 3)
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        #expect(try tasbih.recordedDayCount(week, before: "2026-09-23") == 1)
+    }
+
     @Test func adhkarCompletedDayCountIsDistinctEarlierDates() throws {
         let adhkar = database.adhkar
         for date in ["2026-09-15", "2026-09-20", "2026-09-22", "2026-09-23"] {

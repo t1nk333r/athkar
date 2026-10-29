@@ -26,13 +26,14 @@ let package = Package(
         .target(
             name: "AthkarModels", dependencies: [core, crypto], path: "Athkar",
             exclude: ["App/AppModel.swift", "Assets.xcassets", "AthkarApp.swift", "Deck/DeckCardView.swift",
-                      "Deck/DeckIndexView.swift", "Deck/SectionChips.swift",
+                      "Deck/DeckIndexView.swift", "Deck/SectionChips.swift", "Tasbih/TasbihView.swift",
+                      "Tasbih/TasbihSheets.swift",
                       "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
                       "Screens"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
-                      "Deck/SuwarDeckModel.swift",
+                      "Deck/SuwarDeckModel.swift", "Tasbih/TasbihText.swift", "Tasbih/TasbihModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
                       "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
                       "Reminders/ReminderModel.swift", "App/DayRollover.swift"]
