@@ -45,9 +45,11 @@ publisher-identity details.
 ### iOS tests and sideload builds
 
 Before testing native iOS code, building an IPA, or deciding Linux blocks verification, read
-[`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). All new checks run on Linux under
-the shared and project lane locks. Record SDK compilation, executed tests, and iOS device
-results separately. The dated Mac/Feather record documents earlier work.
+[`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). All new local checks run on Linux under
+the shared and project lane locks. The iOS IPA workflow (`.github/workflows/ios-ipa.yml`) builds
+the IPA with Xcode and runs the affected Mac tests on a GitHub macOS runner; a version tag
+releases the IPA, and Feather imports releases. Record SDK compilation, executed tests,
+simulator and iOS device results separately. The dated Mac/Feather record documents earlier work.
 
 ### Issue tracker
 

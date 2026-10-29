@@ -8,8 +8,8 @@
 #   models     Linux   portable production-model XCTest classes (tools/test-native-models.sh)
 #   ios-build  Linux   the app compiled for iOS (tools/ios-linux-compile.sh); compiling
 #                      AthkarTests is listed: its bundle can't be packaged on Linux yet
-#   app-unit   device  hosted AthkarTests classes   } listed only: Linux can't run them;
-#   ui         Mac     AthkarUITests classes        } tools/ios-mac-run.sh test selects both
+#   app-unit   device  hosted AthkarTests classes   } listed only: Linux can't run them; the iOS
+#   ui         Mac     AthkarUITests classes        } IPA workflow runs both on a simulator
 #
 #   tools/test.sh [--plan] [--all | --base REF] [--lanes selector,content,...]
 #
@@ -155,11 +155,11 @@ for lane in ${LANES//,/ }; do
       fi
       ;;
     app-unit)
-      echo "listed: hosted AthkarTests need an authorized iOS device (docs/agents/ios-linux.md): $ATHKAR_TEST_ONLY_TESTING"
+      echo "listed: the iOS IPA workflow runs these on a simulator (docs/agents/ios-linux.md): $ATHKAR_TEST_ONLY_TESTING"
       outcome app-unit listed
       ;;
     ui)
-      echo "listed: on the Mac, tools/ios-mac-run.sh test runs these: $ATHKAR_TEST_ONLY_TESTING"
+      echo "listed: the iOS IPA workflow runs these on a simulator (docs/agents/ios-linux.md): $ATHKAR_TEST_ONLY_TESTING"
       outcome ui listed
       ;;
   esac

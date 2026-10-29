@@ -12,6 +12,7 @@ do not start a native run without that turn's grant.
 | Portable app deck models, bundled content and production database writes | Installed Linux Swift and real swift-crypto, Luna | Executed production-source XCTest method identifiers, count and exit status |
 | All app sources and optional app-unit test compilation | Existing Linux Darwin SDK, Luna | Compiler and packaging outcomes, zero executed tests |
 | Ad hoc signed sideload IPA | Existing Linux Darwin SDK, actool and rcodesign, Luna | IPA path, size, SHA-256 and archive checks; no runtime result |
+| Xcode build, IPA and the affected AthkarTests and AthkarUITests classes | `.github/workflows/ios-ipa.yml` on GitHub's macOS runner and an iOS simulator | Run URL, Xcode and SDK versions, IPA SHA-256, the selected test classes and the xcresult bundle |
 | AppModel integration, UI, accessibility, location, heading, haptics and notification delivery | An authorized iOS device route orchestrated from Linux | Exact device, test identifiers and runtime result |
 
 Linux XCTest covers the production files selected by `ios/Package.swift`. It
@@ -250,6 +251,44 @@ the signature check and the comparison above are not runtime evidence; Feather r
 the app when it installs it. Publishing remains the coordinator's step. This tool does
 not read the Feather token, publish or install anything.
 
+## GitHub workflow
+
+`.github/workflows/ios-ipa.yml` builds the app with Xcode on GitHub's macOS 26 runner. Hosted
+runners cost nothing for this public repository, and the workflow needs no lane lock or native
+grant. It runs on three events:
+
+- A pushed version tag, `ios-<CFBundleShortVersionString>-build-<CFBundleVersion>`, such as
+  `ios-1.3-build-4`. The tag must name the version in `ios/Athkar/Info.plist`. When the IPA
+  and the tests pass, it creates the tag's GitHub release if there is none and attaches
+  `Athkar-<version>+<build>.ipa` and its `.sha256`. It never replaces an asset.
+- A manual run from the Actions tab. The IPA stays a run artifact. The `base` input chooses
+  the tests, as below.
+- A pull request that changes the workflow itself. It never releases.
+
+The `ipa` job builds Release for `generic/platform=iOS` without signing, then signs ad hoc with
+no profile, as `tools/ios-mac-run.sh ipa` did. It checks the bundle identifier
+(`local.dev.athkar`), compares each resource `ios/project.yml` bundles with the repository and
+checks that the zip holds only `Payload/`. The job summary records Xcode, the SDK, the size and
+the SHA-256.
+
+The `tests` job runs the AthkarTests and AthkarUITests classes the changes reach on an iPhone
+simulator, chosen by `tools/affected-tests.py select` as `tools/ios-mac-run.sh test` chose them.
+A tag compares with the previous `ios-*` tag, a manual run with the latest one, and a pull
+request with its base branch; with no earlier tag every class runs. The manual `base` input
+can name another ref, `all` or `none`. A version bump changes `ios/project.yml`, a shared build
+input, so a release runs both targets in full. The job summary lists the selection, and the
+xcresult bundle is a run artifact. The simulator holds no user data, so the hosted
+AthkarTests startup touches nothing of the user's installation. A simulator result is not a
+device result: haptics, heading, notification delivery and the installed app's data still
+need a device.
+
+GitHub's runners cannot reach the Feather server, which resolves to a LAN address. Feather
+pulls instead: its auto-import job `athkar`, added on 2026-10-29, checks this repository's
+releases (pre-releases excluded) for one asset matching `Athkar-*.ipa`, asserts
+`local.dev.athkar` and publishes a version Feather does not have. Its schedule was every 48
+hours on 2026-10-29; "Run now" in Feather's admin page publishes sooner. A release must carry
+exactly one IPA matching that pattern.
+
 ## Required runtime cases and historical results
 
 `AthkarTests` is a hosted app-unit target. Starting its host runs the normal
@@ -285,8 +324,9 @@ presets. From the root of a clean checkout, run
 `"$scratch/release/xcodegen" generate --spec ios/project.yml`. Commit the
 regenerated `ios/Athkar.xcodeproj`, and explain any other changed file.
 
-Without an authorized iOS device result, these app-unit cases remain required
-unrun:
+The iOS IPA workflow runs these cases on a simulator when a change reaches them; record
+its run URL as a simulator result. Without an authorized iOS device result, they remain
+required unrun on a device:
 
 - `TestInfrastructureTests.testBundledPacksRecordActualChecksumsAndVersions`
 - `TestInfrastructureTests.testAppModelBuildsDecksFromBundledContent`
@@ -304,6 +344,7 @@ Its `test` action passes `-only-testing` for just the app-unit and UI classes th
 changes reach. The selection compares with `origin/main`, so it needs a Git
 checkout with that branch, or `--base REF`. `--all` runs both targets, and a single
 test identifier still selects that test.
+The iOS IPA workflow now runs the same selection on GitHub's runner.
 Leave existing historical jobs and their running copies untouched. Do not use
 the runner for new checks or request Mac keys, wake-up or provisioning. Preserve the
 user's physical-device data and the existing signing/publisher identity.

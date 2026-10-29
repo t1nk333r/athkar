@@ -12,8 +12,8 @@ Lanes (tools/test.sh runs them; the native runners select for themselves too):
   models     Linux   portable production-model XCTest classes (tools/test-native-models.sh)
   ios-build  Linux   the app compiled for iOS (tools/ios-linux-compile.sh); compiling AthkarTests
                      is listed: its bundle cannot be packaged on Linux yet
-  app-unit   device  hosted AthkarTests classes              } listed: Linux cannot run them.
-  ui         Mac     AthkarUITests classes                    } tools/ios-mac-run.sh test selects both
+  app-unit   device  hosted AthkarTests classes              } listed: Linux cannot run them. The iOS IPA
+  ui         Mac     AthkarUITests classes                    } workflow and tools/ios-mac-run.sh test select both
 
 The changes are the diff from the merge base of HEAD and the base branch to the working tree,
 untracked files included. The base branch is --base REF, else $ATHKAR_TEST_BASE, else origin/main.
@@ -79,8 +79,8 @@ SHARED = ["ios/Package.swift", "ios/Package.resolved", "ios/AthkarCore/Package.s
           "tools/test-native-core.sh", "tools/test-native-models.sh", "tools/ios-linux-compile.sh"]
 # The selection and the driver: their own tests.
 SELECTOR = ["tools/affected-tests.py", "tools/affected-tests-test.py", "tools/test.sh"]
-# The Mac runner: every app-unit and UI test.
-MAC_RUNNER = ["tools/ios-mac-run.sh"]
+# The Mac runners, the GitHub workflow and the retired script: every app-unit and UI test.
+MAC_RUNNER = ["tools/ios-mac-run.sh", ".github/workflows/ios-ipa.yml"]
 # Copied into the app bundle. tools/test-native-core.sh stages these for the SDK build, and
 # ios/project.yml bundles them; `check` compares all three.
 APP_RESOURCES = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json",
@@ -929,7 +929,7 @@ def cmd_plan(args):
             continue
         for line in entry["why"]:
             print(f"{'':<11}{line}")
-    print("* listed, not run on Linux: app-unit needs an iOS device; ui runs on the Mac (tools/ios-mac-run.sh test)")
+    print("* listed, not run on Linux: the iOS IPA workflow (.github/workflows/ios-ipa.yml) runs both on a simulator")
     if sel.docs:
         print("Documentation only, no tests: " + ", ".join(sel.docs))
     if sel.untested:
