@@ -1,7 +1,7 @@
 import XCTest
 
-/// The home header's prayer row: without a location it asks for one; with one it names the current and next prayers;
-/// it opens أوقات الصلاة; the settings toggle brings the title back.
+/// The home header's prayer row: without a location it asks for one; with one it names the current prayer with how long
+/// ago its time began, and the next with the time left; it opens أوقات الصلاة; the settings toggle brings the title back.
 final class HomePrayerRowUITests: DeckTestCase {
     private var row: XCUIElement { app.buttons["home.prayerRow"] }
 
@@ -27,6 +27,9 @@ final class HomePrayerRowUITests: DeckTestCase {
         app.buttons["tab.morning"].tap()
         XCTAssertTrue(wait { self.row.label.contains("القادمة") }, row.label)
         XCTAssertFalse(row.label.contains("حدّد موقعك"), row.label)
+        // The current side tells how long ago its time began, never «الآن» for a time hours old.
+        XCTAssertTrue(row.label.contains("الحالية") || row.label.contains("السابقة"), row.label)
+        XCTAssertTrue(row.label.contains("منذ") || row.label.contains("الآن"), row.label)
 
         openSettings()
         toggle("settings.homePrayerRow", to: false)

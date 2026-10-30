@@ -1,9 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// The home header's prayer row, in the title's place: the current prayer and its time, today's Hijri date in a box
-/// (the day large, the month and year under it), and the next prayer with the time left. Tapping it opens أوقات الصلاة.
-/// Without a location the date still shows and the next prayer's place asks for one.
+/// The home header's prayer row, in the title's place: the current prayer and how long ago its time began, today's Hijri
+/// date in a box (the day large, the month and year under it), and the next prayer with the time left. Tapping it opens
+/// أوقات الصلاة. Without a location the date still shows and the next prayer's place asks for one.
 struct HomePrayerRow: View {
     let prayer: PrayerTimesModel
     let open: () -> Void
@@ -26,9 +26,9 @@ struct HomePrayerRow: View {
         let date = HijriDay(PrayerTimesModel.localDate(daysFromToday: 0, now: now, in: prayer.zone),
                             offset: prayer.settings.hijriOffset)
         return HStack(spacing: 8) {
-            side(label: "الآن",
+            side(label: Self.currentLabel(current),
                  name: current.map { PrayerNames.name($0.prayer) } ?? "—",
-                 detail: current.map { ArabicFormat.time($0.at, in: prayer.zone) },
+                 detail: current.map { Self.since($0.at, now: now) },
                  dimmed: current == nil || current?.prayer == .sunrise, accent: false)
                 .frame(maxWidth: .infinity, alignment: .leading)
             dateBox(date)
@@ -41,7 +41,7 @@ struct HomePrayerRow: View {
         .frame(minHeight: 44)
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Self.spoken(current: current, next: next, now: now, date: date, zone: prayer.zone))
+        .accessibilityLabel(Self.spoken(current: current, next: next, now: now, date: date))
         .accessibilityHint("يفتح أوقات الصلاة")
     }
 
@@ -99,19 +99,35 @@ struct HomePrayerRow: View {
         return NextPrayer(prayer: .isha, at: isha)
     }
 
+    /// A prayer's time runs until the next one, so it is «الحالية». Sunrise ends Fajr's time and is no prayer: from it
+    /// until Dhuhr the row names it as «السابقة», so it never reads as happening now.
+    static func currentLabel(_ current: NextPrayer?) -> String {
+        current?.prayer == .sunrise ? "السابقة" : "الحالية"
+    }
+
+    /// How long ago `start` was: «منذ ٢٠ د», «منذ ٥ س ٣٦ د»; «الآن» within its first minute.
+    static func since(_ start: Date, now: Date) -> String {
+        let minutes = max(0, Int((now.timeIntervalSince(start) / 60).rounded(.down)))
+        return minutes == 0 ? "الآن" : "منذ " + span(minutes)
+    }
+
     /// «٤٥ د», «١ س ٢٠ د».
     static func left(from now: Date, to target: Date) -> String {
-        let minutes = max(0, Int((target.timeIntervalSince(now) / 60).rounded(.up)))
+        span(max(0, Int((target.timeIntervalSince(now) / 60).rounded(.up))))
+    }
+
+    private static func span(_ minutes: Int) -> String {
         let hours = minutes / 60
         if hours == 0 { return "\(ArabicFormat.number(minutes)) د" }
         if minutes % 60 == 0 { return "\(ArabicFormat.number(hours)) س" }
         return "\(ArabicFormat.number(hours)) س \(ArabicFormat.number(minutes % 60)) د"
     }
 
-    private static func spoken(current: NextPrayer?, next: NextPrayer?, now: Date, date: HijriDay,
-                               zone: TimeZone) -> String {
+    private static func spoken(current: NextPrayer?, next: NextPrayer?, now: Date, date: HijriDay) -> String {
         var parts: [String] = []
-        if let current { parts.append("الآن \(PrayerNames.name(current.prayer)) \(ArabicFormat.time(current.at, in: zone))") }
+        if let current {
+            parts.append("\(currentLabel(current)) \(PrayerNames.name(current.prayer)) \(since(current.at, now: now))")
+        }
         parts.append("\(date.day) \(date.monthYear)")
         if let next {
             parts.append("القادمة \(PrayerNames.name(next.prayer)) بعد \(left(from: now, to: next.at))")
