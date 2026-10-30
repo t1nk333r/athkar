@@ -6,10 +6,11 @@ struct ProhibitedTimeTests {
     private let zone = TimeZone(identifier: "Asia/Riyadh")!
 
     /// Fajr 4:00, sunrise 5:30, Dhuhr 12:00, Asr 15:30, Maghrib 18:00, Isha 19:30 (hours since the epoch).
-    private func schedule(asrClamped: Bool = false, fajr: Bool = true, sunrise: Bool = true) -> PrayerSchedule {
+    private func schedule(asrClamped: Bool = false, fajr: Bool = true, sunrise: Bool = true,
+                          dhuhr: Bool = true) -> PrayerSchedule {
         func at(_ hours: Double) -> Date { Date(timeIntervalSince1970: hours * 3600) }
         return PrayerSchedule(localDate: "2026-10-30", zone: zone, fajr: fajr ? at(4) : nil,
-                              sunrise: sunrise ? at(5.5) : nil, dhuhr: at(12),
+                              sunrise: sunrise ? at(5.5) : nil, dhuhr: dhuhr ? at(12) : nil,
                               asr: asrClamped ? at(18) : at(15.5), maghrib: at(18), isha: at(19.5),
                               asrClamped: asrClamped)
     }
@@ -28,10 +29,19 @@ struct ProhibitedTimeTests {
         #expect(ProhibitedTime.current(at: at(5, minutes: 50), today: day) == nil)
     }
 
-    @Test func noWindowBeforeDhuhr() {
-        // The owner's rule shows no zenith window, so the minutes before Dhuhr are clear.
-        #expect(ProhibitedTime.current(at: at(11, minutes: 50), today: schedule()) == nil)
-        #expect(ProhibitedTime.current(at: at(12), today: schedule()) == nil)
+    @Test func fromTenMinutesBeforeTheDhuhrAdhanUntilIt() {
+        let day = schedule()
+        #expect(ProhibitedTime.current(at: at(11, minutes: 49), today: day) == nil)
+        let window = ProhibitedTime(kind: .beforeDhuhr, start: at(11, minutes: 50), end: at(12))
+        #expect(ProhibitedTime.current(at: at(11, minutes: 50), today: day) == window)
+        #expect(ProhibitedTime.current(at: at(11, minutes: 59), today: day) == window)
+        // The sun has passed its zenith: the Dhuhr adhan.
+        #expect(ProhibitedTime.current(at: at(12), today: day) == nil)
+    }
+
+    @Test func aMissingDhuhrOpensNoZenithWindow() {
+        #expect(ProhibitedTime.windows(schedule(dhuhr: false)).map(\.kind) == [.afterFajr, .afterAsr])
+        #expect(ProhibitedTime.current(at: at(11, minutes: 55), today: schedule(dhuhr: false)) == nil)
     }
 
     @Test func fromAsrUntilTheMaghribAdhan() {
@@ -45,24 +55,25 @@ struct ProhibitedTimeTests {
     }
 
     @Test func aClampedAsrOpensNoWindow() {
-        #expect(ProhibitedTime.windows(schedule(asrClamped: true)).map(\.kind) == [.afterFajr])
+        #expect(ProhibitedTime.windows(schedule(asrClamped: true)).map(\.kind) == [.afterFajr, .beforeDhuhr])
         #expect(ProhibitedTime.current(at: at(17), today: schedule(asrClamped: true)) == nil)
     }
 
     @Test func aMissingFajrOrSunriseOpensNoMorningWindow() {
-        #expect(ProhibitedTime.windows(schedule(fajr: false)).map(\.kind) == [.afterAsr])
-        #expect(ProhibitedTime.windows(schedule(sunrise: false)).map(\.kind) == [.afterAsr])
-        #expect(ProhibitedTime.windows(schedule()).map(\.kind) == [.afterFajr, .afterAsr])
+        #expect(ProhibitedTime.windows(schedule(fajr: false)).map(\.kind) == [.beforeDhuhr, .afterAsr])
+        #expect(ProhibitedTime.windows(schedule(sunrise: false)).map(\.kind) == [.beforeDhuhr, .afterAsr])
+        #expect(ProhibitedTime.windows(schedule()).map(\.kind) == [.afterFajr, .beforeDhuhr, .afterAsr])
     }
 
     @Test func anEmptyOrInvertedRangeOpensNoWindow() {
-        func day(fajr: Double, sunrise: Double, asr: Double) -> PrayerSchedule {
-            PrayerSchedule(localDate: "2026-10-30", zone: zone, fajr: at(fajr), sunrise: at(sunrise), dhuhr: at(12),
-                           asr: at(asr), maghrib: at(18), isha: at(19.5), asrClamped: false)
+        func kinds(fajr: Double, sunrise: Double, asr: Double) -> [ProhibitedTime.Kind] {
+            let day = PrayerSchedule(localDate: "2026-10-30", zone: zone, fajr: at(fajr), sunrise: at(sunrise),
+                                     dhuhr: at(12), asr: at(asr), maghrib: at(18), isha: at(19.5), asrClamped: false)
+            return ProhibitedTime.windows(day).map(\.kind)
         }
-        #expect(ProhibitedTime.windows(day(fajr: 5.5, sunrise: 4, asr: 15.5)).map(\.kind) == [.afterAsr])
-        #expect(ProhibitedTime.windows(day(fajr: 5.5, sunrise: 5.5, asr: 15.5)).map(\.kind) == [.afterAsr])
-        #expect(ProhibitedTime.windows(day(fajr: 4, sunrise: 5.5, asr: 18)).map(\.kind) == [.afterFajr])
-        #expect(ProhibitedTime.windows(day(fajr: 4, sunrise: 5.5, asr: 19)).map(\.kind) == [.afterFajr])
+        #expect(kinds(fajr: 5.5, sunrise: 4, asr: 15.5) == [.beforeDhuhr, .afterAsr])
+        #expect(kinds(fajr: 5.5, sunrise: 5.5, asr: 15.5) == [.beforeDhuhr, .afterAsr])
+        #expect(kinds(fajr: 4, sunrise: 5.5, asr: 18) == [.afterFajr, .beforeDhuhr])
+        #expect(kinds(fajr: 4, sunrise: 5.5, asr: 19) == [.afterFajr, .beforeDhuhr])
     }
 }

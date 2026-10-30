@@ -223,8 +223,10 @@ struct PrayerTimesView: View {
     /// The rule behind the home row's «وقت نهي عن الصلاة» notice (``ProhibitedTime``).
     private var prohibitedNote: some View {
         let minutes = ArabicFormat.number(Int(ProhibitedTime.afterSunrise / 60))
+        let zenith = ArabicFormat.minutesLeft(Int(ProhibitedTime.beforeDhuhr / 60))
         return Text("أوقات النهي عن الصلاة، كما ينبّه إليها صف المواقيت في أعلى صفحة الأذكار: "
                     + "من صلاة الفجر حتى ارتفاع الشمس، نحو \(minutes) دقيقة بعد الشروق، "
+                    + "وعند استواء الشمس حتى تزول، نحو \(zenith) قبل أذان الظهر، "
                     + "ومن صلاة العصر حتى أذان المغرب.")
             .font(.caption.weight(.semibold))
             .foregroundStyle(palette.textSecondary)
