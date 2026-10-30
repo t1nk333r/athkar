@@ -54,4 +54,15 @@ struct ProhibitedTimeTests {
         #expect(ProhibitedTime.windows(schedule(sunrise: false)).map(\.kind) == [.afterAsr])
         #expect(ProhibitedTime.windows(schedule()).map(\.kind) == [.afterFajr, .afterAsr])
     }
+
+    @Test func anEmptyOrInvertedRangeOpensNoWindow() {
+        func day(fajr: Double, sunrise: Double, asr: Double) -> PrayerSchedule {
+            PrayerSchedule(localDate: "2026-10-30", zone: zone, fajr: at(fajr), sunrise: at(sunrise), dhuhr: at(12),
+                           asr: at(asr), maghrib: at(18), isha: at(19.5), asrClamped: false)
+        }
+        #expect(ProhibitedTime.windows(day(fajr: 5.5, sunrise: 4, asr: 15.5)).map(\.kind) == [.afterAsr])
+        #expect(ProhibitedTime.windows(day(fajr: 5.5, sunrise: 5.5, asr: 15.5)).map(\.kind) == [.afterAsr])
+        #expect(ProhibitedTime.windows(day(fajr: 4, sunrise: 5.5, asr: 18)).map(\.kind) == [.afterFajr])
+        #expect(ProhibitedTime.windows(day(fajr: 4, sunrise: 5.5, asr: 19)).map(\.kind) == [.afterFajr])
+    }
 }
