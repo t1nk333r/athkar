@@ -1,0 +1,309 @@
+# Builds the iOS app with Xcode on a GitHub macOS runner, packages an ad hoc signed IPA for
+# Feather, and runs the AthkarTests and AthkarUITests classes the changes reach. A version tag
+# (ios-<version>-build-<build>) also attaches the IPA to that tag's GitHub release, which Feather's
+# auto-import then publishes. See docs/agents/ios-linux.md, "GitHub workflow".
+name: iOS IPA
+
+on:
+  push:
+    tags: ["ios-*"]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: >-
+          Mac tests: run the classes the changes since this ref reach. Empty means since the
+          latest ios-* tag, "all" runs every class and "none" runs none.
+        required: false
+        default: ""
+  # Checks a change to this workflow before it merges. It never releases.
+  pull_request:
+    paths: [".github/workflows/ios-ipa.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ipa-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  ipa:
+    name: Build the IPA
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check the tag names the app's version
+        if: github.ref_type == 'tag'
+        run: |
+          set -euo pipefail
+          plist=ios/Athkar/Info.plist
+          version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$plist")
+          build=$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$plist")
+          if [[ $GITHUB_REF_NAME != "ios-$version-build-$build" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match version $version ($build) in $plist; expected ios-$version-build-$build."
+            exit 1
+          fi
+
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          {
+            echo '### Toolchain'
+            echo '```'
+            xcodebuild -version
+            echo "iOS SDK $(xcrun --sdk iphoneos --show-sdk-version)"
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Build for iOS devices (Release)
+        run: |
+          xcodebuild -project ios/Athkar.xcodeproj -scheme Athkar -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= build
+
+      - name: Package and check the IPA
+        run: |
+          set -euo pipefail
+          out=$RUNNER_TEMP/ipa
+          mkdir -p "$out/Payload"
+          ditto "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/Athkar.app" "$out/Payload/Athkar.app"
+          app=$out/Payload/Athkar.app
+          plist() { /usr/libexec/PlistBuddy -c "Print $1" "$app/Info.plist"; }
+          # Ad hoc: no identity, entitlements or device-bound profile; Feather signs the app for
+          # the device when it installs it. Embedded code is signed first, so the app seals its
+          # final bytes.
+          for framework in "$app"/Frameworks/*; do
+            [[ -e $framework ]] || continue
+            codesign --force --sign - --generate-entitlement-der "$framework"
+          done
+          codesign --force --sign - --generate-entitlement-der "$app"
+          codesign --verify --deep --strict "$app"
+          if [[ -e $app/embedded.mobileprovision ]]; then
+            echo "::error::The IPA must carry no device-bound provisioning profile."
+            exit 1
+          fi
+          # The installed app's identity, so Feather updates it in place.
+          if [[ $(plist CFBundleIdentifier) != local.dev.athkar ]]; then
+            echo "::error::The bundle identifier is $(plist CFBundleIdentifier), not local.dev.athkar."
+            exit 1
+          fi
+          # Each resource ios/project.yml bundles (its buildPhase: resources sources, as
+          # tools/affected-tests.py check reads them) is copied byte for byte.
+          resources=$(python3 -c 'import re, sys
+          print("\n".join(re.findall(r"- path: \.\./(\S+)\n\s+buildPhase: resources", open(sys.argv[1]).read())))' \
+            ios/project.yml)
+          [[ -n $resources ]] || { echo "::error::Found no bundled resources in ios/project.yml."; exit 1; }
+          while read -r resource; do
+            cmp "$resource" "$app/${resource##*/}"
+          done <<< "$resources"
+          version=$(plist CFBundleShortVersionString)
+          build=$(plist CFBundleVersion)
+          name=Athkar-$version+$build.ipa
+          (cd "$out" && ditto -c -k --norsrc --noextattr --keepParent Payload "$name")
+          stray=$(zipinfo -1 "$out/$name" | grep -v '^Payload/' || true)
+          if [[ -n $stray ]]; then
+            echo "::error::The IPA holds files outside Payload/: $(echo $stray)"
+            exit 1
+          fi
+          (cd "$out" && shasum -a 256 "$name" > "$name.sha256")
+          rm -rf "$out/Payload"
+          {
+            echo '### IPA'
+            echo "\`$name\`: version $version, build $build, $(stat -f %z "$out/$name") bytes"
+            echo
+            echo "SHA-256 \`$(cut -d' ' -f1 "$out/$name.sha256")\`"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ipa
+          path: |
+            ${{ runner.temp }}/ipa/*.ipa
+            ${{ runner.temp }}/ipa/*.ipa.sha256
+          if-no-files-found: error
+          compression-level: 0
+
+  tests:
+    name: Mac tests the changes reach
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Choose the tests
+        id: select
+        env:
+          BASE: ${{ inputs.base }}
+          PR_BASE: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          # tools/affected-tests.py picks the classes, as tools/ios-mac-run.sh does. A tag or manual
+          # run compares with the latest ios-* tag before this commit (so a run on a tagged commit
+          # compares with the previous release), and a pull request with its base branch. With no
+          # earlier tag, every class runs.
+          if [[ -z ${BASE:-} ]]; then
+            if [[ $GITHUB_EVENT_NAME == pull_request ]]; then
+              BASE=origin/$PR_BASE
+            else
+              BASE=$(git describe --tags --abbrev=0 --match 'ios-*' HEAD^ 2>/dev/null || echo all)
+            fi
+          fi
+          echo '### Mac tests' >> "$GITHUB_STEP_SUMMARY"
+          case $BASE in
+            none)
+              echo 'None requested.' | tee -a "$GITHUB_STEP_SUMMARY"
+              echo 'run=0' >> "$GITHUB_OUTPUT"
+              exit 0 ;;
+            all) args=(--all) ;;
+            *) args=(--base "$BASE") ;;
+          esac
+          only=()
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          for lane in app-unit ui; do
+            if ! selection=$(python3 tools/affected-tests.py select "$lane" "${args[@]}" 2> "$RUNNER_TEMP/why"); then
+              cat "$RUNNER_TEMP/why" >&2
+              echo "::error::tools/affected-tests.py select $lane ${args[*]} failed."
+              exit 1
+            fi
+            tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/why"
+            eval "$selection"
+            # Test identifiers have no spaces.
+            if [[ $ATHKAR_TEST_RUN != 0 ]]; then
+              read -ra picked <<< "$ATHKAR_TEST_ONLY_TESTING"
+              only+=("${picked[@]}")
+            fi
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          if (( ${#only[@]} == 0 )); then
+            echo 'run=0' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=1' >> "$GITHUB_OUTPUT"
+            echo "only=${only[*]}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run them on a simulator
+        if: steps.select.outputs.run == '1'
+        env:
+          ONLY: ${{ steps.select.outputs.only }}
+        run: |
+          set -euo pipefail
+          xcrun simctl list devices available --json > "$RUNNER_TEMP/devices.json"
+          # An iPhone 17 Pro on the newest iOS runtime, else that runtime's first iPhone.
+          cat > "$RUNNER_TEMP/pick-simulator.py" <<'EOF'
+          import json, re, sys
+          best = None
+          for runtime, devices in json.load(open(sys.argv[1]))["devices"].items():
+              match = re.search(r"SimRuntime\.iOS-([0-9-]+)$", runtime)
+              if not match:
+                  continue
+              version = tuple(int(part) for part in match.group(1).split("-"))
+              for device in devices:
+                  if device["name"].startswith("iPhone"):
+                      key = (version, device["name"] == "iPhone 17 Pro")
+                      if best is None or key > best[0]:
+                          best = (key, device["udid"], f"{device['name']}, iOS {'.'.join(map(str, version))}")
+          if best is None:
+              sys.exit("No available iPhone simulator")
+          print(best[2], file=sys.stderr)
+          print(best[1])
+          EOF
+          device=$(python3 "$RUNNER_TEMP/pick-simulator.py" "$RUNNER_TEMP/devices.json")
+          read -ra only <<< "$ONLY"
+          xcodebuild -project ios/Athkar.xcodeproj -scheme Athkar \
+            -destination "platform=iOS Simulator,id=$device" -parallel-testing-enabled NO \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/tests.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test "${only[@]}"
+
+      - uses: actions/upload-artifact@v7
+        if: always() && steps.select.outputs.run == '1'
+        with:
+          name: tests-xcresult
+          path: ${{ runner.temp }}/tests.xcresult
+          if-no-files-found: ignore
+
+  release:
+    name: Attach the IPA to the release
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [ipa, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ipa
+          path: ipa
+
+      - name: Create the release if needed and upload the IPA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          cd ipa
+          shopt -s nullglob
+          ipas=(*.ipa)
+          if (( ${#ipas[@]} != 1 )); then
+            echo "::error::Expected one IPA, found ${#ipas[@]}."
+            exit 1
+          fi
+          ipa=${ipas[0]}
+          sha256sum -c "$ipa.sha256"
+          stem=${ipa#Athkar-}
+          stem=${stem%.ipa}
+          version=${stem%+*}
+          build=${stem#*+}
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            {
+              echo "Athkar for iOS, version $version, build $build, built from \`$TAG\` by [the iOS IPA workflow]($RUN_URL)."
+              echo
+              echo "## Install"
+              echo
+              echo "Feather imports this release from GitHub on its auto-import schedule. You can also download \`$ipa\` and install it with Feather. The bundle ID (\`local.dev.athkar\`) is unchanged, so it updates the existing install in place and keeps your data."
+              echo
+              echo '```'
+              cat "$ipa.sha256"
+              echo '```'
+            } > "$RUNNER_TEMP/notes.md"
+            gh release create "$TAG" --verify-tag --title "Athkar iOS $version (build $build)" \
+              --notes-file "$RUNNER_TEMP/notes.md"
+          fi
+          # An asset is never replaced: one already attached must hold these bytes (a rerun after a
+          # partial upload). Feather imports a release's one Athkar-*.ipa, so no other may be attached.
+          assets=$(gh release view "$TAG" --json assets --jq '.assets[] | "\(.name) \(.digest)"')
+          others=$(awk -v ipa="$ipa" '$1 ~ /^Athkar-.*\.ipa$/ && $1 != ipa { print $1 }' <<< "$assets")
+          if [[ -n $others ]]; then
+            echo "::error::$TAG already has another IPA, $(echo $others); Feather imports one per release."
+            exit 1
+          fi
+          upload=()
+          for file in "$ipa" "$ipa.sha256"; do
+            attached=$(awk -v file="$file" '$1 == file { print $2 }' <<< "$assets")
+            if [[ -z $attached ]]; then
+              upload+=("$file")
+            elif [[ $attached == "sha256:$(sha256sum "$file" | cut -d' ' -f1)" ]]; then
+              echo "$file is already attached with the same SHA-256."
+            else
+              echo "::error::$TAG already has a different $file (digest $attached); an asset is never replaced."
+              exit 1
+            fi
+          done
+          if (( ${#upload[@]} > 0 )); then
+            gh release upload "$TAG" "${upload[@]}"
+          fi
+          echo "Attached $ipa to $TAG." | tee -a "$GITHUB_STEP_SUMMARY"

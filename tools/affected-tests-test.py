@@ -171,9 +171,11 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(sel.untested, ["sw.js", "icons/icon.svg"])
 
     def test_mac_runner_runs_every_app_unit_and_ui_test(self):
-        sel = self.select("tools/ios-mac-run.sh")
-        self.assertEqual(set(sel.full), {"app-unit", "ui"})
-        self.assertEqual(set(picked(sel)), {"app-unit", "ui"})
+        for path in ("tools/ios-mac-run.sh", ".github/workflows/ios-ipa.yml"):
+            with self.subTest(path=path):
+                sel = self.select(path)
+                self.assertEqual(set(sel.full), {"app-unit", "ui"})
+                self.assertEqual(set(picked(sel)), {"app-unit", "ui"})
 
     def test_selector_runs_its_own_tests(self):
         for path in ("tools/affected-tests.py", "tools/affected-tests-test.py", "tools/test.sh"):

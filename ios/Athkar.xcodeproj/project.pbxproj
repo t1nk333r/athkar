@@ -27,6 +27,7 @@
 		4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */; };
 		546AB6664195846DDA46B54C /* DeviceHeading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */; };
 		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
+		59B3BB6C07691CF933231540 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 395887779FE3432ED69CE3FB /* GRDB */; };
 		5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
 		626A2510A916FA3FC997C2A1 /* PrayerTimesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43802A54E228E374EADE3ACE /* PrayerTimesView.swift */; };
@@ -184,6 +185,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				480B42DD3FC4646A95151223 /* AthkarCore in Frameworks */,
+				59B3BB6C07691CF933231540 /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,6 +434,7 @@
 			name = AthkarTests;
 			packageProductDependencies = (
 				15B13C389B55D96EC0545171 /* AthkarCore */,
+				395887779FE3432ED69CE3FB /* GRDB */,
 			);
 			productName = AthkarTests;
 			productReference = 69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */;
@@ -491,6 +494,7 @@
 			mainGroup = 526A3F1070A709238B2FA209;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				E9C142E91AD4D4F9A984D6DC /* XCRemoteSwiftPackageReference "GRDB.swift" */,
 				2DC4FF0EE5F47402FDD1FBE0 /* XCLocalSwiftPackageReference "AthkarCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -891,10 +895,26 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		E9C142E91AD4D4F9A984D6DC /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 7.11.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		15B13C389B55D96EC0545171 /* AthkarCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AthkarCore;
+		};
+		395887779FE3432ED69CE3FB /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9C142E91AD4D4F9A984D6DC /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
 		};
 		E6B3694BE1E4F864C8A979F8 /* AthkarCore */ = {
 			isa = XCSwiftPackageProductDependency;

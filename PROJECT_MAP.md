@@ -6,7 +6,9 @@
 - Native iOS: Swift 6, SwiftUI, SwiftPM and an XcodeGen project under `ios/`.
 - Native tests: AthkarCore Swift Testing and portable production-source XCTest on Linux;
   iOS UI/device cases retain their runtime requirements.
-- Sideload delivery: the dated 1.0/1 IPA is on Feather and re-signed by the client.
+- Sideload delivery: `.github/workflows/ios-ipa.yml` builds the IPA with Xcode on a GitHub macOS
+  runner, and a version tag attaches it to a GitHub release. Feather imports releases and the
+  client re-signs the app.
 
 ## [SYSTEM_FLOW]
 
@@ -27,7 +29,9 @@ quiet.
 - `ios/Athkar/` and `ios/AthkarUITests/` hold the app and its UI tests.
 - `tools/test.sh` runs only the checks a change reaches, lane by lane; `tools/affected-tests.py`
   selects them and `tools/affected-tests-test.py` tests the selection.
-- `tools/ios-mac-run.sh` is retained for historical provenance; current checks use Linux.
+- `.github/workflows/ios-ipa.yml` builds and releases the IPA and runs the affected AthkarTests
+  and AthkarUITests classes on a simulator; `tools/affected-tests.py` selects them.
+- `tools/ios-mac-run.sh` is retained for historical provenance.
 - [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md) owns the build/test procedure
   and recorded verification limits.
 

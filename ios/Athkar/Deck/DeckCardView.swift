@@ -204,7 +204,9 @@ struct DeckCardView: View {
                 .foregroundStyle(palette.textSecondary)
                 .accessibilityHidden(true)
             Menu {
-                Picker(selection: Binding(get: { card.target }, set: onTarget)) {
+                // A closure, not onTarget itself: converting a function value to Binding's @isolated(any)
+                // setter crashes Xcode 26's Swift 6.3 compiler in IRGen.
+                Picker(selection: Binding(get: { card.target }, set: { onTarget($0) })) {
                     ForEach(options, id: \.self) { option in
                         Text(ArabicFormat.number(option)).tag(option)
                     }

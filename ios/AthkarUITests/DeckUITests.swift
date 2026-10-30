@@ -99,6 +99,8 @@ final class DeckUITests: DeckTestCase {
         launch()
         XCTAssertFalse(nextButton.isEnabled)
         openSettings()
+        // The form builds its rows lazily, and the reminders section puts this one below the first screen.
+        reveal(app.switches["settings.manual.morning"])
         XCTAssertTrue(app.staticTexts["لم تُسجل كمكتملة"].exists)
         toggle("settings.manual.morning", to: true)
         XCTAssertTrue(app.staticTexts["اكتملت خارج التطبيق"].exists)

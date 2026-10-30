@@ -32,7 +32,9 @@ struct TasbihPhraseSheet: View {
                                 HStack(spacing: 8) {
                                     optionButton(option, identifier: "tasbih.custom.\(index)")
                                         .accessibilityFocused($focus, equals: .custom(index))
-                                    deleteButton(model.custom[index], index: index,
+                                    // The row's own phrase, not `model.custom[index]`: deleting the last phrase
+                                    // updates this row before ForEach drops it, and the old index is out of range.
+                                    deleteButton(TasbihText.savedText(of: option.key), index: index,
                                                  identifier: "tasbih.custom.\(index).delete")
                                 }
                             }
