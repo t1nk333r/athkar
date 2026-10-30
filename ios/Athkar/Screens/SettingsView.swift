@@ -61,7 +61,7 @@ struct SettingsView: View {
                 Section("الصفحة الرئيسية") {
                     Toggle(isOn: $settings.homePrayerRow) {
                         toggleCopy("المواقيت في أعلى الصفحة",
-                                   "الصلاة الحالية والتاريخ الهجري والصلاة القادمة مكان عنوان «بكرة وأصيلا».")
+                                   "الأذان القادم والتاريخ الهجري وتنبيه أوقات النهي عن الصلاة مكان عنوان «بكرة وأصيلا».")
                     }
                     .accessibilityIdentifier("settings.homePrayerRow")
                 }

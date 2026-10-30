@@ -26,6 +26,7 @@ struct PrayerTimesView: View {
                         }
                     }
                     times
+                    prohibitedNote
                     locationCard
                 }
                 Button {
@@ -217,6 +218,18 @@ struct PrayerTimesView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 14.4, style: .continuous))
         .card(palette)
+    }
+
+    /// The rule behind the home row's «وقت نهي عن الصلاة» notice (``ProhibitedTime``).
+    private var prohibitedNote: some View {
+        let minutes = ArabicFormat.number(Int(ProhibitedTime.afterSunrise / 60))
+        return Text("أوقات النهي عن الصلاة، كما ينبّه إليها صف المواقيت أعلى الصفحة: من صلاة الفجر حتى ارتفاع الشمس، "
+                    + "نحو \(minutes) دقيقة بعد الشروق، ومن صلاة العصر حتى أذان المغرب.")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(palette.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .accessibilityIdentifier("prayer.prohibited")
     }
 
     private func value(_ time: PrayerTime, in schedule: PrayerSchedule?) -> String {
