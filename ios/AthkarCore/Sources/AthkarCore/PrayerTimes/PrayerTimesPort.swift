@@ -34,9 +34,13 @@ public struct PrayerSchedule: Equatable, Sendable {
     /// The calculation put Asr outside (Dhuhr, Maghrib], so `asr` is Maghrib instead. Happens where the noon Sun
     /// barely clears the horizon (the first days after a polar night) or where adjustments push Asr past Maghrib.
     public let asrClamped: Bool
+    /// «اصفرار الشمس», estimated as the moment an object's shadow is twice its length plus its noon shadow (Ibn
+    /// Uthaymeen: «واصفرار الشمس قريب من أن يكون ظل الشيء مثليه»). Not adjusted, and not one of the six times.
+    /// Strictly between Dhuhr and Maghrib, or `nil`.
+    public let yellowing: Date?
 
     public init(localDate: String, zone: TimeZone, fajr: Date?, sunrise: Date?, dhuhr: Date?, asr: Date?,
-                maghrib: Date?, isha: Date?, asrClamped: Bool = false) {
+                maghrib: Date?, isha: Date?, asrClamped: Bool = false, yellowing: Date? = nil) {
         self.localDate = localDate
         self.zone = zone
         self.fajr = fajr
@@ -46,6 +50,7 @@ public struct PrayerSchedule: Equatable, Sendable {
         self.maghrib = maghrib
         self.isha = isha
         self.asrClamped = asrClamped
+        self.yellowing = yellowing
     }
 
     public subscript(time: PrayerTime) -> Date? {

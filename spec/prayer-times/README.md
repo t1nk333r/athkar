@@ -20,11 +20,12 @@ func schedule(on localDate: String, at coordinates: GeoCoordinates, in zone: Tim
               settings: CalculationSettings) throws(PrayerTimesError) -> PrayerSchedule
 ```
 
-`PrayerSchedule` holds `localDate`, `zone`, six optional UTC instants (`fajr`, `sunrise`, `dhuhr`, `asr`,
-`maghrib`, `isha`) and `asrClamped`. `CalculationSettings` is `method`, `asrSchool`, `highLatitudeRule`, `adjustments` (whole
-minutes per time) and `hijriOffset` (days, display only). Each field is its own `settings` key; see
-[`../schema.md`](../schema.md). Reading the profile writes nothing. The app writes a field's key when the user
-chooses it, even if the choice equals the default, so a later PWA import cannot replace an explicit choice.
+`PrayerSchedule` holds `localDate`, `zone`, six optional UTC instants (`fajr`, `sunrise`, `dhuhr`, `asr`, `maghrib`,
+`isha`), `asrClamped` and `yellowing` (see [The yellowing](#the-yellowing)). `CalculationSettings` is `method`,
+`asrSchool`, `highLatitudeRule`, `adjustments` (whole minutes per time) and `hijriOffset` (days, display only). Each
+field is its own `settings` key; see [`../schema.md`](../schema.md). Reading the profile writes nothing. The app
+writes a field's key when the user chooses it, even if the choice equals the default, so a later PWA import cannot
+replace an explicit choice.
 
 ## Adapter configuration
 
@@ -283,6 +284,19 @@ The value is a placeholder that keeps the six times in order, not a computed Asr
 the noon Sun one to three degrees up the real start of Asr is about 10–30 min after Dhuhr. Consumers must treat `asrClamped` as "Asr
 undetermined": the reminder planner does not schedule an Asr-relative reminder that day, and a view shows no Asr
 time. The same flag is set if user adjustments push Asr past Maghrib.
+
+### The yellowing
+
+`yellowing` is the native app's estimate of «اصفرار الشمس», which divides the fourth and fifth of the five
+prohibited times (`ProhibitedTime`, after Shaykh Ibn Baz's fatwa 10693). Ibn Baz gives no measure for it. Ibn
+Uthaymeen says «واصفرار الشمس قريب من أن يكون ظل الشيء مثليه», so the adapter takes hanafi Asr: the moment an
+object's shadow is twice its length plus its noon shadow. The calculation runs on the same solar day as the
+schedule, with the chosen method and without the user's Asr adjustment, which moves the adhan and not the Sun. The
+method's own Asr offset still applies; Dubai and Turkey add a few minutes. Under the hanafi school, with no Asr
+adjustment, `yellowing` equals `asr`.
+
+A yellowing outside (Dhuhr, Maghrib) is `nil`, as are all times on a day without them. Near the polar night, Adhan
+can misplace the double shadow as it misplaces Asr. The PWA has no yellowing, so the parity vectors don't cover it.
 
 ## P2: authority tables (pending)
 

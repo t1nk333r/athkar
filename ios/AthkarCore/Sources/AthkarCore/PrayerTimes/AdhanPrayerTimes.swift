@@ -20,12 +20,13 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
             // Adhan returns all six times or none (no sunrise or sunset: polar day or night).
             PrayerTimes(coordinates: location, date: Self.utcComponents(utcDay), calculationParameters: parameters)
         }
-        let guess = Self.meanTransitUTCDay(localDay: localDay, longitude: coordinates.longitude, zone: zone)
-        var result = times(utcDay: guess)
+        var utcDay = Self.meanTransitUTCDay(localDay: localDay, longitude: coordinates.longitude, zone: zone)
+        var result = times(utcDay: utcDay)
         // Dhuhr is the true transit (equation of time, the offset in force at that instant, and any Dhuhr
         // adjustment included). If it lands on a neighbouring civil day, move the UTC date back by that difference.
         if let dhuhr = result?.dhuhr, case let dhuhrDay = Self.localDay(of: dhuhr, in: zone), dhuhrDay != localDay {
-            result = times(utcDay: guess + localDay - dhuhrDay)
+            utcDay += localDay - dhuhrDay
+            result = times(utcDay: utcDay)
         }
         guard let result else {
             return PrayerSchedule(localDate: localDate, zone: zone, fajr: nil, sunrise: nil, dhuhr: nil, asr: nil,
@@ -34,9 +35,17 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
         // Where the noon Sun barely clears the horizon, Adhan's single correction step can put Asr before Dhuhr or
         // after Maghrib (even after Isha). Asr then ends at Maghrib (spec/prayer-times/README.md, P3).
         let asrInWindow = result.dhuhr < result.asr && result.asr <= result.maghrib
+        // The yellowing is hanafi Asr on the same solar day, without the user's Asr adjustment, which moves the
+        // adhan and not the Sun. The same horizon trouble can put it outside (Dhuhr, Maghrib); then it is unknown.
+        var doubleShadow = parameters
+        doubleShadow.madhab = .hanafi
+        doubleShadow.adjustments.asr = 0
+        let yellowing = PrayerTimes(coordinates: location, date: Self.utcComponents(utcDay),
+                                    calculationParameters: doubleShadow)?.asr
         return PrayerSchedule(localDate: localDate, zone: zone, fajr: result.fajr, sunrise: result.sunrise,
                               dhuhr: result.dhuhr, asr: asrInWindow ? result.asr : result.maghrib,
-                              maghrib: result.maghrib, isha: result.isha, asrClamped: !asrInWindow)
+                              maghrib: result.maghrib, isha: result.isha, asrClamped: !asrInWindow,
+                              yellowing: yellowing.flatMap { result.dhuhr < $0 && $0 < result.maghrib ? $0 : nil })
     }
 
     /// Adhan computes the solar day around the transit on a UTC calendar date. First guess: the UTC date whose mean
