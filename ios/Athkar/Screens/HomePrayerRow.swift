@@ -2,9 +2,10 @@ import AthkarCore
 import SwiftUI
 
 /// The home header's prayer row, in the title's place: the next adhan with the time left («أذان الظهر» over «بعد ٣
-/// دقائق», a seconds countdown in its last ``countdownWindow``), today's Hijri date in a box (the day large, the month
-/// and year under it), and during «أوقات النهي عن الصلاة» (``ProhibitedTime``) a notice under them. Tapping it opens
-/// أوقات الصلاة. Without a location the date still shows and the adhan's place asks for one.
+/// دقائق», a seconds countdown in its last ``countdownWindow``) and today's Hijri date in a box (the day large, the
+/// month and year under it). During «أوقات النهي عن الصلاة» (``ProhibitedTime``) the adhan takes one line and a «وقت
+/// نهي» notice the second, so the row keeps its height. Tapping it opens أوقات الصلاة. Without a location the date
+/// still shows and the adhan's place asks for one.
 struct HomePrayerRow: View {
     let prayer: PrayerTimesModel
     let open: () -> Void
@@ -37,15 +38,24 @@ struct HomePrayerRow: View {
         let notice = prayer.schedule(dayOffset: 0, now: now).flatMap { ProhibitedTime.current(at: now, today: $0) }
         let date = HijriDay(PrayerTimesModel.localDate(daysFromToday: 0, now: now, in: prayer.zone),
                             offset: prayer.settings.hijriOffset)
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                adhan(next, now: now)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                dateBox(date)
-            }
-            if let notice {
-                noticeLine(notice)
-            }
+        return HStack(spacing: 8) {
+            // The two-line adhan stays underneath, hidden during a notice, so the row's height never changes and the
+            // adhkar below do not move.
+            adhan(next, now: now)
+                .opacity(notice == nil ? 1 : 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .leading) {
+                    if let notice {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                                name(next)
+                                timeLeft(next, now: now)
+                            }
+                            noticeLine(notice)
+                        }
+                    }
+                }
+            dateBox(date)
         }
         .frame(minHeight: 44)
         .contentShape(Rectangle())
@@ -56,18 +66,26 @@ struct HomePrayerRow: View {
 
     private func adhan(_ next: NextPrayer?, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(next.map { Self.adhanName($0) } ?? "أوقات الصلاة")
-                .font(.headline.weight(.heavy))
-                .foregroundStyle(next == nil ? palette.textSecondary : palette.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-            Text(next.map { "بعد " + Self.left(from: now, to: $0.at) } ?? "حدّد موقعك")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(palette.accentStrong)
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            name(next)
+            timeLeft(next, now: now)
         }
+    }
+
+    private func name(_ next: NextPrayer?) -> some View {
+        Text(next.map { Self.adhanName($0) } ?? "أوقات الصلاة")
+            .font(.headline.weight(.heavy))
+            .foregroundStyle(next == nil ? palette.textSecondary : palette.textPrimary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+    }
+
+    private func timeLeft(_ next: NextPrayer?, now: Date) -> some View {
+        Text(next.map { "بعد " + Self.left(from: now, to: $0.at) } ?? "حدّد موقعك")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(palette.accentStrong)
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
     }
 
     private func noticeLine(_ notice: ProhibitedTime) -> some View {
@@ -75,7 +93,7 @@ struct HomePrayerRow: View {
             Capsule()
                 .fill(palette.warning)
                 .frame(width: 3, height: 16)
-            Text("وقت نهي عن الصلاة")
+            Text("وقت نهي")
                 .font(.caption.weight(.heavy))
                 .foregroundStyle(palette.warning)
             Text(Self.until(notice, zone: prayer.zone))
