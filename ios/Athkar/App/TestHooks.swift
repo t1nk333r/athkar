@@ -25,6 +25,16 @@ enum TestHooks {
         #endif
     }
 
+    /// Replaces how long taps are ignored after a horizontal swipe (`ATHKAR_UITEST_TAP_SUPPRESSION_MS`), so a test's
+    /// tap lands inside the window however slowly the runner delivers it.
+    static var tapSuppressionMs: Int? {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["ATHKAR_UITEST_TAP_SUPPRESSION_MS"].flatMap { Int($0) }
+        #else
+        nil
+        #endif
+    }
+
     /// Reads the manifest and packs from this directory instead of the app bundle
     /// (`ATHKAR_UITEST_CONTENT_DIR`), so a test can run on a small pack of its own.
     static var contentDirectory: URL? {

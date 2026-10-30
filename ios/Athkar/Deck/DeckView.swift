@@ -309,6 +309,9 @@ struct DeckView<Model: DeckModel>: View {
 
     // MARK: Swipe (`beginCardSwipe` … `finishCardSwipe`)
 
+    /// `suppressCardClicksUntil`'s 450 ms after a horizontal swipe, or the UI tests' window.
+    private static var tapSuppression: TimeInterval { Double(TestHooks.tapSuppressionMs ?? 450) / 1000 }
+
     /// Recognised from touch-down (the PWA's `pointerdown`), so the swipe's duration starts there; the axis is
     /// decided after 8 points, as in `moveCardSwipe`.
     private func swipe(width: CGFloat) -> some Gesture {
@@ -326,7 +329,7 @@ struct DeckView<Model: DeckModel>: View {
                     drag.axis = abs(dy) >= abs(dx) ? .vertical : .horizontal
                 }
                 guard drag.axis == .horizontal else { return }
-                drag.suppressTapsUntil = Date().addingTimeInterval(0.45)
+                drag.suppressTapsUntil = Date().addingTimeInterval(Self.tapSuppression)
                 drag.offset = canNavigate(forward: dx > 0) ? dx : dx * 0.2
             }
             .onEnded { value in
@@ -337,7 +340,7 @@ struct DeckView<Model: DeckModel>: View {
                     drag.offset = 0
                     return
                 }
-                drag.suppressTapsUntil = Date().addingTimeInterval(0.45)
+                drag.suppressTapsUntil = Date().addingTimeInterval(Self.tapSuppression)
                 let dx = value.translation.width
                 let dy = value.translation.height
                 let distance = abs(dx)
