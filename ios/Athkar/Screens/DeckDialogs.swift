@@ -23,10 +23,12 @@ struct SourceSheet: View {
                             .padding(isNote ? 14 : 0)
                             .background {
                                 if isNote {
-                                    RoundedRectangle(cornerRadius: 8).fill(palette.accentSoft.opacity(0.45))
+                                    Corner.box.fill(palette.accentSoft.opacity(0.45))
                                         .overlay(alignment: .leading) {
                                             Rectangle().fill(palette.divider).frame(width: 3.2)
                                         }
+                                        // The bar follows the box's corners.
+                                        .clipShape(Corner.box)
                                 }
                             }
                     }
@@ -70,9 +72,9 @@ struct ResetScopeSheet: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(14)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(palette.surfaceRaised))
-                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(palette.border))
-                    .contentShape(RoundedRectangle(cornerRadius: 16))
+                    .background(Corner.box.fill(palette.surfaceRaised))
+                    .overlay(Corner.box.strokeBorder(palette.border))
+                    .contentShape(Corner.box)
                 }
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
@@ -150,10 +152,10 @@ struct DialogButtonStyle: ButtonStyle {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: 14.4).fill(primary ? palette.accentSoft : palette.surface))
-            .overlay(RoundedRectangle(cornerRadius: 14.4).strokeBorder(
+            .background(Corner.box.fill(primary ? palette.accentSoft : palette.surface))
+            .overlay(Corner.box.strokeBorder(
                 primary ? palette.accent.mixed(0.55, with: palette.border) : palette.border))
-            .contentShape(RoundedRectangle(cornerRadius: 14.4))
+            .contentShape(Corner.box)
             .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }

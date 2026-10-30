@@ -74,7 +74,7 @@ struct TasbihPhraseSheet: View {
 
     /// `tasbihOptionMarkup`: the phrase with its tashkeel and today's count; the one counted is pressed.
     private func optionButton(_ option: TasbihModel.Option, identifier: String) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 16)
+        let shape = Corner.box
         return Button {
             if let change = model.select(option.key) {
                 dismiss()
@@ -249,7 +249,7 @@ struct TasbihTargetSheet: View {
 
     private func option(_ title: String, detail: String, identifier: String, pressed: Bool,
                         action: @escaping () -> Void) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 16)
+        let shape = Corner.box
         return Button(action: action) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.body.weight(.bold))

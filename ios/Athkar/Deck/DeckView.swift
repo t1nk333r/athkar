@@ -121,14 +121,14 @@ struct DeckView<Model: DeckModel>: View {
     private var stackDecoration: some View {
         let fill = palette.surface.mixed(0.82, with: palette.background)
         return ZStack {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            Corner.box
                 .fill(fill)
-                .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(palette.border))
+                .overlay(Corner.box.strokeBorder(palette.border))
                 .padding(EdgeInsets(top: 16, leading: 18.4, bottom: 1.6, trailing: 18.4))
                 .opacity(0.48)
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            Corner.box
                 .fill(fill)
-                .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(palette.border))
+                .overlay(Corner.box.strokeBorder(palette.border))
                 .padding(EdgeInsets(top: 8.8, leading: 9.3, bottom: 8.8, trailing: 9.3))
                 .opacity(0.72)
         }
@@ -190,8 +190,8 @@ struct DeckView<Model: DeckModel>: View {
             .fixedSize(horizontal: showsGlyph, vertical: false)
             .padding(.horizontal, showsGlyph ? 8 : 0)
             .frame(minWidth: 72, minHeight: 44)
-            .overlay(Capsule().strokeBorder(palette.border))
-            .contentShape(Capsule())
+            .overlay(Corner.box.strokeBorder(palette.border))
+            .contentShape(Corner.box)
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(count == 0)
@@ -212,10 +212,10 @@ struct DeckView<Model: DeckModel>: View {
             .foregroundStyle(palette.textPrimary)
             .padding(.horizontal, 14)
             .frame(minWidth: 99, minHeight: 44)
-            .background(Capsule().fill(palette.surfaceRaised))
-            .overlay(Capsule().strokeBorder(palette.border))
+            .background(Corner.box.fill(palette.surfaceRaised))
+            .overlay(Corner.box.strokeBorder(palette.border))
             .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
-            .contentShape(Capsule())
+            .contentShape(Corner.box)
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(!enabled)

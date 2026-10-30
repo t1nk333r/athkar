@@ -184,7 +184,7 @@ struct QiblaView: View {
                     .font(.subheadline.weight(.heavy))
                     .padding(.horizontal, 16)
                     .frame(minHeight: 44)
-                    .background(Capsule().fill(palette.accentSoft))
+                    .background(Corner.box.fill(palette.accentSoft))
                     .foregroundStyle(palette.accentStrong)
             }
             .buttonStyle(.plain)
@@ -217,7 +217,7 @@ struct QiblaView: View {
 
 private extension View {
     func qiblaCard(_ palette: Palette) -> some View {
-        background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
-            .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
+        background(Corner.box.fill(palette.surface.opacity(0.94)))
+            .overlay(Corner.box.strokeBorder(palette.border))
     }
 }

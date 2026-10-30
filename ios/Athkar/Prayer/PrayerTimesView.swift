@@ -216,7 +216,7 @@ struct PrayerTimesView: View {
                 .accessibilityIdentifier("prayer.time.\(time.rawValue)")
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14.4, style: .continuous))
+        .clipShape(Corner.box)
         .card(palette)
     }
 
@@ -602,8 +602,8 @@ enum PrayerDates {
 
 private extension View {
     func card(_ palette: Palette) -> some View {
-        background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
-            .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
+        background(Corner.box.fill(palette.surface.opacity(0.94)))
+            .overlay(Corner.box.strokeBorder(palette.border))
     }
 
     func pill(_ palette: Palette, prominent: Bool) -> some View {
@@ -611,8 +611,8 @@ private extension View {
             .foregroundStyle(prominent ? palette.accentStrong : palette.textSecondary)
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
-            .background(Capsule().fill(prominent ? palette.accentSoft : palette.surfaceRaised))
-            .overlay(Capsule().strokeBorder(palette.border))
-            .contentShape(Capsule())
+            .background(Corner.box.fill(prominent ? palette.accentSoft : palette.surfaceRaised))
+            .overlay(Corner.box.strokeBorder(palette.border))
+            .contentShape(Corner.box)
     }
 }

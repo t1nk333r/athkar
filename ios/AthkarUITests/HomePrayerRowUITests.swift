@@ -25,7 +25,9 @@ final class HomePrayerRowUITests: DeckTestCase {
         app.buttons["prayer.manual.save"].tap()
         XCTAssertTrue(app.descendants(matching: .any)["prayer.time.fajr"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.staticTexts["prayer.prohibited"].exists)
+        XCTAssertFalse(app.buttons["tab.morning"].exists, "a section of أخرى hides the switch")
 
+        app.buttons["header.back"].tap()
         app.buttons["tab.morning"].tap()
         XCTAssertTrue(wait { self.row.label.contains("أذان ") }, row.label)
         XCTAssertFalse(row.label.contains("حدّد موقعك"), row.label)

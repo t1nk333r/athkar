@@ -101,8 +101,8 @@ struct HomePrayerRow: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
         .frame(minWidth: 72)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(palette.surfaceRaised))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(palette.border))
+        .background(Corner.box.fill(palette.surfaceRaised))
+        .overlay(Corner.box.strokeBorder(palette.border))
         .accessibilityIdentifier("home.hijri")
     }
 

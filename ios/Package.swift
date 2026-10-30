@@ -28,7 +28,7 @@ let package = Package(
             exclude: ["App/AppModel.swift", "Assets.xcassets", "AthkarApp.swift", "Deck/DeckCardView.swift",
                       "Deck/DeckIndexView.swift", "Deck/SectionChips.swift", "Tasbih/TasbihView.swift",
                       "Tasbih/TasbihSheets.swift",
-                      "Deck/DeckView.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
+                      "Deck/DeckView.swift", "Design/Corner.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
                       "Screens"],

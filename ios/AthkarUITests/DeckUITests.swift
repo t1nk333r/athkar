@@ -256,7 +256,9 @@ final class DeckUITests: DeckTestCase {
             XCTAssertEqual(sectionChip(sura.id).label, sura.surah, "\(sura.id) restarted")
         }
 
-        // The أخرى list marks the section done and gives the whole day's count; its row reopens the deck.
+        // The أخرى list marks the section done and gives the whole day's count; its row reopens the deck. The
+        // section hides the switch; the list shows it again.
+        XCTAssertFalse(app.buttons["tab.other"].exists, "a section of أخرى hides the switch")
         app.buttons["header.back"].tap()
         XCTAssertEqual(app.buttons["tab.other"].label, "أخرى")
         XCTAssertTrue(app.buttons["other.ruqyah"].waitForExistence(timeout: 3))
