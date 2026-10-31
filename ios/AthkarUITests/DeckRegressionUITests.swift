@@ -142,16 +142,19 @@ final class DeckRegressionUITests: DeckTestCase {
         expectLabel(summary, "٠ من ٢٦ ذكرًا")
     }
 
-    /// A tap that ends a horizontal drag does not count (the 450 ms `suppressCardClicksUntil`); a tap after it
-    /// does.
+    /// A tap that ends a horizontal drag does not count (`suppressCardClicksUntil`); a tap after it does. XCUITest
+    /// delivers the next tap about half a second after a drag, at the edge of the app's 450 ms, so the test widens
+    /// the window to 2 s and waits it out before the tap that counts.
     func testTapEndingAHorizontalDragDoesNotCount() {
-        launch()
+        launch(environment: ["ATHKAR_UITEST_TAP_SUPPRESSION_MS": "2000"])
         let start = card("morning-01").coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.5))
         start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 24, dy: 0)))
+        let released = Date()
         tapCard()
         RunLoop.current.run(until: Date().addingTimeInterval(0.6))
         expectPosition(1, of: 26)
         expectLabel(counter, "ذكر ١، لم يُعلَّم كمقروء")
+        RunLoop.current.run(until: released.addingTimeInterval(2.5))
         tapCard()
         expectPosition(2, of: 26)
     }
