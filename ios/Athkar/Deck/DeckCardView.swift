@@ -30,9 +30,7 @@ struct DeckCardView: View {
     /// Drawn as a `.dhikr-card`: an adhkar item or a «سور» page.
     private var isDhikrCard: Bool { isDhikr || isPage }
 
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: metrics.viewportWidth <= 380 ? 22.4 : 28, style: .continuous)
-    }
+    private var shape: RoundedRectangle { Corner.box }
 
     var body: some View {
         ZStack {
@@ -162,11 +160,11 @@ struct DeckCardView: View {
         .padding(.horizontal, isDhikrCard ? 13 : 10)
         .frame(minWidth: isDhikrCard ? 85 : 54, minHeight: isDhikr ? 44 : isPage ? 38.4 : 42)
         .background {
-            Capsule()
+            Corner.box
                 .fill(isDhikrCard ? (complete ? palette.completedSoft : palette.accentSoft) : palette.surfaceRaised)
         }
         .overlay {
-            Capsule().strokeBorder(complete
+            Corner.box.strokeBorder(complete
                 ? palette.completed.mixed(0.55, with: isDhikrCard ? palette.border : palette.divider)
                 : isDhikrCard ? palette.accent.mixed(0.45, with: palette.border) : palette.divider)
         }
@@ -188,9 +186,9 @@ struct DeckCardView: View {
             .foregroundStyle(palette.textSecondary)
             .padding(.horizontal, 10)
             .frame(minWidth: 43, minHeight: 44)
-            .background(Capsule().fill(palette.surfaceRaised))
-            .overlay(Capsule().strokeBorder(palette.border))
-            .contentShape(Capsule())
+            .background(Corner.box.fill(palette.surfaceRaised))
+            .overlay(Corner.box.strokeBorder(palette.border))
+            .contentShape(Corner.box)
         }
         .buttonStyle(.plain)
         .disabled(card.count == 0)
@@ -224,9 +222,9 @@ struct DeckCardView: View {
                 .foregroundStyle(palette.textPrimary)
                 .padding(.horizontal, 12)
                 .frame(minWidth: 72, minHeight: 44)
-                .background(Capsule().fill(palette.surfaceRaised))
-                .overlay(Capsule().strokeBorder(palette.border))
-                .contentShape(Capsule())
+                .background(Corner.box.fill(palette.surfaceRaised))
+                .overlay(Corner.box.strokeBorder(palette.border))
+                .contentShape(Corner.box)
             }
             .accessibilityLabel(card.targetLabel)
             .accessibilityValue(ArabicFormat.number(card.target))
@@ -330,9 +328,9 @@ private struct OverflowScroll<Content: View>: View {
                 .foregroundStyle(palette.accentStrong)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(palette.accentSoft))
-                .overlay(Capsule().strokeBorder(palette.accent.mixed(0.45, with: palette.border)))
-                .contentShape(Capsule())
+                .background(Corner.box.fill(palette.accentSoft))
+                .overlay(Corner.box.strokeBorder(palette.accent.mixed(0.45, with: palette.border)))
+                .contentShape(Corner.box)
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
@@ -476,7 +474,7 @@ private struct ReviewCardBody: View {
                     .padding(.horizontal, 10.4)
                     .padding(.vertical, 4)
                     .frame(minHeight: 32)
-                    .background(Capsule().fill(palette.warningSoft))
+                    .background(Corner.box.fill(palette.warningSoft))
                     .accessibilityIdentifier("deck.card.review.badge")
             }
             Text(item.reviewTitle ?? item.text)

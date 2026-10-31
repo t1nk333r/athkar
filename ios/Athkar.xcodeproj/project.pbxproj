@@ -58,6 +58,7 @@
 		A8C219DC192084B6457932D9 /* DeckIndexUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D80C8721B3117918112288FE /* DeckIndexUITests.swift */; };
 		AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */; };
 		B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F4A7DAF059476E447785AE3 /* QiblaView.swift */; };
+		B382CA4EAE84D9B6F6C92C8D /* Corner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A33D04CDB3BEE71D726B1BF /* Corner.swift */; };
 		B8685A7D7E4A58C43B82ED4A /* kfgqpc-uthman-taha-naskh.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2D7A0CB0E1E8C5226E94EA /* kfgqpc-uthman-taha-naskh.ttf */; };
 		BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A69E443B335C7F687972315F /* AdhkarDeckModel.swift */; };
 		BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4122DE1C89CDB311B8848C /* SectionChips.swift */; };
@@ -125,6 +126,7 @@
 		5F05E54F6F784321446FD2E9 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 		6134B2928ABCD0502572ED37 /* DayRollover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayRollover.swift; sourceTree = "<group>"; };
 		69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A33D04CDB3BEE71D726B1BF /* Corner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Corner.swift; sourceTree = "<group>"; };
 		6BC25390B547669C1BA3AF86 /* TasbihModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihModel.swift; sourceTree = "<group>"; };
 		6D4122DE1C89CDB311B8848C /* SectionChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionChips.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
@@ -330,6 +332,7 @@
 			isa = PBXGroup;
 			children = (
 				0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */,
+				6A33D04CDB3BEE71D726B1BF /* Corner.swift */,
 				BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */,
 				17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */,
 			);
@@ -535,6 +538,7 @@
 				E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */,
 				647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */,
 				99BA870781EAC9D1CEAE720A /* CityDirectory.swift in Sources */,
+				B382CA4EAE84D9B6F6C92C8D /* Corner.swift in Sources */,
 				E86F1D7AF6E9F041D330B258 /* DayRollover.swift in Sources */,
 				1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */,
 				6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */,

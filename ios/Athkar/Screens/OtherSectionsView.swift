@@ -125,9 +125,9 @@ struct OtherSectionsView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
-            .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
-            .contentShape(RoundedRectangle(cornerRadius: 14.4, style: .continuous))
+            .background(Corner.box.fill(palette.surface.opacity(0.94)))
+            .overlay(Corner.box.strokeBorder(palette.border))
+            .contentShape(Corner.box)
         }
         .buttonStyle(.plain)
         .disabled(!available)

@@ -97,7 +97,7 @@ private struct DeckIndexRow: View {
     @Environment(\.palette) private var palette
     @Environment(\.readingMetrics) private var metrics
 
-    private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 16, style: .continuous) }
+    private var shape: RoundedRectangle { Corner.box }
 
     private var isDhikr: Bool {
         if case .dhikr = card.content { return true }
@@ -200,7 +200,7 @@ private struct DeckIndexRow: View {
         .foregroundStyle(card.isComplete ? palette.completed : palette.accentStrong)
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
-        .background(Capsule().fill(card.isComplete ? palette.completedSoft : palette.accentSoft))
+        .background(Corner.box.fill(card.isComplete ? palette.completedSoft : palette.accentSoft))
     }
 
     private var reviewBadge: some View {
@@ -209,7 +209,7 @@ private struct DeckIndexRow: View {
             .foregroundStyle(palette.warning)
             .padding(.horizontal, 10.4)
             .padding(.vertical, 4)
-            .background(Capsule().fill(palette.warningSoft))
+            .background(Corner.box.fill(palette.warningSoft))
     }
 
     /// As the card: a warning tint for review items, the completed tint once read.

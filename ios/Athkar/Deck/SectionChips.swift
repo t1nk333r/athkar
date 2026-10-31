@@ -27,9 +27,9 @@ struct SectionChips: View {
                     .minimumScaleFactor(0.8)
                     .padding(.horizontal, 6.4)
                     .frame(maxWidth: .infinity, minHeight: 36.8)
-                    .background(Capsule().fill(selected ? palette.accentSoft : palette.surfaceRaised))
-                    .overlay(Capsule().strokeBorder(selected ? palette.accent.opacity(0.55) : palette.border))
-                    .contentShape(Capsule())
+                    .background(Corner.box.fill(selected ? palette.accentSoft : palette.surfaceRaised))
+                    .overlay(Corner.box.strokeBorder(selected ? palette.accent.opacity(0.55) : palette.border))
+                    .contentShape(Corner.box)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(section.accessibilityLabel)

@@ -39,7 +39,10 @@ struct HomeView: View {
         let deck = app.deck(app.selection)
         return VStack(spacing: 0) {
             header(palette: palette)
-            tabs(palette: palette)
+            // A section of أخرى leads back through its title, so the switch shows only on the two decks and the list.
+            if app.tab != .other || app.otherSection == nil {
+                tabs(palette: palette)
+            }
             if app.showsOtherList {
                 OtherSectionsView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
@@ -219,11 +222,9 @@ struct HomeView: View {
                 let selected = app.tab == id
                 let complete = Self.deck(id).map { app.deck($0).isComplete } ?? false
                 Button {
-                    if app.tab == id {
-                        // Tapping أخرى again goes back to its list.
-                        if id == .other { app.otherSection = nil }
-                        return
-                    }
+                    // The selected tab does nothing: a section of أخرى hides the switch and leads back through
+                    // its title.
+                    if app.tab == id { return }
                     app.ensureCurrentDay()
                     switch id {
                     case .morning: app.selection = .morning
@@ -243,8 +244,8 @@ struct HomeView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(Capsule().fill(selected ? palette.accentSoft : .clear))
-                    .contentShape(Capsule())
+                    .background(Corner.inner(gap: 4).fill(selected ? palette.accentSoft : .clear))
+                    .contentShape(Corner.inner(gap: 4))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Self.tabLabel(id) + (complete ? "، مكتملة اليوم" : ""))
@@ -253,8 +254,8 @@ struct HomeView: View {
             }
         }
         .padding(4)
-        .background(Capsule().fill(palette.surfaceRaised.opacity(0.92)))
-        .overlay(Capsule().strokeBorder(palette.border))
+        .background(Corner.box.fill(palette.surfaceRaised.opacity(0.92)))
+        .overlay(Corner.box.strokeBorder(palette.border))
         .shadow(color: .black.opacity(0.08), radius: 19, y: 14)
     }
 
@@ -325,8 +326,8 @@ struct HomeView: View {
         }
         .padding(.horizontal, 10.4)
         .padding(.vertical, 6.7)
-        .background(RoundedRectangle(cornerRadius: 14.4, style: .continuous).fill(palette.surface.opacity(0.94)))
-        .overlay(RoundedRectangle(cornerRadius: 14.4, style: .continuous).strokeBorder(palette.border))
+        .background(Corner.box.fill(palette.surface.opacity(0.94)))
+        .overlay(Corner.box.strokeBorder(palette.border))
     }
 
     // MARK: Deck

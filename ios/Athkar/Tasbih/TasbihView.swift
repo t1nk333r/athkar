@@ -110,9 +110,9 @@ struct TasbihView: View {
             .minimumScaleFactor(0.8)
             .padding(.horizontal, 12.8)
             .frame(maxWidth: .infinity, minHeight: 36.8)
-            .background(Capsule().fill(palette.surfaceRaised))
-            .overlay(Capsule().strokeBorder(palette.border))
-            .contentShape(Capsule())
+            .background(Corner.box.fill(palette.surfaceRaised))
+            .overlay(Corner.box.strokeBorder(palette.border))
+            .contentShape(Corner.box)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -122,7 +122,7 @@ struct TasbihView: View {
     // MARK: Card (`.tasbih-card`)
 
     private var card: some View {
-        let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
+        let shape = Corner.box
         return ZStack {
             Button(action: add) {
                 Color.clear.contentShape(shape)
@@ -268,10 +268,10 @@ struct TasbihView: View {
                 .foregroundStyle(palette.textPrimary)
                 .padding(.horizontal, 14)
                 .frame(minWidth: 99, minHeight: 44)
-                .background(Capsule().fill(palette.surfaceRaised))
-                .overlay(Capsule().strokeBorder(palette.border))
+                .background(Corner.box.fill(palette.surfaceRaised))
+                .overlay(Corner.box.strokeBorder(palette.border))
                 .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
-                .contentShape(Capsule())
+                .contentShape(Corner.box)
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(!enabled)

@@ -147,8 +147,13 @@ class DeckTestCase: XCTestCase {
     }
 
     /// `morning`, `evening`, `other` (its list or last section), or a section of أخرى (`ruqyah`, `suwar`, `tasbih`):
-    /// أخرى, then its row when the list shows.
+    /// أخرى, then its row when the list shows. A section of أخرى hides the switch, so its title leads back first.
     func selectTab(_ id: String) {
+        let back = app.buttons["header.back"]
+        if back.exists {
+            back.tap()
+            XCTAssertTrue(app.buttons["tab.other"].waitForExistence(timeout: 3), "the list shows the switch")
+        }
         guard ["ruqyah", "suwar", "tasbih"].contains(id) else {
             app.buttons["tab.\(id)"].tap()
             return

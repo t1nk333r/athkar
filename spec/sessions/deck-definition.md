@@ -47,11 +47,11 @@ of sections (رقية القرين, سور, مسبحة, أذكار النوم, �
 opens رقية القرين, سور, مسبحة, أوقات الصلاة and القبلة, and lists the others as «قريبًا». A deck row shows the deck's
 summary copy and «✓» once today is complete. «مسبحة» is a counter, not a deck ([`tasbih.md`](tasbih.md)); its row
 shows today's total, «اليوم: N». The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض
-المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title.
-Tapping أخرى again returns to the list. The list has no summary, and its reset button is disabled. The أخرى tab never
-shows «✓»; each row shows completion. Each deck keeps its current card while another deck is open. The رقية القرين row
-shows the whole day's «N من ٣٣ تكرارًا», and the سور row the suras complete today, «N من ٥ سور» (native: the PWA's tab
-has no such line); its «✓» needs all five.
+المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title,
+and the tabs are hidden; the back button returns to the list, where they show again. The list has no summary, and its
+reset button is disabled. The أخرى tab never shows «✓»; each row shows completion. Each deck keeps its current card
+while another deck is open. The رقية القرين row shows the whole day's «N من ٣٣ تكرارًا», and the سور row the suras
+complete today, «N من ٥ سور» (native: the PWA's tab has no such line); its «✓» needs all five.
 
 ### Adhkar item fields
 
