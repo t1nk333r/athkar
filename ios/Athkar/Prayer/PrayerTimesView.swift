@@ -220,12 +220,20 @@ struct PrayerTimesView: View {
         .card(palette)
     }
 
-    /// The rule behind the home row's «وقت نهي عن الصلاة» notice (``ProhibitedTime``).
+    /// The five times behind the home row's «وقت نهي عن الصلاة» notice (``ProhibitedTime``), as Ibn Baz's fatwa lists
+    /// them, with what may still be prayed in them.
     private var prohibitedNote: some View {
-        let minutes = ArabicFormat.number(Int(ProhibitedTime.afterSunrise / 60))
-        return Text("أوقات النهي عن الصلاة، كما ينبّه إليها صف المواقيت في أعلى صفحة الأذكار: "
-                    + "من صلاة الفجر حتى ارتفاع الشمس، نحو \(minutes) دقيقة بعد الشروق، "
-                    + "ومن صلاة العصر حتى أذان المغرب.")
+        let sunrise = ArabicFormat.minutesLeft(Int(ProhibitedTime.afterSunrise / 60))
+        let zenith = ArabicFormat.minutesLeft(Int(ProhibitedTime.beforeDhuhr / 60))
+        return Text("""
+            أوقات النهي عن الصلاة خمسة، كما في فتوى الشيخ ابن باز، وينبّه إليها صف المواقيت في أعلى صفحة الأذكار:
+            ١. من طلوع الفجر حتى طلوع الشمس.
+            ٢. من طلوع الشمس حتى ترتفع قيد رمح، نحو \(sunrise).
+            ٣. عند استواء الشمس قبيل الظهر حتى تزول، نحو \(zenith).
+            ٤. من صلاة العصر حتى تصفرّ الشمس، قرب أن يصير ظل الشيء مثليه.
+            ٥. من اصفرار الشمس حتى تغرب.
+            ويُصلّى فيها ما فات من الفرائض، وذوات الأسباب كتحية المسجد وسنة الوضوء.
+            """)
             .font(.caption.weight(.semibold))
             .foregroundStyle(palette.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)

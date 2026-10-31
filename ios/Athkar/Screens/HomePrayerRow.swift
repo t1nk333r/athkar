@@ -127,21 +127,29 @@ struct HomePrayerRow: View {
         return ArabicFormat.minutesLeft((seconds + 59) / 60)
     }
 
-    /// The notice's end: «حتى نحو ٥:٥٠ ص» (the sun's rise is an estimate) or «حتى المغرب ٦:٠٠ م».
+    /// Which of the five times it is, and its end: «بعد الفجر حتى الشروق ٥:٣٠ ص», «بعد الشروق حتى نحو ٥:٥٠ ص»,
+    /// «عند الاستواء حتى الظهر ١١:٤٢ ص», «بعد العصر حتى نحو ٤:٤٥ م» (the yellowing is an estimate), «عند الاصفرار
+    /// حتى المغرب ٥:٤٠ م». The first and fourth run straight into the second and fifth.
     static func until(_ notice: ProhibitedTime, zone: TimeZone) -> String {
         let time = ArabicFormat.time(notice.end, in: zone)
         return switch notice.kind {
-        case .afterFajr: "حتى نحو \(time)"
-        case .afterAsr: "حتى المغرب \(time)"
+        case .afterFajr: "بعد الفجر حتى الشروق \(time)"
+        case .sunrise: "بعد الشروق حتى نحو \(time)"
+        case .zenith: "عند الاستواء حتى الظهر \(time)"
+        case .afterAsr: "بعد العصر حتى نحو \(time)"
+        case .sunset: "عند الاصفرار حتى المغرب \(time)"
         }
     }
 
-    /// The rule in full, for VoiceOver.
+    /// The time in full, for VoiceOver. The fourth names no landmark: without the yellowing it runs to Maghrib.
     static func rule(_ notice: ProhibitedTime, zone: TimeZone) -> String {
         let time = ArabicFormat.time(notice.end, in: zone)
         return switch notice.kind {
-        case .afterFajr: "من صلاة الفجر حتى ارتفاع الشمس نحو \(time)"
-        case .afterAsr: "من صلاة العصر حتى أذان المغرب \(time)"
+        case .afterFajr: "من طلوع الفجر حتى طلوع الشمس \(time)"
+        case .sunrise: "من طلوع الشمس حتى ترتفع قيد رمح نحو \(time)"
+        case .zenith: "عند استواء الشمس حتى تزول عند أذان الظهر \(time)"
+        case .afterAsr: "بعد صلاة العصر حتى نحو \(time)"
+        case .sunset: "من اصفرار الشمس حتى تغرب عند أذان المغرب \(time)"
         }
     }
 
