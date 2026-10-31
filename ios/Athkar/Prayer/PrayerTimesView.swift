@@ -220,7 +220,7 @@ struct PrayerTimesView: View {
         .card(palette)
     }
 
-    /// The five times behind the home row's «وقت نهي عن الصلاة» notice (``ProhibitedTime``), as Ibn Baz's fatwa lists
+    /// The five times behind the home row's «وقت نهي» notice (``ProhibitedTime``), as Ibn Baz's fatwa lists
     /// them, with what may still be prayed in them.
     private var prohibitedNote: some View {
         let sunrise = ArabicFormat.minutesLeft(Int(ProhibitedTime.afterSunrise / 60))
