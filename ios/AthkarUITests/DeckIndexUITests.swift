@@ -215,6 +215,7 @@ final class DeckIndexUITests: DeckTestCase {
         choose("داكن", in: "settings.theme")
         closeSettings()
         tapCard()
+        expectPosition(2, of: 26)
         tapCard(3)
         expectPosition(3, of: 26)
         shot("deck-position-dark")
@@ -262,15 +263,29 @@ final class DeckIndexUITests: DeckTestCase {
         XCTAssertTrue(wait { !self.app.buttons["deck.index.close"].exists }, "index still open", file: file, line: line)
     }
 
-    /// Scrolls the index until the row is on screen (the list builds its rows lazily).
+    /// Scrolls the index until the row is on screen (the list builds its rows lazily): up, then down, each way until
+    /// the row shows or the list stops moving at its end. At the largest accessibility size a row is about half the
+    /// sheet, so the far end can be dozens of swipes away.
     @discardableResult
     private func revealRow(_ id: String, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let element = row(id)
         let list = app.scrollViews["deck.index.list"]
-        for _ in 0..<10 where !(element.exists && element.isHittable) { list.swipeUp() }
-        for _ in 0..<10 where !(element.exists && element.isHittable) { list.swipeDown() }
+        for up in [true, false] {
+            var frames = rowFrames(list)
+            for _ in 0..<80 where !(element.exists && element.isHittable) {
+                if up { list.swipeUp() } else { list.swipeDown() }
+                let moved = rowFrames(list)
+                if moved == frames { break }
+                frames = moved
+            }
+        }
         XCTAssertTrue(element.exists && element.isHittable, "row \(id)", file: file, line: line)
         return element
+    }
+
+    /// Where the rows the list has built are, to tell whether a swipe moved it.
+    private func rowFrames(_ list: XCUIElement) -> [CGRect] {
+        list.buttons.allElementsBoundByIndex.map { $0.frame }
     }
 
     /// `launch()` at a Dynamic Type size, answering the long-order question with «لا، أبقِ الترتيب».

@@ -271,21 +271,26 @@ struct PrayerSettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Closures, not the model's methods: converting a method reference to Binding's
+                // @isolated(any) setter crashes Xcode 26's Swift 6.3 compiler (DeckCardView's target picker).
                 Section {
-                    Picker("طريقة الحساب", selection: Binding(get: { model.settings.method }, set: model.setMethod)) {
+                    Picker("طريقة الحساب",
+                           selection: Binding(get: { model.settings.method }, set: { model.setMethod($0) })) {
                         ForEach(CalculationMethod.allCases, id: \.self) { method in
                             Text(PrayerNames.method(method)).tag(method)
                         }
                     }
                     .accessibilityIdentifier("prayer.settings.method")
-                    Picker("مذهب العصر", selection: Binding(get: { model.settings.asrSchool }, set: model.setAsrSchool)) {
+                    Picker("مذهب العصر",
+                           selection: Binding(get: { model.settings.asrSchool }, set: { model.setAsrSchool($0) })) {
                         Text("الجمهور").tag(AsrSchool.standard)
                         Text("الحنفي").tag(AsrSchool.hanafi)
                     }
                     .pickerStyle(.segmented)
                     .accessibilityIdentifier("prayer.settings.asrSchool")
                     Picker("خطوط العرض العالية",
-                           selection: Binding(get: { model.settings.highLatitudeRule }, set: model.setHighLatitudeRule)) {
+                           selection: Binding(get: { model.settings.highLatitudeRule },
+                                              set: { model.setHighLatitudeRule($0) })) {
                         ForEach(HighLatitudeRule.allCases, id: \.self) { rule in
                             Text(PrayerNames.highLatitudeRule(rule)).tag(rule)
                         }
@@ -308,7 +313,8 @@ struct PrayerSettingsView: View {
                     }
                 }
                 Section {
-                    Stepper(value: Binding(get: { model.settings.hijriOffset }, set: model.setHijriOffset), in: -2...2) {
+                    Stepper(value: Binding(get: { model.settings.hijriOffset }, set: { model.setHijriOffset($0) }),
+                            in: -2...2) {
                         HStack {
                             Text("تعديل التاريخ الهجري")
                             Spacer()
