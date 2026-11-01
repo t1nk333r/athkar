@@ -6,6 +6,8 @@ import SwiftUI
 struct PrayerTimesView: View {
     let model: PrayerTimesModel
     let reminders: ReminderModel
+    /// Opens «اليوم», where today's prayers are recorded.
+    var openToday: () -> Void = {}
 
     @Environment(\.palette) private var palette
     @State private var showsSettings = false
@@ -29,6 +31,14 @@ struct PrayerTimesView: View {
                     prohibitedNote
                     locationCard
                 }
+                Button(action: openToday) {
+                    Label("تسجيل صلوات اليوم", systemImage: "checklist")
+                        .font(.subheadline.weight(.heavy))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(palette.textSecondary)
+                .accessibilityIdentifier("prayer.tracker")
                 Button {
                     showsReminders = true
                 } label: {
@@ -615,7 +625,8 @@ enum PrayerDates {
     }
 }
 
-private extension View {
+/// The prayer screens' card and button styles, shared with the tracker's.
+extension View {
     func card(_ palette: Palette) -> some View {
         background(Corner.box.fill(palette.surface.opacity(0.94)))
             .overlay(Corner.box.strokeBorder(palette.border))

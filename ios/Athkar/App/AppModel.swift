@@ -15,6 +15,7 @@ final class AppModel {
     let tasbih: TasbihModel
     let prayer: PrayerTimesModel
     let reminders: ReminderModel
+    let tracker: PrayerTrackerModel
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -77,7 +78,16 @@ final class AppModel {
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
         suwar = try SuwarDeckModel(database: database, content: content, today: today, report: report)
         tasbih = try TasbihModel(database: database, today: today, report: report)
-        prayer = try PrayerTimesModel(database: database, report: report)
+        let prayer = try PrayerTimesModel(database: database, report: report)
+        self.prayer = prayer
+        // The tracker's dates are the prayer times' dates; a new record captures the time and profile shown.
+        tracker = PrayerTrackerModel(
+            repository: database.prayerRecords, report: report,
+            clock: { (Self.now(), prayer.zone) },
+            metadata: { occurrence in
+                (prayer.schedule(on: occurrence.date)?.scheduledTime(of: occurrence.prayer),
+                 prayer.settings.profileVersion)
+            })
         reminders = try ReminderModel(repository: database.reminders, report: report)
         transferImporter = TransferImporter(
             database: database, collections: content.packs.adhkar,
@@ -211,8 +221,12 @@ final class AppModel {
     }
 
     private static func today(now: Date = Date()) -> String {
-        let shifted = Calendar.current.date(byAdding: .day, value: TestHooks.dayOffset, to: now) ?? now
-        return SessionCalendar.localDate(of: shifted, in: .current)
+        SessionCalendar.localDate(of: Self.now(now), in: .current)
+    }
+
+    /// Now, moved by ``TestHooks/dayOffset`` in Debug builds.
+    static func now(_ now: Date = Date()) -> Date {
+        Calendar.current.date(byAdding: .day, value: TestHooks.dayOffset, to: now) ?? now
     }
 }
 

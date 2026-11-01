@@ -10,7 +10,7 @@ enum HomeTab: String, CaseIterable, Identifiable, Sendable {
 
 /// The sections of the أخرى tab, in list order. Those not ``isAvailable`` yet are listed as «قريبًا».
 enum OtherSection: String, CaseIterable, Identifiable, Sendable {
-    case ruqyah, suwar, tasbih, sleep, afterPrayer, waking, prayerTimes, qibla
+    case ruqyah, suwar, tasbih, sleep, afterPrayer, waking, prayerTimes, qibla, today, calendar
 
     var id: String { rawValue }
 
@@ -24,6 +24,8 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         case .waking: "أذكار الاستيقاظ"
         case .prayerTimes: "أوقات الصلاة"
         case .qibla: "القبلة"
+        case .today: "اليوم"
+        case .calendar: "التقويم"
         }
     }
 
@@ -37,6 +39,8 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         case .waking: "sunrise"
         case .prayerTimes: "clock"
         case .qibla: "location.north.line"
+        case .today: "checklist"
+        case .calendar: "calendar"
         }
     }
 
@@ -45,7 +49,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: .ruqyah
         case .suwar: .suwar
-        case .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla: nil
+        case .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla, .today, .calendar: nil
         }
     }
 
@@ -60,11 +64,15 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         case .waking: .orange
         case .prayerTimes: .indigo
         case .qibla: .green
+        case .today: .mint
+        case .calendar: .pink
         }
     }
 
     /// Whether the section opens yet; the rest are listed as «قريبًا».
-    var isAvailable: Bool { deck != nil || self == .tasbih || self == .prayerTimes || self == .qibla }
+    var isAvailable: Bool {
+        deck != nil || [.tasbih, .prayerTimes, .qibla, .today, .calendar].contains(self)
+    }
 }
 
 /// The أخرى tab: a two-column grid of its sections, each title in its own colour, with its progress today where it
@@ -137,10 +145,18 @@ struct OtherSectionsView: View {
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
 
-    /// The deck's summary, today's «مسبحة» total, the next prayer, or «قريبًا».
+    /// The deck's summary, today's «مسبحة» total, the next prayer, today's recorded prayers, the month, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
         if let deck { return deck.listSummary.copy }
         if section == .tasbih { return app.tasbih.totalText }
+        if section == .today {
+            let today = app.tracker.today
+            let records = app.tracker.records(on: today).values
+            let notApplicable = records.filter { $0.state == .notApplicable }.count
+            return TrackerText.todaySubtitle(prayed: records.filter { $0.state == .prayed }.count,
+                                             applicable: ObligatoryPrayer.allCases.count - notApplicable)
+        }
+        if section == .calendar { return TrackerText.month(String(app.tracker.today.prefix(7))) }
         if section == .qibla {
             guard let location = app.prayer.location else { return "حدّد موقعك" }
             let place = GeoCoordinates(latitude: location.latitude, longitude: location.longitude)

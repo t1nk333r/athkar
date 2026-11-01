@@ -36,7 +36,7 @@ public enum NoonPrayer: String, Codable, Sendable, CaseIterable, DatabaseValueCo
 }
 
 /// One prayer on one calculation date: a record's identity.
-public struct PrayerOccurrence: Hashable, Sendable {
+public struct PrayerOccurrence: Hashable, Identifiable, Sendable {
     public var date: String
     public var prayer: ObligatoryPrayer
 
@@ -44,6 +44,8 @@ public struct PrayerOccurrence: Hashable, Sendable {
         self.date = date
         self.prayer = prayer
     }
+
+    public var id: String { "\(date)/\(prayer.rawValue)" }
 
     /// The Dhuhr slot of a Friday, which may record Jumu'ah instead.
     public var isFridayDhuhr: Bool { prayer == .dhuhr && LocalDate.isFriday(date) }
