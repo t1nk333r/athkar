@@ -159,7 +159,7 @@ struct PrayerRecordSheet: View {
                 } header: {
                     Text("وقت الأداء (اختياري)")
                 } footer: {
-                    Text(entry.state == .prayed ? "يختاره المستخدم، ولا يُستنتج من الساعة."
+                    Text(entry.state == .prayed ? "تختاره أنت، ولا يحدده التطبيق من الساعة."
                                                 : "يُختار بعد تسجيل الصلاة.")
                 }
                 if let record, let loggedAt = record.loggedAt {
