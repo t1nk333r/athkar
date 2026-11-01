@@ -114,6 +114,19 @@ base45 codec, QR frames, limits, validation, and the merge with reset epochs. It
 Codes in `codec.json` use stored (uncompressed) deflate blocks, so they are byte-identical on every zlib; the round
 trips use the host's `CompressionStream` and record only the container.
 
+## Prayer tracker
+
+`tracker/tracker.md` specifies the 1.0 prayer tracker: occurrences, the neutral states, commands and their
+transitions, metadata captured once, the calendar month summary and the next prayer across a DST change. The PWAs
+have no tracker, so its fixtures are written by hand (the next-prayer times are copied from
+`prayer-times/vectors.json`), not generated:
+
+| File | Rule | Content |
+| --- | --- | --- |
+| `tracker/fixtures/transitions.json` | Commands (`PrayerTracker.apply`) | records before and a list of command steps → each step's result and the records after |
+| `tracker/fixtures/calendar.json` | Calendar month (`PrayerCalendar.month`) | records, adhkar and ruqyah days → per-day counts and the month's totals, with no missed value |
+| `tracker/fixtures/next-prayer.json` | Next prayer (`NextPrayer.upcoming`) | a place and an instant on a DST transition day → today, the next prayer, its date and time |
+
 ## Deck definition
 
 `sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2). `sessions/tasbih.md` describes the «مسبحة» counter (counting, phrases, target, day and reset) and where the native app differs from the PWA.

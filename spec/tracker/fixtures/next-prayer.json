@@ -1,0 +1,300 @@
+{
+  "about": "Today's next prayer on DST transition days: the civil date of now in the zone, then the next civil date",
+  "source": "spec/tracker/tracker.md \"Next prayer across a DST change\"; expected times from spec/prayer-times/vectors.json",
+  "toleranceSeconds": 120,
+  "defaultInput": {
+    "method": "mwl",
+    "asrSchool": "standard"
+  },
+  "cases": [
+    {
+      "name": "US spring forward: after Isha on the eve, the next day's Fajr",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T03:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-03-07",
+        "prayer": "fajr",
+        "date": "2026-03-08",
+        "at": "2026-03-08T09:47:36.090Z",
+        "source": "vectors.json new-york 2026-03-08 mwl standard fajr"
+      }
+    },
+    {
+      "name": "US spring forward: just after the skipped hour",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T07:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-03-08",
+        "prayer": "fajr",
+        "date": "2026-03-08",
+        "at": "2026-03-08T09:47:36.090Z",
+        "source": "vectors.json new-york 2026-03-08 mwl standard fajr"
+      }
+    },
+    {
+      "name": "US spring forward: the afternoon of the 23-hour day",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-03-08T19:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-03-08",
+        "prayer": "asr",
+        "date": "2026-03-08",
+        "at": "2026-03-08T20:21:46.098Z",
+        "source": "vectors.json new-york 2026-03-08 mwl standard asr"
+      }
+    },
+    {
+      "name": "US fall back: the first 01:30 (EDT)",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T05:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-11-01",
+        "prayer": "fajr",
+        "date": "2026-11-01",
+        "at": "2026-11-01T09:54:01.895Z",
+        "source": "vectors.json new-york 2026-11-01 mwl standard fajr"
+      }
+    },
+    {
+      "name": "US fall back: the second 01:30 (EST)",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T06:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-11-01",
+        "prayer": "fajr",
+        "date": "2026-11-01",
+        "at": "2026-11-01T09:54:01.895Z",
+        "source": "vectors.json new-york 2026-11-01 mwl standard fajr"
+      }
+    },
+    {
+      "name": "US fall back: after Asr on the 25-hour day, Maghrib",
+      "input": {
+        "location": "new-york",
+        "latitude": 40.71,
+        "longitude": -74.01,
+        "timeZone": "America/New_York",
+        "now": "2026-11-01T20:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-11-01",
+        "prayer": "maghrib",
+        "date": "2026-11-01",
+        "at": "2026-11-01T21:52:28.410Z",
+        "source": "vectors.json new-york 2026-11-01 mwl standard sunset"
+      }
+    },
+    {
+      "name": "EU spring forward: late on the eve, the next day's Fajr",
+      "input": {
+        "location": "london",
+        "latitude": 51.51,
+        "longitude": -0.13,
+        "timeZone": "Europe/London",
+        "now": "2026-03-28T22:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-03-28",
+        "prayer": "fajr",
+        "date": "2026-03-29",
+        "at": "2026-03-29T03:45:03.711Z",
+        "source": "vectors.json london 2026-03-29 mwl standard fajr"
+      }
+    },
+    {
+      "name": "EU spring forward: just after the skipped hour",
+      "input": {
+        "location": "london",
+        "latitude": 51.51,
+        "longitude": -0.13,
+        "timeZone": "Europe/London",
+        "now": "2026-03-29T01:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-03-29",
+        "prayer": "fajr",
+        "date": "2026-03-29",
+        "at": "2026-03-29T03:45:03.711Z",
+        "source": "vectors.json london 2026-03-29 mwl standard fajr"
+      }
+    },
+    {
+      "name": "EU fall back: the first 01:30 (BST)",
+      "input": {
+        "location": "london",
+        "latitude": 51.51,
+        "longitude": -0.13,
+        "timeZone": "Europe/London",
+        "now": "2026-10-25T00:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-25",
+        "prayer": "fajr",
+        "date": "2026-10-25",
+        "at": "2026-10-25T04:49:54.348Z",
+        "source": "vectors.json london 2026-10-25 mwl standard fajr"
+      }
+    },
+    {
+      "name": "EU fall back: the second 01:30 (GMT)",
+      "input": {
+        "location": "london",
+        "latitude": 51.51,
+        "longitude": -0.13,
+        "timeZone": "Europe/London",
+        "now": "2026-10-25T01:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-25",
+        "prayer": "fajr",
+        "date": "2026-10-25",
+        "at": "2026-10-25T04:49:54.348Z",
+        "source": "vectors.json london 2026-10-25 mwl standard fajr"
+      }
+    },
+    {
+      "name": "EU fall back: after Dhuhr on the 25-hour day, Asr",
+      "input": {
+        "location": "london",
+        "latitude": 51.51,
+        "longitude": -0.13,
+        "timeZone": "Europe/London",
+        "now": "2026-10-25T13:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-25",
+        "prayer": "asr",
+        "date": "2026-10-25",
+        "at": "2026-10-25T14:16:34.852Z",
+        "source": "vectors.json london 2026-10-25 mwl standard asr"
+      }
+    },
+    {
+      "name": "AU fall back: the evening before, the next day's Fajr",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-04-04T11:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-04-04",
+        "prayer": "fajr",
+        "date": "2026-04-05",
+        "at": "2026-04-04T18:47:18.625Z",
+        "source": "vectors.json sydney 2026-04-05 mwl standard fajr"
+      }
+    },
+    {
+      "name": "AU fall back: the first 02:30 (AEDT)",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-04-04T15:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-04-05",
+        "prayer": "fajr",
+        "date": "2026-04-05",
+        "at": "2026-04-04T18:47:18.625Z",
+        "source": "vectors.json sydney 2026-04-05 mwl standard fajr"
+      }
+    },
+    {
+      "name": "AU fall back: the second 02:30 (AEST)",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-04-04T16:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-04-05",
+        "prayer": "fajr",
+        "date": "2026-04-05",
+        "at": "2026-04-04T18:47:18.625Z",
+        "source": "vectors.json sydney 2026-04-05 mwl standard fajr"
+      }
+    },
+    {
+      "name": "AU spring forward: just after the skipped hour",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-10-03T16:30:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-04",
+        "prayer": "fajr",
+        "date": "2026-10-04",
+        "at": "2026-10-03T18:03:44.894Z",
+        "source": "vectors.json sydney 2026-10-04 mwl standard fajr"
+      }
+    },
+    {
+      "name": "AU spring forward: the afternoon, Asr",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-10-04T04:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-04",
+        "prayer": "asr",
+        "date": "2026-10-04",
+        "at": "2026-10-04T05:16:46.617Z",
+        "source": "vectors.json sydney 2026-10-04 mwl standard asr"
+      }
+    },
+    {
+      "name": "AU spring forward: after Asr, Maghrib",
+      "input": {
+        "location": "sydney",
+        "latitude": -33.87,
+        "longitude": 151.21,
+        "timeZone": "Australia/Sydney",
+        "now": "2026-10-04T06:00:00.000Z"
+      },
+      "expected": {
+        "today": "2026-10-04",
+        "prayer": "maghrib",
+        "date": "2026-10-04",
+        "at": "2026-10-04T07:59:36.723Z",
+        "source": "vectors.json sydney 2026-10-04 mwl standard sunset"
+      }
+    }
+  ]
+}
