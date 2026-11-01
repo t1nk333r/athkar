@@ -414,6 +414,36 @@ final class ReminderReplanTests: XCTestCase {
         XCTAssertTrue(harness.world.reports.isEmpty)
     }
 
+    /// «حذف كل البيانات»: once the rules are deleted, `eraseAll` replans to nothing, removes every request and banner
+    /// the app owns (never another feature's), and forgets the diagnostics times.
+    @MainActor
+    func testEraseAllLeavesNothingPendingOrDelivered() async throws {
+        let store = MemoryDiagnosticsStore()
+        let harness = try Harness([morningRule, eveningRule, fajrRule], diagnostics: store)
+        harness.model.replan()
+        await harness.settle()
+        XCTAssertFalse(harness.ids.isEmpty)
+        harness.center.foreignPending = [PendingReminder(id: "other.feature", title: "other", fireAt: nil)]
+        harness.center.delivered = [
+            DeliveredReminder(id: "adhkar.evening.\(day(0))", ruleId: eveningRule.id, date: local(day: 0, hour: 16.5)),
+            DeliveredReminder(id: "other.feature", ruleId: "other", date: local(day: 0, hour: 9)),
+        ]
+        store.lastBackgroundRefreshAt = harness.world.now
+
+        try harness.database.deleteAllUserData()
+        await harness.model.eraseAll()
+        XCTAssertNil(harness.model.replanTask)
+        XCTAssertEqual(harness.ids, [])
+        XCTAssertTrue(harness.model.rules.isEmpty)
+        XCTAssertEqual(harness.center.foreignPending.map(\.id), ["other.feature"])
+        XCTAssertEqual(harness.center.delivered.map(\.id), ["other.feature"])
+        XCTAssertNil(harness.model.nextPending)
+        XCTAssertNil(store.lastReplanAt)
+        XCTAssertNil(store.lastBackgroundRefreshAt)
+        XCTAssertEqual(harness.model.diagnostics, ReminderModel.Diagnostics(pending: 0))
+        XCTAssertTrue(harness.world.reports.isEmpty)
+    }
+
     // MARK: Diagnostics and background refresh
 
     /// A finished pass records what it planned, what the budget left out and what iOS holds, and when; the time

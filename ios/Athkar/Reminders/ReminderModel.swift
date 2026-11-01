@@ -238,6 +238,21 @@ final class ReminderModel {
         diagnosticsStore.lastReplanAt = now
     }
 
+    /// «حذف كل البيانات», after the rules were deleted: reads them again and replans, which leaves nothing pending,
+    /// removes every delivered notification the app owns, then forgets the diagnostics times (the replan's included).
+    func eraseAll() async {
+        reload()
+        await replanAndWait()
+        let pending = await center.pendingRequests().map(\.id).filter(Self.isOwned)
+        if !pending.isEmpty { center.removePendingRequests(withIdentifiers: pending) }
+        let delivered = await center.deliveredNotifications().map(\.id).filter(Self.isOwned)
+        if !delivered.isEmpty { center.removeDeliveredNotifications(withIdentifiers: delivered) }
+        nextPending = nil
+        diagnosticsStore.lastReplanAt = nil
+        diagnosticsStore.lastBackgroundRefreshAt = nil
+        diagnostics = Diagnostics(pending: 0)
+    }
+
     // MARK: Diagnostics and background refresh
 
     /// Reads what the diagnostics screen shows from iOS again: the permission and the pending requests.
