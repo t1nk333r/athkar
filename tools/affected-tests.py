@@ -157,17 +157,18 @@ TEST_MODULE = {"core": "AthkarCoreTests", "models": "AthkarPortableTests", "app-
                "ui": "AthkarUITests"}
 LINUX_TEST_DIRS = (CORE_TESTS, PORTABLE_TESTS)
 
-MODIFIER = (r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|internal|private|fileprivate|open|package|final"
+MODIFIER = (r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|internal|private|fileprivate|open|package|final"
             r"|nonisolated|indirect|static|class|override|mutating|nonmutating|lazy|weak|unowned|convenience"
-            r"|required|dynamic|optional|distributed|(?:public|internal|package|private|fileprivate)\(set\))\s+)*)")
+            r"|required|dynamic|optional|distributed|prefix|postfix|infix|"
+            r"(?:public|internal|package|private|fileprivate)\(set\))\s+)*)")
 DECL = re.compile(r"\s*" + MODIFIER + r"(class|struct|enum|protocol|actor|typealias|extension|func|var|let)\s+"
                   r"([A-Za-z_]\w*)(.*)")
 WHOLE_TYPE = re.compile(r"\s*" + MODIFIER + r"(?:init\b|subscript\b|(?:static\s+)?func\s+[^\w\s(])")
 # The label of an init (its first parameter name) or a subscript (only when it spells two names,
 # `subscript(safe index:)`), after any generic parameters.
-INIT_LABEL = re.compile(r"\s*" + MODIFIER + r"init\s*[?!]?\s*(?:<.*?>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\b")
+INIT_LABEL = re.compile(r"\s*" + MODIFIER + r"init\s*[?!]?\s*(?:<[^(){}]*>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\b")
 SUBSCRIPT_LABEL = re.compile(r"\s*" + MODIFIER
-                             + r"subscript\s*(?:<.*?>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:")
+                             + r"subscript\s*(?:<[^(){}]*>)?\s*\(\s*(?P<label>[A-Za-z_]\w*)\s+[A-Za-z_]\w*\s*:")
 IDENT = re.compile(r"[A-Za-z_]\w*")
 DOTTED = re.compile(r"\.\s*([A-Za-z_]\w*)")
 LITERAL = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
