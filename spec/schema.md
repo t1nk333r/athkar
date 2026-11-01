@@ -40,6 +40,7 @@ Update this file in the same commit as any migration.
 | `v2` | `ruqyah_sura_days`: the ruqyah PWA's per-sura completions (`ruqyah-suwar-v1`). |
 | `v3` | `suwar_page_reads` and `suwar_sura_days`: the athkar PWA's «سور» (`athkar-suwar-v1`). |
 | `v4` | `tasbih_counts`: the athkar PWA's «مسبحة» (`athkar-tasbih-v1`). |
+| `v5` | `prayer_records`: the native prayer tracker ([`tracker/tracker.md`](tracker/tracker.md)). |
 
 ## Tables (migration v1)
 
@@ -239,11 +240,45 @@ This table stores one row per local date and «مسبحة» phrase counted on it
 | `first_use` | INTEGER | no | | The phrase's place in the day's order of first counts (`firstUse`), from 1; unique within the date. |
 | `updated_at` | TEXT | no | | Instant. |
 
-## Future tables (not in v4)
+## Tables (migration v5)
 
-- 1.0, added by later slices' migrations: `prayer_records` (unique on `(calculation_date, prayer_key)`, per
-  MOBILE_APP_PLAN.md §11 `prayer_logs`) and `notification_audit` (redacted).
-- 1.1: `not_applicable_ranges`, `favorites`, `optional_practices`.
+### `prayer_records`
+
+This table stores the prayer tracker's records (MOBILE_APP_PLAN.md §11 `prayer_logs`, trimmed to the 1.0 fields,
+with the Friday choice): one row per calculation date and prayer, which is the occurrence's identity. The rules
+are in [`tracker/tracker.md`](tracker/tracker.md). The PWAs have no tracker, so no PWA key maps to it.
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `calculation_date` | TEXT | no | PK 1 | Local date: the day the user recorded the prayer on (Today, or the calendar's day). |
+| `prayer_key` | TEXT | no | PK 2 | `fajr`, `dhuhr`, `asr`, `maghrib`, `isha`. |
+| `zone_id` | TEXT | no | | IANA zone of the device when the row was created. Never rewritten. |
+| `scheduled_at` | TEXT | yes | | Instant: the prayer's calculated time when the row was created. Null when it could not be calculated (no location, polar day or night, a clamped Asr). Never rewritten. |
+| `profile_version` | TEXT | no | | The calculation profile when the row was created, as `CalculationSettings.profileVersion` writes it (`umm-al-qura/standard/twilight-angle/0,0,0,0,0,0`). Never rewritten. |
+| `state` | TEXT | no | | `unrecorded`, `prayed`, `not_applicable`. |
+| `timing` | TEXT | yes | | `on_time`, `late`, `made_up`, chosen by the user; only on `prayed`. |
+| `noon_prayer` | TEXT | yes | | `dhuhr`, `jumuah`: which noon prayer a Friday's Dhuhr slot records; only on a `prayed` Dhuhr on a Friday. Null when the user did not say. |
+| `logged_at` | TEXT | yes | | Instant the current state was set. Null exactly when `state` is `unrecorded`. |
+| `updated_at` | TEXT | no | | Instant. |
+
+Checks:
+
+- `timing IS NULL OR state = 'prayed'`.
+- `noon_prayer IS NULL OR (state = 'prayed' AND prayer_key = 'dhuhr' AND strftime('%w', calculation_date) = '5')`.
+- `(logged_at IS NULL) = (state = 'unrecorded')`.
+- `zone_id` and `profile_version` are not empty.
+
+The primary key makes every write idempotent: `PrayerRecordRepository.apply(_:to:context:)` reads the row, runs the
+transition and writes the result in one transaction, so "record as prayed" sent twice stores one row.
+
+Prayer records are not in backup envelope v1 or the transfer code yet: an export leaves them out and an import
+never touches them. Adding them is a later backup task (envelope v2).
+
+## Future tables (not in v5)
+
+- 1.0, added by later slices' migrations: `notification_audit` (redacted).
+- 1.1: `not_applicable_ranges`, `favorites`, `optional_practices`, and the 1.1 tracker fields (`prayer_records`
+  make-up link, modifiers, entry source).
 
 ## Invariants
 
@@ -265,6 +300,11 @@ This table stores one row per local date and «مسبحة» phrase counted on it
   pack keeps its page IDs. After a pack changes them, a sura can be complete with no row, and so shows no time, or
   keep a row with pages unread; the row still makes «سور» resettable, and its recorded time is the one shown once
   every page is read. The PWA drops such a `completedAt` when it loads (`normalizeSuwarState`).
+- A prayer occurrence `(calculation_date, prayer_key)` has at most one `prayer_records` row. No row and a row with
+  `unrecorded` mean the same: nothing recorded, which is neutral, never missed. Commands never delete a row:
+  `unrecord`, an undo and clearing a day set it back to `unrecorded` and keep its metadata (`zone_id`,
+  `scheduled_at`, `profile_version`), which no write ever changes. Only `PrayerRecordRepository.delete(_:)` with a
+  `HistoryRemoval` deletes rows; no section's scoped reset calls it.
 - A «مسبحة» phrase is counted on a date if and only if a `tasbih_counts` row exists, with a count of at least 1.
   A date holds at most one key per phrase as `tasbihIdentity` reads it: a saved phrase that matches an earlier
   spelling's counts takes them over (`canonicalTasbihDays`). The stored keys are already the cleaned spelling, so

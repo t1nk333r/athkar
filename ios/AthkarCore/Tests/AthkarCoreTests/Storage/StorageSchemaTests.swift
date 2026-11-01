@@ -67,13 +67,14 @@ struct StorageSchemaTests {
 
     @Test func migrationsCreateExactlyTheDocumentedSchema() throws {
         let documented = try Self.documentedTables()
-        #expect(documented.count == 13)
-        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3", "v4"])
+        #expect(documented.count == 14)
+        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3", "v4", "v5"])
         #expect(Set(documented.values.map(\.migration)) == Set(try Self.documentedMigrations()))
         #expect(documented["ruqyah_sura_days"]?.migration == "v2")
         #expect(documented["suwar_page_reads"]?.migration == "v3")
         #expect(documented["suwar_sura_days"]?.migration == "v3")
         #expect(documented["tasbih_counts"]?.migration == "v4")
+        #expect(documented["prayer_records"]?.migration == "v5")
 
         let database = try AppDatabase.inMemory()
         let actual = try database.reader.read { db in
@@ -108,7 +109,7 @@ struct StorageSchemaTests {
              try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations"))
         }
         #expect(journalMode == "wal")
-        #expect(migrations == ["v1", "v2", "v3", "v4"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
         #expect(migrations == (try Self.documentedMigrations()))
         #expect(try reopened.settings.value(for: .theme) == .dark)
     }
@@ -147,7 +148,7 @@ struct StorageSchemaTests {
             ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, 0, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, NULL, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO location_profiles VALUES (2, NULL, 21.42, 39.83, NULL, 'device', NULL)", []),
-        ]
+        ] + Self.prayerRecordRows.map { (Self.prayerRecordInsert, $0) }
         for (sql, arguments) in rows {
             #expect(throws: DatabaseError.self, "\(sql)") {
                 try database.writer.write { try $0.execute(sql: sql, arguments: arguments) }
@@ -185,6 +186,43 @@ struct StorageSchemaTests {
         }
         for time in ["24:00", "29:59", "23:60", "30:00", "9:30", "09:30:00"] {
             #expect(throws: DatabaseError.self, "\(time)") { try insert(time) }
+        }
+    }
+
+    static let prayerRecordInsert = "INSERT INTO prayer_records VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    static let stamp = "2026-10-30T12:00:00.000Z"
+
+    /// Rows `prayer_records` rejects: bad dates, keys, zones and instants, and entries that break the tracker rules.
+    static let prayerRecordRows: [StatementArguments] = [
+        ["2026-10-3", "fajr", "Asia/Riyadh", nil, "p", "prayed", nil, nil, stamp, stamp],
+        ["2026-10-30", "sunrise", "Asia/Riyadh", nil, "p", "prayed", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "", nil, "p", "prayed", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", "2026-10-30", "p", "prayed", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "", "prayed", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "missed", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "prayed", "early", nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "not_applicable", "late", nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "prayed", nil, "jumuah", stamp, stamp],
+        ["2026-10-29", "dhuhr", "Asia/Riyadh", nil, "p", "prayed", nil, "jumuah", stamp, stamp],
+        ["2026-10-30", "dhuhr", "Asia/Riyadh", nil, "p", "unrecorded", nil, "dhuhr", nil, stamp],
+        ["2026-10-30", "dhuhr", "Asia/Riyadh", nil, "p", "prayed", nil, "asr", stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "prayed", nil, nil, nil, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "unrecorded", nil, nil, stamp, stamp],
+        ["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "prayed", nil, nil, stamp, nil],
+    ]
+
+    /// A Friday Dhuhr may record Jumu'ah, and an occurrence holds one row.
+    @Test func prayerRecordsKeepOneRowPerOccurrence() throws {
+        let database = try AppDatabase.inMemory()
+        func insert(_ arguments: StatementArguments) throws {
+            try database.writer.write { try $0.execute(sql: Self.prayerRecordInsert, arguments: arguments) }
+        }
+        try insert(["2026-10-30", "dhuhr", "Asia/Riyadh", Self.stamp, "p", "prayed", "on_time", "jumuah", Self.stamp,
+                    Self.stamp])
+        try insert(["2026-10-30", "fajr", "Asia/Riyadh", nil, "p", "unrecorded", nil, nil, nil, Self.stamp])
+        try insert(["2026-10-30", "asr", "Asia/Riyadh", nil, "p", "not_applicable", nil, nil, Self.stamp, Self.stamp])
+        #expect(throws: DatabaseError.self) {
+            try insert(["2026-10-30", "dhuhr", "Europe/London", nil, "q", "prayed", nil, nil, Self.stamp, Self.stamp])
         }
     }
 }

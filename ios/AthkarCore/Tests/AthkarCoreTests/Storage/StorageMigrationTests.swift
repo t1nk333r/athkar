@@ -65,7 +65,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
     }
 
     @Test func v3KeepsEveryV2RowAndAddsEmptySuwarTables() throws {
@@ -99,7 +99,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
     }
 
     @Test func v4KeepsEveryV3RowAndAddsAnEmptyTasbihTable() throws {
@@ -139,7 +139,44 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+    }
+
+    @Test func v5KeepsEveryV4RowAndAddsAnEmptyPrayerRecordsTable() throws {
+        var configuration = Configuration()
+        configuration.foreignKeysEnabled = true
+        let queue = try DatabaseQueue(configuration: configuration)
+        try AppDatabase.migrator.migrate(queue, upTo: "v4")
+        let v4Tables = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%' ORDER BY name
+                """)
+        }
+        #expect(v4Tables.count == Self.v1Rows.count + 4)
+        #expect(!v4Tables.contains("prayer_records"))
+        try queue.write { db in
+            for sql in Self.v1Rows { try db.execute(sql: sql) }
+            try db.execute(sql: "INSERT INTO ruqyah_sura_days VALUES ('2026-09-21', 'qaf', '2026-09-21T05:00:00.000Z')")
+            try db.execute(sql: """
+                INSERT INTO suwar_page_reads VALUES ('2026-09-21', 'mulk', 'mulk-1-4', '2026-09-21T05:00:00.000Z')
+                """)
+            try db.execute(sql: "INSERT INTO suwar_sura_days VALUES ('2026-09-20', 'mulk', '2026-09-20T05:00:00.000Z')")
+            try db.execute(sql: "INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 3, 1, '2026-09-23T10:00:00.000Z')")
+        }
+        let before = try Self.rows(of: v4Tables, in: queue)
+        #expect(before.values.allSatisfy { $0.count == 1 })
+
+        let database = try AppDatabase(queue)
+        #expect(try Self.rows(of: v4Tables, in: queue) == before)
+        #expect(try database.tasbih.counts(on: "2026-09-23").count == 1)
+        #expect(try database.prayerRecords.records(from: "0000-01-01", through: "9999-12-31") == [])
+        let month = try #require(try database.prayerRecords.month("2026-09", today: "2026-09-23"))
+        #expect(month.totals == PrayerMonthTotals(prayed: 0, morning: 1, evening: 0, ruqyah: 1))
+        let migrations = try queue.read { db in
+            try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
+        }
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
     }
 
     /// Every row of each table, in rowid order.
