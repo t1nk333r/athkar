@@ -80,7 +80,8 @@ value. This prevents an onboarding import from being shadowed by rows the app cr
 
 ### `content_installs`
 
-This table records the installed version of each bundled content pack (§5.4).
+This table records the installed version of each bundled content pack (§5.4). It holds nothing the user did or
+chose: «حذف كل البيانات» keeps it, and no backup carries it ("Delete all data").
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -565,4 +566,21 @@ reads either format (`BackupFile.decode`, `importFile`) and rejects a format abo
   a native one. Re-import is a no-op.
 - Round trip: a fresh database that imported a format 2 file exports it again unchanged, given the same `meta` and
   location opt-in. Unlike format 1 there are no exceptions: every field maps to one column.
+
+## Delete all data
+
+«حذف كل البيانات» (الإعدادات) returns the app to a fresh install's state. `AppDatabase.deleteAllUserData()` deletes every
+row of `AppDatabase.userTables` in one transaction: `settings`, `adhkar_days`, `adhkar_item_progress`,
+`ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`,
+`tasbih_counts`, `prayer_records`, `reminder_state`, `reminder_rules` and `location_profiles`. Every table a later
+migration adds is a user table unless this section says otherwise; `AthkarCoreTests` fails when a table is in
+neither list.
+
+`content_installs` is kept. Its rows are the bundled packs' versions and checksums, which the app records again at
+every launch (`BundledContent.recordInstalls`); they describe the app, not the user, and «حول التطبيق» reads them.
+Deleting them would only make the next launch write the same rows.
+
+Outside the database the app then removes every pending and delivered notification it owns, its `UserDefaults`
+keys (the diagnostics times and the first-run import offer), and replans reminders, which finds no rule and
+schedules nothing.
 
