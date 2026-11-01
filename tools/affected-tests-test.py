@@ -280,10 +280,7 @@ SYNTHETIC = {
         """,
     CORE + "Bool+Plus.swift": """\
         extension Bool {
-            public static func + (
-                lhs: Int,
-                rhs: Bool
-            ) -> Int { rhs ? lhs + 1 : (Int.init(radix: 2) ?? lhs) }
+            public @inlinable static prefix func - (w: Bool) -> Bool { !w }
         }
         """,
     CORE + "Widget+Named.swift": """\
@@ -291,6 +288,18 @@ SYNTHETIC = {
             public init<S: StringProtocol>(
                 named: S
             ) { self.init() }
+        }
+        """,
+    CORE + "Widget+Generic.swift": """\
+        extension Widget {
+            init<T>() { flag = limit > (floor) }
+        }
+        """,
+    CORE + "Widget+SubscriptBody.swift": """\
+        extension Widget {
+            public subscript(
+                index: Int
+            ) -> Int { subscript(ghost value: Int) -> Int { value }; index[1] }
         }
         """,
     CORE + "Widget+Index.swift": """\
@@ -330,6 +339,20 @@ SYNTHETIC = {
 
         struct WidgetIndexTests {
             @Test func subscripts() { #expect(makeWidget()[2] == 2) }
+        }
+        """,
+    CORE_TESTS + "FloorLabelTests.swift": """\
+        import Testing
+
+        struct FloorLabelTests {
+            @Test func floor() { let floor = 1; #expect(floor == 1) }
+        }
+        """,
+    CORE_TESTS + "GhostLabelTests.swift": """\
+        import Testing
+
+        struct GhostLabelTests {
+            @Test func ghost() { let ghost = 1; #expect(ghost == 1) }
         }
         """,
     CORE_TESTS + "WidgetTests.swift": """\
@@ -557,6 +580,31 @@ class SyntheticRepositoryTests(unittest.TestCase):
         values = self.select(lane, *mode)
         return set(values["ATHKAR_TEST_UNITS"].split()) if values["ATHKAR_TEST_RUN"] == "1" else set()
 
+    def test_rule_mutations_are_killed(self):
+        mutations = (
+            ("|prefix|postfix|infix|", "|", "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
+            (r'r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|',
+             r'r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|',
+             "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
+            ("SUBSCRIPT_LABEL.match(signature)", "SUBSCRIPT_LABEL.search(signature)",
+             "test_subscript_body_spelling_is_not_a_label"),
+        )
+        for old, new, test_name in mutations:
+            with self.subTest(mutation=old):
+                source = (HERE / "affected-tests.py").read_text()
+                self.assertEqual(source.count(old), 1)
+                mutant_dir = Path(tempfile.mkdtemp(prefix="athkar-selector-mutant-"))
+                self.addCleanup(shutil.rmtree, mutant_dir)
+                (mutant_dir / "affected-tests.py").write_text(source.replace(old, new))
+                test_file = mutant_dir / "affected-tests-test.py"
+                shutil.copy(HERE / "affected-tests-test.py", test_file)
+                result = subprocess.run([sys.executable, str(test_file), "-k", test_name],
+                                        capture_output=True, text=True)
+                output = result.stdout + result.stderr
+                self.assertNotEqual(result.returncode, 0, output)
+                self.assertIn("FAILED", output)
+                self.assertIn(test_name, output)
+
     def test_member_edit_runs_the_users_of_that_member(self):
         self.write(CORE + "Clock+Days.swift", "extension Clock {\n    public var tomorrow: Int { now + 2 }\n}\n")
         # `.tomorrow` could be Clock's: LedgerTests' and LedgerPortableTests' run too, but not
@@ -575,10 +623,27 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual(self.units("core"), {"ProbeStringTests", "CityTests"})
 
     def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
-        # Its body spells `Int.init(radix:)`, which is no label of the operator.
-        self.write(CORE + "Bool+Plus.swift", textwrap.dedent(SYNTHETIC[CORE + "Bool+Plus.swift"]).replace("+ 1", "+ 2"))
+        path = CORE + "Bool+Plus.swift"
+        self.write(path, textwrap.dedent(SYNTHETIC[path]).replace("!w", "w"))
         self.assertEqual(self.units("core"), self.units("core", "--all"))
         self.assertEqual(self.units("models"), self.units("models", "--all"))
+
+    def test_modifier_rule_accepts_attributes_after_modifiers(self):
+        source = "extension Widget {\n    public @inlinable init(label: String) {}\n}\n"
+        parsed = at.SwiftFile(CORE + "Widget+Named.swift", source)
+        self.assertIn((("Widget",), "label", "label"), parsed.members)
+
+    def test_generic_initializer_body_comparison_is_not_a_label(self):
+        path = CORE + "Widget+Generic.swift"
+        self.write(path, textwrap.dedent(SYNTHETIC[path]).replace("(floor)", "(ground)"))
+        self.assertIn("WidgetNameTests", self.units("core"))
+        self.assertNotIn("FloorLabelTests", self.units("core"))
+
+    def test_subscript_body_spelling_is_not_a_label(self):
+        path = CORE + "Widget+SubscriptBody.swift"
+        self.write(path, textwrap.dedent(SYNTHETIC[path]).replace("; index[1]", "; index[2]"))
+        self.assertIn("WidgetIndexTests", self.units("core"))
+        self.assertNotIn("GhostLabelTests", self.units("core"))
 
     def test_labelled_init_counts_where_the_type_is_named(self):
         self.write(CORE + "Widget+Named.swift", "extension Widget {\n    public init(named: String) { self.init(); _ = 1 }\n}\n")
@@ -718,7 +783,7 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
                          {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests",
                           "WidgetTests", "ProbeStringTests", "SplitTests", "WidgetNameTests", "WidgetIndexTests",
-                          "ArrayPositionTests"})
+                          "FloorLabelTests", "GhostLabelTests", "ArrayPositionTests"})
 
 
 if __name__ == "__main__":
