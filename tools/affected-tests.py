@@ -157,7 +157,9 @@ TEST_MODULE = {"core": "AthkarCoreTests", "models": "AthkarPortableTests", "app-
                "ui": "AthkarUITests"}
 LINUX_TEST_DIRS = (CORE_TESTS, PORTABLE_TESTS)
 
-MODIFIER = (r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|internal|private|fileprivate|open|package|final"
+# Attributes come before the modifiers (Swift rejects `public @inlinable init`), outside group 1: a `private`
+# in an attribute's arguments, as in `@_documentation(visibility: private )`, is not the declaration's own.
+MODIFIER = (r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|internal|private|fileprivate|open|package|final"
             r"|nonisolated|indirect|static|class|override|mutating|nonmutating|lazy|weak|unowned|convenience"
             r"|required|dynamic|optional|distributed|prefix|postfix|infix|"
             r"(?:public|internal|package|private|fileprivate)\(set\))\s+)*)")

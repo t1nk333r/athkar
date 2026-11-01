@@ -280,7 +280,7 @@ SYNTHETIC = {
         """,
     CORE + "Bool+Plus.swift": """\
         extension Bool {
-            public @inlinable static prefix func - (
+            @available(iOS 17, *) @inlinable public static prefix func - (
                 w: Bool
             ) -> Bool { _ = Int.init(radix: 2); return !w }
         }
@@ -606,9 +606,13 @@ class SyntheticRepositoryTests(unittest.TestCase):
              "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
             ("|postfix|", "|", "test_fixity_modifiers_are_parsed"),
             ("|infix|", "|", "test_fixity_modifiers_are_parsed"),
-            (r'r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|',
-             r'r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|',
-             "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
+            (r'r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|',
+             r'r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|',
+             "test_attribute_arguments_are_not_the_declarations_visibility"),
+            (r'r"(?:@[\w.]+(?:\([^)]*\))?\s+)*', r'r"(?:@[\w.]+\s+)*', "test_fixity_modifiers_are_parsed"),
+            (r'r"init\s*[?!]?\s*', r'r"init\s*', "test_failable_and_nested_generic_inits_keep_their_label"),
+            (r'init\s*[?!]?\s*(?:<[^(){}]*>)?', r'init\s*[?!]?\s*(?:<[^(){}>]*>)?',
+             "test_failable_and_nested_generic_inits_keep_their_label"),
             ("SUBSCRIPT_LABEL.match(signature)", "SUBSCRIPT_LABEL.search(signature)",
              "test_subscript_body_spelling_is_not_a_label"),
         )
@@ -660,10 +664,23 @@ class SyntheticRepositoryTests(unittest.TestCase):
                 type_name = path.rsplit("/", 1)[-1].split("+", 1)[0]
                 self.assertIn(((type_name,), type_name, "type"), parsed.members)
 
-    def test_modifier_rule_accepts_attributes_after_modifiers(self):
-        source = "extension Widget {\n    public @inlinable init(label: String) {}\n}\n"
-        parsed = at.SwiftFile(CORE + "Widget+Named.swift", source)
-        self.assertIn((("Widget",), "label", "label"), parsed.members)
+    def test_attribute_arguments_are_not_the_declarations_visibility(self):
+        source = ("@_documentation(visibility: private ) public struct Shown {}\n"
+                  "extension Widget {\n"
+                  "    @_documentation(visibility: private ) public func shown() {}\n"
+                  "    @MainActor private func hidden() {}\n"
+                  "}\n")
+        parsed = at.SwiftFile(CORE + "Widget+Shown.swift", source)
+        self.assertIn("Shown", parsed.names)
+        self.assertIn((("Widget",), "shown", "member"), parsed.members)
+        self.assertNotIn((("Widget",), "hidden", "member"), parsed.members)
+
+    def test_failable_and_nested_generic_inits_keep_their_label(self):
+        for init in ("init?(label: String)", "init!(label: String)", "init<T: Collection<Int>>(label: T)"):
+            with self.subTest(init=init):
+                source = f"extension Widget {{\n    public {init} {{ self.init() }}\n}}\n"
+                parsed = at.SwiftFile(CORE + "Widget+Named.swift", source)
+                self.assertIn((("Widget",), "label", "label"), parsed.members)
 
     def test_generic_initializer_body_comparison_is_not_a_label(self):
         path = CORE + "Widget+Generic.swift"
