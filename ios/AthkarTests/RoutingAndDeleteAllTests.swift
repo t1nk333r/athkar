@@ -143,7 +143,9 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         let deleted = await app.deleteAllData()
         XCTAssertTrue(deleted)
         for table in AppDatabase.userTables {
-            let count = try support.database.writer.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM \(table)") }
+            let count = try await support.database.writer.read {
+                try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM \(table)")
+            }
             XCTAssertEqual(count, 0, table)
         }
         XCTAssertFalse(try support.database.contentInstalls.installs().isEmpty, "content_installs stays")
