@@ -8,6 +8,7 @@ struct SettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
+    @State private var transfer: TransferImportModel?
 
     var body: some View {
         @Bindable var settings = app.settings
@@ -58,6 +59,21 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings.haptics")
                 }
 
+                Section {
+                    Button {
+                        transfer = app.makeTransferImport()
+                    } label: {
+                        toggleCopy("استيراد من تطبيق الويب",
+                                   "انقل تقدّمك من تطبيق الويب «أذكار المسلم» إلى هذا الجهاز: الصق رمز النقل، أو اختر ملفه، أو امسح رمز QR. لا يُحذف شيء من هذا الجهاز قبل أن تراجع ما سيتغيّر وتؤكده.")
+                            .foregroundStyle(palette.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier("settings.transferImport")
+                } header: {
+                    Text("النقل")
+                }
+
                 Section("الصفحة الرئيسية") {
                     Toggle(isOn: $settings.homePrayerRow) {
                         toggleCopy("المواقيت في أعلى الصفحة",
@@ -76,6 +92,10 @@ struct SettingsView: View {
             }
         }
         .tint(palette.accentStrong)
+        .sheet(item: $transfer) { model in
+            TransferImportView(model: model)
+                .environment(\.palette, palette)
+        }
     }
 
     private func segmented<Value: Hashable>(_ title: String, selection: Binding<Value>, identifier: String,

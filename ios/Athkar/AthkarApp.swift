@@ -47,6 +47,10 @@ private struct RootView: View {
                     onOpen: { payload in app.open(payload) })
                 app.reminders.replan()
             }
+            // A transfer code or backup file opened in the app: «استيراد من تطبيق الويب» shows its review.
+            .onOpenURL { url in
+                if url.isFileURL { app.openTransferFile(url) }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { refresh() }
             }

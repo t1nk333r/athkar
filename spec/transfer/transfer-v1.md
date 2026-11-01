@@ -310,3 +310,119 @@ within a few percent):
 | Worst: as full, plus an epoch on every unit of every window day | 76 929 B | 4 401 B | 6 626 chars | 8 |
 
 All are far below the 64 KiB text and 256 KiB JSON limits.
+
+## 9. Native receiver
+
+The iOS app receives a code in Settings, «استيراد من تطبيق الويب» (NATIVE_APP_PLAN.md §8.3 Slice 7, §6.4): pasted
+text, a file opened from Files or shared to the app, or the QR frames scanned with the camera. AthkarCore implements
+it (`TransferCodec`, `TransferValidator`, `TransferImporter`); `ios/AthkarCore/Tests/AthkarCoreTests/Transfer/` runs
+every case of `fixtures/codec.json` and the applicable cases of `fixtures/real-path.json` (§9.6) against it.
+
+### 9.1 Decoding
+
+Decoding is §1–§4 and §7 exactly: the same frames, text form, base45, zlib, cap, JSON and validation, with the same
+error, `reason` and `path` for every input of `codec.json`. Apple platforms inflate with the Compression framework
+(256 compressed bytes at a time into a 4 KiB buffer, the zlib header and trailer read by the app); the portable
+decoder used elsewhere reads the same streams and both stop at the 256 KiB cap. JSON is read with `JSON.parse`'s
+rules (duplicate keys keep the last value, `Object.keys` order, lone surrogates read as U+FFFD), so a refused code
+names the PWA's path. A file is read as the browser's `file.text()` reads it (UTF-8 with replacement, one byte-order
+mark dropped) after the same 256 KB size check.
+
+The PWA's `unsupported` (a browser without `CompressionStream`) has no native counterpart; the receiver never
+reports it.
+
+An athkar `.athkarbackup` imports as in the PWA: its adhkar part (today and the seven history days) and its
+settings; its location is validated and never imported. A ruqyah `.athkarbackup` and a ruqyah code stay `wrong-app`:
+this screen receives the athkar PWA's progress only.
+
+### 9.2 Units and the epoch rule
+
+The native stores keep rows per local date and no reset epochs (spec/schema.md), so the receiver compares the code's
+epochs with the time of what is stored here. The units are the PWA's: adhkar (date, period), suwar (date, sura),
+tasbih (date, phrase identity: preset ID or match key). For each unit:
+
+- **E**, the incoming epoch: the later of the code's day epoch and the unit's own (for tasbih, of any key of the
+  unit's identity that day). No epoch when the code has neither.
+- **A**, the activity here: the latest stamp of the unit's rows (`adhkar_item_progress.updated_at`,
+  `adhkar_days.completed_at`, `suwar_page_reads.read_at`, `suwar_sura_days.completed_at`,
+  `tasbih_counts.updated_at`); a completion without an instant counts as oldest.
+
+Then:
+
+1. Nothing stored here for the unit: the code's unit is written.
+2. Something stored, and A is earlier than E: the other device reset the unit after everything recorded here, so the
+   code's unit **replaces** it (an empty code unit deletes it: a reset travels). The preview shows such a unit as a
+   reset when it loses something.
+3. Otherwise the units **join**: counts take the larger, read pages and completions are kept from both, instants the
+   earliest recorded one. A completion stored here is never removed by a join.
+
+Rows written by the import are stamped with the code's `exportedAt`; a raised row takes the later of its own stamp
+and `exportedAt`; an unchanged row keeps its stamp. Every reset epoch of a code precedes its `exportedAt`, so after an
+import every touched unit's activity is at least its epoch: importing the same code again plans nothing (idempotent),
+and the result does not depend on when the user confirms. A completion the join itself makes is stamped with
+`exportedAt` too (the PWA uses the merge instant).
+
+**Accepted limitation.** A reset made here records no epoch: a later import of an older code can bring back counts
+that were reset here, shown in the preview as additions. Keeping epochs natively would need a schema change; until
+then the preview is the guard.
+
+### 9.3 Store rules
+
+**Adhkar.** The code's envelope is read into sessions by `BackupImporter.sessions(from:collections:)` (today's
+completion judged from its counters or `manualCompletion`, history entries as imported completions), with the
+code's 31-day `athkar.adhkar.history` in place of the envelope's seven days; item IDs this version does not have are
+dropped. Targets stay this device's: incoming targets fill only items it lacks, and never on a unit already complete
+here (a new target could leave its completion unearned). A joined unit is complete when its joined counters complete
+the period (origin `counters`), or either side recorded it complete (this device's origin first, else the code's:
+`manual` or `import`).
+
+**Suwar.** Pages and suras the app's pack lacks are dropped. Today's unit is the sura's read pages, complete when all
+of them are read (an incoming completion without every page is dropped, as in the PWA); a history unit is the sura's
+completion that day. Page rows the import writes are stamped `exportedAt`. `selected` stays this device's.
+
+**Tasbih.** Saved phrases and the cap are §5.4's: this device's phrases, then the code's that `findTasbihPhrase`
+does not match, up to 8; a phrase that does not fit is dropped with its counts (`tasbih-cap`). The code's keys of one
+identity on one day reduce as the sender's own load does (only the keys with the latest epoch count, summed). A unit
+is stored under its preset ID, else the merged saved spelling, else this device's spelling, else the code's. A join
+raises the unit's sum to the larger by raising one row (the row under the chosen spelling, else the first). A new
+unit goes last in that day's first-use order. `selected` and `target` stay this device's.
+
+**Settings.** As §5.4: written (origin `athkar-pwa`) only where this device has no stored row and the code's value
+differs from the default shown here: theme, text size, line spacing, haptics, long-adhkar order and its prompt, and
+the calculation method and Asr school together when neither is stored. Reminder switches, last-shown dates and the
+location never transfer.
+
+### 9.4 The receiver's today
+
+`T` is this device's local date. A code dated after `T` brings only its days before `T` (`future`); a code dated
+before `T` imports each day as its own date, the native stores keeping rows per date (`stale`). Units before `T`'s
+31-day window are not imported (`trimmed`). Nothing stored here is pruned.
+
+### 9.5 Plan and apply
+
+`TransferImporter.plan` is a dry run: the preview's rows (additions, resets), the saved phrases added, the settings,
+whether only repetition choices are added, the warnings, and the exact writes. It refuses a code with an instant later
+than this device's clock plus a day, or exported before 2020 (`clock`), and a merge past the tasbih budget (at most
+256 phrases a day and 512 phrase keys over `T`'s window, counting what is stored here; `too-big`). `apply` takes the
+device's local date at confirmation: if it is no longer the plan's `T` (the review crossed midnight), it writes nothing
+and throws `changed`, as the PWA's `applyTransfer` does. Otherwise it re-plans inside one write transaction and writes
+only if the result is the same plan; else it writes nothing and throws `changed`. On `changed` the app plans again on
+the current date and shows the new preview. A failed write leaves the database unchanged (`write`).
+
+### 9.6 Fixtures
+
+`codec.json`: every case. `real-path.json`: the sender cases run the decoded code into an empty native database and
+check the unit's count and the stored keys; of the receiver cases, those whose PWA receiver holds no reset epoch run
+with the receiver's counts stored natively. Receiver cases with epochs describe state the native stores cannot hold
+(§9.2). The native rules above are pinned by `TransferImporterTests`.
+
+### 9.7 The receiver's screen
+
+«استيراد من تطبيق الويب» in Settings takes the code three ways: pasted, as a file (chosen in the sheet, or shared to
+or opened in the app: a `.txt` code, JSON, or an athkar `.athkarbackup`), or scanned frame by frame with the camera
+(`handleTransferScanText`: other QR codes are ignored, a changed code starts over, a damaged, newer or other-app frame
+ends the scan). The camera only reads the code; nothing is recorded or sent. The review and every refusal use the
+PWA's wording (`transferPreviewMarkup`, `transferErrorCopy`), except where this app differs: `wrong-app` says this app
+receives only «أذكار المسلم», `newer` asks to update this app, and nothing suggests sending back (the native app does
+not send). Confirming applies exactly the reviewed plan; on `changed` the code is planned again and written only if
+the review reads the same, else the new review is shown. After a write, every section reads its stores again.

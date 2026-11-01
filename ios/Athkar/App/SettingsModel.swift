@@ -32,6 +32,31 @@ final class SettingsModel {
         longOrderPromptAnswered = try repository.value(for: .longOrderPromptAnswered)
     }
 
+    /// After a transfer import (``TransferImportModel``): the stored values are read again and shown, without writing
+    /// them back. A value that cannot be read keeps what is shown.
+    func reload() {
+        do {
+            let theme: Theme = try repository.value(for: .theme)
+            let textSize: TextSize = try repository.value(for: .textSize)
+            let lineSpacing: LineSpacing = try repository.value(for: .lineSpacing)
+            let haptics: Bool = try repository.value(for: .haptics)
+            let homePrayerRow: Bool = try repository.value(for: .homePrayerRow)
+            let longOrder: LongOrder = try repository.value(for: .longOrder)
+            let answered: Bool = try repository.value(for: .longOrderPromptAnswered)
+            restoreWithoutWriting {
+                self.theme = theme
+                self.textSize = textSize
+                self.lineSpacing = lineSpacing
+                self.haptics = haptics
+                self.homePrayerRow = homePrayerRow
+            }
+            self.longOrder = longOrder
+            longOrderPromptAnswered = answered
+        } catch {
+            report(error)
+        }
+    }
+
     /// Saves the long-order choice, then shows it. `false` when the save failed: the error is reported and nothing
     /// changes.
     @discardableResult

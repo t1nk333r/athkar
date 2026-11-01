@@ -18,6 +18,25 @@ enum ArabicFormat {
         return instant.formatted(style)
     }
 
+    /// `Intl.DateTimeFormat("ar-EG", { weekday: "short", day: "numeric", month: "short" })` of an instant, e.g.
+    /// «الأحد، ٤ أكتوبر».
+    static func shortDate(_ instant: Date, in zone: TimeZone = .current) -> String {
+        var style = Date.FormatStyle(locale: Locale(identifier: "ar-EG")).weekday(.abbreviated).day().month(.abbreviated)
+        style.timeZone = zone
+        return instant.formatted(style)
+    }
+
+    /// `historyDateLabel(date)`: a local date (`YYYY-MM-DD`) as ``shortDate(_:in:)`` shows it, at its noon.
+    static func shortDate(localDate: String) -> String {
+        let parts = localDate.split(separator: "-").compactMap { Int($0) }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        guard parts.count == 3,
+              let noon = calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
+        else { return localDate }
+        return shortDate(noon, in: .current)
+    }
+
     /// `dayCountLabel(count)` in both PWAs.
     static func dayCount(_ count: Int) -> String {
         switch count {

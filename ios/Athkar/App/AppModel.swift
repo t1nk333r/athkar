@@ -60,6 +60,11 @@ final class AppModel {
     private(set) var lastPeriod: Period = .morning
     /// Set when a database write fails; the screen shows it once.
     var failure: String?
+    /// A file shared to the app or opened in it, waiting for «استيراد من تطبيق الويب» to show it (`nil` data: the
+    /// file could not be read).
+    var pendingTransferFile: PendingTransferFile?
+
+    @ObservationIgnored private let transferImporter: TransferImporter
 
     init(database: AppDatabase, content: BundledContent, today: String) throws {
         var reportFailure: (any Error) -> Void = { _ in }
@@ -74,6 +79,9 @@ final class AppModel {
         tasbih = try TasbihModel(database: database, today: today, report: report)
         prayer = try PrayerTimesModel(database: database, report: report)
         reminders = try ReminderModel(repository: database.reminders, report: report)
+        transferImporter = TransferImporter(
+            database: database, collections: content.packs.adhkar,
+            suwar: content.suwar.suwar.map { SuwarOutline(id: $0.id, name: $0.surah, pageIDs: $0.pages.map(\.id)) })
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
         }
@@ -174,8 +182,42 @@ final class AppModel {
         adhkar.applyLongOrder(moveLongLast, active: lastPeriod)
     }
 
+    // MARK: Transfer import
+
+    /// «استيراد من تطبيق الويب» (NATIVE_APP_PLAN.md §6.4): codes are planned for today after the day rollover, and a
+    /// confirmed import is shown at once in every section it touched.
+    func makeTransferImport() -> TransferImportModel {
+        TransferImportModel(importer: transferImporter, today: { [weak self] in
+            self?.ensureCurrentDay()
+            return Self.today()
+        }, applied: { [weak self] in self?.showImportedProgress() })
+    }
+
+    /// Reads back what an import wrote: settings (the long-adhkar order included), the sessions of the day on screen,
+    /// and the prayer calculation.
+    private func showImportedProgress() {
+        settings.reload()
+        adhkar.reload(longAdhkarLast: settings.longOrder == .last)
+        suwar.reload()
+        tasbih.reload()
+        prayer.reloadSettings()
+    }
+
+    /// A file opened in the app (Files, the share sheet, AirDrop), read while its security scope is open.
+    func openTransferFile(_ url: URL) {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        pendingTransferFile = PendingTransferFile(data: TransferImportModel.read(url))
+    }
+
     private static func today(now: Date = Date()) -> String {
         let shifted = Calendar.current.date(byAdding: .day, value: TestHooks.dayOffset, to: now) ?? now
         return SessionCalendar.localDate(of: shifted, in: .current)
     }
+}
+
+/// A file waiting to be imported; each opening is shown, even of the same file again.
+struct PendingTransferFile: Identifiable {
+    let id = UUID()
+    let data: Data?
 }
