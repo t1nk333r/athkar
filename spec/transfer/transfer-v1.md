@@ -328,6 +328,9 @@ rules (duplicate keys keep the last value, `Object.keys` order, lone surrogates 
 names the PWA's path. A file is read as the browser's `file.text()` reads it (UTF-8 with replacement, one byte-order
 mark dropped) after the same 256 KB size check.
 
+The PWA's `unsupported` (a browser without `CompressionStream`) has no native counterpart; the receiver never
+reports it.
+
 An athkar `.athkarbackup` imports as in the PWA: its adhkar part (today and the seven history days) and its
 settings; its location is validated and never imported. A ruqyah `.athkarbackup` and a ruqyah code stay `wrong-app`:
 this screen receives the athkar PWA's progress only.
@@ -400,9 +403,11 @@ before `T` imports each day as its own date, the native stores keeping rows per 
 `TransferImporter.plan` is a dry run: the preview's rows (additions, resets), the saved phrases added, the settings,
 whether only repetition choices are added, the warnings, and the exact writes. It refuses a code with an instant later
 than this device's clock plus a day, or exported before 2020 (`clock`), and a merge past the tasbih budget (at most
-256 phrases a day and 512 phrase keys over `T`'s window, counting what is stored here; `too-big`). `apply` re-plans
-inside one write transaction and writes only if the result is the same plan; otherwise it writes nothing and throws
-`changed`, and the app shows the new preview. A failed write leaves the database unchanged (`write`).
+256 phrases a day and 512 phrase keys over `T`'s window, counting what is stored here; `too-big`). `apply` takes the
+device's local date at confirmation: if it is no longer the plan's `T` (the review crossed midnight), it writes nothing
+and throws `changed`, as the PWA's `applyTransfer` does. Otherwise it re-plans inside one write transaction and writes
+only if the result is the same plan; else it writes nothing and throws `changed`. On `changed` the app plans again on
+the current date and shows the new preview. A failed write leaves the database unchanged (`write`).
 
 ### 9.6 Fixtures
 

@@ -168,6 +168,32 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertEqual(try support.database.tasbih.counts(on: support.today).map(\.count).sorted(), [7, 40])
     }
 
+    /// A review left open past midnight is planned again for the new day before anything is written.
+    @MainActor
+    func testAReviewThatCrossesMidnightIsPlannedAgain() throws {
+        let support = try PortableTestSupport()
+        let collections = support.content.packs.adhkar
+        let outline = support.content.suwar.suwar.map {
+            SuwarOutline(id: $0.id, name: $0.surah, pageIDs: $0.pages.map(\.id))
+        }
+        let importer = TransferImporter(database: support.database, collections: collections, suwar: outline)
+        var today = support.today
+        let model = TransferImportModel(importer: importer, today: { today },
+                                        now: { TransferImportModelTests.now }, applied: {})
+        model.code = TransferTestCodes.text(typical())
+        model.continuePaste()
+        XCTAssertEqual(model.preview?.warnings, [])
+        today = "2026-10-15"
+        model.confirm()
+        XCTAssertEqual(model.screen, .review)
+        XCTAssertTrue(model.refreshed)
+        XCTAssertEqual(model.preview?.warnings, ["أُنشئ هذا الرمز أمس، فلا يحمل ما سُجّل على الجهاز الآخر بعد ذلك."])
+        XCTAssertTrue(try support.database.tasbih.counts(on: support.today).isEmpty)
+        model.confirm()
+        XCTAssertEqual(model.outcome?.succeeded, true)
+        XCTAssertEqual(try support.database.tasbih.counts(on: support.today).map(\.count).sorted(), [7, 33])
+    }
+
     @MainActor
     func testACodeFromAnEarlierDayIsReviewedWithAWarning() throws {
         let support = try PortableTestSupport()
@@ -215,6 +241,22 @@ final class TransferImportModelTests: XCTestCase {
         model.importFile(Data("{}".utf8))
         XCTAssertEqual(model.screen, .receive)
         XCTAssertNotNil(model.fileError)
+    }
+
+    /// A file is read up to one byte past the limit; one that cannot be read gives no data, so the sheet says so.
+    func testAFileThatCannotBeReadGivesNoData() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        XCTAssertNil(TransferImportModel.read(folder))
+        XCTAssertNil(TransferImportModel.read(folder.appendingPathComponent("missing.txt")))
+
+        let large = folder.appendingPathComponent("large.txt")
+        try Data(repeating: 0x41, count: TransferCodec.maxFileBytes + 10).write(to: large)
+        XCTAssertEqual(TransferImportModel.read(large)?.count, TransferCodec.maxFileBytes + 1)
+        let empty = folder.appendingPathComponent("empty.txt")
+        try Data().write(to: empty)
+        XCTAssertEqual(TransferImportModel.read(empty), Data())
     }
 
     /// A file opened in the app starts the sheet on its review, or on its error as a result.

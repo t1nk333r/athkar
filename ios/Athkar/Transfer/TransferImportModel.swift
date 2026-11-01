@@ -146,7 +146,11 @@ final class TransferImportModel: Identifiable {
     nonisolated static func read(_ url: URL) -> Data? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
-        return try? handle.read(upToCount: TransferCodec.maxFileBytes + 1) ?? Data()
+        do {
+            return try handle.read(upToCount: TransferCodec.maxFileBytes + 1) ?? Data()
+        } catch {
+            return nil
+        }
     }
 
     private static func decode(file data: Data?) -> Result<TransferContainer, TransferError> {
@@ -208,7 +212,7 @@ final class TransferImportModel: Identifiable {
         isWriting = true
         defer { isWriting = false }
         do {
-            try importer.apply(plan, of: container)
+            try importer.apply(plan, of: container, today: today())
         } catch let error as TransferError where error.kind == .changed {
             let shown = preview
             let replanned: TransferPlan
@@ -222,7 +226,7 @@ final class TransferImportModel: Identifiable {
             let fresh = Self.preview(replanned)
             if fresh == shown {
                 do {
-                    try importer.apply(replanned, of: container)
+                    try importer.apply(replanned, of: container, today: today())
                 } catch let error as TransferError where error.kind == .changed {
                     showRefreshed(fresh)
                     return
@@ -344,8 +348,6 @@ final class TransferImportModel: Identifiable {
             ("يتجاوز ما يتسع له التطبيق", "لا يتسع التطبيق لكل ما في الرمز من عبارات المسبحة وسجلها مع ما على هذا الجهاز، فلم يُنقل شيء ولم يتغيّر تقدّمك.")
         case .fileRead:
             ("تعذّرت قراءة الملف", "تعذّرت قراءة الملف. اختر ملف رمز النقل أو ملف نسخة احتياطية من «أذكار المسلم».")
-        case .unsupported:
-            ("غير مدعوم", "لا يمكن استلام هذا الرمز على هذا الجهاز.")
         case .write:
             ("تعذّر الحفظ", "لم يُحفظ شيء ولم يتغيّر تقدّمك. تأكد من وجود مساحة كافية على الجهاز، ثم أعد المحاولة.")
         }

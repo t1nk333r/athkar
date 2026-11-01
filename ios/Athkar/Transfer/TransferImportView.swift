@@ -43,8 +43,11 @@ struct TransferImportView: View {
         .tint(palette.accentStrong)
         .interactiveDismissDisabled(model.isWriting)
         .fileImporter(isPresented: $choosesFile, allowedContentTypes: Self.fileTypes) { picked in
+            // Cancelling the picker reports no URL and changes nothing, as in the PWA.
             guard case let .success(url) = picked else {
-                if case .failure = picked { model.importFile(nil) }
+                if case let .failure(error) = picked, (error as? CocoaError)?.code != .userCancelled {
+                    model.importFile(nil)
+                }
                 return
             }
             let scoped = url.startAccessingSecurityScopedResource()

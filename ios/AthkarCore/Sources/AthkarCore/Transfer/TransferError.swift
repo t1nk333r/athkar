@@ -1,6 +1,7 @@
 import Foundation
 
-/// Why a transfer code was refused (spec/transfer/transfer-v1.md §7). `kind` is the spec's error string.
+/// Why a transfer code was refused (spec/transfer/transfer-v1.md §7). `kind` is the spec's error string. The PWA's
+/// `unsupported` (a browser without CompressionStream) has no native counterpart: decoding here always works.
 public struct TransferError: Error, Equatable, Sendable {
     public enum Kind: String, Sendable, CaseIterable {
         case notCode = "not-code"
@@ -12,7 +13,6 @@ public struct TransferError: Error, Equatable, Sendable {
         case newer
         case corrupt
         case fileRead = "file-read"
-        case unsupported
         case clock
         case tooBig = "too-big"
         case write

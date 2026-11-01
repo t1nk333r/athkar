@@ -126,9 +126,11 @@ public struct TransferImporter: Sendable {
         return try database.writer.read { db in try planned(container, today: today, in: db) }
     }
 
-    /// Writes `plan` in one transaction, after checking that the stores still give the same plan. Throws `changed`
-    /// (nothing written) when something was recorded here since; plan again and show the new preview.
-    public func apply(_ plan: TransferPlan, of container: TransferContainer) throws {
+    /// Writes `plan` in one transaction, after checking that it was made on `today` (this device's local date now) and
+    /// that the stores still give the same plan. Throws `changed` (nothing written) when the day has turned or
+    /// something was recorded here since; plan again and show the new preview.
+    public func apply(_ plan: TransferPlan, of container: TransferContainer, today: String) throws {
+        guard plan.today == today else { throw TransferError(.changed) }
         try database.writer.write { db in
             let current = try planned(container, today: plan.today, in: db)
             guard current.operations == plan.operations else { throw TransferError(.changed) }

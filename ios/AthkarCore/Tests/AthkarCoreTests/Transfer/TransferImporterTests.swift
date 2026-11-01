@@ -18,7 +18,7 @@ private func transfer(_ container: TransferContainer, into database: AppDatabase
                       at instant: Date = now) throws -> TransferPlan {
     let importer = try importer(database)
     let plan = try importer.plan(container, today: date, now: instant)
-    try importer.apply(plan, of: container)
+    try importer.apply(plan, of: container, today: date)
     return plan
 }
 
@@ -154,7 +154,7 @@ struct TransferImporterTests {
         let again = try importer(database).plan(container, today: today, now: now)
         #expect(again.isEmpty)
         #expect(again.changes.isEmpty && again.settings.isEmpty && !again.targetsAdded)
-        try importer(database).apply(again, of: container)
+        try importer(database).apply(again, of: container, today: today)
         #expect(try dump(database) == first)
     }
 
@@ -336,8 +336,25 @@ struct TransferImporterTests {
         let plan = try importer.plan(container, today: today, now: now)
         try database.tasbih.setCount(40, for: "subhan", on: today, at: Instant.at("2026-10-04T06:01:00.000Z"))
         let before = try dump(database)
-        #expect(throws: TransferError(.changed)) { try importer.apply(plan, of: container) }
+        #expect(throws: TransferError(.changed)) { try importer.apply(plan, of: container, today: today) }
         #expect(try dump(database) == before)
+    }
+
+    /// A confirm after midnight would write the reviewed plan under the day before; the PWA refuses it too
+    /// (`applyTransfer`: `plan.today !== localDateKey()`).
+    @Test func aPlanFromBeforeMidnightStopsTheWrite() throws {
+        let database = try AppDatabase.inMemory()
+        let importer = try importer(database)
+        let container = try typical
+        let plan = try importer.plan(container, today: today, now: now)
+        let before = try dump(database)
+        #expect(throws: TransferError(.changed)) { try importer.apply(plan, of: container, today: "2026-10-05") }
+        #expect(try dump(database) == before)
+
+        let fresh = try importer.plan(container, today: "2026-10-05", now: Instant.at("2026-10-05T00:01:00.000Z"))
+        #expect(fresh.warnings == [.stale(date: today)])
+        try importer.apply(fresh, of: container, today: "2026-10-05")
+        #expect(try database.suwar.readPages(on: today) == ["mulk-1-4", "mulk-5-8"])
     }
 
     @Test func aBackupFileImportsItsAdhkarOnly() throws {
