@@ -52,6 +52,16 @@ final class RuqyahDeckModel: DeckModel {
     /// `ensureCurrentDay` tries again.
     func roll(to today: String) {
         guard today != progress.date else { return }
+        load(today)
+    }
+
+    /// After a backup import or «حذف كل البيانات»: the day on screen is read again, and every sura reopens on its first
+    /// incomplete segment. A day that cannot be read keeps what is on screen.
+    func reload() {
+        load(progress.date)
+    }
+
+    private func load(_ today: String) {
         do {
             let counts = try repository.counts(on: today)
             let day = try repository.day(on: today)

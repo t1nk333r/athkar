@@ -86,23 +86,29 @@ final class TasbihModel: ResettableSection {
         // `normalizeTasbihState`: saved phrases are cleaned, and one that names a preset or an earlier phrase, or is
         // past the eighth, is dropped; a target out of range reads as 33; a selection that is neither a preset nor
         // saved reads as «سبحان الله».
-        let phrases = Self.savedPhrases(try settings.value(for: .tasbihCustomPhrases))
-        custom = phrases
-        let target = try settings.value(for: .tasbihTarget)
-        self.target = switch target {
+        (custom, target, selected) = try Self.choices(settings)
+    }
+
+    /// The saved phrases, the target and the phrase counted, normalized.
+    private static func choices(_ settings: SettingsRepository) throws
+        -> (custom: [String], target: Int?, selected: String) {
+        let phrases = savedPhrases(try settings.value(for: .tasbihCustomPhrases))
+        let stored = try settings.value(for: .tasbihTarget)
+        let target: Int? = switch stored {
         case 0: nil
-        case 1...TasbihText.maxTarget: target
+        case 1...TasbihText.maxTarget: stored
         default: TasbihText.defaultTarget
         }
-        let stored = try settings.value(for: .tasbihSelected)
-        if TasbihText.preset(stored) != nil {
-            selected = stored
-        } else if TasbihText.isCustomKey(stored),
-                  let key = TasbihText.findPhrase(TasbihText.savedText(of: stored), custom: phrases) {
-            selected = key
+        let selection = try settings.value(for: .tasbihSelected)
+        let selected = if TasbihText.preset(selection) != nil {
+            selection
+        } else if TasbihText.isCustomKey(selection),
+                  let key = TasbihText.findPhrase(TasbihText.savedText(of: selection), custom: phrases) {
+            key
         } else {
-            selected = TasbihText.presets[0].id
+            TasbihText.presets[0].id
         }
+        return (phrases, target, selected)
     }
 
     /// `ensureCurrentDay`: a new day starts with that day's counts; the phrase, target and saved phrases stay. A day
@@ -122,16 +128,16 @@ final class TasbihModel: ResettableSection {
         settleCap()
     }
 
-    /// After a transfer import (``TransferImportModel``): today's counts and the saved phrases are read again; the
-    /// phrase on screen and the target stay. A day that cannot be read keeps what is on screen.
+    /// After an import (``TransferImportModel``) or «حذف كل البيانات»: today's counts, the saved phrases, the target
+    /// and the phrase counted are read again. A day that cannot be read keeps what is on screen.
     func reload() {
         do {
             let rows = try repository.counts(on: date)
             let hasHistory = try repository.recordedDayCount(.all, before: date) > 0
-            let phrases = Self.savedPhrases(try settings.value(for: .tasbihCustomPhrases))
+            let choices = try Self.choices(settings)
             counts = rows.map { PhraseCount(key: $0.phraseKey, count: $0.count) }
             self.hasHistory = hasHistory
-            custom = phrases
+            (custom, target, selected) = choices
         } catch {
             report(error)
             return

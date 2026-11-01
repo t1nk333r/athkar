@@ -93,4 +93,12 @@ public enum BackupFile: Equatable, Sendable {
         default: throw BackupError.unsupportedFormat(format)
         }
     }
+
+    /// `meta.exportedAt`.
+    public var exportedAt: Date {
+        switch self {
+        case let .pwa(envelope): envelope.meta.exportedAt
+        case let .native(backup): backup.meta.exportedAt
+        }
+    }
 }

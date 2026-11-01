@@ -6,6 +6,11 @@ import Observation
 /// spec/transfer/transfer-v1.md §9). A code arrives pasted, as a file, or scanned frame by frame; it is decoded and
 /// planned against the stores, previewed with the PWA's wording, and written only once confirmed. Nothing is written
 /// before the confirmation, and the location is never imported.
+///
+/// A backup file this app restores whole goes through ``BackupImporter`` instead (spec/backup/envelope-v2.md): the
+/// app's own format 2 file, and the ruqyah PWA's format 1 backup. Its review lists what a dry run of the merge would
+/// add, and the confirmation runs the merge. The athkar PWA's own backup keeps the transfer path, whose review is
+/// richer.
 @MainActor
 @Observable
 final class TransferImportModel: Identifiable {
@@ -44,12 +49,16 @@ final class TransferImportModel: Identifiable {
         var assurance: String
         var warnings: [String]
         var confirmTitle: String
+        /// A backup restored whole: the review has no «التراجع» note.
+        var isBackup = false
     }
 
     struct Outcome: Equatable, Sendable {
         var succeeded: Bool
         var title: String
         var message: String
+        /// The outcome of restoring a backup, not of a transfer.
+        var isBackup = false
     }
 
     static let pasteHelp = "اضغط مطولًا داخل الحقل واختر «لصق»."
@@ -95,12 +104,18 @@ final class TransferImportModel: Identifiable {
     @ObservationIgnored private var container: TransferContainer?
     @ObservationIgnored private var plan: TransferPlan?
     @ObservationIgnored private var scan = TransferScan()
+    @ObservationIgnored private let backupImporter: BackupImporter?
+    /// The backup under review, when the file is one ``BackupImporter`` restores.
+    @ObservationIgnored private var backup: BackupFile?
 
     /// `today` is this device's local date when a code is planned (after the day rollover); `applied` runs after a
     /// confirmed write, to show the imported progress.
-    init(importer: TransferImporter, today: @escaping () -> String, now: @escaping () -> Date = Date.init,
-         applied: @escaping () -> Void) {
+    /// `backupImporter` restores backup files whole; without it every file is read as a transfer code or the athkar
+    /// PWA's backup.
+    init(importer: TransferImporter, backupImporter: BackupImporter? = nil, today: @escaping () -> String,
+         now: @escaping () -> Date = Date.init, applied: @escaping () -> Void) {
         self.importer = importer
+        self.backupImporter = backupImporter
         self.today = today
         self.now = now
         self.applied = applied
@@ -126,6 +141,13 @@ final class TransferImportModel: Identifiable {
     /// under the button.
     func importFile(_ data: Data?) {
         fileError = nil
+        if let data, let carrier = backupCarrier(data) {
+            switch carrier {
+            case let .success(file): review(file)
+            case let .failure(error): fileError = Self.errorText(error)
+            }
+            return
+        }
         switch Self.decode(file: data) {
         case let .success(container): review(container)
         case let .failure(error): fileError = Self.errorText(error, surface: .file)
@@ -135,19 +157,30 @@ final class TransferImportModel: Identifiable {
     /// A file shared to the app or opened in it: the sheet starts afresh on its review, or on its error.
     func open(fileData data: Data?) {
         reset()
+        if let data, let carrier = backupCarrier(data) {
+            switch carrier {
+            case let .success(file): review(file)
+            case let .failure(error): fail(backup: error)
+            }
+            return
+        }
         switch Self.decode(file: data) {
         case let .success(container): review(container)
         case let .failure(error): fail(error)
         }
     }
 
-    /// A chosen file's bytes, refused unread past ``TransferCodec/maxFileBytes`` (read as one byte more, which
-    /// `decode` then refuses as too long). `nil` when it cannot be read.
+    /// A backup file holds the whole history, so it may be far larger than a transfer code
+    /// (``TransferCodec/maxFileBytes``), which `decode` still refuses past its own limit.
+    nonisolated static let maxBackupBytes = 32 << 20
+
+    /// A chosen file's bytes, refused unread past ``maxBackupBytes`` (read as one byte more, which is then refused as
+    /// too long). `nil` when it cannot be read.
     nonisolated static func read(_ url: URL) -> Data? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         do {
-            return try handle.read(upToCount: TransferCodec.maxFileBytes + 1) ?? Data()
+            return try handle.read(upToCount: maxBackupBytes + 1) ?? Data()
         } catch {
             return nil
         }
@@ -155,6 +188,122 @@ final class TransferImportModel: Identifiable {
 
     private static func decode(file data: Data?) -> Result<TransferContainer, TransferError> {
         data.map(TransferCodec.decode(fileData:)) ?? .failure(TransferError(.fileRead))
+    }
+
+    // MARK: Backups
+
+    /// The file as a backup ``BackupImporter`` restores, an error in it, or `nil` for the transfer path: a transfer code,
+    /// the athkar PWA's backup, or anything that is no backup of format 2 or later.
+    private func backupCarrier(_ data: Data) -> Result<BackupFile, BackupError>? {
+        guard backupImporter != nil else { return nil }
+        guard data.count <= Self.maxBackupBytes else {
+            return data.count > TransferCodec.maxFileBytes ? .failure(.malformed("too large")) : nil
+        }
+        switch Result(catching: { try BackupFile.decode(data) }) {
+        case let .success(.pwa(envelope)) where envelope.meta.app == .athkarPWA:
+            return nil
+        case let .success(file):
+            return .success(file)
+        case let .failure(error):
+            let error = (error as? BackupError) ?? .malformed(String(describing: error))
+            if case let .unsupportedFormat(format) = error, format > NativeBackup.format { return .failure(error) }
+            // A format 1 file, or no backup at all, reads as before; a damaged format 2 file is reported as one.
+            return Self.declaredFormat(data) == NativeBackup.format ? .failure(error) : nil
+        }
+    }
+
+    /// `meta.format` as the file declares it, read leniently.
+    private static func declaredFormat(_ data: Data) -> Int? {
+        let bytes = data.starts(with: [0xEF, 0xBB, 0xBF]) ? data.dropFirst(3) : data[...]
+        let root = try? JSONSerialization.jsonObject(with: Data(bytes), options: [.fragmentsAllowed])
+        return ((root as? [String: Any])?["meta"] as? [String: Any])?["format"] as? Int
+    }
+
+    private func review(_ file: BackupFile) {
+        guard let backupImporter else { return }
+        let summary: BackupImportSummary
+        do {
+            summary = try backupImporter.importFile(file, dryRun: true)
+        } catch {
+            fail(backup: (error as? BackupError) ?? .malformed(String(describing: error)), write: !(error is BackupError))
+            return
+        }
+        backup = file
+        preview = Self.preview(summary, exportedAt: file.exportedAt)
+        refreshed = false
+        screen = .review
+    }
+
+    private func confirmBackup(_ file: BackupFile) {
+        guard let backupImporter else { return }
+        isWriting = true
+        defer { isWriting = false }
+        do {
+            try backupImporter.importFile(file, dryRun: false)
+        } catch {
+            fail(backup: (error as? BackupError) ?? .malformed(String(describing: error)), write: !(error is BackupError))
+            return
+        }
+        wrote = true
+        backup = nil
+        applied()
+        outcome = Outcome(succeeded: true, title: "استُعيدت النسخة الاحتياطية",
+                          message: "يظهر ما استُعيد الآن في أقسامه.", isBackup: true)
+        screen = .result
+    }
+
+    private func fail(backup error: BackupError, write: Bool = false) {
+        backup = nil
+        if write {
+            fail(TransferError(.write))
+            outcome?.isBackup = true
+            return
+        }
+        let copy = Self.backupCopy(error)
+        outcome = Outcome(succeeded: false, title: copy.title, message: copy.message, isBackup: true)
+        screen = .result
+    }
+
+    static func errorText(_ error: BackupError) -> String {
+        backupCopy(error).message
+    }
+
+    private static func backupCopy(_ error: BackupError) -> (title: String, message: String) {
+        if case .unsupportedFormat = error {
+            return ("إصدار أحدث",
+                    "أُنشئت هذه النسخة بإصدار أحدث من التطبيق. حدّث هذا التطبيق ثم أعد المحاولة.")
+        }
+        return ("نسخة احتياطية تالفة",
+                "تعذّرت قراءة هذه النسخة الاحتياطية، فلم يُستورد منها شيء ولم يتغيّر شيء على هذا الجهاز.")
+    }
+
+    /// The review of a backup: what each section would add here.
+    static func preview(_ summary: BackupImportSummary, exportedAt: Date) -> Preview {
+        if summary.isEmpty {
+            return Preview(isEmpty: true, lead: emptyTitle, created: nil, rows: [], hasResets: false,
+                           assurance: "كل ما في الملف موجود على هذا الجهاز بالفعل، فلا شيء لإضافته.", warnings: [],
+                           confirmTitle: "تم", isBackup: true)
+        }
+        var rows: [Row] = []
+        func add(_ title: String, _ count: Int, _ detail: (Int) -> String) {
+            if count > 0 { rows.append(Row(title: title, detail: detail(count))) }
+        }
+        add("أذكار الصباح والمساء", summary.adhkar, sessions)
+        add("رقية القرين", summary.ruqyah, days)
+        add("قراءة السور", summary.suwar, days)
+        add("المسبحة", summary.tasbih, days)
+        add("سجل الصلوات", summary.prayers, prayers)
+        add("التذكيرات", summary.reminders, reminders)
+        add("الإعدادات", summary.settings, settings)
+        if summary.location {
+            rows.append(Row(title: "الموقع", detail: "يُحفظ الموقع الذي في الملف لحساب مواقيت الصلاة."))
+        }
+        return Preview(
+            isEmpty: false, lead: "سيُضاف إلى هذا الجهاز:",
+            created: "أُنشئت النسخة: \(ArabicFormat.shortDate(exportedAt))، \(ArabicFormat.time(exportedAt))",
+            rows: rows, hasResets: false,
+            assurance: "لن يُحذف شيء من هذا الجهاز ولن ينقص أي عدد. يُضاف ما ينقصه فقط، ويبقى ما سُجّل هنا كما هو.",
+            warnings: [], confirmTitle: "استعادة النسخة", isBackup: true)
     }
 
     // MARK: Scan
@@ -208,6 +357,10 @@ final class TransferImportModel: Identifiable {
     /// «إضافة التقدّم» / «تطبيق التغييرات»: exactly the previewed plan is written. When the stores changed meanwhile,
     /// the code is planned again: a preview that reads the same is written, any other is shown for review.
     func confirm() {
+        if let backup, !isWriting, preview?.isEmpty == false {
+            confirmBackup(backup)
+            return
+        }
         guard let container, let plan, !isWriting, preview?.isEmpty == false else { return }
         isWriting = true
         defer { isWriting = false }
@@ -256,6 +409,7 @@ final class TransferImportModel: Identifiable {
     func back() {
         container = nil
         plan = nil
+        backup = nil
         preview = nil
         refreshed = false
         outcome = nil
@@ -571,6 +725,35 @@ final class TransferImportModel: Identifiable {
             case 11...99: .many
             default: .other
             }
+        }
+    }
+
+    /// Adhkar sessions: «ورد واحد».
+    static func sessions(_ count: Int) -> String {
+        counted(count, one: "ورد واحد", two: "وردان", few: "أوراد", many: "وردًا", other: "ورد")
+    }
+
+    static func prayers(_ count: Int) -> String {
+        counted(count, one: "صلاة واحدة", two: "صلاتان", few: "صلوات", many: "صلاةً", other: "صلاة")
+    }
+
+    static func reminders(_ count: Int) -> String {
+        counted(count, one: "تذكير واحد", two: "تذكيران", few: "تذكيرات", many: "تذكيرًا", other: "تذكير")
+    }
+
+    static func settings(_ count: Int) -> String {
+        counted(count, one: "إعداد واحد", two: "إعدادان", few: "إعدادات", many: "إعدادًا", other: "إعداد")
+    }
+
+    private static func counted(_ count: Int, one: String, two: String, few: String, many: String,
+                                other: String) -> String {
+        let number = ArabicFormat.number(count)
+        return switch plural(count) {
+        case .one: one
+        case .two: two
+        case .few: "\(number) \(few)"
+        case .many: "\(number) \(many)"
+        case .zero, .other: "\(number) \(other)"
         }
     }
 
