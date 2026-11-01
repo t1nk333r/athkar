@@ -100,7 +100,9 @@ final class DiagnosticsUITests: DeckTestCase {
         for pack in ["adhkar", "ruqyah", "suwar"] {
             XCTAssertFalse(value("content.\(pack)").isEmpty, pack)
         }
-        XCTAssertTrue(row("appVersion").exists)
+        expectNoWorshipData()
+        // The app section is last, below the fold: the Form builds its rows only once they scroll into view.
+        XCTAssertTrue(reveal(row("appVersion")).exists, "diagnostics.appVersion")
         expectNoWorshipData()
         closeDiagnostics()
 
