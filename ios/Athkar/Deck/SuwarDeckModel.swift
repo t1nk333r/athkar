@@ -69,6 +69,25 @@ final class SuwarDeckModel: DeckModel {
         refresh()
     }
 
+    /// After a transfer import (``TransferImportModel``): the day on screen is read again, and every sura reopens on
+    /// its first unread page. A day that cannot be read keeps what is on screen.
+    func reload() {
+        do {
+            let pages = try repository.readPages(on: date)
+            let suraDays = try repository.suraDays(on: date)
+            let hasHistory = try repository.recordedDayCount(.all, before: date) > 0
+            readPages = pages
+            completedSuwar = suraDays
+            self.hasHistory = hasHistory
+        } catch {
+            report(error)
+            return
+        }
+        suraIndices = [:]
+        currentIndex = openingIndex(of: selectedSura)
+        refresh()
+    }
+
     // MARK: Sections
 
     var sections: [DeckSection] {

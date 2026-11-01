@@ -143,6 +143,9 @@ UI_BLACK_BOX = {
                      APP + "Platform/Haptics.swift", "fonts/*.ttf"],
     "TasbihUITests": [APP + "Tasbih/*.swift", APP + "Screens/OtherSectionsView.swift",
                       APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
+    "TransferImportUITests": [APP + "Transfer/*.swift", APP + "Screens/SettingsView.swift",
+                              APP + "Screens/DeckDialogs.swift", APP + "Deck/SuwarDeckModel.swift",
+                              APP + "Tasbih/TasbihModel.swift", APP + "Prayer/PrayerTimesModel.swift"],
 }
 
 # The views and model that assemble the whole app. Every app file reaches one of them, so reaching one

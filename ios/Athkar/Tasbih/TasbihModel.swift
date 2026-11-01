@@ -86,11 +86,7 @@ final class TasbihModel: ResettableSection {
         // `normalizeTasbihState`: saved phrases are cleaned, and one that names a preset or an earlier phrase, or is
         // past the eighth, is dropped; a target out of range reads as 33; a selection that is neither a preset nor
         // saved reads as «سبحان الله».
-        var phrases: [String] = []
-        for stored in try settings.value(for: .tasbihCustomPhrases) where phrases.count < TasbihText.maxCustom {
-            let text = TasbihText.cleanPhrase(stored)
-            if !text.isEmpty, TasbihText.findPhrase(text, custom: phrases) == nil { phrases.append(text) }
-        }
+        let phrases = Self.savedPhrases(try settings.value(for: .tasbihCustomPhrases))
         custom = phrases
         let target = try settings.value(for: .tasbihTarget)
         self.target = switch target {
@@ -124,6 +120,34 @@ final class TasbihModel: ResettableSection {
             return
         }
         settleCap()
+    }
+
+    /// After a transfer import (``TransferImportModel``): today's counts and the saved phrases are read again; the
+    /// phrase on screen and the target stay. A day that cannot be read keeps what is on screen.
+    func reload() {
+        do {
+            let rows = try repository.counts(on: date)
+            let hasHistory = try repository.recordedDayCount(.all, before: date) > 0
+            let phrases = Self.savedPhrases(try settings.value(for: .tasbihCustomPhrases))
+            counts = rows.map { PhraseCount(key: $0.phraseKey, count: $0.count) }
+            self.hasHistory = hasHistory
+            custom = phrases
+        } catch {
+            report(error)
+            return
+        }
+        settleCap()
+    }
+
+    /// `normalizeTasbihState`'s saved phrases: each cleaned, and one that names a preset or an earlier phrase, or is
+    /// past the eighth, dropped.
+    private static func savedPhrases(_ stored: [String]) -> [String] {
+        var phrases: [String] = []
+        for phrase in stored where phrases.count < TasbihText.maxCustom {
+            let text = TasbihText.cleanPhrase(phrase)
+            if !text.isEmpty, TasbihText.findPhrase(text, custom: phrases) == nil { phrases.append(text) }
+        }
+        return phrases
     }
 
     // MARK: Counting

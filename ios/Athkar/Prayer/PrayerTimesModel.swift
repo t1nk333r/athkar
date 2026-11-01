@@ -111,6 +111,15 @@ final class PrayerTimesModel {
 
     // MARK: Settings
 
+    /// After a transfer import (``TransferImportModel``): the calculation settings are read again.
+    func reloadSettings() {
+        do {
+            settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
+        } catch {
+            report(error)
+        }
+    }
+
     func setMethod(_ method: CalculationMethod) { write(method, .calculationMethod) { $0.method = method } }
     func setAsrSchool(_ school: AsrSchool) { write(school, .asrSchool) { $0.asrSchool = school } }
     func setHighLatitudeRule(_ rule: HighLatitudeRule) {

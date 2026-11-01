@@ -17,6 +17,8 @@ struct HomeView: View {
     @State private var scopeConfirmation: ScopeConfirmation?
     @State private var completedDeck: DeckID?
     @State private var showsLongOrderPrompt = false
+    /// «استيراد من تطبيق الويب» for a file opened in the app.
+    @State private var openedTransfer: TransferImportModel?
 
     private struct ScopeConfirmation {
         var scope: ResetScope
@@ -81,6 +83,11 @@ struct HomeView: View {
             SettingsView(app: app)
                 .environment(\.palette, palette)
         }
+        .sheet(item: $openedTransfer) { model in
+            TransferImportView(model: model)
+                .environment(\.palette, palette)
+        }
+        .task(id: app.pendingTransferFile?.id) { await presentOpenedFile() }
         .sheet(isPresented: $showsResetScope, onDismiss: confirmChosenScope) {
             ResetScopeSheet { scope in
                 // A scope with a question asks once this sheet is gone; a deck's «تقدم اليوم» resets at once.
@@ -384,6 +391,23 @@ struct HomeView: View {
             }
             try? await Task.sleep(for: .milliseconds(1500))
         }
+    }
+
+    /// A file opened in the app (Files, the share sheet, AirDrop) opens «استيراد من تطبيق الويب» on its review. This
+    /// screen's sheets close first; anything else on screen is waited for.
+    private func presentOpenedFile() async {
+        guard let file = app.pendingTransferFile else { return }
+        showsSettings = false
+        showsResetScope = false
+        completedDeck = nil
+        showsLongOrderPrompt = false
+        try? await Task.sleep(for: .milliseconds(400))
+        while Self.isPresenting, !Task.isCancelled { try? await Task.sleep(for: .milliseconds(400)) }
+        guard !Task.isCancelled, app.pendingTransferFile?.id == file.id else { return }
+        app.pendingTransferFile = nil
+        let model = app.makeTransferImport()
+        model.open(fileData: file.data)
+        openedTransfer = model
     }
 
     /// Whether any window is showing a sheet or alert over its content.

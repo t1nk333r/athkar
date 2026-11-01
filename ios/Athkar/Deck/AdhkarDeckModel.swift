@@ -73,6 +73,24 @@ final class AdhkarSessionModel {
         refresh()
     }
 
+    /// After a transfer import (``TransferImportModel``): the day on screen is read again in `longAdhkarLast` order,
+    /// each deck on its first unread card. If the rows cannot be read, the state on screen stays and the error is
+    /// reported; the import itself is saved.
+    func reload(longAdhkarLast: Bool) {
+        let loaded: SessionState
+        do {
+            loaded = try store.load(date: state.date)
+        } catch {
+            report(error)
+            return
+        }
+        state = loaded
+        self.longAdhkarLast = longAdhkarLast
+        rebuildDecks()
+        indices = SessionPeriods(morning: firstIncompleteIndex(.morning), evening: firstIncompleteIndex(.evening))
+        refresh()
+    }
+
     // MARK: Counters
 
     func tap(_ period: Period, at index: Int) -> DeckChange? {
