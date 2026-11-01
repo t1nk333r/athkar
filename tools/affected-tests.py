@@ -101,7 +101,8 @@ READS = {
 }
 
 # Written by tools/fixtures-generate.mjs from index.html.
-GENERATED_FIXTURES = ["spec/sessions/fixtures/*.json", "spec/reminders/fixtures/*.json",
+# spec/reminders/fixtures/tracker-aware.json is written by hand (the PWAs have no tracker), so it is not one of them.
+GENERATED_FIXTURES = ["spec/sessions/fixtures/*.json", "spec/reminders/fixtures/next-reminder-time.json",
                       "spec/prayer-times/vectors.json", "spec/transfer/fixtures/*.json"]
 # Node checks: the script and what it reads. The local modules a script imports count as inputs.
 NODE_CHECKS = {
@@ -129,6 +130,10 @@ UI_BLACK_BOX = {
                          APP + "Deck/SectionChips.swift", APP + "Screens/DeckDialogs.swift"],
     "DeckRegressionUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
                               APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", "fonts/*.ttf"],
+    # It records today's prayers on «اليوم» and reads the counts on «التشخيص».
+    "DiagnosticsUITests": [APP + "Reminders/*.swift", APP + "Screens/SettingsView.swift",
+                           APP + "Screens/OtherSectionsView.swift", APP + "Tracker/TodayView.swift",
+                           APP + "Tracker/TrackerViews.swift", APP + "Tracker/TrackerText.swift", *PRAYER],
     "DeckUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
                     APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
     "HomePrayerRowUITests": [APP + "Screens/HomePrayerRow.swift", *PRAYER],
