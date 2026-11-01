@@ -113,7 +113,8 @@ NODE_CHECKS = {
                            ["index.html", "content/adhkar.v1.json", "content/suwar.v1.json", "content/ruqyah.v1.json"]),
     "fixtures": ("tools/fixtures-generate.mjs",
                  ["index.html", "content/suwar.v1.json", "spec/backup/examples/*", *GENERATED_FIXTURES]),
-    "backup-validate": ("tools/backup-validate.mjs", ["spec/backup/examples/*", "spec/backup/envelope-v1.schema.json"]),
+    "backup-validate": ("tools/backup-validate.mjs", ["spec/backup/examples/*", "spec/backup/envelope-v1.schema.json",
+                                                    "spec/backup/envelope-v2.schema.json"]),
 }
 
 # XCUITest drives the built app, so no code links these tests to what they check. "*" is every UI

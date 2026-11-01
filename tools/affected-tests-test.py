@@ -89,6 +89,14 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(picked(self.select("spec/reminders/fixtures/tracker-aware.json")),
                          {"core": {"TrackerAwareReminderTests"}})
 
+    def test_backup_format_2_runs_the_validator_and_its_suites(self):
+        # The schema is read only by the validator; the example also by the fixture generator and the core suites.
+        self.assertEqual(picked(self.select("spec/backup/envelope-v2.schema.json")), {"content": {"backup-validate"}})
+        lanes = picked(self.select("spec/backup/examples/native.athkarbackup"))
+        self.assertEqual(lanes["content"], {"backup-validate", "fixtures"})
+        self.assertTrue({"NativeBackupRoundTripTests", "NativeBackupImportTests"} <= lanes["core"], lanes["core"])
+        self.assertEqual(set(lanes), {"content", "core"})
+
     def test_reminder_views_run_the_diagnostics_ui_test(self):
         lanes = picked(self.select("ios/Athkar/Reminders/DiagnosticsView.swift"))
         # The view is excluded from the portable target; it reaches the UI tests through the settings screen too.

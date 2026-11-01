@@ -248,7 +248,9 @@ struct BackupImportTests {
 
     /// Each case edits one example file so that tools/backup-validate.mjs rejects it.
     static let rejections: [(name: String, file: String, edits: [(String, String)], expected: Rejection)] = [
-        ("future format", ruqyahFile, [(#""format": 1"#, #""format": 2"#)], .format(2)),
+        ("future format", ruqyahFile, [(#""format": 1"#, #""format": 3"#)], .format(3)),
+        // Format 2 is the native app's; importBackup reads format 1 only (BackupFile.decode reads both).
+        ("format 2 to the format 1 reader", ruqyahFile, [(#""format": 1"#, #""format": 2"#)], .format(2)),
         ("not a calendar date", ruqyahFile, [(#""2026-09-21": {"#, #""2026-02-30": {"#)],
          .invalid("ruqyah.history.2026-02-30")),
         ("not a real instant", ruqyahFile, [("2026-09-21T05:10:00.000Z", "2026-09-21T24:10:00.000Z")], .malformed),
