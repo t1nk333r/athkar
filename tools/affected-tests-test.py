@@ -69,8 +69,8 @@ class RepositoryTests(unittest.TestCase):
                          {"content-validate", "content-review-test", "content-export-pwa", "fixtures"})
         self.assertEqual(picked(sel)["models"], {
             "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
-            "PortableModelTests", "ReminderReplanTests", "RuqyahPersistenceTests", "SettingsPersistenceTests",
-            "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
+            "PortableModelTests", "PrayerTrackerModelTests", "ReminderReplanTests", "RuqyahPersistenceTests",
+            "SettingsPersistenceTests", "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
             "TasbihTextTests", "TransferImportModelTests",
         })
         self.assertEqual(picked(sel)["ios-build"], {"app", "tests"})
@@ -105,6 +105,18 @@ class RepositoryTests(unittest.TestCase):
         self.assertNotIn("LaunchTests", lanes["ui"])
         self.assertNotIn("HomePrayerRowUITests", lanes["ui"])
         self.assertEqual(sel.full, {})
+
+    def test_tracker_fixture_and_views_run_their_tests(self):
+        # The tracker's fixtures are read through their directory literal; they are hand-written, not generated.
+        self.assertEqual(picked(self.select("spec/tracker/fixtures/calendar.json")), {"core": {"TrackerFixtureTests"}})
+        # The tracker's views are excluded from the portable target and named for the UI test that drives them.
+        lanes = picked(self.select("ios/Athkar/Tracker/TrackerCalendarView.swift"))
+        self.assertEqual(lanes["ui"], {"PrayerTrackerUITests"})
+        self.assertNotIn("models", lanes)
+        model = picked(self.select("ios/Athkar/Tracker/PrayerTrackerModel.swift"))
+        self.assertIn("PrayerTrackerModelTests", model["models"])
+        self.assertIn("PrayerTrackerWiringTests", model["app-unit"])
+        self.assertIn("PrayerTrackerUITests", model["ui"])
 
     def test_test_support_runs_the_suites_that_use_it(self):
         core = picked(self.select(CORE_TESTS + "Storage/StorageTestSupport.swift"))["core"]
