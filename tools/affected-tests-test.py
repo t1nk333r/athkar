@@ -280,7 +280,19 @@ SYNTHETIC = {
         """,
     CORE + "Bool+Plus.swift": """\
         extension Bool {
-            public @inlinable static prefix func - (w: Bool) -> Bool { !w }
+            public @inlinable static prefix func - (
+                w: Bool
+            ) -> Bool { _ = Int.init(radix: 2); return !w }
+        }
+        """,
+    CORE + "Int+Postfix.swift": """\
+        extension Int {
+            public static postfix func ++ (value: Int) -> Int { value + 1 }
+        }
+        """,
+    CORE + "Widget+Infix.swift": """\
+        extension Widget {
+            public static infix func ** (lhs: Int, rhs: Int) -> Int { lhs + rhs }
         }
         """,
     CORE + "Widget+Named.swift": """\
@@ -339,6 +351,13 @@ SYNTHETIC = {
 
         struct WidgetIndexTests {
             @Test func subscripts() { #expect(makeWidget()[2] == 2) }
+        }
+        """,
+    CORE_TESTS + "RadixLabelTests.swift": """\
+        import Testing
+
+        struct RadixLabelTests {
+            @Test func radixLabel() { _ = Int.init(radix: 2) }
         }
         """,
     CORE_TESTS + "FloorLabelTests.swift": """\
@@ -583,6 +602,10 @@ class SyntheticRepositoryTests(unittest.TestCase):
     def test_rule_mutations_are_killed(self):
         mutations = (
             ("|prefix|postfix|infix|", "|", "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
+            ("INIT_LABEL.match(signature)", "INIT_LABEL.search(signature)",
+             "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
+            ("|postfix|", "|", "test_fixity_modifiers_are_parsed"),
+            ("|infix|", "|", "test_fixity_modifiers_are_parsed"),
             (r'r"((?:(?:@[\w.]+(?:\([^)]*\))?|public|',
              r'r"(?:@[\w.]+(?:\([^)]*\))?\s+)*((?:(?:public|',
              "test_operator_on_an_outside_type_runs_every_test_that_sees_it"),
@@ -624,9 +647,18 @@ class SyntheticRepositoryTests(unittest.TestCase):
 
     def test_operator_on_an_outside_type_runs_every_test_that_sees_it(self):
         path = CORE + "Bool+Plus.swift"
-        self.write(path, textwrap.dedent(SYNTHETIC[path]).replace("!w", "w"))
+        self.write(path, textwrap.dedent(SYNTHETIC[path]).replace("return !w", "return w"))
         self.assertEqual(self.units("core"), self.units("core", "--all"))
         self.assertEqual(self.units("models"), self.units("models", "--all"))
+        parsed = at.SwiftFile(path, textwrap.dedent(SYNTHETIC[path]))
+        self.assertEqual(parsed.members, {(('Bool',), 'Bool', 'type')})
+
+    def test_fixity_modifiers_are_parsed(self):
+        for path in (CORE + "Bool+Plus.swift", CORE + "Int+Postfix.swift", CORE + "Widget+Infix.swift"):
+            with self.subTest(path=path):
+                parsed = at.SwiftFile(path, textwrap.dedent(SYNTHETIC[path]))
+                type_name = path.rsplit("/", 1)[-1].split("+", 1)[0]
+                self.assertIn(((type_name,), type_name, "type"), parsed.members)
 
     def test_modifier_rule_accepts_attributes_after_modifiers(self):
         source = "extension Widget {\n    public @inlinable init(label: String) {}\n}\n"
@@ -783,7 +815,7 @@ class SyntheticRepositoryTests(unittest.TestCase):
         self.assertEqual(set(values["ATHKAR_TEST_UNITS"].split()),
                          {"QiblaTests", "AngleTests", "ClockTests", "LedgerTests", "legacyNowIsZero()", "CityTests",
                           "WidgetTests", "ProbeStringTests", "SplitTests", "WidgetNameTests", "WidgetIndexTests",
-                          "FloorLabelTests", "GhostLabelTests", "ArrayPositionTests"})
+                          "FloorLabelTests", "GhostLabelTests", "ArrayPositionTests", "RadixLabelTests"})
 
 
 if __name__ == "__main__":
