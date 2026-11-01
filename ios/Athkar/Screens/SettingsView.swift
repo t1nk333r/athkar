@@ -81,6 +81,16 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings.homePrayerRow")
                 }
+
+                Section {
+                    NavigationLink {
+                        DiagnosticsView(app: app)
+                    } label: {
+                        toggleCopy("التشخيص",
+                                   "عدد التذكيرات المجدولة وإصدارات المحتوى والتطبيق، دون أي شيء من أذكارك أو صلواتك.")
+                    }
+                    .accessibilityIdentifier("settings.diagnostics")
+                }
             }
             .navigationTitle("الإعدادات")
             .navigationBarTitleDisplayMode(.inline)

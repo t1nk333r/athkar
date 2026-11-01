@@ -6,7 +6,10 @@ import Observation
 /// `ReminderPlanner`. The whole plan is rebuilt on every trigger (foreground, clock or zone change, a rule, the
 /// location or the calculation settings, a period completed or reopened, an import); requests keep stable IDs, so
 /// rebuilding replaces them instead of adding duplicates. Permission is asked only when a reminder is turned on.
-/// iOS's notification centre is reached through `ReminderNotificationCenter` (`ReminderNotifications.swift`).
+/// A prayer the tracker records gets no notification, so every tracker write replans too. An opportunistic background
+/// refresh replans while the app is not opened (`runBackgroundRefresh()`).
+/// iOS's notification centre is reached through `ReminderNotificationCenter` (`ReminderNotifications.swift`), its
+/// background scheduler through `ReminderRefreshScheduler` (`BackgroundRefresh.swift`).
 @MainActor
 @Observable
 final class ReminderModel {
@@ -18,6 +21,8 @@ final class ReminderModel {
     private(set) var authorization: Authorization = .notDetermined
     /// The earliest pending reminder as iOS holds it, after the last replan.
     private(set) var nextPending: (title: String, fireAt: Date)?
+    /// What the diagnostics screen shows (NATIVE_APP_PLAN.md §8.4): counts and times, never worship data.
+    private(set) var diagnostics: Diagnostics
 
     @ObservationIgnored private let repository: ReminderRepository
     @ObservationIgnored private let report: (any Error) -> Void
@@ -30,11 +35,37 @@ final class ReminderModel {
     @ObservationIgnored private var replanRequests = 0
     /// The single writer: it runs passes until one finishes with no newer request. Internal so tests can wait for it.
     @ObservationIgnored private(set) var replanTask: Task<Void, Never>?
+    /// Asks iOS for the next background refresh; `nil` where there is none (the portable tests that do not set one).
+    @ObservationIgnored var refreshScheduler: (any ReminderRefreshScheduler)?
+    @ObservationIgnored private let diagnosticsStore: any ReminderDiagnosticsStore
+    /// The zone of the last pass, which places the next background refresh after its midnight.
+    @ObservationIgnored private var planZone: TimeZone = .current
 
     struct PlanInputs {
         let zone: TimeZone
         let schedule: (String) -> PrayerSchedule?
         let completeToday: Set<Period>
+        /// The tracker's recorded occurrences over the horizon (`ReminderPlanner.prayerStates`).
+        var prayerStates: [PrayerOccurrence: PrayerRecordState] = [:]
+    }
+
+    /// Counts and times for the diagnostics screen. A count is `nil` until a pass or a read sets it.
+    struct Diagnostics: Equatable {
+        /// What the last finished pass planned, and how many its budget left out.
+        var planned: Int?
+        var droppedByBudget: Int?
+        /// The app's pending requests as iOS holds them, after the last pass or diagnostics read.
+        var pending: Int?
+        var lastReplanAt: Date?
+        var lastBackgroundRefreshAt: Date?
+        /// The last request for a background refresh: its earliest start, or `nil` when iOS refused it (the simulator
+        /// does) or none was made.
+        var refreshRequest: RefreshRequest?
+    }
+
+    enum RefreshRequest: Equatable {
+        case accepted(earliestBegin: Date)
+        case refused
     }
 
     /// Prefixes of the request IDs this model owns (`PlannedNotification.id`).
@@ -43,11 +74,15 @@ final class ReminderModel {
     nonisolated static let targetKey = "target"
 
     init(repository: ReminderRepository, report: @escaping (any Error) -> Void,
-         center: any ReminderNotificationCenter, clock: @escaping () -> Date = { Date() }) throws {
+         center: any ReminderNotificationCenter, clock: @escaping () -> Date = { Date() },
+         diagnosticsStore: any ReminderDiagnosticsStore = MemoryDiagnosticsStore()) throws {
         self.repository = repository
         self.report = report
         self.center = center
         self.clock = clock
+        self.diagnosticsStore = diagnosticsStore
+        diagnostics = Diagnostics(lastReplanAt: diagnosticsStore.lastReplanAt,
+                                  lastBackgroundRefreshAt: diagnosticsStore.lastBackgroundRefreshAt)
         rules = Dictionary(uniqueKeysWithValues: try repository.rules().map { ($0.id, $0) })
     }
 
@@ -123,6 +158,13 @@ final class ReminderModel {
         }
     }
 
+    /// A replan the caller waits for: a notification action or a background refresh, which iOS may suspend once it
+    /// returns.
+    func replanAndWait() async {
+        replan()
+        await replanTask?.value
+    }
+
     private func drainReplans() async {
         var planned: Int
         repeat {
@@ -149,20 +191,27 @@ final class ReminderModel {
         guard isCurrent() else { return }
         recordDelivered(delivered, today: today, zone: zone)
 
-        var plan: [PlannedNotification] = []
+        var result = ReminderPlan(notifications: [], droppedByBudget: 0)
         if status == .allowed, let inputs {
             let firedToday = Set(rules.keys.filter { (try? repository.lastShown(ruleId: $0)) == today })
-            plan = ReminderPlanner.plan(now: now, zone: zone, rules: Array(rules.values), schedule: inputs.schedule,
-                                        completeToday: inputs.completeToday, firedToday: firedToday)
+            result = ReminderPlanner.makePlan(now: now, zone: zone, rules: Array(rules.values),
+                                              schedule: inputs.schedule, completeToday: inputs.completeToday,
+                                              firedToday: firedToday, prayerStates: inputs.prayerStates)
         }
+        let plan = result.notifications
 
         let wanted = Set(plan.map(\.id))
         let pending = await center.pendingRequests().map(\.id).filter(Self.isOwned)
         guard isCurrent() else { return }
         center.removePendingRequests(withIdentifiers: pending.filter { !wanted.contains($0) })
-        // Today's delivered adhkar reminder goes once its period is complete (`periodIsComplete`).
-        if let complete = inputs?.completeToday, !complete.isEmpty {
-            center.removeDeliveredNotifications(withIdentifiers: complete.map { "adhkar.\($0.rawValue).\(today)" })
+        // Today's delivered adhkar reminder goes once its period is complete (`periodIsComplete`), and a prayer's once
+        // the tracker records it.
+        let settled = (inputs?.completeToday ?? []).map { "adhkar.\($0.rawValue).\(today)" }
+            + (inputs?.prayerStates ?? [:])
+            .filter { $0.key.date == today && $0.value != .unrecorded }
+            .map { "prayer.\($0.key.prayer.rawValue).\(today)" }.sorted()
+        if !settled.isEmpty {
+            center.removeDeliveredNotifications(withIdentifiers: settled)
         }
         for item in plan {
             guard isCurrent() else { return }
@@ -175,12 +224,64 @@ final class ReminderModel {
             }
         }
 
-        let next = await center.pendingRequests()
-            .filter { Self.isOwned($0.id) }
+        let held = await center.pendingRequests().filter { Self.isOwned($0.id) }
+        let next = held
             .compactMap { request -> (String, Date)? in request.fireAt.map { (request.title, $0) } }
             .min { $0.1 < $1.1 }
         guard isCurrent() else { return }
         nextPending = next.map { (title: $0.0, fireAt: $0.1) }
+        planZone = zone
+        diagnostics.planned = plan.count
+        diagnostics.droppedByBudget = result.droppedByBudget
+        diagnostics.pending = held.count
+        diagnostics.lastReplanAt = now
+        diagnosticsStore.lastReplanAt = now
+    }
+
+    // MARK: Diagnostics and background refresh
+
+    /// Reads what the diagnostics screen shows from iOS again: the permission and the pending requests.
+    func refreshDiagnostics() async {
+        await refreshAuthorization()
+        let pending = await center.pendingRequests().filter { Self.isOwned($0.id) }.count
+        diagnostics.pending = pending
+    }
+
+    /// The `BGAppRefreshTask` identifier, also listed in Info.plist's `BGTaskSchedulerPermittedIdentifiers`.
+    nonisolated static let refreshTaskIdentifier = "local.dev.athkar.reminders.refresh"
+
+    /// Asks iOS for one background refresh, not before the next local midnight: a new day enters the horizon then.
+    /// iOS decides whether and when it runs. Called on going to the background and from each refresh.
+    func scheduleBackgroundRefresh() {
+        guard let refreshScheduler else { return }
+        let earliest = Self.nextRefresh(after: clock(), zone: planZone)
+        do {
+            try refreshScheduler.submit(earliestBegin: earliest)
+            diagnostics.refreshRequest = .accepted(earliestBegin: earliest)
+        } catch {
+            // Not a failed save: iOS refuses where there is no background refresh (the simulator, or the user's
+            // «تحديث التطبيق في الخلفية» turned off). The diagnostics screen shows it.
+            diagnostics.refreshRequest = .refused
+        }
+    }
+
+    /// One background refresh run: the next one is asked for first, in case iOS ends this run early, then a replan
+    /// that is waited for.
+    func runBackgroundRefresh() async {
+        let now = clock()
+        diagnostics.lastBackgroundRefreshAt = now
+        diagnosticsStore.lastBackgroundRefreshAt = now
+        scheduleBackgroundRefresh()
+        await replanAndWait()
+    }
+
+    /// Five minutes after the next local midnight in `zone`.
+    nonisolated static func nextRefresh(after now: Date, zone: TimeZone) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+            ?? now.addingTimeInterval(86_400)
+        return tomorrow.addingTimeInterval(5 * 60)
     }
 
     private func ruleId(for item: PlannedNotification) -> String? {
@@ -250,6 +351,50 @@ protocol ReminderNotificationCenter: AnyObject {
     func add(_ request: ReminderRequest) async throws
 }
 
+/// Asks iOS for a background refresh: `BGTaskScheduler` in the app (`BackgroundRefresh.swift`), a recording scheduler
+/// in the tests.
+@MainActor
+protocol ReminderRefreshScheduler: AnyObject {
+    /// Replaces any refresh already asked for. Throws when iOS refuses it.
+    func submit(earliestBegin: Date) throws
+}
+
+/// Where the diagnostics times are kept between launches: not in SQLite, so they never reach a backup.
+@MainActor
+protocol ReminderDiagnosticsStore: AnyObject {
+    var lastReplanAt: Date? { get set }
+    var lastBackgroundRefreshAt: Date? { get set }
+}
+
+/// The app's diagnostics times, in `UserDefaults`.
+@MainActor
+final class UserDefaultsDiagnosticsStore: ReminderDiagnosticsStore {
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    var lastReplanAt: Date? {
+        get { defaults.object(forKey: "diagnostics.lastReplanAt") as? Date }
+        set { defaults.set(newValue, forKey: "diagnostics.lastReplanAt") }
+    }
+
+    var lastBackgroundRefreshAt: Date? {
+        get { defaults.object(forKey: "diagnostics.lastBackgroundRefreshAt") as? Date }
+        set { defaults.set(newValue, forKey: "diagnostics.lastBackgroundRefreshAt") }
+    }
+}
+
+/// Diagnostics times for one model's lifetime: the tests.
+@MainActor
+final class MemoryDiagnosticsStore: ReminderDiagnosticsStore {
+    var lastReplanAt: Date?
+    var lastBackgroundRefreshAt: Date?
+
+    init() {}
+}
+
 /// A delivered notification: its request ID, the rule in its payload, and when it was shown.
 struct DeliveredReminder: Equatable, Sendable {
     let id: String
@@ -298,6 +443,16 @@ struct ReminderPayload: Sendable, Equatable {
     }
 
     var isPrayer: Bool { requestId?.hasPrefix("prayer.") ?? false }
+
+    /// The occurrence a prayer reminder belongs to, from its ID `prayer.<key>.<local_date>`: the notification's own
+    /// date, whatever the date is when it is acted on.
+    var occurrence: PrayerOccurrence? {
+        guard let requestId else { return nil }
+        let parts = requestId.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
+        guard parts.count == 3, parts[0] == "prayer", let prayer = ObligatoryPrayer(rawValue: parts[1]),
+              LocalDate.epochDay(parts[2]) != nil else { return nil }
+        return PrayerOccurrence(date: parts[2], prayer: prayer)
+    }
 }
 
 extension ReminderRule.PrayerKey {

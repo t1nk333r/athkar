@@ -80,6 +80,9 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension: [athkarbackup]
         LSSupportsOpeningDocumentsInPlace: false
+        # The opportunistic reminder refresh (NATIVE_APP_PLAN.md §7.5): iOS decides whether and when it runs.
+        BGTaskSchedulerPermittedIdentifiers: [local.dev.athkar.reminders.refresh]
+        UIBackgroundModes: [fetch]
         UILaunchScreen: {}
         UIAppFonts: [kfgqpc-uthman-taha-naskh.ttf, kfgqpc-hafs-v30.ttf]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]

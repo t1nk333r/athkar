@@ -61,9 +61,18 @@ final class UserNotificationCenterAdapter: ReminderNotificationCenter {
 }
 
 extension ReminderModel {
-    /// The app's reminders, on iOS's notification centre.
-    convenience init(repository: ReminderRepository, report: @escaping (any Error) -> Void) throws {
-        try self.init(repository: repository, report: report, center: UserNotificationCenterAdapter())
+    // MARK: Categories
+
+    /// Prayer reminders' category, which carries «سجّل الصلاة».
+    nonisolated static let prayerCategory = "prayer"
+    nonisolated static let recordPrayerAction = "record-prayer"
+
+    /// «سجّل الصلاة» runs in the background: it writes one record and replans, so the app need not take over the
+    /// screen. iOS asks the user to unlock first, so the database is readable and nobody records from a locked phone.
+    static var categories: Set<UNNotificationCategory> {
+        let record = UNNotificationAction(identifier: recordPrayerAction, title: "سجّل الصلاة",
+                                          options: [.authenticationRequired])
+        return [UNNotificationCategory(identifier: prayerCategory, actions: [record], intentIdentifiers: [])]
     }
 
     // MARK: Requests
@@ -98,6 +107,7 @@ extension ReminderModel {
             content.title = "صلاة \(name)"
             content.body = prayerBody(name, offsetMinutes: item.offsetMinutes)
             content.threadIdentifier = "prayer"
+            content.categoryIdentifier = prayerCategory
         }
         return content
     }
@@ -111,6 +121,8 @@ final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDele
     @MainActor private final class Handlers {
         var onShown: ((ReminderPayload, Date) -> Void)?
         var onOpen: ((ReminderPayload) -> Void)?
+        /// «سجّل الصلاة»: attached at launch, before a scene exists, because the action runs in the background.
+        var onRecordPrayer: (@MainActor (ReminderPayload, Date) async -> Void)?
         /// A tap that arrived before the app model existed.
         var pendingOpen: ReminderPayload?
     }
@@ -129,6 +141,16 @@ final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDele
         }
     }
 
+    /// Called once at launch, before this becomes the centre's delegate: a background launch for «سجّل الصلاة» has no
+    /// scene, so the scene's `attach` never runs.
+    @MainActor func attachActions(onRecordPrayer: @escaping @MainActor (ReminderPayload, Date) async -> Void) {
+        Self.handlers.onRecordPrayer = onRecordPrayer
+    }
+
+    @MainActor private static func recordPrayer(_ payload: ReminderPayload, shownAt date: Date) async {
+        await handlers.onRecordPrayer?(payload, date)
+    }
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification)
         async -> UNNotificationPresentationOptions {
         let payload = ReminderPayload(notification.request.content.userInfo)
@@ -138,9 +160,14 @@ final class ReminderNotificationDelegate: NSObject, UNUserNotificationCenterDele
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
         let payload = ReminderPayload(response.notification.request.content.userInfo)
         let date = response.notification.date
+        if response.actionIdentifier == ReminderModel.recordPrayerAction {
+            // Returns once the record is written and the replan is done: iOS may suspend the app after that.
+            await Self.recordPrayer(payload, shownAt: date)
+            return
+        }
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
         await MainActor.run {
             let handlers = Self.handlers
             handlers.onShown?(payload, date)
