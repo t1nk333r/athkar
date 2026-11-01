@@ -61,14 +61,14 @@ final class DiagnosticsUITests: DeckTestCase {
         closeSettings()
     }
 
-    /// Nothing on the screen names a prayer state, adhkar progress or completion. Only the diagnostics Form is read:
-    /// the screen it was opened from («اليوم») stays in the accessibility tree under the settings sheet.
+    /// No diagnostics row names a prayer state, adhkar progress or completion. Each row is one accessibility element
+    /// whose label and value are all it shows (the headers and footers are fixed text). App-wide static texts would
+    /// also read «اليوم», which stays in the accessibility tree under the settings sheet.
     private func expectNoWorshipData() {
-        let form = app.collectionViews.containing(.any, identifier: "diagnostics.planned").firstMatch
-        XCTAssertTrue(form.exists, "the diagnostics Form")
-        let texts = form.staticTexts.allElementsBoundByIndex.map(\.label)
-            + form.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'diagnostics.'"))
-            .allElementsBoundByIndex.flatMap { [$0.label, $0.value as? String ?? ""] }
+        let rows = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'diagnostics.'")).allElementsBoundByIndex
+        XCTAssertFalse(rows.isEmpty, "no diagnostics rows")
+        let texts = rows.flatMap { [$0.label, $0.value as? String ?? ""] }
         for word in ["صلّيتُ", "لم تُسجَّل", "لا تنطبق", "مكتمل", "تقدّم", "فائت"] {
             XCTAssertFalse(texts.contains { $0.contains(word) }, "«\(word)» on the diagnostics screen: \(texts)")
         }
