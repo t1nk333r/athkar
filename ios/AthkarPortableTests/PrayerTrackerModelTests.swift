@@ -214,4 +214,69 @@ final class PrayerTrackerModelTests: XCTestCase {
             }
         }
     }
+
+    /// Every write the reminders depend on tells them to replan: a quick log, its undo, a timing, the Friday choice,
+    /// not applicable, a past day, a cleared day and a reload. A command that changes nothing or is refused does not.
+    @MainActor
+    func testEveryWriteAsksTheRemindersToReplan() throws {
+        let h = try TrackerHarness()
+        let model = h.makeModel()
+        var writes = 0
+        model.didWrite = { writes += 1 }
+        let friday = PrayerOccurrence(date: "2026-10-30", prayer: .dhuhr)
+        let yesterday = PrayerOccurrence(date: "2026-10-29", prayer: .isha)
+
+        XCTAssertTrue(model.quickLog(fajr))
+        XCTAssertEqual(writes, 1)
+        XCTAssertFalse(model.quickLog(fajr))
+        XCTAssertEqual(writes, 1, "nothing changed")
+        model.undo()
+        XCTAssertEqual(writes, 2)
+        XCTAssertTrue(model.quickLog(fajr))
+        XCTAssertTrue(model.apply(.setTiming(.onTime), to: fajr))
+        XCTAssertTrue(model.apply(.record(noon: .jumuah), to: friday))
+        XCTAssertTrue(model.apply(.markNotApplicable, to: PrayerOccurrence(date: "2026-10-30", prayer: .asr)))
+        XCTAssertTrue(model.quickLog(yesterday))
+        XCTAssertEqual(writes, 7)
+        XCTAssertFalse(model.quickLog(PrayerOccurrence(date: "2026-10-31", prayer: .fajr)), "a future day is refused")
+        XCTAssertEqual(writes, 7)
+        XCTAssertTrue(model.clearDay("2026-10-30"))
+        XCTAssertEqual(writes, 8)
+        model.reload()
+        XCTAssertEqual(writes, 9)
+    }
+
+    /// «سجّل الصلاة» records its own occurrence once, like the quick log, and offers no «تراجع».
+    @MainActor
+    func testLoggingFromAReminderRecordsOnceWithoutUndo() throws {
+        let h = try TrackerHarness()
+        let model = h.makeModel()
+        let yesterday = PrayerOccurrence(date: "2026-10-29", prayer: .isha)
+        XCTAssertTrue(model.logFromReminder(yesterday))
+        XCTAssertEqual(model.entry(yesterday), PrayerEntry(state: .prayed, loggedAt: h.now))
+        XCTAssertNil(model.lastChange)
+        XCTAssertFalse(model.logFromReminder(yesterday))
+        XCTAssertEqual(try h.support.database.prayerRecords.records(on: "2026-10-29").count, 1)
+        XCTAssertFalse(model.logFromReminder(PrayerOccurrence(date: "2026-10-31", prayer: .fajr)))
+    }
+
+    /// The reminder planner's input: the recorded states from a date through the horizon, unrecorded rows included.
+    @MainActor
+    func testStatesCoverTheHorizonFromADate() throws {
+        let h = try TrackerHarness()
+        let model = h.makeModel()
+        XCTAssertTrue(model.quickLog(fajr))
+        XCTAssertTrue(model.apply(.markNotApplicable, to: PrayerOccurrence(date: "2026-10-30", prayer: .asr)))
+        XCTAssertTrue(model.quickLog(PrayerOccurrence(date: "2026-10-29", prayer: .isha)))
+        XCTAssertTrue(model.quickLog(PrayerOccurrence(date: "2026-10-30", prayer: .isha)))
+        model.undo()
+        XCTAssertEqual(model.states(from: "2026-10-30", days: 7), [
+            fajr: .prayed,
+            PrayerOccurrence(date: "2026-10-30", prayer: .asr): .notApplicable,
+            PrayerOccurrence(date: "2026-10-30", prayer: .isha): .unrecorded,
+        ])
+        XCTAssertEqual(model.states(from: "2026-10-29", days: 1),
+                       [PrayerOccurrence(date: "2026-10-29", prayer: .isha): .prayed])
+        XCTAssertEqual(model.states(from: "2026-10-30", days: 0), [:])
+    }
 }
