@@ -176,7 +176,7 @@ struct TrackerFixtureTests {
 // MARK: - Fixture shapes
 
 /// A fixture record, read in the file's field names.
-private struct FixtureRecord: Decodable {
+struct FixtureRecord: Decodable {
     var date: String
     var prayer: ObligatoryPrayer
     var zone: String

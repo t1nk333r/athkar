@@ -1,0 +1,524 @@
+{
+  "about": "Tracker-aware planning (NATIVE_APP_PLAN.md §7.5): a prayer occurrence the tracker records as prayed or not_applicable gets no prayer notification, on any day; unrecorded (never recorded, undone, unrecorded, unmarked or cleared) keeps it. Adhkar reminders do not depend on the tracker. Steps are the tracker commands of spec/tracker/fixtures/transitions.json, applied in order before planning at now.",
+  "source": "NATIVE_APP_PLAN.md §7.5, spec/tracker/tracker.md (written by hand: the PWAs have no tracker)",
+  "defaultInput": {
+    "timeZone": "Asia/Riyadh",
+    "now": "2026-10-30T03:00:00.000Z",
+    "nowLocal": "2026-10-30T06:00:00.000+03:00",
+    "times": {
+      "fajr": "04:40",
+      "sunrise": "05:58",
+      "dhuhr": "11:35",
+      "asr": "14:52",
+      "maghrib": "17:13",
+      "isha": "18:43"
+    },
+    "rules": [
+      {
+        "kind": "prayer",
+        "prayer": "fajr",
+        "offsetMinutes": 0
+      },
+      {
+        "kind": "prayer",
+        "prayer": "dhuhr",
+        "offsetMinutes": 0
+      },
+      {
+        "kind": "prayer",
+        "prayer": "asr",
+        "offsetMinutes": 0
+      },
+      {
+        "kind": "prayer",
+        "prayer": "maghrib",
+        "offsetMinutes": 0
+      },
+      {
+        "kind": "prayer",
+        "prayer": "isha",
+        "offsetMinutes": 0
+      },
+      {
+        "kind": "adhkar",
+        "period": "morning"
+      },
+      {
+        "kind": "adhkar",
+        "period": "evening"
+      }
+    ],
+    "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0",
+    "records": [],
+    "steps": []
+  },
+  "cases": [
+    {
+      "name": "nothing recorded: every prayer still ahead today is planned, and every prayer of the next six days",
+      "input": {},
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "a prayer recorded prayed later today is not planned",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "maghrib"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 46,
+        "absent": [
+          "prayer.maghrib.2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "a prayer marked not applicable is not planned; the evening adhkar (Asr + 60) still is",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "markNotApplicable"
+            },
+            "date": "2026-10-30",
+            "prayer": "asr"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 46,
+        "absent": [
+          "prayer.asr.2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "recorded and undone: the record is unrecorded and the prayer is planned again",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          },
+          {
+            "command": {
+              "kind": "undo"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "unrecord and unmark not applicable plan their prayers again",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          },
+          {
+            "command": {
+              "kind": "unrecord"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          },
+          {
+            "command": {
+              "kind": "markNotApplicable"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          },
+          {
+            "command": {
+              "kind": "unmarkNotApplicable"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "choosing a timing keeps a prayed occurrence unplanned",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          },
+          {
+            "command": {
+              "kind": "setTiming",
+              "timing": "on_time"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 46,
+        "absent": [
+          "prayer.dhuhr.2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "Friday: Jumu'ah recorded in the Dhuhr slot is not planned",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record",
+              "noon": "jumuah"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 46,
+        "absent": [
+          "prayer.dhuhr.2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "a cleared day plans every prayer of it again",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          },
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "asr"
+          },
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "maghrib"
+          },
+          {
+            "command": {
+              "kind": "markNotApplicable"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          },
+          {
+            "command": {
+              "kind": "clearDay"
+            },
+            "date": "2026-10-30"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "a past-day edit leaves today's plan as it was",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-29",
+            "prayer": "isha"
+          },
+          {
+            "command": {
+              "kind": "markNotApplicable"
+            },
+            "date": "2026-10-29",
+            "prayer": "maghrib"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "a prayer already past and recorded changes nothing",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "fajr"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": []
+      }
+    },
+    {
+      "name": "10 minutes after Dhuhr, unrecorded: its catch-up is planned",
+      "input": {
+        "now": "2026-10-30T08:45:00.000Z"
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 47,
+        "absent": [],
+        "catchUp": [
+          "prayer.dhuhr.2026-10-30"
+        ]
+      }
+    },
+    {
+      "name": "10 minutes after Dhuhr, recorded prayed: no catch-up",
+      "input": {
+        "now": "2026-10-30T08:45:00.000Z",
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 46,
+        "absent": [
+          "prayer.dhuhr.2026-10-30"
+        ],
+        "catchUp": []
+      }
+    },
+    {
+      "name": "stored records on a later date (made under a clock set ahead): prayed and not applicable are not planned, unrecorded is",
+      "input": {
+        "records": [
+          {
+            "date": "2026-10-31",
+            "prayer": "fajr",
+            "zone": "Asia/Riyadh",
+            "scheduledAt": null,
+            "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0",
+            "state": "prayed",
+            "timing": null,
+            "noon": null,
+            "loggedAt": "2026-10-31T02:00:00.000Z",
+            "updatedAt": "2026-10-31T02:00:00.000Z"
+          },
+          {
+            "date": "2026-10-31",
+            "prayer": "dhuhr",
+            "zone": "Asia/Riyadh",
+            "scheduledAt": null,
+            "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0",
+            "state": "not_applicable",
+            "timing": null,
+            "noon": null,
+            "loggedAt": "2026-10-31T02:00:00.000Z",
+            "updatedAt": "2026-10-31T02:00:00.000Z"
+          },
+          {
+            "date": "2026-10-31",
+            "prayer": "asr",
+            "zone": "Asia/Riyadh",
+            "scheduledAt": null,
+            "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0",
+            "state": "unrecorded",
+            "timing": null,
+            "noon": null,
+            "loggedAt": null,
+            "updatedAt": "2026-10-31T02:00:00.000Z"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "adhkar.evening.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ],
+        "count": 45,
+        "absent": [
+          "prayer.fajr.2026-10-31",
+          "prayer.dhuhr.2026-10-31"
+        ]
+      }
+    },
+    {
+      "name": "recording leaves the adhkar reminders alone",
+      "input": {
+        "steps": [
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "dhuhr"
+          },
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "asr"
+          },
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "maghrib"
+          },
+          {
+            "command": {
+              "kind": "record"
+            },
+            "date": "2026-10-30",
+            "prayer": "isha"
+          }
+        ]
+      },
+      "expected": {
+        "today": [
+          "adhkar.evening.2026-10-30"
+        ],
+        "count": 43,
+        "absent": [
+          "prayer.dhuhr.2026-10-30",
+          "prayer.asr.2026-10-30",
+          "prayer.maghrib.2026-10-30",
+          "prayer.isha.2026-10-30"
+        ]
+      }
+    }
+  ]
+}
