@@ -9,6 +9,11 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.palette) private var palette
     @State private var transfer: TransferImportModel?
+    @State private var choosesBackup = false
+    /// «حذف كل البيانات»: the first question, then the second.
+    @State private var asksDelete = false
+    @State private var confirmsDelete = false
+    @State private var isDeleting = false
 
     var body: some View {
         @Bindable var settings = app.settings
@@ -74,6 +79,28 @@ struct SettingsView: View {
                     Text("النقل")
                 }
 
+                Section {
+                    NavigationLink {
+                        BackupExportView(app: app)
+                    } label: {
+                        toggleCopy("تصدير نسخة احتياطية",
+                                   "ملف واحد فيه كل ما سجّلته وإعداداتك، تحفظه أو تنقله إلى جهاز آخر.")
+                    }
+                    .accessibilityIdentifier("settings.backupExport")
+                    Button {
+                        choosesBackup = true
+                    } label: {
+                        toggleCopy("استعادة نسخة احتياطية",
+                                   "اختر ملف نسخة احتياطية (‎.athkarbackup) من هذا التطبيق أو من تطبيقَي الويب. يُضاف ما ينقص هذا الجهاز فقط، بعد أن تراجعه وتؤكده.")
+                            .foregroundStyle(palette.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .accessibilityIdentifier("settings.backupRestore")
+                } header: {
+                    Text("النسخ الاحتياطي")
+                }
+
                 Section("الصفحة الرئيسية") {
                     Toggle(isOn: $settings.homePrayerRow) {
                         toggleCopy("المواقيت في أعلى الصفحة",
@@ -84,12 +111,38 @@ struct SettingsView: View {
 
                 Section {
                     NavigationLink {
+                        PrivacyView()
+                    } label: {
+                        toggleCopy("الخصوصية", "ما يبقى على جهازك، والموقع، والتذكيرات، والنسخ الاحتياطية.")
+                    }
+                    .accessibilityIdentifier("settings.privacy")
+                    NavigationLink {
+                        AboutView(app: app)
+                    } label: {
+                        toggleCopy("حول التطبيق", "الإصدار، ومصادر الأذكار والقرآن، والخطوط، وحساب مواقيت الصلاة.")
+                    }
+                    .accessibilityIdentifier("settings.about")
+                    NavigationLink {
                         DiagnosticsView(app: app)
                     } label: {
                         toggleCopy("التشخيص",
                                    "عدد التذكيرات المجدولة وإصدارات المحتوى والتطبيق، دون أي شيء من أذكارك أو صلواتك.")
                     }
                     .accessibilityIdentifier("settings.diagnostics")
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        asksDelete = true
+                    } label: {
+                        Text(isDeleting ? "يُحذف…" : "حذف كل البيانات")
+                            .font(.body.weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .disabled(isDeleting)
+                    .accessibilityIdentifier("settings.deleteAll")
+                } footer: {
+                    Text("يحذف من هذا الجهاز كل ما سجّلته وإعداداتك، ويلغي التذكيرات المجدولة.")
                 }
             }
             .navigationTitle("الإعدادات")
@@ -105,6 +158,35 @@ struct SettingsView: View {
         .sheet(item: $transfer) { model in
             TransferImportView(model: model)
                 .environment(\.palette, palette)
+        }
+        .fileImporter(isPresented: $choosesBackup, allowedContentTypes: TransferImportView.fileTypes) { picked in
+            guard case let .success(url) = picked else { return }
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let model = app.makeTransferImport()
+            model.open(fileData: TransferImportModel.read(url))
+            transfer = model
+        }
+        .alert("حذف كل البيانات؟", isPresented: $asksDelete) {
+            Button("متابعة", role: .destructive) { confirmsDelete = true }
+            Button("إلغاء", role: .cancel) {}
+        } message: {
+            Text("يُحذف من هذا الجهاز كل ما سجّلته: الأذكار والرقية والسور والمسبحة وسجل الصلوات والتذكيرات والموقع والإعدادات. لا يمكن التراجع عن ذلك، فصدّر نسخة احتياطية أولًا إن أردت الاحتفاظ به.")
+        }
+        .alert("تأكيد الحذف", isPresented: $confirmsDelete) {
+            Button("حذف كل البيانات", role: .destructive) {
+                isDeleting = true
+                Task {
+                    let deleted = await app.deleteAllData()
+                    isDeleting = false
+                    guard deleted else { return }
+                    announce("حُذفت كل البيانات من هذا الجهاز")
+                    dismiss()
+                }
+            }
+            Button("إلغاء", role: .cancel) {}
+        } message: {
+            Text("هل تريد حذف كل البيانات من هذا الجهاز نهائيًا؟")
         }
     }
 

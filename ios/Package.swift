@@ -33,14 +33,16 @@ let package = Package(
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
                       "Reminders/BackgroundRefresh.swift", "Reminders/DiagnosticsView.swift",
                       "Screens", "Tracker/TodayView.swift", "Tracker/TrackerCalendarView.swift",
-                      "Tracker/TrackerViews.swift", "Transfer/TransferImportView.swift", "Transfer/QRScanner.swift"],
+                      "Tracker/TrackerViews.swift", "Transfer/TransferImportView.swift", "Transfer/QRScanner.swift",
+                      "Backup/BackupExportView.swift", "About/AboutView.swift", "About/PrivacyView.swift"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Deck/SuwarDeckModel.swift", "Tasbih/TasbihText.swift", "Tasbih/TasbihModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
                       "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
                       "Reminders/ReminderModel.swift", "Reminders/DiagnosticsReport.swift", "App/DayRollover.swift",
                       "Transfer/TransferImportModel.swift", "Tracker/PrayerTrackerModel.swift",
-                      "Tracker/TrackerText.swift"]
+                      "Tracker/TrackerText.swift", "App/AppRoute.swift", "Backup/BackupExportModel.swift",
+                      "About/AboutReport.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),

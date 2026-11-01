@@ -581,6 +581,8 @@ every launch (`BundledContent.recordInstalls`); they describe the app, not the u
 Deleting them would only make the next launch write the same rows.
 
 Outside the database the app then removes every pending and delivered notification it owns, its `UserDefaults`
-keys (the diagnostics times and the first-run import offer), and replans reminders, which finds no rule and
-schedules nothing.
+keys (the diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`, and
+`onboarding.webImportOfferClosed`, so the first-launch import offer of spec/routes.md comes back), and replans
+reminders, which finds no rule and schedules nothing. Every section reads its defaults back, and the app returns to
+the الصباح deck. The confirmation asks twice: «حذف كل البيانات؟», then «تأكيد الحذف».
 

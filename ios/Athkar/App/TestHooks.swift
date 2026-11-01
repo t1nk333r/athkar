@@ -44,4 +44,15 @@ enum TestHooks {
         nil
         #endif
     }
+
+    /// A UI test that starts from an empty database (`--reset-data`) is offered the first-launch import only with
+    /// `ATHKAR_UITEST_IMPORT_OFFER=1`; otherwise the offer is closed for good, so the أخرى list keeps its layout in
+    /// every other test and its relaunches.
+    static func hidesImportOffer(arguments: [String]) -> Bool {
+        #if DEBUG
+        arguments.contains("--reset-data") && ProcessInfo.processInfo.environment["ATHKAR_UITEST_IMPORT_OFFER"] != "1"
+        #else
+        false
+        #endif
+    }
 }

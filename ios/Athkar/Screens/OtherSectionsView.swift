@@ -81,6 +81,7 @@ struct OtherSectionsView: View {
     let app: AppModel
 
     @Environment(\.palette) private var palette
+    @State private var transfer: TransferImportModel?
 
     private let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
 
@@ -90,15 +91,62 @@ struct OtherSectionsView: View {
             grid
             ScrollView { grid }
         }
+        .sheet(item: $transfer) { model in
+            TransferImportView(model: model)
+                .environment(\.palette, palette)
+        }
     }
 
     private var grid: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(OtherSection.allCases) { section in
-                cell(section)
+        VStack(spacing: 8) {
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(OtherSection.allCases) { section in
+                    cell(section)
+                }
             }
+            if app.offersWebImport { importOffer }
         }
         .padding(.top, 8)
+    }
+
+    /// The first-launch offer (spec/routes.md "First launch"): on a fresh install with no user data, below the
+    /// sections, until it is used or closed. Nothing waits on it.
+    private var importOffer: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Button {
+                transfer = app.makeTransferImport()
+            } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("استيراد من تطبيق الويب")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundStyle(palette.textPrimary)
+                    Text("إن كنت تستخدم «أذكار المسلم» على الويب، انقل تقدّمك إلى هذا الجهاز.")
+                        .font(.caption)
+                        .foregroundStyle(palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("other.importOffer")
+            Button {
+                app.closeImportOffer()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(palette.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("إخفاء")
+            .accessibilityIdentifier("other.importOffer.close")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Corner.box.fill(palette.surface.opacity(0.94)))
+        .overlay(Corner.box.strokeBorder(palette.border))
     }
 
     private func cell(_ section: OtherSection) -> some View {
