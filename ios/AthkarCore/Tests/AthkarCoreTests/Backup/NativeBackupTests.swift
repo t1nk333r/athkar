@@ -208,6 +208,7 @@ struct NativeBackupImportTests {
                                         #""date": "2026-10-29",\#n        "prayer": "dhuhr""#)],
          "prayers.records[1].noonPrayer"),
         ("adjustment out of range", [(#""maghrib": 3"#, #""maghrib": 31"#)], "prayerSettings.adjustments.maghrib"),
+        ("iqama delay out of range", [(#""maghrib": 5"#, #""maghrib": 61"#)], "prayerSettings.iqamaDelays.maghrib"),
         ("lastShown without a rule", [(#""adhkar_morning": "2026-10-31""#, #""adhkar_noon": "2026-10-31""#)],
          "reminders.lastShown.adhkar_noon"),
         ("U+0000 in an ID", [(#""pageId": "kahf-1-4""#, #""pageId": "kahf\u0000""#)], "suwar.pages[2].pageId"),

@@ -23,6 +23,13 @@
       "asr": 0,
       "maghrib": 3,
       "isha": 0
+    },
+    "iqamaDelays": {
+      "fajr": 30,
+      "dhuhr": 20,
+      "asr": 20,
+      "maghrib": 5,
+      "isha": 20
     }
   },
   "adhkar": {

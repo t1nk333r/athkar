@@ -42,7 +42,7 @@ read format 2: it carries tables the PWAs never had.
 | `meta.exportedAt` | UTC instant | the export's time, `toISOString()` form |
 | `meta.timeZone` | IANA zone | the device's zone at export; every `date` is the local date its row was written on |
 | `preferences` | object | `settings` rows `theme`, `text_size` → `textSize`, `line_spacing` → `lineSpacing`, `haptics`, `long_order` → `longOrder`, `long_order_prompt_answered` → `longOrderPromptAnswered`, `home_prayer_row` → `homePrayerRow`; the values of spec/schema.md |
-| `prayerSettings` | object | the calculation profile (§6.4 `prayerSettings`): `calculation_method` → `calculationMethod` (all 12 methods, native presets included), `asr_school` → `asrSchool`, `high_latitude_rule` → `highLatitudeRule`, `prayer_adjustments` → `adjustments` (`fajr` … `isha`, whole minutes −30 … 30), `hijri_offset` → `hijriOffset` (−2 … 2) |
+| `prayerSettings` | object | the calculation profile (§6.4 `prayerSettings`): `calculation_method` → `calculationMethod` (all 12 methods, native presets included), `asr_school` → `asrSchool`, `high_latitude_rule` → `highLatitudeRule`, `prayer_adjustments` → `adjustments` (`fajr` … `isha`, whole minutes −30 … 30), `hijri_offset` → `hijriOffset` (−2 … 2), `iqama_delays` → `iqamaDelays` (`fajr`, `dhuhr`, `asr`, `maghrib`, `isha`, whole minutes 0 … 60) |
 | `adhkar.days[]` | `{date, period, completedAt, origin}` | `adhkar_days`; `origin` is `completion_origin` (`counters`, `manual`, `import`) |
 | `adhkar.items[]` | `{date, period, itemId, count, target}` | `adhkar_item_progress`; `count` and `target` are integers 0 … 2^53 − 1, not both `null` |
 | `ruqyah.days[]` | `{date, completedAt, origin}` | `ruqyah_days`; `origin` is `counters` or `import` |

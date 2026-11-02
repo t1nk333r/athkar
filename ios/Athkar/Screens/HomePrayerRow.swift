@@ -2,8 +2,8 @@ import AthkarCore
 import SwiftUI
 
 /// The home header's prayer row, in the title's place: the next adhan with the time left («أذان الظهر» over «بعد ٣
-/// دقائق», a seconds countdown in its last ``countdownWindow``) and today's Hijri date in a box (the day large, the
-/// month and year under it). During «أوقات النهي عن الصلاة» (``ProhibitedTime``) the adhan takes one line and a «وقت
+/// دقائق», a seconds countdown in its last ``countdownWindow``), or after an adhan its iqama («إقامة الظهر» over
+/// «بعد ١٢:٠٥», ``PrayerCountdown``), and today's Hijri date in a box (the day large, the month and year under it). During «أوقات النهي عن الصلاة» (``ProhibitedTime``) the adhan takes one line and a «وقت
 /// نهي» notice the second, so the row keeps its height. Tapping it opens أوقات الصلاة. Without a location the date
 /// still shows and the adhan's place asks for one.
 struct HomePrayerRow: View {
@@ -18,9 +18,9 @@ struct HomePrayerRow: View {
     var body: some View {
         Button(action: open) {
             TimelineView(.everyMinute) { minute in
-                // Seconds tick only near an adhan. The minute tick can start them up to a minute early; the text
-                // switches to the countdown at exactly ``countdownWindow``.
-                if Self.countsDown(to: prayer.nextPrayer(now: minute.date), now: minute.date, slack: 60) {
+                // Seconds tick only near an adhan or iqama. The minute tick can start them up to a minute early; the
+                // text switches to the countdown at exactly ``countdownWindow``.
+                if Self.countsDown(to: prayer.countdown(now: minute.date), now: minute.date, slack: 60) {
                     TimelineView(.periodic(from: minute.date, by: 1)) { second in
                         row(now: second.date)
                     }
@@ -34,7 +34,7 @@ struct HomePrayerRow: View {
     }
 
     private func row(now: Date) -> some View {
-        let next = prayer.nextPrayer(now: now)
+        let next = prayer.countdown(now: now)
         let notice = prayer.schedule(dayOffset: 0, now: now).flatMap { ProhibitedTime.current(at: now, today: $0) }
         let date = HijriDay(PrayerTimesModel.localDate(daysFromToday: 0, now: now, in: prayer.zone),
                             offset: prayer.settings.hijriOffset)
@@ -64,22 +64,22 @@ struct HomePrayerRow: View {
         .accessibilityHint("يفتح أوقات الصلاة")
     }
 
-    private func adhan(_ next: NextPrayer?, now: Date) -> some View {
+    private func adhan(_ next: PrayerCountdown?, now: Date) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             name(next)
             timeLeft(next, now: now)
         }
     }
 
-    private func name(_ next: NextPrayer?) -> some View {
-        Text(next.map { Self.adhanName($0) } ?? "أوقات الصلاة")
+    private func name(_ next: PrayerCountdown?) -> some View {
+        Text(next.map { Self.title($0) } ?? "أوقات الصلاة")
             .font(.headline.weight(.heavy))
             .foregroundStyle(next == nil ? palette.textSecondary : palette.textPrimary)
             .lineLimit(1)
             .minimumScaleFactor(0.75)
     }
 
-    private func timeLeft(_ next: NextPrayer?, now: Date) -> some View {
+    private func timeLeft(_ next: PrayerCountdown?, now: Date) -> some View {
         Text(next.map { "بعد " + Self.left(from: now, to: $0.at) } ?? "حدّد موقعك")
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(palette.accentStrong)
@@ -126,13 +126,16 @@ struct HomePrayerRow: View {
 
     // MARK: Wording
 
-    /// «أذان الظهر». The next time is always one of the five prayers, never sunrise.
-    static func adhanName(_ next: NextPrayer) -> String {
-        "أذان \(PrayerNames.name(next.prayer))"
+    /// «أذان الظهر», or «إقامة الظهر» once its adhan has sounded. Always one of the five prayers, never sunrise.
+    static func title(_ next: PrayerCountdown) -> String {
+        switch next.event {
+        case .adhan: "أذان \(PrayerNames.name(next.prayer))"
+        case .iqama: "إقامة \(PrayerNames.name(next.prayer))"
+        }
     }
 
     /// Whether the time left to `next` is within ``countdownWindow`` (plus `slack`).
-    static func countsDown(to next: NextPrayer?, now: Date, slack: TimeInterval = 0) -> Bool {
+    static func countsDown(to next: PrayerCountdown?, now: Date, slack: TimeInterval = 0) -> Bool {
         guard let next else { return false }
         return next.at.timeIntervalSince(now) <= countdownWindow + slack
     }
@@ -172,12 +175,12 @@ struct HomePrayerRow: View {
     }
 
     /// In whole minutes even while the countdown runs, so the label does not change every second.
-    private static func spoken(next: NextPrayer?, notice: ProhibitedTime?, now: Date, date: HijriDay,
+    private static func spoken(next: PrayerCountdown?, notice: ProhibitedTime?, now: Date, date: HijriDay,
                                zone: TimeZone) -> String {
         var parts: [String] = []
         if let next {
             let minutes = max(1, Int((next.at.timeIntervalSince(now) / 60).rounded(.up)))
-            parts.append("\(adhanName(next)) بعد \(ArabicFormat.minutesLeft(minutes))")
+            parts.append("\(title(next)) بعد \(ArabicFormat.minutesLeft(minutes))")
         } else {
             parts.append("حدّد موقعك لعرض المواقيت")
         }

@@ -78,6 +78,7 @@ extension BackupImporter {
         try put(prayer.highLatitudeRule, .highLatitudeRule)
         try put(prayer.adjustments, .prayerAdjustments)
         try put(prayer.hijriOffset, .hijriOffset)
+        try put(prayer.iqamaDelays, .iqamaDelays)
         try put(backup.suwar.selected, .suwarSelectedSura)
         try put(backup.tasbih.selected, .tasbihSelected)
         try put(backup.tasbih.target, .tasbihTarget)

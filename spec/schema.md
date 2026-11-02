@@ -70,6 +70,7 @@ for the calculation profile (`CalculationSettings`, spec/prayer-times/README.md)
 | `high_latitude_rule` | `"twilight-angle"` \| `"middle-of-the-night"` \| `"seventh-of-the-night"` | `"twilight-angle"` | none (the PWA's fixed clamp is the twilight-angle rule) |
 | `prayer_adjustments` | `{"fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes each | all `0` | none |
 | `hijri_offset` | integer days | `0` | none |
+| `iqama_delays` | `{"fajr", "dhuhr", "asr", "maghrib", "isha"}`, whole minutes 0–60 from each adhan to its iqama; `0` shows no iqama | Fajr `25`, Dhuhr `20`, Asr `20`, Maghrib `10`, Isha `20` (the Saudi Ministry of Islamic Affairs' waits, `IqamaDelays`) | none (native only) |
 | `suwar_selected_sura` | a sura ID of the suwar pack | `"kahf"` (a stored ID the pack no longer has reads as its first sura) | `athkar-suwar-v1.selected` |
 | `tasbih_selected` | a preset ID, or `"c:"` and a saved phrase | `"subhan"` (a key that is neither a preset nor a saved phrase reads as `"subhan"`) | `athkar-tasbih-v1.selected` |
 | `tasbih_target` | integer 1–9999, or `0` for «بلا هدف» (the PWA's `null`) | `33` (any other value reads as `33`) | `athkar-tasbih-v1.target` |

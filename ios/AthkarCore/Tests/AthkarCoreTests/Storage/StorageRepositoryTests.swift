@@ -511,6 +511,24 @@ struct StorageRepositoryTests {
                          ["prayer_adjustments", #"{"asr":-4,"dhuhr":3,"fajr":-2,"isha":6,"maghrib":5,"sunrise":1}"#]])
     }
 
+    /// The iqama delays read as the ministry's waits until the user changes one; then all five are one row.
+    @Test func iqamaDelaysDefaultUnwrittenThenStoreAsOneRow() throws {
+        let settings = database.settings
+        #expect(try settings.value(for: .iqamaDelays)
+                == IqamaDelays(fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20))
+        #expect(try database.reader.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM settings") } == 0)
+
+        var delays = IqamaDelays()
+        delays[.fajr] = 30
+        delays[.maghrib] = 5
+        try settings.set(delays, for: .iqamaDelays, at: t0)
+        #expect(try settings.value(for: .iqamaDelays) == IqamaDelays(fajr: 30, maghrib: 5))
+        let stored = try database.reader.read {
+            try String.fetchOne($0, sql: "SELECT value_json FROM settings WHERE key = 'iqama_delays'")
+        }
+        #expect(stored == #"{"asr":20,"dhuhr":20,"fajr":30,"isha":20,"maghrib":5}"#)
+    }
+
     @Test func locationIsASingleProfileRoundedToTwoDecimals() throws {
         let location = database.location
         try location.save(LocationProfile(latitude: 21.4225, longitude: -39.8262, source: .device, updatedAt: t0))
