@@ -1,0 +1,696 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "envelope-v2.schema.json",
+  "title": "athkar-backup format 2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "preferences",
+    "prayerSettings",
+    "adhkar",
+    "ruqyah",
+    "suwar",
+    "tasbih",
+    "prayers",
+    "reminders"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "app",
+        "exportedAt",
+        "timeZone"
+      ],
+      "properties": {
+        "format": {
+          "const": 2
+        },
+        "app": {
+          "const": "athkar-native"
+        },
+        "exportedAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "enum": [
+            "system",
+            "light",
+            "dark"
+          ]
+        },
+        "textSize": {
+          "enum": [
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "lineSpacing": {
+          "enum": [
+            "compact",
+            "comfortable",
+            "wide"
+          ]
+        },
+        "haptics": {
+          "type": "boolean"
+        },
+        "longOrder": {
+          "enum": [
+            "last",
+            "original"
+          ]
+        },
+        "longOrderPromptAnswered": {
+          "type": "boolean"
+        },
+        "homePrayerRow": {
+          "type": "boolean"
+        }
+      }
+    },
+    "prayerSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "calculationMethod": {
+          "enum": [
+            "mwl",
+            "umm-al-qura",
+            "egyptian",
+            "karachi",
+            "north-america",
+            "dubai",
+            "moonsighting-committee",
+            "kuwait",
+            "qatar",
+            "singapore",
+            "tehran",
+            "turkey"
+          ]
+        },
+        "asrSchool": {
+          "enum": [
+            "standard",
+            "hanafi"
+          ]
+        },
+        "highLatitudeRule": {
+          "enum": [
+            "middle-of-the-night",
+            "seventh-of-the-night",
+            "twilight-angle"
+          ]
+        },
+        "adjustments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fajr",
+            "sunrise",
+            "dhuhr",
+            "asr",
+            "maghrib",
+            "isha"
+          ],
+          "properties": {
+            "fajr": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            },
+            "sunrise": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            },
+            "dhuhr": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            },
+            "asr": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            },
+            "maghrib": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            },
+            "isha": {
+              "type": "integer",
+              "minimum": -30,
+              "maximum": 30
+            }
+          }
+        },
+        "hijriOffset": {
+          "type": "integer",
+          "minimum": -2,
+          "maximum": 2
+        }
+      }
+    },
+    "adhkar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "days",
+        "items"
+      ],
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "period",
+              "completedAt",
+              "origin"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "period": {
+                "enum": [
+                  "morning",
+                  "evening"
+                ]
+              },
+              "completedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              },
+              "origin": {
+                "enum": [
+                  "counters",
+                  "manual",
+                  "import"
+                ]
+              }
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "period",
+              "itemId",
+              "count",
+              "target"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "period": {
+                "enum": [
+                  "morning",
+                  "evening"
+                ]
+              },
+              "itemId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "target": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    },
+    "ruqyah": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "days",
+        "segments",
+        "suras"
+      ],
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "completedAt",
+              "origin"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "completedAt": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              },
+              "origin": {
+                "enum": [
+                  "counters",
+                  "import"
+                ]
+              }
+            }
+          }
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "segmentId",
+              "count"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "segmentId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "suras": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "suraId",
+              "completedAt"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "suraId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "completedAt": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "suwar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pages",
+        "suras"
+      ],
+      "properties": {
+        "selected": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "suraId",
+              "pageId",
+              "readAt"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "suraId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "pageId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "readAt": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              }
+            }
+          }
+        },
+        "suras": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "suraId",
+              "completedAt"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "suraId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "completedAt": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "tasbih": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "counts"
+      ],
+      "properties": {
+        "selected": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9999
+        },
+        "phrases": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "counts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "phrase",
+              "count",
+              "firstUse"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "phrase": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999
+              },
+              "firstUse": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    },
+    "prayers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "records"
+      ],
+      "properties": {
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "date",
+              "prayer",
+              "zone",
+              "scheduledAt",
+              "profile",
+              "state",
+              "timing",
+              "noonPrayer",
+              "loggedAt"
+            ],
+            "properties": {
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "prayer": {
+                "enum": [
+                  "fajr",
+                  "dhuhr",
+                  "asr",
+                  "maghrib",
+                  "isha"
+                ]
+              },
+              "zone": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scheduledAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              },
+              "profile": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "enum": [
+                  "unrecorded",
+                  "prayed",
+                  "not_applicable"
+                ]
+              },
+              "timing": {
+                "enum": [
+                  "on_time",
+                  "late",
+                  "made_up",
+                  null
+                ]
+              },
+              "noonPrayer": {
+                "enum": [
+                  "dhuhr",
+                  "jumuah",
+                  null
+                ]
+              },
+              "loggedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reminders": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rules",
+        "lastShown"
+      ],
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "kind",
+              "prayer",
+              "offsetMinutes",
+              "localTime",
+              "weekdays",
+              "enabled"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "enum": [
+                  "adhkar_morning",
+                  "adhkar_evening",
+                  "prayer",
+                  "personal"
+                ]
+              },
+              "prayer": {
+                "enum": [
+                  "fajr",
+                  "dhuhr",
+                  "asr",
+                  "maghrib",
+                  "isha",
+                  null
+                ]
+              },
+              "offsetMinutes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "localTime": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "weekdays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 127
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "lastShown": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          }
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "latitude",
+            "longitude",
+            "label",
+            "zoneId",
+            "updatedAt"
+          ],
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "label": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "zoneId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "updatedAt": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

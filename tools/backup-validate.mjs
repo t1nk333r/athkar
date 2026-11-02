@@ -1,10 +1,14 @@
-// Validates PWA backup files against spec/backup/envelope-v1.schema.json plus rules the schema subset cannot express.
+// Validates backup files against spec/backup/envelope-v1.schema.json (the PWAs' format 1) or envelope-v2.schema.json
+// (the native app's format 2), plus rules the schema subset cannot express.
 //   node tools/backup-validate.mjs <file.athkarbackup> [...]
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readJSON, repoRoot, schemaErrors } from "./content-lib.mjs";
 
-const schema = readJSON(join(repoRoot, "spec/backup/envelope-v1.schema.json"));
+const schemas = {
+  1: readJSON(join(repoRoot, "spec/backup/envelope-v1.schema.json")),
+  2: readJSON(join(repoRoot, "spec/backup/envelope-v2.schema.json"))
+};
 const sections = {
   "athkar-pwa": { required: ["adhkar", "reminders", "preferences"], forbidden: ["ruqyah"], athkarPreferences: true },
   "ruqyah-pwa": { required: ["ruqyah", "preferences"], forbidden: ["adhkar", "reminders"], athkarPreferences: false }
@@ -51,9 +55,13 @@ function calendarErrors(node, value, path, errors) {
 const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
 
 function validate(envelope) {
+  const format = envelope?.meta?.format;
+  // An object without a known format reports against format 1, whose `meta.format` const names the problem.
+  const schema = schemas[format] ?? schemas[1];
   const errors = schemaErrors(schema, envelope, "backup");
   if (!isObject(envelope)) return errors;
   calendarErrors(schema, envelope, "backup", errors);
+  if (format === 2) return nativeErrors(envelope, errors);
   const rules = sections[envelope.meta?.app];
   if (rules) {
     for (const key of rules.required) if (!(key in envelope)) errors.push(`backup: ${envelope.meta.app} must include ${key}`);
@@ -85,6 +93,85 @@ function validate(envelope) {
   return errors;
 }
 
+/** The format 2 rules envelope-v2.md states beyond the schema: each table's key unique, IDs without U+0000, and the
+ * tables' own checks (spec/schema.md). Mirrors NativeBackup.validate() in AthkarCore. */
+function nativeErrors(backup, errors) {
+  const list = value => (Array.isArray(value) ? value.filter(isObject) : []);
+  const unique = (rows, path, key) => {
+    const seen = new Set();
+    rows.forEach((row, i) => {
+      const value = JSON.stringify(key(row));
+      if (seen.has(value)) errors.push(`backup.${path}[${i}]: repeats an earlier row's key`);
+      seen.add(value);
+    });
+  };
+  const noNul = (value, path) => {
+    if (typeof value === "string" && value.includes("\u0000")) errors.push(`backup.${path}: contains U+0000`);
+  };
+  const adhkar = backup.adhkar ?? {};
+  unique(list(adhkar.days), "adhkar.days", row => [row.date, row.period]);
+  list(adhkar.items).forEach((row, i) => {
+    noNul(row.itemId, `adhkar.items[${i}].itemId`);
+    if (row.count === null && row.target === null) errors.push(`backup.adhkar.items[${i}]: neither count nor target`);
+  });
+  unique(list(adhkar.items), "adhkar.items", row => [row.date, row.period, row.itemId]);
+  const ruqyah = backup.ruqyah ?? {};
+  unique(list(ruqyah.days), "ruqyah.days", row => [row.date]);
+  list(ruqyah.segments).forEach((row, i) => noNul(row.segmentId, `ruqyah.segments[${i}].segmentId`));
+  unique(list(ruqyah.segments), "ruqyah.segments", row => [row.date, row.segmentId]);
+  const suwar = backup.suwar ?? {};
+  for (const [path, rows] of [["ruqyah.suras", list(ruqyah.suras)], ["suwar.suras", list(suwar.suras)]]) {
+    rows.forEach((row, i) => noNul(row.suraId, `${path}[${i}].suraId`));
+    unique(rows, path, row => [row.date, row.suraId]);
+  }
+  noNul(suwar.selected, "suwar.selected");
+  list(suwar.pages).forEach((row, i) => {
+    noNul(row.suraId, `suwar.pages[${i}].suraId`);
+    noNul(row.pageId, `suwar.pages[${i}].pageId`);
+  });
+  unique(list(suwar.pages), "suwar.pages", row => [row.date, row.pageId]);
+  const tasbih = backup.tasbih ?? {};
+  noNul(tasbih.selected, "tasbih.selected");
+  (Array.isArray(tasbih.phrases) ? tasbih.phrases : []).forEach((phrase, i) => {
+    noNul(phrase, `tasbih.phrases[${i}]`);
+    if (typeof phrase === "string" && phrase.length > 60) errors.push(`backup.tasbih.phrases[${i}]: longer than 60`);
+  });
+  list(tasbih.counts).forEach((row, i) => {
+    noNul(row.phrase, `tasbih.counts[${i}].phrase`);
+    // SQLite's length() counts code points.
+    if (typeof row.phrase === "string" && [...row.phrase].length > 62) errors.push(`backup.tasbih.counts[${i}].phrase: longer than 62`);
+  });
+  unique(list(tasbih.counts), "tasbih.counts", row => [row.date, row.phrase]);
+  unique(list(tasbih.counts), "tasbih.counts", row => [row.date, row.firstUse]);
+  list(backup.prayers?.records).forEach((row, i) => {
+    const path = `backup.prayers.records[${i}]`;
+    noNul(row.zone, `prayers.records[${i}].zone`);
+    noNul(row.profile, `prayers.records[${i}].profile`);
+    if (row.timing !== null && row.state !== "prayed") errors.push(`${path}.timing: only a prayed record has a timing`);
+    const friday = typeof row.date === "string" && datePattern.test(row.date) && new Date(`${row.date}T00:00:00Z`).getUTCDay() === 5;
+    if (row.noonPrayer !== null && !(row.state === "prayed" && row.prayer === "dhuhr" && friday)) {
+      errors.push(`${path}.noonPrayer: only a prayed Dhuhr on a Friday has a noon prayer`);
+    }
+    if ((row.loggedAt === null) !== (row.state === "unrecorded")) errors.push(`${path}.loggedAt: set exactly when the prayer is recorded`);
+  });
+  unique(list(backup.prayers?.records), "prayers.records", row => [row.date, row.prayer]);
+  const reminders = backup.reminders ?? {};
+  const rules = list(reminders.rules);
+  rules.forEach((row, i) => {
+    const path = `backup.reminders.rules[${i}]`;
+    noNul(row.id, `reminders.rules[${i}].id`);
+    if ((row.kind === "adhkar_morning" || row.kind === "adhkar_evening") && row.id !== row.kind) errors.push(`${path}.id: an adhkar rule's ID is its kind`);
+    if ((row.prayer === null) !== (row.offsetMinutes === null)) errors.push(`${path}.offsetMinutes: set exactly when the rule follows a prayer`);
+    if ((row.prayer === null) === (row.localTime === null)) errors.push(`${path}.localTime: set exactly when the rule follows no prayer`);
+  });
+  unique(rules, "reminders.rules", row => [row.id]);
+  const ids = new Set(rules.map(row => row.id));
+  for (const ruleId of Object.keys(isObject(reminders.lastShown) ? reminders.lastShown : {})) {
+    if (!ids.has(ruleId)) errors.push(`backup.reminders.lastShown.${ruleId}: no such rule`);
+  }
+  return errors;
+}
+
 const files = process.argv.slice(2);
 if (!files.length) {
   console.error("usage: node tools/backup-validate.mjs <file> [...]");
@@ -108,7 +195,7 @@ for (const file of files) {
     failed = true;
     for (const error of errors) console.error(`✗ ${file}: ${error}`);
   } else {
-    console.log(`✓ ${file}: valid ${envelope.meta.app} backup${envelope.reminders?.location ? " (includes location)" : ""}`);
+    console.log(`✓ ${file}: valid ${envelope.meta.app} backup (format ${envelope.meta.format})${envelope.reminders?.location ? " (includes location)" : ""}`);
   }
 }
 process.exit(failed ? 1 : 0);

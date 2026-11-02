@@ -94,6 +94,8 @@ struct HomeView: View {
                 .environment(\.palette, palette)
         }
         .task(id: app.pendingTransferFile?.id) { await presentOpenedFile() }
+        // A route opened from outside (a URL, a quick action, a reminder): the place it opens shows, not a sheet.
+        .onChange(of: app.routesOpened) { closeSheets() }
         .sheet(isPresented: $showsResetScope, onDismiss: confirmChosenScope) {
             ResetScopeSheet { scope in
                 // A scope with a question asks once this sheet is gone; a deck's «تقدم اليوم» resets at once.
@@ -403,10 +405,7 @@ struct HomeView: View {
     /// screen's sheets close first; anything else on screen is waited for.
     private func presentOpenedFile() async {
         guard let file = app.pendingTransferFile else { return }
-        showsSettings = false
-        showsResetScope = false
-        completedDeck = nil
-        showsLongOrderPrompt = false
+        closeSheets(keepingTransfer: true)
         try? await Task.sleep(for: .milliseconds(400))
         while Self.isPresenting, !Task.isCancelled { try? await Task.sleep(for: .milliseconds(400)) }
         guard !Task.isCancelled, app.pendingTransferFile?.id == file.id else { return }
@@ -414,6 +413,17 @@ struct HomeView: View {
         let model = app.makeTransferImport()
         model.open(fileData: file.data)
         openedTransfer = model
+    }
+
+    /// Closes this screen's sheets and alerts (the settings with everything opened from them).
+    private func closeSheets(keepingTransfer: Bool = false) {
+        showsSettings = false
+        showsResetScope = false
+        chosenScope = nil
+        scopeConfirmation = nil
+        completedDeck = nil
+        showsLongOrderPrompt = false
+        if !keepingTransfer { openedTransfer = nil }
     }
 
     /// Whether any window is showing a sheet or alert over its content.

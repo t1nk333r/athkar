@@ -153,13 +153,15 @@ public struct SettingsRepository: Sendable {
         return try JSONDecoder().decode(Value.self, from: Data(row.valueJson.utf8))
     }
 
-    /// Writes an imported value unless the existing row's origin takes precedence (or ties).
+    /// Writes an imported value unless the existing row's origin takes precedence (or ties). `true` when written.
+    @discardableResult
     static func importValue<Value>(_ value: Value, for key: SettingKey<Value>, in db: Database,
-                                   origin: SettingOrigin, updatedAt: Date) throws {
+                                   origin: SettingOrigin, updatedAt: Date) throws -> Bool {
         if let existing = try Setting.fetchOne(db, key: key.name), existing.origin.precedence >= origin.precedence {
-            return
+            return false
         }
         try Setting(key: key.name, valueJson: try json(value), origin: origin, updatedAt: updatedAt).upsert(db)
+        return true
     }
 
     static func json<Value: Encodable>(_ value: Value) throws -> String {

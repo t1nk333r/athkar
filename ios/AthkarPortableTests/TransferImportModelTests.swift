@@ -252,8 +252,9 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertNil(TransferImportModel.read(folder.appendingPathComponent("missing.txt")))
 
         let large = folder.appendingPathComponent("large.txt")
-        try Data(repeating: 0x41, count: TransferCodec.maxFileBytes + 10).write(to: large)
-        XCTAssertEqual(TransferImportModel.read(large)?.count, TransferCodec.maxFileBytes + 1)
+        // A backup's whole history may be far larger than a transfer code, so the limit is the backup's.
+        try Data(repeating: 0x41, count: TransferImportModel.maxBackupBytes + 10).write(to: large)
+        XCTAssertEqual(TransferImportModel.read(large)?.count, TransferImportModel.maxBackupBytes + 1)
         let empty = folder.appendingPathComponent("empty.txt")
         try Data().write(to: empty)
         XCTAssertEqual(TransferImportModel.read(empty), Data())

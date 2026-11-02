@@ -6,7 +6,8 @@ The document the native app imports a user's history from (NATIVE_APP_PLAN.md §
 `reminders.location`, as its `envelope` field; the native app imports from the athkar PWA by reading a code.
 Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). Validate an envelope with
 `node tools/backup-validate.mjs <file>`. [`examples/`](examples/) holds real exports from each PWA, the athkar one
-made before its export moved into the transfer code.
+made before its export moved into the transfer code. The native app's own export is format 2
+([`envelope-v2.md`](envelope-v2.md)); the app keeps importing format 1.
 
 - As a file, the envelope is one UTF-8 JSON document with extension `.athkarbackup` and MIME type `application/json`. Its file
   name carries the device's local date. Importers strip one leading BOM (files passed through Mail or Notes can

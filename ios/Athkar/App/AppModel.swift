@@ -66,17 +66,31 @@ final class AppModel {
     /// A file shared to the app or opened in it, waiting for «استيراد من تطبيق الويب» to show it (`nil` data: the
     /// file could not be read).
     var pendingTransferFile: PendingTransferFile?
+    /// Counts the routes opened (``open(_:)-(AppRoute)``): the home screen closes its sheets when it changes, so the
+    /// opened place is what shows.
+    private(set) var routesOpened = 0
+    /// «استيراد من تطبيق الويب» offered on the أخرى list: on a fresh install with no user data, until it is used or
+    /// closed (spec/routes.md "First launch").
+    private(set) var offersWebImport: Bool
 
+    @ObservationIgnored private let database: AppDatabase
     @ObservationIgnored private let transferImporter: TransferImporter
+    @ObservationIgnored private let backupImporter: BackupImporter
+    @ObservationIgnored private let flags: UserDefaults
 
     /// - Parameters:
     ///   - notifications: the reminders' notification centre; iOS's own unless a test supplies one.
     ///   - reminderClock: the reminders' clock, which a test may fix.
     ///   - diagnosticsStore: where the reminder diagnostics' times are kept; `UserDefaults` unless a test supplies one.
+    ///   - flags: where the app's own flags are kept (the import offer); `UserDefaults.standard` unless a test
+    ///     supplies one.
     init(database: AppDatabase, content: BundledContent, today: String,
          notifications: (any ReminderNotificationCenter)? = nil,
          reminderClock: @escaping () -> Date = { Date() },
-         diagnosticsStore: (any ReminderDiagnosticsStore)? = nil) throws {
+         diagnosticsStore: (any ReminderDiagnosticsStore)? = nil,
+         flags: UserDefaults = .standard) throws {
+        self.database = database
+        self.flags = flags
         var reportFailure: (any Error) -> Void = { _ in }
         let report: (any Error) -> Void = { reportFailure($0) }
         settings = try SettingsModel(repository: database.settings, report: report)
@@ -105,6 +119,12 @@ final class AppModel {
         transferImporter = TransferImporter(
             database: database, collections: content.packs.adhkar,
             suwar: content.suwar.suwar.map { SuwarOutline(id: $0.id, name: $0.surah, pageIDs: $0.pages.map(\.id)) })
+        backupImporter = BackupImporter(database: database, content: content.packs)
+        // Offered once: a launch that finds user data closes the offer for good.
+        if !flags.bool(forKey: Self.importOfferClosedKey), try database.hasUserData() {
+            flags.set(true, forKey: Self.importOfferClosedKey)
+        }
+        offersWebImport = !flags.bool(forKey: Self.importOfferClosedKey)
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
         }
@@ -138,14 +158,40 @@ final class AppModel {
         return recorded
     }
 
-    /// A tapped reminder: an adhkar reminder opens its deck, a prayer reminder أوقات الصلاة.
+    /// A tapped reminder: an adhkar reminder opens its deck (its route), a prayer reminder أوقات الصلاة.
     func open(_ payload: ReminderPayload) {
-        if let deck = payload.deck {
-            selection = deck
+        if let route = AppRoute(reminder: payload) {
+            open(route)
         } else if payload.isPrayer {
+            routesOpened += 1
             tab = .other
             otherSection = .prayerTimes
         }
+    }
+
+    /// The one router (spec/routes.md): a URL, a quick action or an adhkar reminder opens its place, over whatever
+    /// sheet was showing.
+    func open(_ route: AppRoute) {
+        routesOpened += 1
+        if let deck = route.deck {
+            selection = deck
+        } else {
+            tab = .other
+            otherSection = .today
+        }
+    }
+
+    /// A URL opened in the app: a backup or transfer file goes to «استيراد من تطبيق الويب», an `athkar://` URL to its
+    /// route. Returns whether the URL was one of them.
+    @discardableResult
+    func open(url: URL) -> Bool {
+        if url.isFileURL {
+            openTransferFile(url)
+            return true
+        }
+        guard let route = AppRoute(url: url) else { return false }
+        open(route)
+        return true
     }
 
     /// Opens the on-disk database (Application Support), loads the bundled packs and records their versions.
@@ -161,12 +207,20 @@ final class AppModel {
             for suffix in ["", "-wal", "-shm"] {
                 try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
             }
+            UserDefaults.standard.removeObject(forKey: importOfferClosedKey)
         }
         #endif
         let database = try AppDatabase.onDisk(at: url)
         let content = try BundledContent.load()
         try BundledContent.recordInstalls(manifest: content.manifest, in: database)
-        return try AppModel(database: database, content: content, today: Self.today())
+        let app = try AppModel(database: database, content: content, today: Self.today())
+        if TestHooks.hidesImportOffer(arguments: arguments) { app.closeImportOffer() }
+        return app
+    }
+
+    /// The bundled packs' installed versions (`content_installs`), for «حول التطبيق»; none when they cannot be read.
+    func contentInstalls() -> [ContentInstall] {
+        (try? database.contentInstalls.installs()) ?? []
     }
 
     func deck(_ id: DeckID) -> any DeckModel {
@@ -227,20 +281,69 @@ final class AppModel {
     /// «استيراد من تطبيق الويب» (NATIVE_APP_PLAN.md §6.4): codes are planned for today after the day rollover, and a
     /// confirmed import is shown at once in every section it touched.
     func makeTransferImport() -> TransferImportModel {
-        TransferImportModel(importer: transferImporter, today: { [weak self] in
+        closeImportOffer()
+        return TransferImportModel(importer: transferImporter, backupImporter: backupImporter, today: { [weak self] in
             self?.ensureCurrentDay()
             return Self.today()
-        }, applied: { [weak self] in self?.showImportedProgress() })
+        }, applied: { [weak self] in self?.reloadAll() })
     }
 
-    /// Reads back what an import wrote: settings (the long-adhkar order included), the sessions of the day on screen,
-    /// and the prayer calculation.
-    private func showImportedProgress() {
+    /// The offer on the أخرى list is used or closed: it does not come back.
+    func closeImportOffer() {
+        flags.set(true, forKey: Self.importOfferClosedKey)
+        offersWebImport = false
+    }
+
+    static let importOfferClosedKey = "onboarding.webImportOfferClosed"
+
+    /// Reads back everything from the tables, after an import or «حذف كل البيانات»: settings (the long-adhkar order
+    /// included), the sessions of the day on screen, the tracker, the location and prayer calculation, and the
+    /// reminder rules, which are then replanned.
+    private func reloadAll() {
         settings.reload()
         adhkar.reload(longAdhkarLast: settings.longOrder == .last)
+        ruqyah.reload()
         suwar.reload()
         tasbih.reload()
-        prayer.reloadSettings()
+        prayer.reload()
+        tracker.reload()
+        reminders.reload()
+        reminders.replan()
+    }
+
+    // MARK: Backup and «حذف كل البيانات»
+
+    /// «تصدير نسخة احتياطية» (spec/backup/envelope-v2.md).
+    func makeBackupExport() -> BackupExportModel {
+        BackupExportModel(exporter: BackupExporter(database: database), now: { Self.now() })
+    }
+
+    /// «حذف كل البيانات» (spec/schema.md "Delete all data"): every user table is emptied in one transaction, then
+    /// every model reads the empty tables, the reminders are replanned (nothing is planned) and every pending and
+    /// delivered notification, the diagnostics times and the import offer's flag are cleared. Returns whether the
+    /// data was deleted; a failure is reported and changes nothing.
+    @discardableResult
+    func deleteAllData() async -> Bool {
+        do {
+            try database.deleteAllUserData()
+        } catch {
+            failure = "تعذّر حذف البيانات من هذا الجهاز. (\(error.localizedDescription))"
+            return false
+        }
+        flags.removeObject(forKey: Self.importOfferClosedKey)
+        offersWebImport = true
+        settings.reload()
+        adhkar.reload(longAdhkarLast: settings.longOrder == .last)
+        ruqyah.reload()
+        suwar.reload()
+        tasbih.reload()
+        prayer.reload()
+        tracker.reload()
+        lastPeriod = .morning
+        tab = .morning
+        otherSection = nil
+        await reminders.eraseAll()
+        return true
     }
 
     /// A file opened in the app (Files, the share sheet, AirDrop), read while its security scope is open.

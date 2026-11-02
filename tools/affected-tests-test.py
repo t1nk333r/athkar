@@ -69,7 +69,8 @@ class RepositoryTests(unittest.TestCase):
                          {"content-validate", "content-review-test", "content-export-pwa", "fixtures"})
         self.assertEqual(picked(sel)["models"], {
             "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
-            "DiagnosticsReportTests", "PortableModelTests", "PrayerTrackerModelTests", "ReminderReplanTests", "RuqyahPersistenceTests",
+            "DiagnosticsReportTests", "MigrationPrivacyTests", "PortableModelTests", "PrayerTrackerModelTests",
+            "ReminderReplanTests", "RuqyahPersistenceTests",
             "SettingsPersistenceTests", "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
             "TasbihTextTests", "TransferImportModelTests",
         })
@@ -88,6 +89,30 @@ class RepositoryTests(unittest.TestCase):
         # Written by hand, not by the generator, so its change runs no fixture check.
         self.assertEqual(picked(self.select("spec/reminders/fixtures/tracker-aware.json")),
                          {"core": {"TrackerAwareReminderTests"}})
+
+    def test_backup_format_2_runs_the_validator_and_its_suites(self):
+        # The schema is read only by the validator; the example also by the fixture generator and the core suites.
+        self.assertEqual(picked(self.select("spec/backup/envelope-v2.schema.json")), {"content": {"backup-validate"}})
+        lanes = picked(self.select("spec/backup/examples/native.athkarbackup"))
+        self.assertEqual(lanes["content"], {"backup-validate", "fixtures"})
+        self.assertTrue({"NativeBackupRoundTripTests", "NativeBackupImportTests"} <= lanes["core"], lanes["core"])
+        # The export, restore and delete-all suites read it too.
+        self.assertEqual(lanes["models"], {"MigrationPrivacyTests"})
+        self.assertEqual(lanes["app-unit"], {"RoutingAndDeleteAllTests"})
+        self.assertEqual(set(lanes), {"content", "core", "models", "app-unit"})
+
+    def test_route_table_runs_the_suite_that_reads_it(self):
+        # spec/routes.md is documentation, but a portable test checks the code and Info.plist against it.
+        self.assertEqual(picked(self.select("spec/routes.md")), {"models": {"MigrationPrivacyTests"}})
+
+    def test_quick_actions_run_the_router_tests(self):
+        lanes = picked(self.select("ios/Athkar/Platform/QuickActions.swift"))
+        self.assertEqual(lanes["app-unit"], {"RoutingAndDeleteAllTests"})
+        self.assertEqual(lanes["ui"], {"MigrationPrivacyUITests"})
+        self.assertNotIn("models", lanes)
+        export = picked(self.select("ios/Athkar/Backup/BackupExportModel.swift"))
+        self.assertIn("MigrationPrivacyTests", export["models"])
+        self.assertIn("MigrationPrivacyUITests", export["ui"])
 
     def test_reminder_views_run_the_diagnostics_ui_test(self):
         lanes = picked(self.select("ios/Athkar/Reminders/DiagnosticsView.swift"))

@@ -80,6 +80,25 @@ targets:
             UTTypeTagSpecification:
               public.filename-extension: [athkarbackup]
         LSSupportsOpeningDocumentsInPlace: false
+        # athkar://morning, evening, ruqyah, prayers (spec/routes.md). A custom scheme only: universal links need an
+        # associated domain, which waits for the publisher identity (NATIVE_APP_PLAN.md §8.1).
+        CFBundleURLTypes:
+          - CFBundleURLName: local.dev.athkar.routes
+            CFBundleURLSchemes: [athkar]
+        # The home-screen quick actions, one per route (spec/routes.md).
+        UIApplicationShortcutItems:
+          - UIApplicationShortcutItemType: athkar.route.morning
+            UIApplicationShortcutItemTitle: أذكار الصباح
+            UIApplicationShortcutItemIconSymbolName: sun.max
+          - UIApplicationShortcutItemType: athkar.route.evening
+            UIApplicationShortcutItemTitle: أذكار المساء
+            UIApplicationShortcutItemIconSymbolName: moon
+          - UIApplicationShortcutItemType: athkar.route.ruqyah
+            UIApplicationShortcutItemTitle: رقية القرين
+            UIApplicationShortcutItemIconSymbolName: book
+          - UIApplicationShortcutItemType: athkar.route.prayers
+            UIApplicationShortcutItemTitle: سجّل الصلاة
+            UIApplicationShortcutItemIconSymbolName: checkmark.circle
         # The opportunistic reminder refresh (NATIVE_APP_PLAN.md §7.5): iOS decides whether and when it runs.
         BGTaskSchedulerPermittedIdentifiers: [local.dev.athkar.reminders.refresh]
         UIBackgroundModes: [fetch]

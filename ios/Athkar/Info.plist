@@ -50,6 +50,17 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.3</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>local.dev.athkar.routes</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>athkar</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>4</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
@@ -62,6 +73,41 @@
 	<array>
 		<string>kfgqpc-uthman-taha-naskh.ttf</string>
 		<string>kfgqpc-hafs-v30.ttf</string>
+	</array>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>sun.max</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>أذكار الصباح</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>athkar.route.morning</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>moon</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>أذكار المساء</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>athkar.route.evening</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>book</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>رقية القرين</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>athkar.route.ruqyah</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>checkmark.circle</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>سجّل الصلاة</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>athkar.route.prayers</string>
+		</dict>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

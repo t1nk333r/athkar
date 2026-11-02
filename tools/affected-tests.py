@@ -113,7 +113,8 @@ NODE_CHECKS = {
                            ["index.html", "content/adhkar.v1.json", "content/suwar.v1.json", "content/ruqyah.v1.json"]),
     "fixtures": ("tools/fixtures-generate.mjs",
                  ["index.html", "content/suwar.v1.json", "spec/backup/examples/*", *GENERATED_FIXTURES]),
-    "backup-validate": ("tools/backup-validate.mjs", ["spec/backup/examples/*", "spec/backup/envelope-v1.schema.json"]),
+    "backup-validate": ("tools/backup-validate.mjs", ["spec/backup/examples/*", "spec/backup/envelope-v1.schema.json",
+                                                    "spec/backup/envelope-v2.schema.json"]),
 }
 
 # XCUITest drives the built app, so no code links these tests to what they check. "*" is every UI
@@ -149,6 +150,14 @@ UI_BLACK_BOX = {
                      APP + "Platform/Haptics.swift", "fonts/*.ttf"],
     "TasbihUITests": [APP + "Tasbih/*.swift", APP + "Screens/OtherSectionsView.swift",
                       APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
+    # Export, delete-all, privacy and about in الإعدادات; a deep link; the first-launch offer on أخرى.
+    "MigrationPrivacyUITests": [APP + "Backup/*.swift", APP + "About/*.swift", APP + "Platform/QuickActions.swift",
+                                APP + "Screens/SettingsView.swift", APP + "Screens/OtherSectionsView.swift",
+                                APP + "Tracker/TodayView.swift", APP + "Tracker/TrackerViews.swift",
+                                APP + "Tracker/TrackerText.swift", APP + "Tracker/PrayerTrackerModel.swift",
+                                APP + "Transfer/*.swift", APP + "Reminders/ReminderModel.swift",
+                                APP + "Prayer/PrayerTimesModel.swift", APP + "Tasbih/TasbihModel.swift",
+                                APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SuwarDeckModel.swift"],
     "TransferImportUITests": [APP + "Transfer/*.swift", APP + "Screens/SettingsView.swift",
                               APP + "Screens/DeckDialogs.swift", APP + "Deck/SuwarDeckModel.swift",
                               APP + "Tasbih/TasbihModel.swift", APP + "Prayer/PrayerTimesModel.swift"],

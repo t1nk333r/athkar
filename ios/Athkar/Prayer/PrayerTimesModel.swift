@@ -126,6 +126,18 @@ final class PrayerTimesModel {
         }
     }
 
+    /// After a backup import or «حذف كل البيانات»: the location and the calculation settings are read again.
+    func reload() {
+        do {
+            let location = try locations.profile()
+            self.location = location
+            settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
+            locationProblem = nil
+        } catch {
+            report(error)
+        }
+    }
+
     func setMethod(_ method: CalculationMethod) { write(method, .calculationMethod) { $0.method = method } }
     func setAsrSchool(_ school: AsrSchool) { write(school, .asrSchool) { $0.asrSchool = school } }
     func setHighLatitudeRule(_ rule: HighLatitudeRule) {

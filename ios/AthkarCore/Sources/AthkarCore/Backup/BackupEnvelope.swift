@@ -9,7 +9,7 @@ public enum BackupApp: String, Codable, Sendable, CaseIterable {
 public enum BackupError: Error, Equatable, Sendable {
     /// Not JSON, or JSON that does not have the envelope's shape.
     case malformed(String)
-    /// `meta.format` is not 1.
+    /// `meta.format` is not one this version reads (1 or 2), or not the one the caller asked for.
     case unsupportedFormat(Int)
     /// Well-formed JSON that breaks a rule of spec/backup/envelope-v1.schema.json.
     case invalid(path: String, reason: String)
@@ -258,61 +258,17 @@ public struct BackupEnvelope: Codable, Equatable, Sendable {
 // MARK: - Reading and writing files
 
 extension BackupEnvelope {
-    /// Decodes and validates a backup file, accepting and rejecting what tools/backup-validate.mjs does.
-    ///
-    /// The file must be one UTF-8 JSON document; a leading UTF-8 BOM is ignored. The text is read by
-    /// `StoredValue(parsingJSON:)`, JavaScript's `JSON.parse` grammar, rather than by `JSONDecoder` directly:
-    /// duplicate keys keep the last value, numbers below the `Double` range read as 0, and a lone surrogate
-    /// escape reads as U+FFFD (still a string, as in JavaScript). `JSONDecoder` would keep the first duplicate
-    /// and reject the other two. `Codable` then decodes the parsed value, re-encoded as plain JSON.
+    /// Decodes and validates a format 1 backup file, accepting and rejecting what tools/backup-validate.mjs does.
+    /// `BackupJSON.parse` reads the text as `JSON.parse` does; `Codable` then decodes the parsed value, re-encoded as
+    /// plain JSON. Use ``BackupFile/decode(_:)`` for a file of either format.
     public static func decode(_ data: Data) throws -> BackupEnvelope {
-        let bom: [UInt8] = [0xEF, 0xBB, 0xBF]
-        let bytes = data.starts(with: bom) ? data.dropFirst(bom.count) : data[...]
-        let text = String(decoding: bytes, as: UTF8.self)
-        // Decoding replaces invalid sequences with U+FFFD, so the bytes change exactly when they are not UTF-8.
-        guard text.utf8.elementsEqual(bytes) else { throw BackupError.malformed("not UTF-8") }
-        let root: SessionState.StoredValue
-        do {
-            root = try SessionState.StoredValue(parsingJSON: text)
-        } catch {
-            throw BackupError.malformed(error.description)
-        }
-        let json: Data
-        do {
-            json = try JSONEncoder().encode(root)
-        } catch {
-            throw BackupError.malformed(Self.describe(error))
-        }
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let text = try container.decode(String.self)
-            guard let date = ISOInstant.parse(text) else {
-                throw DecodingError.dataCorruptedError(
-                    in: container, debugDescription: "\(text) is not an ISO-8601 UTC instant")
-            }
-            return date
-        }
-
-        // Check the format before the shape, so a future format reports as such rather than as malformed.
-        struct Probe: Decodable {
-            struct Meta: Decodable { var format: Int }
-            var meta: Meta
-        }
-        let format: Int
-        do {
-            format = try decoder.decode(Probe.self, from: json).meta.format
-        } catch {
-            throw BackupError.malformed(Self.describe(error))
-        }
+        let (root, json, format) = try BackupJSON.parse(data)
         guard format == Self.format else { throw BackupError.unsupportedFormat(format) }
-
         let envelope: BackupEnvelope
         do {
-            envelope = try decoder.decode(BackupEnvelope.self, from: json)
+            envelope = try BackupJSON.decoder.decode(BackupEnvelope.self, from: json)
         } catch {
-            throw BackupError.malformed(Self.describe(error))
+            throw BackupError.malformed(BackupJSON.describe(error))
         }
         // `Codable` ignores keys it does not know, and reads `null` as an absent optional; the schema forbids
         // both (`additionalProperties: false`, and no optional property allows `null`).
@@ -323,13 +279,7 @@ extension BackupEnvelope {
 
     /// Pretty-printed JSON with sorted keys and instants in `toISOString()` form.
     public func encoded() throws -> Data {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        encoder.dateEncodingStrategy = .custom { date, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(ISOInstant.format(date))
-        }
-        return try encoder.encode(self)
+        try BackupJSON.encoder.encode(self)
     }
 
     /// The rules of envelope-v1.schema.json and tools/backup-validate.mjs that the types cannot express:
@@ -431,25 +381,12 @@ extension BackupEnvelope {
 
     /// `Number.MAX_SAFE_INTEGER`.
     static let maxSafeInteger: Double = 9_007_199_254_740_991
-
-    private static func describe(_ error: any Error) -> String {
-        guard let error = error as? DecodingError else { return String(describing: error) }
-        let (context, summary): (DecodingError.Context, String) = switch error {
-        case let .typeMismatch(type, context): (context, "expected \(type)")
-        case let .valueNotFound(type, context): (context, "missing \(type) value")
-        case let .keyNotFound(key, context): (context, "missing key \(key.stringValue)")
-        case let .dataCorrupted(context): (context, context.debugDescription)
-        @unknown default: (DecodingError.Context(codingPath: [], debugDescription: ""), "\(error)")
-        }
-        let path = context.codingPath.map { $0.intValue.map { "[\($0)]" } ?? $0.stringValue }.joined(separator: ".")
-        return path.isEmpty ? summary : "\(path): \(summary)"
-    }
 }
 
 /// The object keys envelope-v1.schema.json allows, and where it allows `null`, for rejecting unknown keys at any
 /// depth and `null` in place of an optional section or key. Types and required keys are checked by `Codable`,
 /// which reads `null` for an `Optional` as absent; this looks only at key names and `null`.
-private indirect enum KeyShape: Sendable {
+indirect enum KeyShape: Sendable {
     /// A scalar, not `null`.
     case value
     /// A scalar or `null`.

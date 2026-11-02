@@ -65,7 +65,12 @@ struct TransferImportView: View {
         case .receive: "استلام التقدّم"
         case .scan: "مسح رمز QR"
         case .review: "المراجعة"
-        case .result: model.outcome?.succeeded == true ? "تمّ النقل" : "تعذّر النقل"
+        case .result:
+            if model.outcome?.isBackup == true {
+                model.outcome?.succeeded == true ? "تمّت الاستعادة" : "تعذّرت الاستعادة"
+            } else {
+                model.outcome?.succeeded == true ? "تمّ النقل" : "تعذّر النقل"
+            }
         }
     }
 
@@ -210,7 +215,7 @@ struct TransferImportView: View {
                             .font(.subheadline)
                             .foregroundStyle(palette.completed)
                     }
-                    note(TransferImportModel.undoNote)
+                    if !preview.isBackup { note(TransferImportModel.undoNote) }
                 }
                 ForEach(preview.warnings, id: \.self) { warning($0) }
                 if preview.isEmpty {

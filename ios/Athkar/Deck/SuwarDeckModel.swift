@@ -42,8 +42,7 @@ final class SuwarDeckModel: DeckModel {
         completedSuwar = try repository.suraDays(on: today)
         hasHistory = try repository.recordedDayCount(.all, before: today) > 0
         // A stored sura the pack no longer has reads as its first sura (`normalizeSuwarState`).
-        let stored = try settings.value(for: .suwarSelectedSura)
-        selectedSuraID = self.content.suwar.contains { $0.id == stored } ? stored : self.content.suwar.first?.id ?? ""
+        selectedSuraID = try Self.selection(settings, in: self.content)
         currentIndex = openingIndex(of: selectedSura)
         refresh()
     }
@@ -69,13 +68,20 @@ final class SuwarDeckModel: DeckModel {
         refresh()
     }
 
-    /// After a transfer import (``TransferImportModel``): the day on screen is read again, and every sura reopens on
-    /// its first unread page. A day that cannot be read keeps what is on screen.
+    /// A stored sura the pack no longer has reads as its first sura (`normalizeSuwarState`).
+    private static func selection(_ settings: SettingsRepository, in content: SuwarContent) throws -> String {
+        let stored = try settings.value(for: .suwarSelectedSura)
+        return content.suwar.contains { $0.id == stored } ? stored : content.suwar.first?.id ?? ""
+    }
+
+    /// After an import (``TransferImportModel``) or «حذف كل البيانات»: the day on screen and the selected sura are read
+    /// again, and every sura reopens on its first unread page. A day that cannot be read keeps what is on screen.
     func reload() {
         do {
             let pages = try repository.readPages(on: date)
             let suraDays = try repository.suraDays(on: date)
             let hasHistory = try repository.recordedDayCount(.all, before: date) > 0
+            selectedSuraID = try Self.selection(settings, in: content)
             readPages = pages
             completedSuwar = suraDays
             self.hasHistory = hasHistory

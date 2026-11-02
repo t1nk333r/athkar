@@ -4,6 +4,7 @@ import UserNotifications
 
 @main
 struct AthkarApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var launch: Result<AppModel, any Error>
 
     init() {
@@ -63,10 +64,13 @@ private struct RootView: View {
                     onOpen: { payload in app.open(payload) })
                 app.reminders.replan()
             }
-            // A transfer code or backup file opened in the app: «استيراد من تطبيق الويب» shows its review.
-            .onOpenURL { url in
-                if url.isFileURL { app.openTransferFile(url) }
+            .task {
+                // A home-screen quick action, the one that launched the app included (spec/routes.md).
+                QuickActions.shared.attach { route in app.open(route) }
             }
+            // A transfer code or backup file opened in the app: «استيراد من تطبيق الويب» shows its review. An
+            // `athkar://` URL opens its route.
+            .onOpenURL { url in app.open(url: url) }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { refresh() }
                 // iOS may then run a refresh while the app is not opened; it decides when.

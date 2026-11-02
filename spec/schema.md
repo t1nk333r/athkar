@@ -80,7 +80,8 @@ value. This prevents an onboarding import from being shadowed by rows the app cr
 
 ### `content_installs`
 
-This table records the installed version of each bundled content pack (§5.4).
+This table records the installed version of each bundled content pack (§5.4). It holds nothing the user did or
+chose: «حذف كل البيانات» keeps it, and no backup carries it ("Delete all data").
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -271,8 +272,8 @@ Checks:
 The primary key makes every write idempotent: `PrayerRecordRepository.apply(_:to:context:)` reads the row, runs the
 transition and writes the result in one transaction, so "record as prayed" sent twice stores one row.
 
-Prayer records are not in backup envelope v1 or the transfer code yet: an export leaves them out and an import
-never touches them. Adding them is a later backup task (envelope v2).
+Prayer records are not in backup envelope v1 or the transfer code: a format 1 export leaves them out and a format 1
+import never touches them. Envelope format 2 carries them with their metadata ("Backup envelope format 2" below).
 
 ## Future tables (not in v5)
 
@@ -543,3 +544,45 @@ these exceptions:
    segment IDs not in the pack do not come back.
 
 The example files in `spec/backup/examples/` contain none of 2, 3 and 4, and round-trip exactly apart from 1.
+
+## Backup envelope format 2
+
+The native app's own backup, [`backup/envelope-v2.md`](backup/envelope-v2.md): every row of every user table below
+(`settings`, `adhkar_days`, `adhkar_item_progress`, `ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`,
+`suwar_page_reads`, `suwar_sura_days`, `tasbih_counts`, `prayer_records`, `reminder_rules`, `reminder_state`), and
+`location_profiles` only when the user includes it. `BackupExporter.exportNative` writes it; `BackupImporter`
+reads either format (`BackupFile.decode`, `importFile`) and rejects a format above 2 as `unsupportedFormat`.
+
+- A setting is exported only when its row exists; an absent one stays absent on import and reads as its default.
+- `updated_at` and a location's `source` are not exported. Import stamps rows with `meta.exportedAt`, and writes the
+  location as `import`.
+- Import merges in one transaction, unit by unit, and the device wins wherever it has something: an adhkar
+  `(local_date, period)` unit only when empty (as format 1); a `ruqyah_days` row, a `ruqyah_sura_days` row only
+  when absent; a segment count when absent or 0, clamped to `repeat`, unknown segments dropped (as format 1); a «سور»
+  `(local_date, sura_id)` unit (its pages and completion) only when the device has neither; a «مسبحة» date (all its
+  counts, keeping `first_use`) only when the device has no count that date; a prayer record when absent, or over an
+  `unrecorded` one when the imported record is not; a reminder rule or its `reminder_state` when absent; the
+  location into an empty profile. Settings are imported with origin `native`, so they replace a PWA's rows and never
+  a native one. Re-import is a no-op.
+- Round trip: a fresh database that imported a format 2 file exports it again unchanged, given the same `meta` and
+  location opt-in. Unlike format 1 there are no exceptions: every field maps to one column.
+
+## Delete all data
+
+«حذف كل البيانات» (الإعدادات) returns the app to a fresh install's state. `AppDatabase.deleteAllUserData()` deletes every
+row of `AppDatabase.userTables` in one transaction: `settings`, `adhkar_days`, `adhkar_item_progress`,
+`ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`,
+`tasbih_counts`, `prayer_records`, `reminder_state`, `reminder_rules` and `location_profiles`. Every table a later
+migration adds is a user table unless this section says otherwise; `AthkarCoreTests` fails when a table is in
+neither list.
+
+`content_installs` is kept. Its rows are the bundled packs' versions and checksums, which the app records again at
+every launch (`BundledContent.recordInstalls`); they describe the app, not the user, and «حول التطبيق» reads them.
+Deleting them would only make the next launch write the same rows.
+
+Outside the database the app then removes every pending and delivered notification it owns, its `UserDefaults`
+keys (the diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`, and
+`onboarding.webImportOfferClosed`, so the first-launch import offer of spec/routes.md comes back), and replans
+reminders, which finds no rule and schedules nothing. Every section reads its defaults back, and the app returns to
+the الصباح deck. The confirmation asks twice: «حذف كل البيانات؟», then «تأكيد الحذف».
+
