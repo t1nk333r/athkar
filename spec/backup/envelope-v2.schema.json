@@ -165,6 +165,44 @@
           "type": "integer",
           "minimum": -2,
           "maximum": 2
+        },
+        "iqamaDelays": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fajr",
+            "dhuhr",
+            "asr",
+            "maghrib",
+            "isha"
+          ],
+          "properties": {
+            "fajr": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "dhuhr": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "asr": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "maghrib": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "isha": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            }
+          }
         }
       }
     },

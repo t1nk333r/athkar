@@ -26,8 +26,8 @@ final class PrayerTimesUITests: DeckTestCase {
     }
 
     /// Without a location the section asks for one; manual coordinates (Arabic-Indic digits and «٫») give six times,
-    /// a countdown and the location line; days move and return; the Asr school changes Asr; all of it survives a
-    /// relaunch.
+    /// the five iqamas, a countdown and the location line; days move and return; the settings list the iqama delays;
+    /// the Asr school changes Asr; all of it survives a relaunch.
     func testManualLocationScheduleDaysSettingsAndRelaunch() {
         launch()
         app.buttons["tab.other"].tap()
@@ -43,6 +43,10 @@ final class PrayerTimesUITests: DeckTestCase {
         for key in ["sunrise", "dhuhr", "asr", "maghrib", "isha"] { XCTAssertTrue(time(key).exists, key) }
         XCTAssertTrue(time("fajr").label.hasPrefix("الفجر"), time("fajr").label)
         XCTAssertFalse(time("fajr").label.contains("—"), time("fajr").label)
+        for key in ["fajr", "dhuhr", "asr", "maghrib", "isha"] {
+            XCTAssertTrue(time(key).label.contains("الإقامة"), time(key).label)
+        }
+        XCTAssertFalse(time("sunrise").label.contains("الإقامة"), time("sunrise").label)
         XCTAssertTrue(app.descendants(matching: .any)["prayer.countdown"].exists)
         XCTAssertTrue(app.staticTexts["prayer.location"].label.contains("٢١٫٤٢، ٣٩٫٨٢"),
                       app.staticTexts["prayer.location"].label)
@@ -59,6 +63,13 @@ final class PrayerTimesUITests: DeckTestCase {
 
         let standardAsr = time("asr").label
         app.buttons["prayer.settings"].tap()
+        let fajrIqama = app.descendants(matching: .any)["prayer.settings.iqama.fajr"]
+        XCTAssertTrue(fajrIqama.waitForExistence(timeout: 3))
+        let fajrText = "\(fajrIqama.label) \(fajrIqama.value as? String ?? "")"
+        XCTAssertTrue(fajrText.contains("٢٥") || fajrText.contains("25"), fajrText)
+        for key in ["dhuhr", "asr", "maghrib", "isha"] {
+            XCTAssertTrue(app.descendants(matching: .any)["prayer.settings.iqama.\(key)"].exists, key)
+        }
         choose("الحنفي", in: "prayer.settings.asrSchool")
         app.buttons["prayer.settings.done"].tap()
         XCTAssertTrue(wait { self.time("asr").label != standardAsr }, "Hanafi Asr is later")

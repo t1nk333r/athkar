@@ -1,8 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// The أوقات الصلاة section of أخرى: the day's six times with the next prayer's countdown, the location that
-/// produced them, and the calculation settings (NATIVE_APP_PLAN.md §7.3).
+/// The أوقات الصلاة section of أخرى: the day's six times and the five iqamas, with a countdown to the next adhan or,
+/// after an adhan, to its iqama; the location that produced them, and the calculation settings (NATIVE_APP_PLAN.md
+/// §7.3).
 struct PrayerTimesView: View {
     let model: PrayerTimesModel
     let reminders: ReminderModel
@@ -182,9 +183,9 @@ struct PrayerTimesView: View {
 
     @ViewBuilder
     private func countdown(now: Date) -> some View {
-        if let next = model.nextPrayer(now: now) {
+        if let next = model.countdown(now: now) {
             HStack {
-                Text("الصلاة القادمة: \(PrayerNames.name(next.prayer))")
+                Text(PrayerNames.counting(to: next))
                     .font(.subheadline.weight(.heavy))
                     .foregroundStyle(palette.textPrimary)
                 Spacer(minLength: 8)
@@ -204,18 +205,25 @@ struct PrayerTimesView: View {
 
     private var times: some View {
         let schedule = model.shownSchedule
-        let next = model.dayOffset == 0 ? model.nextPrayer() : nil
+        // The prayer counted to: the next adhan's, or the one whose iqama is still ahead.
+        let next = model.dayOffset == 0 ? model.countdown() : nil
         return VStack(spacing: 0) {
             ForEach(Array(PrayerTime.allCases.enumerated()), id: \.element) { index, time in
                 if index > 0 { Divider().overlay(palette.border) }
-                let isNext = next?.prayer == time && next.map { SessionCalendar.localDate(of: $0.at, in: model.zone) }
-                    == schedule?.localDate
+                let isNext = next?.prayer == time && next?.date == schedule?.localDate
                 HStack {
                     Text(PrayerNames.name(time))
                         .font(.body.weight(isNext ? .heavy : .semibold))
                     Spacer(minLength: 8)
-                    Text(value(time, in: schedule))
-                        .font(.body.weight(isNext ? .heavy : .semibold).monospacedDigit())
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text(value(time, in: schedule))
+                            .font(.body.weight(isNext ? .heavy : .semibold).monospacedDigit())
+                        if let schedule, let iqama = model.iqama.iqama(of: time, in: schedule) {
+                            Text("الإقامة " + ArabicFormat.time(iqama, in: schedule.zone))
+                                .font(.caption.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(isNext ? palette.accentStrong : palette.textSecondary)
+                        }
+                    }
                 }
                 .foregroundStyle(isNext ? palette.accentStrong : (time == .sunrise ? palette.textSecondary
                                                                                    : palette.textPrimary))
@@ -330,6 +338,26 @@ struct PrayerSettingsView: View {
                 } footer: {
                     Text("خطوط العرض العالية: كيف يُقدَّر الفجر والعشاء حيث لا يغيب الشفق.")
                 }
+                Section {
+                    ForEach(ObligatoryPrayer.allCases, id: \.self) { prayer in
+                        Stepper(value: Binding(get: { model.iqama[prayer] }, set: { model.setIqama($0, for: prayer) }),
+                                in: IqamaDelays.range) {
+                            HStack {
+                                Text(PrayerNames.name(prayer.time))
+                                Spacer()
+                                Text(Self.iqama(model.iqama[prayer]))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .accessibilityIdentifier("prayer.settings.iqama.\(prayer.rawValue)")
+                    }
+                } header: {
+                    Text("الإقامة بعد الأذان")
+                } footer: {
+                    Text("بعد كل أذان يعدّ العدّاد إلى إقامته. القيم الافتراضية مُدد وزارة الشؤون الإسلامية: الفجر ٢٥ دقيقة، "
+                         + "والمغرب ١٠، وسائر الصلوات ٢٠. والصفر لا يعرض إقامة.")
+                }
                 Section("تعديل الأوقات بالدقائق") {
                     ForEach(PrayerTime.allCases, id: \.self) { time in
                         Stepper(value: adjustment(time), in: -30...30) {
@@ -380,6 +408,10 @@ struct PrayerSettingsView: View {
 
     private static func minutes(_ value: Int) -> String {
         value == 0 ? "بلا تعديل" : (value > 0 ? "+" : "−") + ArabicFormat.number(abs(value)) + " د"
+    }
+
+    private static func iqama(_ value: Int) -> String {
+        value == 0 ? "بلا إقامة" : ArabicFormat.number(value) + " د"
     }
 
     private static func days(_ value: Int) -> String {
@@ -545,6 +577,14 @@ enum PrayerNames {
         case .asr: "العصر"
         case .maghrib: "المغرب"
         case .isha: "العشاء"
+        }
+    }
+
+    /// What a counter counts to: «الصلاة القادمة: الظهر» before the adhan, «إقامة الظهر» after it.
+    static func counting(to countdown: PrayerCountdown) -> String {
+        switch countdown.event {
+        case .adhan: "الصلاة القادمة: \(name(countdown.prayer))"
+        case .iqama: "إقامة \(name(countdown.prayer))"
         }
     }
 

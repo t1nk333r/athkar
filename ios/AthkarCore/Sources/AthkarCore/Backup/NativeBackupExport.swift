@@ -47,7 +47,8 @@ private enum Tables {
             asrSchool: try stored(.asrSchool, in: db),
             highLatitudeRule: try stored(.highLatitudeRule, in: db),
             adjustments: try stored(.prayerAdjustments, in: db),
-            hijriOffset: try stored(.hijriOffset, in: db))
+            hijriOffset: try stored(.hijriOffset, in: db),
+            iqamaDelays: try stored(.iqamaDelays, in: db))
     }
 
     static func adhkar(in db: Database) throws -> NativeBackup.Adhkar {

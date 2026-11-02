@@ -63,4 +63,35 @@ final class PrayerTrackerWiringTests: XCTestCase {
         XCTAssertEqual(upcoming.prayer, .fajr)
         XCTAssertEqual(app.prayer.nextPrayer(now: now), upcoming.next)
     }
+
+    /// After Dhuhr's adhan the counters count to its iqama, 20 minutes later by default; a delay set to 0 sends them
+    /// on to Asr, and the delays outlast a relaunch.
+    @MainActor
+    func testTheCountersCountToTheIqamaAfterTheAdhan() throws {
+        let support = try NativeTestSupport()
+        try support.database.location.save(LocationProfile(latitude: 24.71, longitude: 46.68, zoneId: "Asia/Riyadh",
+                                                           source: .manual, updatedAt: nil))
+        let app = try support.makeAppModel()
+        XCTAssertEqual(app.prayer.iqama, IqamaDelays(fajr: 25, dhuhr: 20, asr: 20, maghrib: 10, isha: 20))
+        let schedule = try XCTUnwrap(app.prayer.schedule(on: "2026-10-14"))
+        let dhuhr = try XCTUnwrap(schedule.dhuhr)
+        let now = dhuhr.addingTimeInterval(60)
+
+        let iqama = try XCTUnwrap(app.prayer.countdown(now: now))
+        XCTAssertEqual(iqama, PrayerCountdown(event: .iqama, prayer: .dhuhr, at: dhuhr.addingTimeInterval(20 * 60),
+                                              date: "2026-10-14"))
+        XCTAssertEqual(HomePrayerRow.title(iqama), "إقامة الظهر")
+        XCTAssertEqual(PrayerNames.counting(to: iqama), "إقامة الظهر")
+
+        app.prayer.setIqama(0, for: .dhuhr)
+        let asr = try XCTUnwrap(app.prayer.countdown(now: now))
+        XCTAssertEqual(asr, PrayerCountdown(event: .adhan, prayer: .asr, at: try XCTUnwrap(schedule.asr),
+                                            date: "2026-10-14"))
+        XCTAssertEqual(HomePrayerRow.title(asr), "أذان العصر")
+        XCTAssertEqual(PrayerNames.counting(to: asr), "الصلاة القادمة: العصر")
+
+        app.prayer.setIqama(30, for: .fajr)
+        XCTAssertEqual(try support.makeAppModel().prayer.iqama, IqamaDelays(fajr: 30, dhuhr: 0))
+        XCTAssertNil(app.failure)
+    }
 }

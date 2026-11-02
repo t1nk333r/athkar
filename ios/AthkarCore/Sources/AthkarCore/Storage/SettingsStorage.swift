@@ -63,6 +63,10 @@ extension SettingKey where Value == PrayerAdjustments {
     public static var prayerAdjustments: Self { Self(name: "prayer_adjustments", defaultValue: PrayerAdjustments()) }
 }
 
+extension SettingKey where Value == IqamaDelays {
+    public static var iqamaDelays: Self { Self(name: "iqama_delays", defaultValue: IqamaDelays()) }
+}
+
 extension SettingKey where Value == Int {
     public static var hijriOffset: Self { Self(name: "hijri_offset", defaultValue: 0) }
     /// The «مسبحة» target (`athkar-tasbih-v1.target`): 1…9999, or 0 for «بلا هدف» (the PWA's `null`). A preference:

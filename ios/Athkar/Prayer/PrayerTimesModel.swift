@@ -10,6 +10,8 @@ import Observation
 final class PrayerTimesModel {
     private(set) var location: LocationProfile?
     private(set) var settings: CalculationSettings
+    /// Minutes from each adhan to its iqama, which the counters count to after the adhan.
+    private(set) var iqama: IqamaDelays
     /// Days from today of the schedule on screen.
     private(set) var dayOffset = 0
     private(set) var isLocating = false
@@ -31,6 +33,7 @@ final class PrayerTimesModel {
         let location = try locations.profile()
         self.location = location
         settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
+        iqama = try settingsRepository.value(for: .iqamaDelays)
     }
 
     // MARK: Schedules
@@ -63,6 +66,13 @@ final class PrayerTimesModel {
     func upcoming(now: Date = Date()) -> UpcomingPrayer? {
         guard location != nil else { return nil }
         return NextPrayer.upcoming(after: now, in: zone) { schedule(on: $0) }
+    }
+
+    /// What the counters count to: the iqama of the prayer whose adhan has sounded, then the next adhan
+    /// (``PrayerCountdown``).
+    func countdown(now: Date = Date()) -> PrayerCountdown? {
+        guard location != nil else { return nil }
+        return PrayerCountdown.at(now, in: zone, delays: iqama) { schedule(on: $0) }
     }
 
     func showDay(_ offset: Int) {
@@ -121,17 +131,20 @@ final class PrayerTimesModel {
     func reloadSettings() {
         do {
             settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
+            iqama = try settingsRepository.value(for: .iqamaDelays)
         } catch {
             report(error)
         }
     }
 
-    /// After a backup import or «حذف كل البيانات»: the location and the calculation settings are read again.
+    /// After a backup import or «حذف كل البيانات»: the location, the calculation settings and the iqama delays are
+    /// read again.
     func reload() {
         do {
             let location = try locations.profile()
             self.location = location
             settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
+            iqama = try settingsRepository.value(for: .iqamaDelays)
             locationProblem = nil
         } catch {
             report(error)
@@ -147,6 +160,18 @@ final class PrayerTimesModel {
         write(adjustments, .prayerAdjustments) { $0.adjustments = adjustments }
     }
     func setHijriOffset(_ offset: Int) { write(offset, .hijriOffset) { $0.hijriOffset = offset } }
+
+    /// One prayer's iqama delay; the five are stored together, so the others are written as they read.
+    func setIqama(_ minutes: Int, for prayer: ObligatoryPrayer) {
+        var delays = iqama
+        delays[prayer] = minutes
+        do {
+            try settingsRepository.set(delays, for: .iqamaDelays)
+            iqama = delays
+        } catch {
+            report(error)
+        }
+    }
 
     private func write<Value>(_ value: Value, _ key: SettingKey<Value>, apply: (inout CalculationSettings) -> Void) {
         do {

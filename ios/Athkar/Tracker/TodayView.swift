@@ -67,10 +67,10 @@ struct TodayView: View {
 
     @ViewBuilder
     private func nextPrayer(now: Date) -> some View {
-        if let next = app.prayer.upcoming(now: now) {
+        if let next = app.prayer.countdown(now: now) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("الصلاة القادمة: \(PrayerNames.name(next.prayer))")
+                    Text(PrayerNames.counting(to: next))
                         .font(.subheadline.weight(.heavy))
                         .foregroundStyle(palette.textPrimary)
                     Text(ArabicFormat.time(next.at, in: app.prayer.zone))

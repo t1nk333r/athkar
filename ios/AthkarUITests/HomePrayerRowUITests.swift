@@ -29,9 +29,10 @@ final class HomePrayerRowUITests: DeckTestCase {
 
         app.buttons["header.back"].tap()
         app.buttons["tab.morning"].tap()
-        XCTAssertTrue(wait { self.row.label.contains("أذان ") }, row.label)
+        // The next adhan, or the iqama of one that has just sounded.
+        XCTAssertTrue(wait { self.row.label.contains("أذان ") || self.row.label.contains("إقامة ") }, row.label)
         XCTAssertFalse(row.label.contains("حدّد موقعك"), row.label)
-        // One sentence: the next adhan and the time left in words.
+        // One sentence: what is next and the time left in words.
         XCTAssertTrue(row.label.contains(" بعد "), row.label)
 
         openSettings()

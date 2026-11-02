@@ -78,22 +78,24 @@ public struct NativeBackup: Codable, Equatable, Sendable {
     }
 
     /// The calculation profile's `settings` rows (NATIVE_APP_PLAN.md §6.4 `prayerSettings`): every method, native
-    /// presets included, the high-latitude rule, the minute adjustments and the Hijri offset.
+    /// presets included, the high-latitude rule, the minute adjustments, the Hijri offset and the iqama delays.
     public struct PrayerSettings: Codable, Equatable, Sendable {
         public var calculationMethod: CalculationMethod?
         public var asrSchool: AsrSchool?
         public var highLatitudeRule: HighLatitudeRule?
         public var adjustments: PrayerAdjustments?
         public var hijriOffset: Int?
+        public var iqamaDelays: IqamaDelays?
 
         public init(calculationMethod: CalculationMethod? = nil, asrSchool: AsrSchool? = nil,
                     highLatitudeRule: HighLatitudeRule? = nil, adjustments: PrayerAdjustments? = nil,
-                    hijriOffset: Int? = nil) {
+                    hijriOffset: Int? = nil, iqamaDelays: IqamaDelays? = nil) {
             self.calculationMethod = calculationMethod
             self.asrSchool = asrSchool
             self.highLatitudeRule = highLatitudeRule
             self.adjustments = adjustments
             self.hijriOffset = hijriOffset
+            self.iqamaDelays = iqamaDelays
         }
     }
 
@@ -412,6 +414,11 @@ extension NativeBackup {
             }
         }
         if let offset = prayerSettings.hijriOffset { try checkRange(offset, -2...2, "prayerSettings.hijriOffset") }
+        if let delays = prayerSettings.iqamaDelays {
+            for prayer in ObligatoryPrayer.allCases {
+                try checkRange(delays[prayer], IqamaDelays.range, "prayerSettings.iqamaDelays.\(prayer.rawValue)")
+            }
+        }
 
         for (index, day) in adhkar.days.enumerated() {
             try checkDate(day.date, "adhkar.days[\(index)].date")
@@ -552,6 +559,7 @@ extension KeyShape {
             "prayerSettings": .object([
                 "calculationMethod": .value, "asrSchool": .value, "highLatitudeRule": .value, "hijriOffset": .value,
                 "adjustments": object(["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"]),
+                "iqamaDelays": object(["fajr", "dhuhr", "asr", "maghrib", "isha"]),
             ]),
             "adhkar": .object([
                 "days": .list(object(["date", "period", "origin"], nullable: ["completedAt"])),

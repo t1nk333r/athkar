@@ -163,7 +163,7 @@ final class MigrationPrivacyTests: XCTestCase {
         XCTAssertEqual(preview.rows.map(\.title), ["أذكار الصباح والمساء", "رقية القرين", "قراءة السور", "المسبحة",
                                                    "سجل الصلوات", "التذكيرات", "الإعدادات"])
         XCTAssertEqual(preview.rows.map(\.detail), ["٥ أوراد", "يومان", "يومان", "يومان", "٦ صلوات", "تذكيران",
-                                                    "١٣ إعدادًا"])
+                                                    "١٤ إعدادًا"])
         XCTAssertFalse(try support.database.hasUserData(), "the review wrote nothing")
 
         model.confirm()
