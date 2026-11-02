@@ -37,8 +37,10 @@ struct AthkarApp: App {
             .environment(\.layoutDirection, .rightToLeft)
             .environment(\.locale, Locale(identifier: "ar"))
         }
-        // The opportunistic refresh (NATIVE_APP_PLAN.md §7.5): it asks for the next one, then replans.
+        // The opportunistic refresh (NATIVE_APP_PLAN.md §7.5): it asks for the next one, then replans. The lock-screen
+        // widget's days ahead are filled again too.
         .backgroundTask(.appRefresh(ReminderModel.refreshTaskIdentifier)) {
+            await app?.prayer.publishWidget()
             await app?.reminders.runBackgroundRefresh()
         }
     }
@@ -46,7 +48,8 @@ struct AthkarApp: App {
 
 /// Applies the theme and runs the day rollover (NATIVE_APP_PLAN.md §6.3): on `NSCalendarDayChanged` (local
 /// midnight while the app runs), on a clock or time-zone change, and whenever the app comes to the foreground.
-/// The same events, and anything the reminder plan depends on, replan the reminders (§7.5).
+/// The same events, and anything the reminder plan depends on, replan the reminders (§7.5) and fill the lock-screen
+/// widget's days ahead.
 private struct RootView: View {
     let app: AppModel
 
@@ -93,6 +96,7 @@ private struct RootView: View {
 
     private func refresh() {
         app.ensureCurrentDay()
+        app.prayer.publishWidget()
         app.reminders.replan()
     }
 

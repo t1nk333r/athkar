@@ -33,6 +33,10 @@ A tapped adhkar reminder opens its deck: `adhkar.morning.<date>` the `morning` r
 `evening` route. A tapped prayer reminder is not a route: it opens أوقات الصلاة, as before, and its «سجّل الصلاة» action
 still records the prayer without opening the app (NATIVE_APP_PLAN.md §7.5).
 
+## Widget
+
+Tapping the lock-screen widget opens the `prayers` route: «اليوم», where the prayer it shows is recorded.
+
 ## Opening a route
 
 A route opens over whatever was on screen: the home screen closes its sheets (الإعدادات and everything opened from

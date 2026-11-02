@@ -174,13 +174,12 @@ if [[ $suite == sdk ]]; then
   command=("$swift" build --package-path "$snapshot/ios" "${common[@]}"
            --build-system swiftbuild --triple arm64-apple-ios --toolset "$sdk_bundle/toolset-swb.json")
   [[ ! -f $snapshot/ios/Package.resolved ]] || command+=(--force-resolved-versions)
+  # Without a target SwiftPM builds every target but the tests: the app and the lock-screen widget.
   if [[ $build_tests == 1 ]]; then
     frameworks="$sdk_bundle/Developer/Platforms/iPhoneOS.platform/Developer/Library/Frameworks"
     # SwiftPM forbids --build-tests together with --target. Select the test target directly.
     command+=(--target AthkarTests -Xswiftc -enable-testing
               -Xswiftc -F -Xswiftc "$frameworks" -Xlinker -F -Xlinker "$frameworks")
-  else
-    command+=(--target Athkar)
   fi
 else
   package="$snapshot/ios"

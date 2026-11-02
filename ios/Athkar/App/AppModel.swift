@@ -82,12 +82,14 @@ final class AppModel {
     ///   - notifications: the reminders' notification centre; iOS's own unless a test supplies one.
     ///   - reminderClock: the reminders' clock, which a test may fix.
     ///   - diagnosticsStore: where the reminder diagnostics' times are kept; `UserDefaults` unless a test supplies one.
+    ///   - widget: where the lock-screen widget's times go; the keychain unless a test supplies a recorder.
     ///   - flags: where the app's own flags are kept (the import offer); `UserDefaults.standard` unless a test
     ///     supplies one.
     init(database: AppDatabase, content: BundledContent, today: String,
          notifications: (any ReminderNotificationCenter)? = nil,
          reminderClock: @escaping () -> Date = { Date() },
          diagnosticsStore: (any ReminderDiagnosticsStore)? = nil,
+         widget: (any PrayerWidgetPublisher)? = nil,
          flags: UserDefaults = .standard) throws {
         self.database = database
         self.flags = flags
@@ -101,7 +103,7 @@ final class AppModel {
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
         suwar = try SuwarDeckModel(database: database, content: content, today: today, report: report)
         tasbih = try TasbihModel(database: database, today: today, report: report)
-        let prayer = try PrayerTimesModel(database: database, report: report)
+        let prayer = try PrayerTimesModel(database: database, widget: widget ?? KeychainPrayerWidget(), report: report)
         self.prayer = prayer
         // The tracker's dates are the prayer times' dates; a new record captures the time and profile shown.
         tracker = PrayerTrackerModel(

@@ -27,9 +27,11 @@ final class RoutingAndDeleteAllTests: XCTestCase {
     @MainActor
     private func makeApp(_ support: NativeTestSupport, center: RecordingReminderCenter = RecordingReminderCenter(),
                          diagnostics: MemoryDiagnosticsStore = MemoryDiagnosticsStore(),
+                         widget: RecordingPrayerWidget = RecordingPrayerWidget(),
                          clock: @escaping () -> Date = { Date() }) throws -> AppModel {
         try AppModel(database: support.database, content: support.content, today: support.today,
-                     notifications: center, reminderClock: clock, diagnosticsStore: diagnostics, flags: flags())
+                     notifications: center, reminderClock: clock, diagnosticsStore: diagnostics, widget: widget,
+                     flags: flags())
     }
 
     // MARK: Routes
@@ -111,8 +113,8 @@ final class RoutingAndDeleteAllTests: XCTestCase {
     // MARK: «حذف كل البيانات»
 
     /// After a restore, a recorded prayer and a planned week of reminders, «حذف كل البيانات» leaves no user row, no
-    /// pending request or banner of the app's, no diagnostics time, every section on its defaults, and the import
-    /// offer back. The installed content versions stay.
+    /// pending request or banner of the app's, no diagnostics time, no times for the lock-screen widget, every section
+    /// on its defaults, and the import offer back. The installed content versions stay.
     @MainActor
     func testDeleteAllLeavesNoRowsAndNothingPending() async throws {
         let riyadh = TimeZone(identifier: "Asia/Riyadh")!
@@ -129,8 +131,10 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         let midnight = calendar.startOfDay(for: AppModel.now())
         let center = RecordingReminderCenter()
         let diagnostics = MemoryDiagnosticsStore()
-        let app = try makeApp(support, center: center, diagnostics: diagnostics,
+        let widget = RecordingPrayerWidget()
+        let app = try makeApp(support, center: center, diagnostics: diagnostics, widget: widget,
                               clock: { midnight.addingTimeInterval(30 * 60) })
+        XCTAssertNotNil(widget.published.last ?? nil, "the widget has the location's times")
         XCTAssertFalse(app.offersWebImport, "a launch with user data closes the offer")
         XCTAssertTrue(app.tracker.quickLog(PrayerOccurrence(date: app.tracker.today, prayer: .fajr)))
         await app.reminders.replanAndWait()
@@ -155,6 +159,7 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         XCTAssertNil(diagnostics.lastBackgroundRefreshAt)
         XCTAssertTrue(app.reminders.rules.isEmpty)
         XCTAssertNil(app.prayer.location)
+        XCTAssertEqual(widget.published.last, .some(nil), "the widget's times are deleted")
         XCTAssertTrue(app.tracker.records(on: app.tracker.today).isEmpty)
         XCTAssertEqual(app.settings.theme, .system)
         XCTAssertEqual(app.tab, .morning)

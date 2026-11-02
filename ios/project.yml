@@ -51,6 +51,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - package: AthkarCore
+      - target: AthkarWidget
     info:
       path: Athkar/Info.plist
       properties:
@@ -105,6 +106,25 @@ targets:
         UILaunchScreen: {}
         UIAppFonts: [kfgqpc-uthman-taha-naskh.ttf, kfgqpc-hafs-v30.ttf]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+  # The lock-screen widget (ios/AthkarWidget). Its versions must equal the app's.
+  AthkarWidget:
+    type: app-extension
+    platform: iOS
+    sources: [AthkarWidget]
+    dependencies:
+      - package: AthkarCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: local.dev.athkar.widget
+    info:
+      path: AthkarWidget/Info.plist
+      properties:
+        CFBundleDevelopmentRegion: ar
+        CFBundleDisplayName: بكرة وأصيلا
+        CFBundleShortVersionString: "1.4"
+        CFBundleVersion: "5"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
   AthkarTests:
     type: bundle.unit-test
     platform: iOS

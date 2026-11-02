@@ -114,6 +114,11 @@ class RepositoryTests(unittest.TestCase):
         self.assertIn("MigrationPrivacyTests", export["models"])
         self.assertIn("MigrationPrivacyUITests", export["ui"])
 
+    def test_widget_runs_only_the_ios_build(self):
+        # The extension is compiled with the app; no test target links it.
+        self.assertEqual(picked(self.select("ios/AthkarWidget/PrayerWidget.swift")), {"ios-build": {"app", "tests"}})
+        self.assertEqual(picked(self.select("ios/AthkarWidget/Info.plist")), {"ios-build": {"app", "tests"}})
+
     def test_reminder_views_run_the_diagnostics_ui_test(self):
         lanes = picked(self.select("ios/Athkar/Reminders/DiagnosticsView.swift"))
         # The view is excluded from the portable target; it reaches the UI tests through the settings screen too.

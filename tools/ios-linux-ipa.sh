@@ -191,11 +191,14 @@ step_failed() { # step, log
 # The committed generated files must be the same, so the repository describes this app.
 mkdir "$results/repo" "$results/committed"
 git -C "$repo" archive "$head" | tar -x -C "$results/repo"
-git -C "$repo" archive "$head" ios/Athkar.xcodeproj ios/Athkar/Info.plist | tar -x -C "$results/committed"
+git -C "$repo" archive "$head" ios/Athkar.xcodeproj ios/Athkar/Info.plist ios/AthkarWidget/Info.plist \
+  | tar -x -C "$results/committed"
 run_owned xcodegen "$results/xcodegen.log" env -C "$results/repo" "$xcodegen" generate --spec ios/project.yml \
   || step_failed xcodegen "$results/xcodegen.log"
 if ! diff -r "$results/committed/ios/Athkar.xcodeproj" "$results/repo/ios/Athkar.xcodeproj" > "$results/generated.diff" \
-  || ! diff "$results/committed/ios/Athkar/Info.plist" "$results/repo/ios/Athkar/Info.plist" >> "$results/generated.diff"; then
+  || ! diff "$results/committed/ios/Athkar/Info.plist" "$results/repo/ios/Athkar/Info.plist" >> "$results/generated.diff" \
+  || ! diff "$results/committed/ios/AthkarWidget/Info.plist" "$results/repo/ios/AthkarWidget/Info.plist" \
+       >> "$results/generated.diff"; then
   cat "$results/generated.diff" >&2
   echo 'The committed Xcode project or Info.plist differs from ios/project.yml; regenerate and commit them.' >&2
   exit 1
