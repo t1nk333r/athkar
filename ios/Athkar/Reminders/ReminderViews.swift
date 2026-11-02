@@ -134,7 +134,7 @@ struct ReminderStatusNote: View {
         case .denied: return "الإشعارات غير مسموح بها لهذا التطبيق. اسمح بها من الإعدادات لتصلك التذكيرات."
         case .notDetermined: return "سيُطلب إذن الإشعارات عند تشغيل أول تذكير."
         case .allowed:
-            let base = "المواعيد محسوبة محليًا، وتصل التذكيرات ولو كان التطبيق مغلقًا."
+            let base = "المواعيد محسوبة محليًا، وتصل التذكيرات ولو كان التطبيق مغلقًا. تُجدول لسبعة أيام قادمة، وما بعدها يُجدول عند فتح التطبيق."
             guard let next = reminders.nextPending else { return base }
             return base + " التذكير القادم: \(next.title) \(Self.when(next.fireAt))."
         }

@@ -22,6 +22,9 @@ final class PrayerTrackerModel {
     private(set) var lastChange: Change?
     /// Bumped on every write, so views reading records refresh.
     private(set) var revision = 0
+    /// Called after every write, a cleared day and a reload: the reminders replan, since a recorded prayer gets no
+    /// notification (NATIVE_APP_PLAN.md §7.5).
+    @ObservationIgnored var didWrite: @MainActor () -> Void = {}
 
     @ObservationIgnored private var cache: [String: [ObligatoryPrayer: PrayerRecord]] = [:]
     private let repository: PrayerRecordRepository
@@ -122,10 +125,30 @@ final class PrayerTrackerModel {
         }
     }
 
+    /// «سجّل الصلاة» on a prayer reminder: the same idempotent «record» as the row's quick log, for the reminder's own
+    /// occurrence. It is not offered for undo: the change was made away from the screen that shows «تراجع».
+    @discardableResult
+    func logFromReminder(_ occurrence: PrayerOccurrence) -> Bool {
+        write(.record(noon: nil), to: occurrence) != nil
+    }
+
     /// Records changed elsewhere (a later import, the day turning): read them again.
     func reload() {
         cache = [:]
         revision += 1
+        didWrite()
+    }
+
+    /// The state of every recorded occurrence from `date` through the `days - 1` days after it: what the reminder
+    /// planner skips. Nothing on a read failure, which is reported.
+    func states(from date: String, days: Int) -> [PrayerOccurrence: PrayerRecordState] {
+        guard days > 0, let last = LocalDate.adding(days - 1, to: date) else { return [:] }
+        do {
+            return ReminderPlanner.prayerStates(try repository.records(from: date, through: last))
+        } catch {
+            report(error)
+            return [:]
+        }
     }
 
     // MARK: Calendar
@@ -165,5 +188,6 @@ final class PrayerTrackerModel {
     private func refresh(_ date: String) {
         cache[date] = nil
         revision += 1
+        didWrite()
     }
 }

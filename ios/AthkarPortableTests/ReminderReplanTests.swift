@@ -377,14 +377,157 @@ final class ReminderReplanTests: XCTestCase {
         XCTAssertEqual(Set(harness.center.requests.map(\.now)), [start])
         XCTAssertGreaterThan(world.now, start, "the clock moved on once the pass read it")
     }
+
+    // MARK: Tracker
+
+    /// A prayer the tracker records today loses its pending request and its delivered banner on the next pass; the
+    /// following days keep theirs. Undone back to unrecorded, it is planned again.
+    @MainActor
+    func testARecordedPrayerLosesItsRequestAndBannerUntilItIsUnrecorded() async throws {
+        let harness = try Harness([ishaRule])
+        let everyIsha = (0...6).map { "prayer.isha.\(day($0))" }
+        harness.model.replan()
+        await harness.settle()
+        XCTAssertEqual(harness.ids, everyIsha)
+
+        let isha = PrayerOccurrence(date: day(0), prayer: .isha)
+        harness.world.prayerStates = [isha: .prayed]
+        let start = harness.center.events.count
+        harness.model.replan()
+        await harness.settle()
+        XCTAssertEqual(harness.ids, Array(everyIsha.dropFirst()))
+        let pass = Array(harness.center.events[start...])
+        XCTAssertTrue(pass.contains(.removePending(["prayer.isha.\(day(0))"])), "\(pass)")
+        XCTAssertTrue(pass.contains(.removeDelivered(["prayer.isha.\(day(0))"])), "\(pass)")
+        XCTAssertEqual(harness.model.diagnostics.planned, 6)
+
+        harness.world.prayerStates = [isha: .notApplicable, PrayerOccurrence(date: day(2), prayer: .isha): .unrecorded]
+        harness.model.replan()
+        await harness.settle()
+        XCTAssertFalse(harness.ids.contains("prayer.isha.\(day(0))"))
+        XCTAssertTrue(harness.ids.contains("prayer.isha.\(day(2))"))
+
+        harness.world.prayerStates = [isha: .unrecorded]
+        harness.model.replan()
+        await harness.settle()
+        XCTAssertEqual(Set(harness.ids), Set(everyIsha))
+        XCTAssertTrue(harness.world.reports.isEmpty)
+    }
+
+    // MARK: Diagnostics and background refresh
+
+    /// A finished pass records what it planned, what the budget left out and what iOS holds, and when; the time
+    /// outlives the model. A diagnostics read counts what iOS holds again, ignoring other features' requests.
+    @MainActor
+    func testDiagnosticsCountThePassAndOutliveTheModel() async throws {
+        let store = MemoryDiagnosticsStore()
+        let harness = try Harness([morningRule, eveningRule], diagnostics: store)
+        XCTAssertEqual(harness.model.diagnostics, ReminderModel.Diagnostics())
+        harness.center.foreignPending = [PendingReminder(id: "other.feature", title: "other", fireAt: nil)]
+        harness.model.replan()
+        await harness.settle()
+
+        let diagnostics = harness.model.diagnostics
+        XCTAssertEqual(diagnostics.planned, bothPeriods.count)
+        XCTAssertEqual(diagnostics.pending, bothPeriods.count)
+        XCTAssertEqual(diagnostics.droppedByBudget, 0)
+        XCTAssertEqual(diagnostics.lastReplanAt, harness.world.now)
+        XCTAssertEqual(store.lastReplanAt, harness.world.now)
+
+        harness.center.removePendingRequests(withIdentifiers: ["adhkar.evening.\(day(0))"])
+        await harness.model.refreshDiagnostics()
+        XCTAssertEqual(harness.model.diagnostics.pending, bothPeriods.count - 1)
+        XCTAssertEqual(harness.model.diagnostics.planned, bothPeriods.count)
+
+        let reopened = try ReminderModel(repository: harness.database.reminders, report: { _ in },
+                                         center: harness.center, diagnosticsStore: store)
+        XCTAssertEqual(reopened.diagnostics.lastReplanAt, harness.world.now)
+        XCTAssertNil(reopened.diagnostics.planned)
+    }
+
+    /// A background refresh asks for the next one (after the next local midnight) before it replans, records its
+    /// run, and leaves the same requests as a foreground replan: replanning stays idempotent.
+    @MainActor
+    func testBackgroundRefreshAsksForTheNextAndReplans() async throws {
+        let store = MemoryDiagnosticsStore()
+        let harness = try Harness([morningRule, eveningRule], diagnostics: store)
+        let scheduler = RecordingRefreshScheduler()
+        harness.model.refreshScheduler = scheduler
+        harness.model.replan()
+        await harness.settle()
+        let foreground = harness.ids
+        let adds = harness.center.adds.count
+
+        let now = harness.world.now
+        await harness.model.runBackgroundRefresh()
+        XCTAssertNil(harness.model.replanTask, "the replan finished before the refresh returned")
+        XCTAssertEqual(harness.ids, foreground)
+        XCTAssertEqual(harness.center.adds.count, adds + foreground.count, "each request replaced, none added twice")
+        XCTAssertEqual(scheduler.requests, [local(day: 1, hour: 0).addingTimeInterval(300)])
+        XCTAssertEqual(harness.model.diagnostics.refreshRequest,
+                       .accepted(earliestBegin: local(day: 1, hour: 0).addingTimeInterval(300)))
+        XCTAssertEqual(harness.model.diagnostics.lastBackgroundRefreshAt, now)
+        XCTAssertEqual(store.lastBackgroundRefreshAt, now)
+        XCTAssertTrue(harness.world.reports.isEmpty)
+    }
+
+    /// iOS refusing a refresh (the simulator, or background refresh turned off) is shown, not reported as a failure.
+    @MainActor
+    func testARefusedRefreshRequestIsShownAndNotReported() throws {
+        let harness = try Harness()
+        harness.model.scheduleBackgroundRefresh()
+        XCTAssertNil(harness.model.diagnostics.refreshRequest, "no scheduler: nothing asked")
+        let scheduler = RecordingRefreshScheduler()
+        scheduler.refuses = true
+        harness.model.refreshScheduler = scheduler
+        harness.model.scheduleBackgroundRefresh()
+        XCTAssertEqual(harness.model.diagnostics.refreshRequest, .refused)
+        XCTAssertTrue(harness.world.reports.isEmpty)
+    }
+
+    /// The next refresh is five minutes after the next local midnight, also across a DST change.
+    func testNextRefreshFollowsTheLocalMidnight() throws {
+        let newYork = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
+        // 2026-03-08 is 23 hours long: 21:00 EST on the 7th, then 00:05 EST on the 8th.
+        let eve = Date(timeIntervalSince1970: 1_772_935_200)
+        XCTAssertEqual(ReminderModel.nextRefresh(after: eve, zone: newYork),
+                       Date(timeIntervalSince1970: 1_772_946_300))
+        // 23:59:59 on 2026-03-08 (EDT): 00:05 EDT on the 9th.
+        XCTAssertEqual(ReminderModel.nextRefresh(after: Date(timeIntervalSince1970: 1_773_028_799), zone: newYork),
+                       Date(timeIntervalSince1970: 1_773_029_100))
+    }
+
+    /// «سجّل الصلاة» acts on the occurrence its reminder names: `prayer.<key>.<date>`, the reminder's own date.
+    func testAPrayerReminderNamesItsOccurrence() {
+        func occurrence(_ id: String?) -> PrayerOccurrence? { ReminderPayload(ruleId: nil, requestId: id).occurrence }
+        XCTAssertEqual(occurrence("prayer.isha.2026-10-29"), PrayerOccurrence(date: "2026-10-29", prayer: .isha))
+        XCTAssertEqual(occurrence("prayer.fajr.2028-02-29"), PrayerOccurrence(date: "2028-02-29", prayer: .fajr))
+        for id in [nil, "adhkar.morning.2026-10-29", "prayer.sunrise.2026-10-29", "prayer.isha.2026-02-30",
+                   "prayer.isha", "prayer.isha.2026-10-29.x", "personal.x.2026-10-29"] {
+            XCTAssertNil(occurrence(id), id ?? "nil")
+        }
+    }
 }
 
 private struct InjectedFailure: Error {}
+
+/// Records each background refresh asked for, or refuses them as the simulator does.
+@MainActor
+private final class RecordingRefreshScheduler: ReminderRefreshScheduler {
+    var refuses = false
+    private(set) var requests: [Date] = []
+
+    func submit(earliestBegin: Date) throws {
+        if refuses { throw InjectedFailure() }
+        requests.append(earliestBegin)
+    }
+}
 
 private let epoch = Date(timeIntervalSince1970: 0)
 private let morningRule = ReminderRule.adhkar(.morning, enabled: true, updatedAt: epoch)
 private let eveningRule = ReminderRule.adhkar(.evening, enabled: true, updatedAt: epoch)
 private let fajrRule = ReminderRule.prayer(.fajr, offsetMinutes: -10, enabled: true, updatedAt: epoch)
+private let ishaRule = ReminderRule.prayer(.isha, offsetMinutes: 0, enabled: true, updatedAt: epoch)
 /// Both adhkar reminders planned at 06:00 on day 0: this evening's, then six mornings and evenings.
 private let bothPeriods = ["adhkar.evening.\(day(0))"]
     + (1...6).flatMap { ["adhkar.morning.\(day($0))", "adhkar.evening.\(day($0))"] }
@@ -415,6 +558,8 @@ private final class World {
     /// How far the clock moves on each time the model reads it.
     var tick: TimeInterval = 0
     var completeToday: Set<Period> = []
+    /// The tracker's recorded occurrences.
+    var prayerStates: [PrayerOccurrence: PrayerRecordState] = [:]
     /// Moves every prayer time, as a location change does.
     var shift: TimeInterval = 0
     var reports: [any Error] = []
@@ -423,7 +568,7 @@ private final class World {
         let zone = self.zone
         let shift = self.shift
         return ReminderModel.PlanInputs(zone: zone, schedule: { schedule($0, zone: zone, shift: shift) },
-                                        completeToday: completeToday)
+                                        completeToday: completeToday, prayerStates: prayerStates)
     }
 
     /// The model's clock: `now`, which then moves on by `tick`.
@@ -441,13 +586,13 @@ private struct Harness {
     let world: World
     let model: ReminderModel
 
-    init(_ rules: [ReminderRule] = []) throws {
+    init(_ rules: [ReminderRule] = [], diagnostics: MemoryDiagnosticsStore = MemoryDiagnosticsStore()) throws {
         let database = try AppDatabase.inMemory()
         for rule in rules { try database.reminders.save(rule) }
         let center = ControlledReminderCenter()
         let world = World()
         let model = try ReminderModel(repository: database.reminders, report: { world.reports.append($0) },
-                                      center: center, clock: { world.read() })
+                                      center: center, clock: { world.read() }, diagnosticsStore: diagnostics)
         model.inputs = { _ in world.inputs }
         self.database = database
         self.center = center

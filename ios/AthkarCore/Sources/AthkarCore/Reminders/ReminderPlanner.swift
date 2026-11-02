@@ -29,6 +29,19 @@ public struct PlannedNotification: Equatable, Sendable {
     }
 }
 
+/// A plan and what the budget left out of it.
+public struct ReminderPlan: Equatable, Sendable {
+    /// The earliest `budget` notifications, by fire time.
+    public let notifications: [PlannedNotification]
+    /// Wanted inside the horizon but beyond the budget: the furthest ones, left out.
+    public let droppedByBudget: Int
+
+    public init(notifications: [PlannedNotification], droppedByBudget: Int) {
+        self.notifications = notifications
+        self.droppedByBudget = droppedByBudget
+    }
+}
+
 /// Which pending notifications the app should have, from the rules and the prayer times: a pure function of its
 /// inputs so the fixtures can check it (NATIVE_APP_PLAN.md §7.5). The PWA's `nextReminderTime` and
 /// `scheduleReminders` are its adhkar part:
@@ -37,7 +50,9 @@ public struct PlannedNotification: Equatable, Sendable {
 /// - a time up to 15 minutes past (inclusive) is planned to fire at once (catch-up);
 /// - an adhkar period already complete today is not planned today;
 /// - a day without times (polar day or night, no location) plans nothing;
-/// - an Asr clamped to Maghrib is undetermined: neither the Asr prayer reminder nor evening adhkar (Asr + 60) that day.
+/// - an Asr clamped to Maghrib is undetermined: neither the Asr prayer reminder nor evening adhkar (Asr + 60) that day;
+/// - a prayer occurrence the tracker records as `prayed` or `not_applicable` is not planned, on any day; `unrecorded`
+///   (never recorded, undone, or cleared) is planned as usual. Adhkar reminders do not depend on the tracker.
 /// It plans `horizonDays` days ahead and keeps the earliest `budget` (iOS allows 64 pending requests per app).
 public enum ReminderPlanner {
     public static let horizonDays = 7
@@ -51,11 +66,24 @@ public enum ReminderPlanner {
     ///   - schedule: the prayer times of a civil date in `zone`, or `nil` when there are none.
     ///   - completeToday: adhkar periods complete today (`periodIsComplete`).
     ///   - firedToday: IDs of rules whose notification already fired today (delivered, or `lastShown` is today).
+    ///   - prayerStates: the tracker's state of each recorded occurrence; one with no entry is `unrecorded`.
     public static func plan(now: Date, zone: TimeZone, rules: [ReminderRule],
                             schedule: (String) -> PrayerSchedule?, completeToday: Set<Period>,
-                            firedToday: Set<String>) -> [PlannedNotification] {
+                            firedToday: Set<String>,
+                            prayerStates: [PrayerOccurrence: PrayerRecordState] = [:]) -> [PlannedNotification] {
+        makePlan(now: now, zone: zone, rules: rules, schedule: schedule, completeToday: completeToday,
+                 firedToday: firedToday, prayerStates: prayerStates).notifications
+    }
+
+    /// ``plan(now:zone:rules:schedule:completeToday:firedToday:prayerStates:)``, with how many notifications the
+    /// budget left out (the diagnostics screen shows it). `budget` is the iOS limit unless a test lowers it.
+    public static func makePlan(now: Date, zone: TimeZone, rules: [ReminderRule],
+                                schedule: (String) -> PrayerSchedule?, completeToday: Set<Period>,
+                                firedToday: Set<String>,
+                                prayerStates: [PrayerOccurrence: PrayerRecordState] = [:],
+                                budget: Int = ReminderPlanner.budget) -> ReminderPlan {
         let active = rules.filter { $0.enabled && $0.kind != .personal }
-        guard !active.isEmpty else { return [] }
+        guard !active.isEmpty else { return ReminderPlan(notifications: [], droppedByBudget: 0) }
 
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
@@ -66,6 +94,10 @@ public enum ReminderPlanner {
             guard let times = schedule(localDate) else { continue }
             for rule in active {
                 guard let item = notification(for: rule, times: times, localDate: localDate) else { continue }
+                // Prayed or not applicable: nothing to remind of. Unrecorded is neutral and keeps its reminder.
+                if case .prayer(let key) = item.target,
+                   let state = prayerStates[PrayerOccurrence(date: localDate, prayer: key.obligatory)],
+                   state != .unrecorded { continue }
                 if day == 0 {
                     if case .adhkar(let period) = item.target, completeToday.contains(period) { continue }
                     // Once a day: shown today, it waits for tomorrow even if today's time is still ahead.
@@ -83,7 +115,13 @@ public enum ReminderPlanner {
         // One request per ID: a second rule for the same prayer (not something the UI creates) is dropped.
         var seen = Set<String>()
         planned = planned.filter { seen.insert($0.id).inserted }
-        return Array(planned.sorted { ($0.fireAt, $0.id) < ($1.fireAt, $1.id) }.prefix(budget))
+        let kept = Array(planned.sorted { ($0.fireAt, $0.id) < ($1.fireAt, $1.id) }.prefix(budget))
+        return ReminderPlan(notifications: kept, droppedByBudget: planned.count - kept.count)
+    }
+
+    /// The planner's `prayerStates` input from the tracker's records.
+    public static func prayerStates(_ records: some Sequence<PrayerRecord>) -> [PrayerOccurrence: PrayerRecordState] {
+        Dictionary(records.map { ($0.occurrence, $0.state) }, uniquingKeysWith: { _, last in last })
     }
 
     private static func notification(for rule: ReminderRule, times: PrayerSchedule, localDate: String)
@@ -128,4 +166,17 @@ extension ReminderRule {
     }
 
     public static func prayerId(_ key: PrayerKey) -> String { "prayer_\(key.rawValue)" }
+}
+
+extension ReminderRule.PrayerKey {
+    /// The tracker's prayer for this reminder's key.
+    public var obligatory: ObligatoryPrayer {
+        switch self {
+        case .fajr: .fajr
+        case .dhuhr: .dhuhr
+        case .asr: .asr
+        case .maghrib: .maghrib
+        case .isha: .isha
+        }
+    }
 }

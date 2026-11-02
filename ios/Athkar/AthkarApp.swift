@@ -4,14 +4,26 @@ import UserNotifications
 
 @main
 struct AthkarApp: App {
-    @State private var launch = Result { try AppModel.launch() }
+    @State private var launch: Result<AppModel, any Error>
 
     init() {
+        let launch = Result { try AppModel.launch() }
+        _launch = State(initialValue: launch)
+        if case let .success(app) = launch {
+            app.reminders.refreshScheduler = AppRefreshScheduler()
+            // A background launch for «سجّل الصلاة» has no scene, so the action is attached here, with the app.
+            ReminderNotificationDelegate.shared.attachActions { payload, date in
+                await app.recordPrayer(payload, shownAt: date)
+            }
+        }
+        let center = UNUserNotificationCenter.current()
+        center.setNotificationCategories(ReminderModel.categories)
         // Before launch finishes, so the tap that opens the app is delivered (NATIVE_APP_PLAN.md §7.5).
-        UNUserNotificationCenter.current().delegate = ReminderNotificationDelegate.shared
+        center.delegate = ReminderNotificationDelegate.shared
     }
 
     var body: some Scene {
+        let app = try? launch.get()
         WindowGroup {
             Group {
                 switch launch {
@@ -23,6 +35,10 @@ struct AthkarApp: App {
             }
             .environment(\.layoutDirection, .rightToLeft)
             .environment(\.locale, Locale(identifier: "ar"))
+        }
+        // The opportunistic refresh (NATIVE_APP_PLAN.md §7.5): it asks for the next one, then replans.
+        .backgroundTask(.appRefresh(ReminderModel.refreshTaskIdentifier)) {
+            await app?.reminders.runBackgroundRefresh()
         }
     }
 }
@@ -53,6 +69,8 @@ private struct RootView: View {
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { refresh() }
+                // iOS may then run a refresh while the app is not opened; it decides when.
+                if phase == .background { app.reminders.scheduleBackgroundRefresh() }
             }
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) {
                 _ in refresh()

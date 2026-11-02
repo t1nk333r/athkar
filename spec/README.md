@@ -55,12 +55,22 @@ The output is byte-identical on every run, whatever the host time zone. Regenera
 | `sessions/fixtures/tasbih-text.json` | `tasbihMatchKey`, `cleanTasbihPhrase`, `findTasbihPhrase`, `tasbihIdentity`, `parseTasbihTarget`, `tasbihStatusText` | `function`, and `text`, `custom`, `key`, `value`, or `count` and `target` | the string (`null` when the PWA returns `null`), the target or `null`, or `{text, check}`; strings compare as UTF-16 code units ([`sessions/tasbih.md`](sessions/tasbih.md)) |
 | `reminders/fixtures/next-reminder-time.json` | `nextReminderTime`, `scheduleReminders`, `prayerTimesForDate` | `now`, `timeZone`, `preferences` (the `athkar-reminders-v2` shape), `state`, `notificationPermission` | `todaySchedule`, per period `nextReminderTime`, and per period `scheduled: {delayMs, fireAt}` or `null` |
 
+`reminders/fixtures/tracker-aware.json` is written by hand, not generated, because the PWAs have no tracker. It checks
+that the planner leaves out a prayer notification for an occurrence the tracker records (NATIVE_APP_PLAN.md §7.5):
+
+| File | Rule | Case input | Expected |
+| --- | --- | --- | --- |
+| `reminders/fixtures/tracker-aware.json` | `ReminderPlanner.plan` with the tracker's states | `now`, `timeZone`, `times` (the same local times every day), `rules`, stored `records` and tracker `steps` in the format of `tracker/fixtures/transitions.json` | `today`: the IDs planned today, in fire order; `count`: everything planned in the horizon; `absent`: IDs that must not be planned; `catchUp`: the catch-up IDs, when given |
+
 ### Reminder notes
 
 - `nextReminderTime` ignores completion.
 - `scheduled` is the result of `scheduleReminders`. A period is skipped when it is disabled, when
   permission is not `granted`, when `periodIsComplete` is true, or when no time can be computed.
 - The catch-up time is `now + 300 ms`, exactly as the PWA does it.
+- A prayer occurrence recorded `prayed` or `not_applicable` is not planned, on any day of the horizon, catch-up
+  included. `unrecorded` keeps its notification, whether it was never recorded, undone, unrecorded, unmarked or
+  cleared. Adhkar reminders do not depend on the tracker.
 - The native notification IDs (`adhkar.<period>.<local_date>`, §7.5) are new. The PWA has no
   equivalent at scheduling time, so the fixtures do not record them.
 

@@ -16,6 +16,8 @@ final class AppModel {
     let prayer: PrayerTimesModel
     let reminders: ReminderModel
     let tracker: PrayerTrackerModel
+    /// The bundled packs and their versions (`manifest.json`), for the diagnostics screen.
+    let contentVersions: [(pack: String, version: String)]
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -67,7 +69,14 @@ final class AppModel {
 
     @ObservationIgnored private let transferImporter: TransferImporter
 
-    init(database: AppDatabase, content: BundledContent, today: String) throws {
+    /// - Parameters:
+    ///   - notifications: the reminders' notification centre; iOS's own unless a test supplies one.
+    ///   - reminderClock: the reminders' clock, which a test may fix.
+    ///   - diagnosticsStore: where the reminder diagnostics' times are kept; `UserDefaults` unless a test supplies one.
+    init(database: AppDatabase, content: BundledContent, today: String,
+         notifications: (any ReminderNotificationCenter)? = nil,
+         reminderClock: @escaping () -> Date = { Date() },
+         diagnosticsStore: (any ReminderDiagnosticsStore)? = nil) throws {
         var reportFailure: (any Error) -> Void = { _ in }
         let report: (any Error) -> Void = { reportFailure($0) }
         settings = try SettingsModel(repository: database.settings, report: report)
@@ -88,7 +97,11 @@ final class AppModel {
                 (prayer.schedule(on: occurrence.date)?.scheduledTime(of: occurrence.prayer),
                  prayer.settings.profileVersion)
             })
-        reminders = try ReminderModel(repository: database.reminders, report: report)
+        reminders = try ReminderModel(repository: database.reminders, report: report,
+                                      center: notifications ?? UserNotificationCenterAdapter(), clock: reminderClock,
+                                      diagnosticsStore: diagnosticsStore ?? UserDefaultsDiagnosticsStore())
+        contentVersions = content.manifest.packs.map { (pack: $0.key, version: $0.value.version) }
+            .sorted { $0.pack < $1.pack }
         transferImporter = TransferImporter(
             database: database, collections: content.packs.adhkar,
             suwar: content.suwar.suwar.map { SuwarOutline(id: $0.id, name: $0.surah, pageIDs: $0.pages.map(\.id)) })
@@ -100,12 +113,29 @@ final class AppModel {
             ensureCurrentDay(now: now)
             let prayer = prayer
             let zone = prayer.zone
-            // Completion counts only for the planner's own date, in its zone at the pass's instant.
+            // Completion counts only for the planner's own date, in its zone at the pass's instant; the tracker's
+            // records for the horizon's dates.
+            let today = SessionCalendar.localDate(of: now, in: zone)
             return ReminderModel.PlanInputs(
                 zone: zone,
                 schedule: { date in prayer.schedule(on: date) },
-                completeToday: adhkar.completedPeriods(on: SessionCalendar.localDate(of: now, in: zone)))
+                completeToday: adhkar.completedPeriods(on: today),
+                prayerStates: tracker.states(from: today, days: ReminderPlanner.horizonDays))
         }
+        // Record, undo, timing, the Friday choice, a cleared day, a past day: a recorded prayer loses its reminder.
+        tracker.didWrite = { [weak self] in self?.reminders.replan() }
+    }
+
+    /// «سجّل الصلاة» on a prayer reminder (NATIVE_APP_PLAN.md §7.5): the same idempotent «record» as «اليوم», for the
+    /// occurrence the reminder names (its own date, not today's), then a replan this waits for, so the pending and
+    /// delivered requests match the tracker before iOS suspends a background launch. Returns whether it recorded.
+    @discardableResult
+    func recordPrayer(_ payload: ReminderPayload, shownAt date: Date) async -> Bool {
+        guard let occurrence = payload.occurrence else { return false }
+        reminders.markShown(payload, localDate: SessionCalendar.localDate(of: date, in: prayer.zone))
+        let recorded = tracker.logFromReminder(occurrence)
+        await reminders.replanAndWait()
+        return recorded
     }
 
     /// A tapped reminder: an adhkar reminder opens its deck, a prayer reminder أوقات الصلاة.

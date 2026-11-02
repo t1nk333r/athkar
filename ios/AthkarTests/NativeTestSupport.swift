@@ -27,4 +27,12 @@ struct NativeTestSupport {
     func makeAppModel() throws -> AppModel {
         try AppModel(database: database, content: content, today: today)
     }
+
+    /// An app model whose reminders use `notifications` and `clock` instead of iOS's centre and the real time.
+    @MainActor
+    func makeAppModel(notifications: any ReminderNotificationCenter, reminderClock: @escaping () -> Date) throws
+        -> AppModel {
+        try AppModel(database: database, content: content, today: today, notifications: notifications,
+                     reminderClock: reminderClock, diagnosticsStore: MemoryDiagnosticsStore())
+    }
 }

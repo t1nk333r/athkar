@@ -69,7 +69,7 @@ class RepositoryTests(unittest.TestCase):
                          {"content-validate", "content-review-test", "content-export-pwa", "fixtures"})
         self.assertEqual(picked(sel)["models"], {
             "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
-            "PortableModelTests", "PrayerTrackerModelTests", "ReminderReplanTests", "RuqyahPersistenceTests",
+            "DiagnosticsReportTests", "PortableModelTests", "PrayerTrackerModelTests", "ReminderReplanTests", "RuqyahPersistenceTests",
             "SettingsPersistenceTests", "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
             "TasbihTextTests", "TransferImportModelTests",
         })
@@ -83,6 +83,21 @@ class RepositoryTests(unittest.TestCase):
             "content": {"fixtures"},
             "core": {"ReminderFixtureTests", "ReminderPlannerTests"},
         })
+
+    def test_hand_written_reminder_fixture_runs_only_its_suite(self):
+        # Written by hand, not by the generator, so its change runs no fixture check.
+        self.assertEqual(picked(self.select("spec/reminders/fixtures/tracker-aware.json")),
+                         {"core": {"TrackerAwareReminderTests"}})
+
+    def test_reminder_views_run_the_diagnostics_ui_test(self):
+        lanes = picked(self.select("ios/Athkar/Reminders/DiagnosticsView.swift"))
+        # The view is excluded from the portable target; it reaches the UI tests through the settings screen too.
+        self.assertTrue({"DiagnosticsUITests", "ReminderUITests", "TransferImportUITests"} <= lanes["ui"], lanes["ui"])
+        self.assertNotIn("PrayerTrackerUITests", lanes["ui"])
+        self.assertNotIn("models", lanes)
+        report = picked(self.select("ios/Athkar/Reminders/DiagnosticsReport.swift"))
+        self.assertIn("DiagnosticsReportTests", report["models"])
+        self.assertIn("DiagnosticsUITests", report["ui"])
 
     def test_pwa_page_runs_the_export_and_fixture_checks(self):
         self.assertEqual(picked(self.select("index.html")), {"content": {"content-export-pwa", "fixtures"}})
@@ -108,7 +123,9 @@ class RepositoryTests(unittest.TestCase):
 
     def test_tracker_fixture_and_views_run_their_tests(self):
         # The tracker's fixtures are read through their directory literal; they are hand-written, not generated.
-        self.assertEqual(picked(self.select("spec/tracker/fixtures/calendar.json")), {"core": {"TrackerFixtureTests"}})
+        # TrackerAwareReminderTests reuses the transition step types of TrackerFixtureTests.swift, which reads them.
+        self.assertEqual(picked(self.select("spec/tracker/fixtures/calendar.json")),
+                         {"core": {"TrackerFixtureTests", "TrackerAwareReminderTests"}})
         # The tracker's views are excluded from the portable target and named for the UI test that drives them.
         lanes = picked(self.select("ios/Athkar/Tracker/TrackerCalendarView.swift"))
         self.assertEqual(lanes["ui"], {"PrayerTrackerUITests"})
