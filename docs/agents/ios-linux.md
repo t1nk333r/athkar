@@ -260,7 +260,7 @@ runners cost nothing for this public repository, and the workflow needs no lane 
 grant. It runs on three events:
 
 - A pushed version tag, `ios-<CFBundleShortVersionString>-build-<CFBundleVersion>`, such as
-  `ios-1.3-build-4`. The tag must name the version in `ios/Athkar/Info.plist`. When the IPA
+  `ios-1.4-build-5`. The tag must name the version in `ios/Athkar/Info.plist`. When the IPA
   and the tests pass, it creates the tag's GitHub release if there is none and attaches
   `Athkar-<version>+<build>.ipa` and its `.sha256`. It never replaces an asset.
 - A manual run from the Actions tab. The IPA stays a run artifact. The `base` input chooses
@@ -361,8 +361,10 @@ physical-device data and the existing signing/publisher identity.
 XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps in
 `ios/project.yml` under `targets.Athkar.info.properties`, using
 `CFBundleShortVersionString` and `CFBundleVersion`. Their current values are
-`1.3` and `5`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`) and `1.3` (`4`) were built before. Feather
-never replaces the bytes of an existing version, so every published IPA needs a new pair.
+`1.4` and `5`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`) and `1.3` (`4`) were built before. Feather
+lists one entry per `CFBundleShortVersionString` and answers a publish whose short version it
+already lists with "Already present", storing nothing, so every published IPA needs a new
+short version as well as a new build number.
 
 Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
 Testing ran 108 tests in 23 suites, with four session history-fixture failures.
