@@ -526,7 +526,8 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - A setting with no row exports its default.
 - A native-only `calculation_method` (not one of the PWA's five) exports as `"mwl"`, which is what the PWA's
   loader reads an unknown method as; envelope v1 allows only the five, and import rejects any other value.
-  `high_latitude_rule`, `prayer_adjustments` and `hijri_offset` have no place in envelope v1 and are not exported.
+  `high_latitude_rule`, `prayer_adjustments`, `hijri_offset` and `iqama_delays` have no place in envelope v1 and are
+  not exported.
 
 Import followed by export with the file's own `meta` reproduces the file in every section it contained, with
 these exceptions:

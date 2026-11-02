@@ -113,7 +113,7 @@ struct NativeBackupImportTests {
         expected.tasbih = 2
         expected.prayers = 6
         expected.reminders = 2
-        expected.settings = 13
+        expected.settings = 14
         #expect(planned == expected)
         #expect(try importer(database).importFile(file) == planned)
     }

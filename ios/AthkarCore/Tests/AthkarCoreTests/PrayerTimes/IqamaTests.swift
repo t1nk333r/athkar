@@ -56,11 +56,14 @@ struct IqamaTests {
                 == PrayerCountdown(event: .adhan, prayer: .isha, at: local(day: 1, 19, 30), date: "1970-01-02"))
     }
 
-    /// The clamped Asr shares Maghrib's instant; only Maghrib's iqama counts.
+    /// The clamped Asr shares Maghrib's instant; only Maghrib's iqama counts, and after it Isha's adhan, not an Asr
+    /// iqama at 18:20.
     @Test func aClampedAsrHasNoIqama() {
         let clamped = [schedule(day: 0), schedule(day: 1, asrClamped: true)]
         #expect(countdown(local(day: 1, 18, 3), schedules: clamped)
                 == PrayerCountdown(event: .iqama, prayer: .maghrib, at: local(day: 1, 18, 10), date: "1970-01-02"))
+        #expect(countdown(local(day: 1, 18, 15), schedules: clamped)
+                == PrayerCountdown(event: .adhan, prayer: .isha, at: local(day: 1, 19, 30), date: "1970-01-02"))
     }
 
     /// An Isha at 23:50 has its iqama at 00:10 the next civil day, still counted from yesterday's schedule.
