@@ -162,7 +162,7 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         XCTAssertTrue(app.reminders.rules.isEmpty)
         XCTAssertNil(app.prayer.location)
         XCTAssertEqual(widget.published.last, .some(nil), "the widget's times are deleted")
-        XCTAssertTrue(app.tracker.records(on: app.tracker.today).isEmpty)
+        XCTAssertTrue(app.tracker.records(on: today).isEmpty)
         XCTAssertEqual(app.settings.theme, .system)
         XCTAssertEqual(app.tab, .morning)
         XCTAssertNil(app.otherSection)
