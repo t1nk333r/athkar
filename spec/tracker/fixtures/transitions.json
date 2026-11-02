@@ -1,0 +1,469 @@
+{
+  "about": "Prayer tracker commands: record, undo, timing, not applicable, the Friday choice, clearing a day, past-day edits, idempotence, metadata captured once, records after midnight, zone changes and future dates",
+  "source": "spec/tracker/tracker.md (written by hand: the PWAs have no tracker)",
+  "defaultInput": {
+    "now": "2026-10-30T15:00:00.000Z",
+    "timeZone": "Asia/Riyadh",
+    "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0",
+    "scheduledAt": null,
+    "records": []
+  },
+  "cases": [
+    {
+      "name": "record creates a prayed record with the step's context",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "fajr", "scheduledAt": "2026-10-30T01:45:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T01:45:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "recording a prayed occurrence again is unchanged, whatever the context",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T01:45:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-30T02:00:00.000Z", "updatedAt": "2026-10-30T02:00:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "fajr", "timeZone": "Europe/London", "profileVersion": "mwl/hanafi/twilight-angle/0,0,0,0,0,0", "scheduledAt": "2026-10-30T05:20:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["unchanged"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T01:45:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-30T02:00:00.000Z", "updatedAt": "2026-10-30T02:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "the same record command twice stores one record",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "maghrib", "scheduledAt": "2026-10-30T14:15:00.000Z"},
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "maghrib", "now": "2026-10-30T15:05:00.000Z", "scheduledAt": "2026-10-30T14:15:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "unchanged"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "maghrib", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T14:15:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "undo of a first record keeps the record, unrecorded, with its metadata",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "maghrib", "scheduledAt": "2026-10-30T14:15:00.000Z"},
+          {"command": {"kind": "undo"}, "date": "2026-10-30", "prayer": "maghrib", "now": "2026-10-30T15:00:05.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "maghrib", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T14:15:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T15:00:05.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "undo restores the entry before the command, its timing and logged time included",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T11:55:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "late", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z", "updatedAt": "2026-10-30T12:40:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "undo"}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:00:05.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T11:55:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "late", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z", "updatedAt": "2026-10-30T15:00:05.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "timing is chosen, changed and cleared without moving the logged time",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "setTiming", "timing": "on_time"}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:01:00.000Z"},
+          {"command": {"kind": "setTiming", "timing": "on_time"}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:02:00.000Z"},
+          {"command": {"kind": "setTiming", "timing": "late"}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:03:00.000Z"},
+          {"command": {"kind": "setTiming", "timing": null}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:04:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed", "unchanged", "changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:04:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a timing needs a prayed record",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "maghrib", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "not_applicable", "timing": null, "noon": null, "loggedAt": "2026-10-30T14:30:00.000Z", "updatedAt": "2026-10-30T14:30:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "setTiming", "timing": "on_time"}, "date": "2026-10-30", "prayer": "isha"},
+          {"command": {"kind": "setTiming", "timing": "on_time"}, "date": "2026-10-30", "prayer": "maghrib"},
+          {"command": {"kind": "setTiming", "timing": null}, "date": "2026-10-30", "prayer": "isha"}
+        ]
+      },
+      "expected": {
+        "results": [
+          {"refused": "not-prayed"},
+          {"refused": "not-prayed"},
+          {"refused": "not-prayed"}
+        ],
+        "records": [
+          {"date": "2026-10-30", "prayer": "maghrib", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "not_applicable", "timing": null, "noon": null, "loggedAt": "2026-10-30T14:30:00.000Z", "updatedAt": "2026-10-30T14:30:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "not applicable is marked and unmarked",
+      "input": {
+        "steps": [
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-30", "prayer": "isha"},
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-30", "prayer": "isha", "now": "2026-10-30T15:01:00.000Z"},
+          {"command": {"kind": "unmarkNotApplicable"}, "date": "2026-10-30", "prayer": "isha", "now": "2026-10-30T15:02:00.000Z"},
+          {"command": {"kind": "unmarkNotApplicable"}, "date": "2026-10-30", "prayer": "isha", "now": "2026-10-30T15:03:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "unchanged", "changed", "unchanged"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "isha", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T15:02:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "marking a prayed occurrence not applicable drops its timing, and recording it again is a new log",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "made_up", "noon": null, "loggedAt": "2026-10-30T05:00:00.000Z", "updatedAt": "2026-10-30T05:00:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-30", "prayer": "fajr"},
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "fajr", "now": "2026-10-30T15:10:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:10:00.000Z", "updatedAt": "2026-10-30T15:10:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "unmarking not applicable leaves a prayed record alone",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T05:00:00.000Z", "updatedAt": "2026-10-30T05:00:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "unmarkNotApplicable"}, "date": "2026-10-30", "prayer": "fajr"}
+        ]
+      },
+      "expected": {
+        "results": ["unchanged"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T05:00:00.000Z", "updatedAt": "2026-10-30T05:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a command that leaves nothing to store creates no record",
+      "input": {
+        "steps": [
+          {"command": {"kind": "unrecord"}, "date": "2026-10-30", "prayer": "dhuhr"},
+          {"command": {"kind": "unmarkNotApplicable"}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "unrecorded", "timing": null, "noon": null, "loggedAt": null}}, "date": "2026-10-30", "prayer": "isha"}
+        ]
+      },
+      "expected": {
+        "results": ["unchanged", "unchanged", "unchanged"],
+        "records": []
+      }
+    },
+    {
+      "name": "unrecord clears the timing, the Friday choice and the logged time",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "on_time", "noon": "jumuah", "loggedAt": "2026-10-30T09:30:00.000Z", "updatedAt": "2026-10-30T09:30:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "unrecord"}, "date": "2026-10-30", "prayer": "dhuhr"}
+        ]
+      },
+      "expected": {
+        "results": ["changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "Friday: the Dhuhr slot records Jumu'ah or Dhuhr",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record", "noon": "jumuah"}, "date": "2026-10-30", "prayer": "dhuhr"},
+          {"command": {"kind": "record", "noon": "dhuhr"}, "date": "2026-10-30", "prayer": "dhuhr", "now": "2026-10-30T15:01:00.000Z"},
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "dhuhr", "now": "2026-10-30T15:02:00.000Z"},
+          {"command": {"kind": "record", "noon": "dhuhr"}, "date": "2026-10-30", "prayer": "dhuhr", "now": "2026-10-30T15:03:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed", "unchanged", "unchanged"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": "dhuhr", "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:01:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "Friday: a quick log of Dhuhr leaves the choice unsaid",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "dhuhr"}
+        ]
+      },
+      "expected": {
+        "results": ["changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a Friday choice on another day or prayer is refused",
+      "input": {
+        "records": [
+          {"date": "2026-10-29", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-29T09:30:00.000Z", "updatedAt": "2026-10-29T09:30:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "record", "noon": "jumuah"}, "date": "2026-10-29", "prayer": "dhuhr"},
+          {"command": {"kind": "record", "noon": "dhuhr"}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "prayed", "timing": null, "noon": "jumuah", "loggedAt": "2026-10-29T09:30:00.000Z"}}, "date": "2026-10-29", "prayer": "dhuhr"}
+        ]
+      },
+      "expected": {
+        "results": [
+          {"refused": "not-friday-dhuhr"},
+          {"refused": "not-friday-dhuhr"},
+          {"refused": "invalid-entry"}
+        ],
+        "records": [
+          {"date": "2026-10-29", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-29T09:30:00.000Z", "updatedAt": "2026-10-29T09:30:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "clearing a day sets each of its records back to unrecorded and keeps their metadata",
+      "input": {
+        "records": [
+          {"date": "2026-10-28", "prayer": "isha", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-28T16:00:00.000Z", "updatedAt": "2026-10-28T16:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-29T02:00:00.000Z", "updatedAt": "2026-10-29T02:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "not_applicable", "timing": null, "noon": null, "loggedAt": "2026-10-29T09:00:00.000Z", "updatedAt": "2026-10-29T09:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-29T13:00:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "clearDay"}, "date": "2026-10-29"},
+          {"command": {"kind": "clearDay"}, "date": "2026-10-29", "now": "2026-10-30T15:01:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "unchanged"],
+        "records": [
+          {"date": "2026-10-28", "prayer": "isha", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-28T16:00:00.000Z", "updatedAt": "2026-10-28T16:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T15:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "dhuhr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T15:00:00.000Z"},
+          {"date": "2026-10-29", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-29T13:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "clearing a day with nothing recorded is unchanged",
+      "input": {
+        "steps": [
+          {"command": {"kind": "clearDay"}, "date": "2026-10-27"}
+        ]
+      },
+      "expected": {
+        "results": ["unchanged"],
+        "records": []
+      }
+    },
+    {
+      "name": "a past day is edited like today",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-20", "prayer": "asr", "scheduledAt": "2026-10-20T11:58:00.000Z"},
+          {"command": {"kind": "setTiming", "timing": "made_up"}, "date": "2026-10-20", "prayer": "asr"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed"],
+        "records": [
+          {"date": "2026-10-20", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-20T11:58:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "made_up", "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a record made after midnight stays on the occurrence it names",
+      "input": {
+        "now": "2026-10-30T21:30:00.000Z",
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "isha", "scheduledAt": "2026-10-30T15:45:00.000Z"},
+          {"command": {"kind": "record"}, "date": "2026-10-31", "prayer": "fajr", "scheduledAt": "2026-10-31T01:46:00.000Z"},
+          {"command": {"kind": "record"}, "date": "2026-11-01", "prayer": "fajr"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed", {"refused": "future-date"}],
+        "records": [
+          {"date": "2026-10-30", "prayer": "isha", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T15:45:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T21:30:00.000Z", "updatedAt": "2026-10-30T21:30:00.000Z"},
+          {"date": "2026-10-31", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-31T01:46:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T21:30:00.000Z", "updatedAt": "2026-10-30T21:30:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a future date is refused for every command",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "setTiming", "timing": "late"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "unrecord"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "unmarkNotApplicable"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "restore", "entry": {"state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:00:00.000Z"}}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "clearDay"}, "date": "2026-10-31"}
+        ]
+      },
+      "expected": {
+        "results": [
+          {"refused": "future-date"},
+          {"refused": "future-date"},
+          {"refused": "future-date"},
+          {"refused": "future-date"},
+          {"refused": "future-date"},
+          {"refused": "future-date"},
+          {"refused": "future-date"}
+        ],
+        "records": []
+      }
+    },
+    {
+      "name": "today is the date of now in the step's zone",
+      "input": {
+        "now": "2026-10-30T22:00:00.000Z",
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-31", "prayer": "fajr"},
+          {"command": {"kind": "record"}, "date": "2026-10-31", "prayer": "dhuhr", "timeZone": "America/New_York"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", {"refused": "future-date"}],
+        "records": [
+          {"date": "2026-10-31", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T22:00:00.000Z", "updatedAt": "2026-10-30T22:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a zone or profile change on the same date reuses the record and keeps its metadata",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "fajr", "scheduledAt": "2026-10-30T01:45:00.000Z"},
+          {"command": {"kind": "setTiming", "timing": "on_time"}, "date": "2026-10-30", "prayer": "fajr", "now": "2026-10-30T15:10:00.000Z", "timeZone": "Europe/London", "profileVersion": "mwl/standard/twilight-angle/0,0,0,0,0,0", "scheduledAt": "2026-10-30T05:20:00.000Z"},
+          {"command": {"kind": "unrecord"}, "date": "2026-10-30", "prayer": "fajr", "now": "2026-10-30T15:11:00.000Z", "timeZone": "Europe/London", "profileVersion": "mwl/standard/twilight-angle/0,0,0,0,0,0", "scheduledAt": "2026-10-30T05:20:00.000Z"},
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "fajr", "now": "2026-10-30T15:12:00.000Z", "timeZone": "Europe/London", "profileVersion": "mwl/standard/twilight-angle/0,0,0,0,0,0", "scheduledAt": "2026-10-30T05:20:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed", "changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "fajr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T01:45:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:12:00.000Z", "updatedAt": "2026-10-30T15:12:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a time that could not be calculated stays null",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-10-30", "prayer": "maghrib"},
+          {"command": {"kind": "markNotApplicable"}, "date": "2026-10-30", "prayer": "maghrib", "now": "2026-10-30T15:01:00.000Z", "scheduledAt": "2026-10-30T14:15:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "changed"],
+        "records": [
+          {"date": "2026-10-30", "prayer": "maghrib", "zone": "Asia/Riyadh", "scheduledAt": null, "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "not_applicable", "timing": null, "noon": null, "loggedAt": "2026-10-30T15:01:00.000Z", "updatedAt": "2026-10-30T15:01:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "a date that is not a calendar day is refused",
+      "input": {
+        "steps": [
+          {"command": {"kind": "record"}, "date": "2026-02-30", "prayer": "fajr"},
+          {"command": {"kind": "record"}, "date": "2026-1-05", "prayer": "fajr"},
+          {"command": {"kind": "clearDay"}, "date": "2026-13-01"},
+          {"command": {"kind": "record"}, "date": "2027-02-29", "prayer": "fajr"}
+        ]
+      },
+      "expected": {
+        "results": [
+          {"refused": "invalid-date"},
+          {"refused": "invalid-date"},
+          {"refused": "invalid-date"},
+          {"refused": "invalid-date"}
+        ],
+        "records": []
+      }
+    },
+    {
+      "name": "restore sets an explicit entry and refuses one that breaks the rules",
+      "input": {
+        "records": [
+          {"date": "2026-10-30", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T11:55:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "unrecorded", "timing": null, "noon": null, "loggedAt": null, "updatedAt": "2026-10-30T13:00:00.000Z"}
+        ],
+        "steps": [
+          {"command": {"kind": "restore", "entry": {"state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z"}}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z"}}, "date": "2026-10-30", "prayer": "asr", "now": "2026-10-30T15:01:00.000Z"},
+          {"command": {"kind": "restore", "entry": {"state": "unrecorded", "timing": "on_time", "noon": null, "loggedAt": null}}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "not_applicable", "timing": null, "noon": null, "loggedAt": null}}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "unrecorded", "timing": null, "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z"}}, "date": "2026-10-30", "prayer": "asr"},
+          {"command": {"kind": "restore", "entry": {"state": "not_applicable", "timing": "late", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z"}}, "date": "2026-10-30", "prayer": "asr"}
+        ]
+      },
+      "expected": {
+        "results": ["changed", "unchanged", {"refused": "invalid-entry"}, {"refused": "invalid-entry"}, {"refused": "invalid-entry"}, {"refused": "invalid-entry"}],
+        "records": [
+          {"date": "2026-10-30", "prayer": "asr", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-30T11:55:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "on_time", "noon": null, "loggedAt": "2026-10-30T12:30:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    },
+    {
+      "name": "restore without a record creates one from the step's context",
+      "input": {
+        "steps": [
+          {"command": {"kind": "restore", "entry": {"state": "prayed", "timing": "late", "noon": null, "loggedAt": "2026-10-29T16:00:00.000Z"}}, "date": "2026-10-29", "prayer": "isha", "scheduledAt": "2026-10-29T15:46:00.000Z"}
+        ]
+      },
+      "expected": {
+        "results": ["changed"],
+        "records": [
+          {"date": "2026-10-29", "prayer": "isha", "zone": "Asia/Riyadh", "scheduledAt": "2026-10-29T15:46:00.000Z", "profileVersion": "umm-al-qura/standard/twilight-angle/0,0,0,0,0,0", "state": "prayed", "timing": "late", "noon": null, "loggedAt": "2026-10-29T16:00:00.000Z", "updatedAt": "2026-10-30T15:00:00.000Z"}
+        ]
+      }
+    }
+  ]
+}

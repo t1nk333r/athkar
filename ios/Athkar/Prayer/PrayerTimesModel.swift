@@ -55,8 +55,14 @@ final class PrayerTimesModel {
 
     /// The countdown's target: today's next prayer, or tomorrow's Fajr.
     func nextPrayer(now: Date = Date()) -> NextPrayer? {
-        guard let today = schedule(dayOffset: 0, now: now) else { return nil }
-        return NextPrayer.after(now, today: today, tomorrow: schedule(dayOffset: 1, now: now))
+        upcoming(now: now)?.next
+    }
+
+    /// The next prayer with its calculation date, taken by civil date so a DST change names the right day
+    /// (``NextPrayer/upcoming(after:in:schedule:)``).
+    func upcoming(now: Date = Date()) -> UpcomingPrayer? {
+        guard location != nil else { return nil }
+        return NextPrayer.upcoming(after: now, in: zone) { schedule(on: $0) }
     }
 
     func showDay(_ offset: Int) {

@@ -27,6 +27,7 @@ public struct AppDatabase: Sendable {
     public var ruqyah: RuqyahRepository { RuqyahRepository(writer: writer) }
     public var suwar: SuwarRepository { SuwarRepository(writer: writer) }
     public var tasbih: TasbihRepository { TasbihRepository(writer: writer) }
+    public var prayerRecords: PrayerRecordRepository { PrayerRecordRepository(writer: writer) }
     public var reminders: ReminderRepository { ReminderRepository(writer: writer) }
     public var settings: SettingsRepository { SettingsRepository(writer: writer) }
     public var location: LocationRepository { LocationRepository(writer: writer) }
@@ -45,6 +46,7 @@ public struct AppDatabase: Sendable {
         migrator.registerMigration("v2") { db in try db.execute(sql: Schema.v2) }
         migrator.registerMigration("v3") { db in try db.execute(sql: Schema.v3) }
         migrator.registerMigration("v4") { db in try db.execute(sql: Schema.v4) }
+        migrator.registerMigration("v5") { db in try db.execute(sql: Schema.v5) }
         return migrator
     }
 }
@@ -171,6 +173,28 @@ private enum Schema {
             updated_at TEXT NOT NULL CHECK (updated_at \(instant)),
             PRIMARY KEY (local_date, phrase_key),
             UNIQUE (local_date, first_use)
+        );
+        """
+
+    /// The prayer tracker (spec/tracker/tracker.md): one record per calculation date and prayer. The metadata (zone,
+    /// calculated time, profile) is captured when the record is created and never rewritten.
+    static let v5 = """
+        CREATE TABLE prayer_records (
+            calculation_date TEXT NOT NULL CHECK (calculation_date \(localDate)),
+            prayer_key TEXT NOT NULL CHECK (prayer_key IN ('fajr', 'dhuhr', 'asr', 'maghrib', 'isha')),
+            zone_id TEXT NOT NULL CHECK (length(zone_id) >= 1),
+            scheduled_at TEXT CHECK (scheduled_at \(instant)),
+            profile_version TEXT NOT NULL CHECK (length(profile_version) >= 1),
+            state TEXT NOT NULL CHECK (state IN ('unrecorded', 'prayed', 'not_applicable')),
+            timing TEXT CHECK (timing IN ('on_time', 'late', 'made_up')),
+            noon_prayer TEXT CHECK (noon_prayer IN ('dhuhr', 'jumuah')),
+            logged_at TEXT CHECK (logged_at \(instant)),
+            updated_at TEXT NOT NULL CHECK (updated_at \(instant)),
+            PRIMARY KEY (calculation_date, prayer_key),
+            CHECK (timing IS NULL OR state = 'prayed'),
+            CHECK (noon_prayer IS NULL
+                   OR (state = 'prayed' AND prayer_key = 'dhuhr' AND strftime('%w', calculation_date) = '5')),
+            CHECK ((logged_at IS NULL) = (state = 'unrecorded'))
         );
         """
 }

@@ -39,7 +39,7 @@ enum ISOInstant {
 }
 
 /// Local civil dates as `YYYY-MM-DD` strings (the PWAs' `localDateKey`), validated as real calendar days.
-enum LocalDate {
+public enum LocalDate {
     static func isValid(_ text: String) -> Bool {
         let bytes = Array(text.utf8)
         return bytes.count == 10 && days(fromDateBytes: bytes[0..<10]) != nil

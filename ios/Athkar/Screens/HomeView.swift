@@ -49,7 +49,13 @@ struct HomeView: View {
                 OtherSectionsView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .prayerTimes {
-                PrayerTimesView(model: app.prayer, reminders: app.reminders)
+                PrayerTimesView(model: app.prayer, reminders: app.reminders) { app.otherSection = .today }
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .today {
+                TodayView(app: app)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .calendar {
+                TrackerCalendarView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .qibla {
                 QiblaView(prayer: app.prayer, haptics: app.settings.haptics) { app.otherSection = .prayerTimes }

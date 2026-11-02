@@ -31,13 +31,15 @@ let package = Package(
                       "Deck/DeckView.swift", "Design/Corner.swift", "Design/Palette.swift", "Design/ReadingMetrics.swift",
                       "DeviceLocation.swift", "Info.plist", "Platform", "Prayer", "Qibla/DeviceHeading.swift",
                       "Qibla/QiblaView.swift", "Reminders/ReminderNotifications.swift", "Reminders/ReminderViews.swift",
-                      "Screens", "Transfer/TransferImportView.swift", "Transfer/QRScanner.swift"],
+                      "Screens", "Tracker/TodayView.swift", "Tracker/TrackerCalendarView.swift",
+                      "Tracker/TrackerViews.swift", "Transfer/TransferImportView.swift", "Transfer/QRScanner.swift"],
             sources: ["Deck/DeckModel.swift", "Deck/AdhkarDeckModel.swift", "Deck/RuqyahDeckModel.swift",
                       "Deck/SuwarDeckModel.swift", "Tasbih/TasbihText.swift", "Tasbih/TasbihModel.swift",
                       "Design/ArabicFormat.swift", "Content/BundledContent.swift", "App/TestHooks.swift",
                       "OneShotLocationRequest.swift", "App/SettingsModel.swift", "Qibla/HeadingReading.swift",
                       "Reminders/ReminderModel.swift", "App/DayRollover.swift",
-                      "Transfer/TransferImportModel.swift"]
+                      "Transfer/TransferImportModel.swift", "Tracker/PrayerTrackerModel.swift",
+                      "Tracker/TrackerText.swift"]
         ),
         .testTarget(name: "AthkarPortableTests", dependencies: ["AthkarModels", core, crypto],
                     path: "AthkarPortableTests"),

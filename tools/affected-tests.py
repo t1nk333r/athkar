@@ -134,6 +134,7 @@ UI_BLACK_BOX = {
     "HomePrayerRowUITests": [APP + "Screens/HomePrayerRow.swift", *PRAYER],
     "LaunchTests": [APP + "Screens/HomePrayerRow.swift", APP + "Prayer/PrayerTimesModel.swift"],
     "PrayerTimesUITests": [APP + "Screens/OtherSectionsView.swift", *PRAYER],
+    "PrayerTrackerUITests": [APP + "Tracker/*.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "QiblaUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Qibla/*.swift", *PRAYER],
     "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *PRAYER],
     "ScreenshotUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", APP + "Screens/*.swift",
