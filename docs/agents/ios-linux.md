@@ -312,8 +312,10 @@ pairing or device permissions under this source-verification grant.
 
 The lock-screen widget (`ios/AthkarWidget`) reads the times the app writes to one keychain
 item in the default access group (`PrayerWidgetStore`). An App Group needs a provisioning
-profile that names the group, which the wildcard profiles Feather signs with cannot. Feather
-signs the extension with the app's own entitlements instead, so both share that default group.
+profile that names the group, which the wildcard profiles Feather signs with cannot. Feather is
+expected to sign the extension with the app's own entitlements instead
+([claration/feather#723](https://github.com/claration/feather/pull/723)), so both share that
+default group.
 No simulator or test shows this: it needs a Feather-signed install on a device. Add the widget
 to the lock screen after the app has a location. «افتح التطبيق وحدّد موقعك لعرضها.» there
 means the extension cannot read the item under that signature. A build signed per target

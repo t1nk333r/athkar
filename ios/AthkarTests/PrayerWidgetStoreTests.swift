@@ -11,8 +11,10 @@ final class PrayerWidgetStoreTests: XCTestCase {
               iqama: Date(timeIntervalSince1970: 1_760_401_500)),
     ])
 
+    /// Adds and deletes the item first: a keychain that refuses the host refuses both.
     override func setUpWithError() throws {
         do {
+            try PrayerWidgetStore.save(snapshot)
             try PrayerWidgetStore.save(nil)
         } catch let failure as PrayerWidgetStore.Failure where failure.status == errSecMissingEntitlement {
             throw XCTSkip("The keychain refuses this test host (\(failure.status)).")
