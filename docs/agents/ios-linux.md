@@ -283,12 +283,13 @@ A tag or manual run compares with the latest `ios-*` tag before its commit, so a
 tagged commit compares with the previous release; a pull request compares with its base
 branch. With no earlier tag every class runs. The manual `base` input can name another ref,
 `all` or `none`. A version bump changes `ios/project.yml`, a shared build
-input, so a release runs both targets in full. The job boots the simulator before the tests, so
-its startup doesn't count against the first test's launch timeout. On the hosted runner a UI test
-fails on timing now and then. The 1.4 (5) release run failed three times, on three different
-tests, and each of them passed in another run. So a failed test runs again, at most three times
-in all, and a test that passes on a retry passes the job. The job summary lists the selection and
-every test that failed a run, and the xcresult bundle is a run artifact. The simulator holds no
+input, so a release runs both targets in full. The job boots the simulator in its own step, with
+a ten-minute limit, so its startup does not count against the first test's launch timeout. On the
+hosted runner a UI test fails on timing now and then. The 1.4 (5) release run failed in all three
+attempts, on three different tests, and each of those tests passed in another attempt. So a
+failed test runs again, at most three times in all, and a test that passes on a retry passes the
+job. The job summary lists the selection and every test that failed a run, and a test that passed
+only on a retry also raises a warning annotation. The xcresult bundle is a run artifact. The simulator holds no
 user data, so the hosted AthkarTests startup touches nothing of the user's installation. A
 simulator result is not a device result: haptics, heading, notification delivery and the
 installed app's data still need a device.
