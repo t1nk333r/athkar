@@ -21,19 +21,22 @@ final class PrayerTimesModel {
     private let locations: LocationRepository
     private let settingsRepository: SettingsRepository
     private let port: any PrayerTimesPort
+    private let widget: any PrayerWidgetPublisher
     private let report: (any Error) -> Void
     private let deviceLocation = DeviceLocation()
 
-    init(database: AppDatabase, port: any PrayerTimesPort = AdhanPrayerTimes(), report: @escaping (any Error) -> Void)
-        throws {
+    init(database: AppDatabase, port: any PrayerTimesPort = AdhanPrayerTimes(),
+         widget: any PrayerWidgetPublisher = KeychainPrayerWidget(), report: @escaping (any Error) -> Void) throws {
         locations = database.location
         settingsRepository = database.settings
         self.port = port
+        self.widget = widget
         self.report = report
         let location = try locations.profile()
         self.location = location
         settings = try settingsRepository.calculationSettings(latitude: location?.latitude)
         iqama = try settingsRepository.value(for: .iqamaDelays)
+        publishWidget()
     }
 
     // MARK: Schedules
@@ -77,6 +80,18 @@ final class PrayerTimesModel {
 
     func showDay(_ offset: Int) {
         dayOffset = max(-30, min(30, offset))
+    }
+
+    /// The lock-screen widget's times (``PrayerWidgetSnapshot``): yesterday's and those of the next
+    /// ``PrayerWidgetSnapshot/days`` days, or none without a location. After every change to the location, the
+    /// calculation or the iqama, and when the day changes, so the days ahead stay filled.
+    func publishWidget(now: Date = Date()) {
+        guard location != nil else {
+            widget.publish(nil)
+            return
+        }
+        let schedules = (-1..<PrayerWidgetSnapshot.days).compactMap { schedule(dayOffset: $0, now: now) }
+        widget.publish(PrayerWidgetSnapshot(zone: zone, schedules: schedules, delays: iqama))
     }
 
     static func localDate(daysFromToday offset: Int, now: Date, in zone: TimeZone) -> String {
@@ -123,6 +138,7 @@ final class PrayerTimesModel {
         } catch {
             report(error)
         }
+        publishWidget()
     }
 
     // MARK: Settings
@@ -135,6 +151,7 @@ final class PrayerTimesModel {
         } catch {
             report(error)
         }
+        publishWidget()
     }
 
     /// After a backup import or «حذف كل البيانات»: the location, the calculation settings and the iqama delays are
@@ -149,6 +166,7 @@ final class PrayerTimesModel {
         } catch {
             report(error)
         }
+        publishWidget()
     }
 
     func setMethod(_ method: CalculationMethod) { write(method, .calculationMethod) { $0.method = method } }
@@ -171,6 +189,7 @@ final class PrayerTimesModel {
         } catch {
             report(error)
         }
+        publishWidget()
     }
 
     private func write<Value>(_ value: Value, _ key: SettingKey<Value>, apply: (inout CalculationSettings) -> Void) {
@@ -180,5 +199,6 @@ final class PrayerTimesModel {
         } catch {
             report(error)
         }
+        publishWidget()
     }
 }

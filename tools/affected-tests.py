@@ -10,7 +10,7 @@ Lanes (tools/test.sh runs them; the native runners select for themselves too):
   content    Linux   the Node checks in NODE_CHECKS
   core       Linux   AthkarCore Swift Testing suites (tools/test-native-core.sh)
   models     Linux   portable production-model XCTest classes (tools/test-native-models.sh)
-  ios-build  Linux   the app compiled for iOS (tools/ios-linux-compile.sh); compiling AthkarTests
+  ios-build  Linux   the app and its widget compiled for iOS (tools/ios-linux-compile.sh); compiling AthkarTests
                      is listed: its bundle cannot be packaged on Linux yet
   app-unit   device  hosted AthkarTests classes              } listed: Linux cannot run them. The iOS IPA
   ui         Mac     AthkarUITests classes                    } workflow and tools/ios-mac-run.sh test select both
@@ -62,6 +62,7 @@ DEFAULT_BASE = "origin/main"
 CORE_SOURCES = "ios/AthkarCore/Sources/AthkarCore/"
 CORE_TESTS = "ios/AthkarCore/Tests/AthkarCoreTests/"
 APP = "ios/Athkar/"
+WIDGET = "ios/AthkarWidget/"
 PORTABLE_TESTS = "ios/AthkarPortableTests/"
 APP_TESTS = "ios/AthkarTests/"
 UI_TESTS = "ios/AthkarUITests/"
@@ -87,8 +88,8 @@ APP_RESOURCES = ["content/manifest.json", "content/adhkar.v1.json", "content/ruq
                  "fonts/kfgqpc-uthman-taha-naskh.ttf", "fonts/kfgqpc-hafs-v30.ttf", "data/cities.tsv"]
 # The manifest and the packs it lists, which the app bundles and the bundle tests read.
 BUNDLED_PACKS = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json"]
-# What the iOS build compiles or bundles.
-APP_INPUTS = [APP + "**", CORE_SOURCES + "**", *APP_RESOURCES]
+# What the iOS build compiles or bundles. No test links the widget extension.
+APP_INPUTS = [APP + "**", WIDGET + "**", CORE_SOURCES + "**", *APP_RESOURCES]
 
 # Swift files that build repository paths their literals don't spell out. Each entry replaces the
 # paths found in the file's literals.

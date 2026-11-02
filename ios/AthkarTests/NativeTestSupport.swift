@@ -23,9 +23,10 @@ struct NativeTestSupport {
         try BundledContent.recordInstalls(from: bundle, manifest: content.manifest, in: database, now: installedAt)
     }
 
+    /// The lock-screen widget's times go to `widget`, never to the keychain.
     @MainActor
-    func makeAppModel() throws -> AppModel {
-        try AppModel(database: database, content: content, today: today)
+    func makeAppModel(widget: RecordingPrayerWidget = RecordingPrayerWidget()) throws -> AppModel {
+        try AppModel(database: database, content: content, today: today, widget: widget)
     }
 
     /// An app model whose reminders use `notifications` and `clock` instead of iOS's centre and the real time.
@@ -33,6 +34,17 @@ struct NativeTestSupport {
     func makeAppModel(notifications: any ReminderNotificationCenter, reminderClock: @escaping () -> Date) throws
         -> AppModel {
         try AppModel(database: database, content: content, today: today, notifications: notifications,
-                     reminderClock: reminderClock, diagnosticsStore: MemoryDiagnosticsStore())
+                     reminderClock: reminderClock, diagnosticsStore: MemoryDiagnosticsStore(),
+                     widget: RecordingPrayerWidget())
+    }
+}
+
+/// What the app published for the lock-screen widget, in order.
+@MainActor
+final class RecordingPrayerWidget: PrayerWidgetPublisher {
+    private(set) var published: [PrayerWidgetSnapshot?] = []
+
+    func publish(_ snapshot: PrayerWidgetSnapshot?) {
+        published.append(snapshot)
     }
 }

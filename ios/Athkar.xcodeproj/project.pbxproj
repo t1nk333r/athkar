@@ -15,6 +15,7 @@
 		0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 501E35E5E819164510431A3C /* DeviceLocationTests.swift */; };
 		0EA61B25B39E91EADE9C0ED9 /* NativeTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */; };
 		12108BCA1E3D663C924F9218 /* TransferImportModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 945545DA38A4C9AD29DEE2AF /* TransferImportModel.swift */; };
+		15C23442485D8933B156A25C /* PrayerWidgetPublisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFE3F2EBE820080C1D234D8 /* PrayerWidgetPublisher.swift */; };
 		1BD47DDE727F988DD0643B8D /* ReminderActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB2578D80AE15FA99070698 /* ReminderActionTests.swift */; };
 		1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC80EB016E62A55F7388473 /* DeckCardView.swift */; };
 		1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC25390B547669C1BA3AF86 /* TasbihModel.swift */; };
@@ -35,12 +36,14 @@
 		5339EA1A8C7962FB46FAE974 /* QRScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB69EC63F1C8D655A307108 /* QRScanner.swift */; };
 		546AB6664195846DDA46B54C /* DeviceHeading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB58617C7D41BC61C03BB3C /* DeviceHeading.swift */; };
 		5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204F141E2D9C1C962271896B /* AppModel.swift */; };
+		5911933C327AFF7EA052068A /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = 227DD3ECEA9974125BD15880 /* AthkarCore */; };
 		59B3BB6C07691CF933231540 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 395887779FE3432ED69CE3FB /* GRDB */; };
 		5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */; };
 		5EC619494202CD6CC6EF42B0 /* AthkarCore in Frameworks */ = {isa = PBXBuildFile; productRef = E6B3694BE1E4F864C8A979F8 /* AthkarCore */; };
 		626A2510A916FA3FC997C2A1 /* PrayerTimesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43802A54E228E374EADE3ACE /* PrayerTimesView.swift */; };
 		631DE3FFF355B37C2CC33BDE /* DeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4723AB110276E031039F64 /* DeckModel.swift */; };
 		6323D403D9C346B66AAEB878 /* DeckDialogs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */; };
+		63B9FC62B6EFE9916155CE01 /* PrayerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C900B43197F91742E73B7F /* PrayerWidget.swift */; };
 		647E3F043654C0787FDD2DBF /* BundledContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11171CCC784D1B7FD1830ACE /* BundledContent.swift */; };
 		64B683DDF039D486630601E7 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9B85A291084AF937C35C88A /* Haptics.swift */; };
 		675C0CB56BA587F5F987F462 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E301EE1F11B7A2E59401A62 /* TodayView.swift */; };
@@ -82,6 +85,7 @@
 		BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4122DE1C89CDB311B8848C /* SectionChips.swift */; };
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
+		C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */; };
 		C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */; };
 		CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */; };
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
@@ -97,6 +101,7 @@
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
 		EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB093C7B73DF50B939CB0E4C /* PrayerTimesModel.swift */; };
 		EF7F3B0BA2B89E02051BBD04 /* TrackerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F40DFA5D331C844BC793D0A /* TrackerViews.swift */; };
+		F428B2B4E128D7221469B0CC /* AthkarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9902C526E04201EDE67E58AE /* AthkarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4280DECA9C457370A36B4B3 /* HomeView.swift */; };
 		F96134CFA1F9A4AF648287CC /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CADA9419CAC70B90CD19CFD /* manifest.json */; };
 		FA1DF952903FA8FC0A0801CF /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F0B23490B73AA7BDB81C0E /* BackgroundRefresh.swift */; };
@@ -113,6 +118,13 @@
 			remoteGlobalIDString = B982E3F066B543AA4AC3C561;
 			remoteInfo = Athkar;
 		};
+		B0C4279CC72ECD54B92E9494 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 689A1A5DE3480CCF8BBD4E14 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 636D0DECEB1FF462E62322FF;
+			remoteInfo = AthkarWidget;
+		};
 		CE758E3A20F00726F9E3596D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 689A1A5DE3480CCF8BBD4E14 /* Project object */;
@@ -121,6 +133,20 @@
 			remoteInfo = Athkar;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7BED13F2CED9B7B6EBE8B2E7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F428B2B4E128D7221469B0CC /* AthkarWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		042329F8B233CEB3D355A537 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
@@ -148,6 +174,7 @@
 		407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRegressionUITests.swift; sourceTree = "<group>"; };
 		43802A54E228E374EADE3ACE /* PrayerTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesView.swift; sourceTree = "<group>"; };
 		453EC69D86D4F76A4CD348B0 /* OneShotLocationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneShotLocationRequest.swift; sourceTree = "<group>"; };
+		4BFE3F2EBE820080C1D234D8 /* PrayerWidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidgetPublisher.swift; sourceTree = "<group>"; };
 		4CA5829C92066B2E935FB84C /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
 		501E35E5E819164510431A3C /* DeviceLocationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocationTests.swift; sourceTree = "<group>"; };
@@ -174,11 +201,14 @@
 		8191873837858F429947CAAC /* TasbihText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihText.swift; sourceTree = "<group>"; };
 		862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckIndexView.swift; sourceTree = "<group>"; };
 		8702E19E751A414E1B4D8607 /* RoutingAndDeleteAllTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingAndDeleteAllTests.swift; sourceTree = "<group>"; };
+		894646259C329A2B1EFB59EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		894967E326786673B5F4981D /* ReminderNotificationsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotificationsTests.swift; sourceTree = "<group>"; };
 		8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationPrivacyUITests.swift; sourceTree = "<group>"; };
 		90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarDeckModel.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidgetStoreTests.swift; sourceTree = "<group>"; };
 		945545DA38A4C9AD29DEE2AF /* TransferImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportModel.swift; sourceTree = "<group>"; };
+		9902C526E04201EDE67E58AE /* AthkarWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AthkarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihSheets.swift; sourceTree = "<group>"; };
 		9E77ABE613735CFD9204EB27 /* TrackerText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerText.swift; sourceTree = "<group>"; };
 		A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTestSupport.swift; sourceTree = "<group>"; };
@@ -204,6 +234,7 @@
 		CD7849DE2707DEDF2F1E57B6 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
 		CDFAF5DB1A7749351672C27D /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
 		CE857DADF37638C3F15FE817 /* ruqyah.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = ruqyah.v1.json; path = ../content/ruqyah.v1.json; sourceTree = "<group>"; };
+		D0C900B43197F91742E73B7F /* PrayerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidget.swift; sourceTree = "<group>"; };
 		D150FDEA907C03DC351639CA /* QiblaUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaUITests.swift; sourceTree = "<group>"; };
 		D80C8721B3117918112288FE /* DeckIndexUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckIndexUITests.swift; sourceTree = "<group>"; };
 		DC7CAA08865E2F5153B81DB4 /* TrackerCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerCalendarView.swift; sourceTree = "<group>"; };
@@ -224,6 +255,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		29A70D356E3F3FFA5E54712E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5911933C327AFF7EA052068A /* AthkarCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3BEE4D21FC0FEA7F6244489B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -269,6 +308,7 @@
 				501E35E5E819164510431A3C /* DeviceLocationTests.swift */,
 				A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */,
 				1ECF728439987926D1A489DB /* PrayerTrackerWiringTests.swift */,
+				92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */,
 				AAB2578D80AE15FA99070698 /* ReminderActionTests.swift */,
 				CC0BB3239231B360B479C37A /* ReminderCompletionInputsTests.swift */,
 				894967E326786673B5F4981D /* ReminderNotificationsTests.swift */,
@@ -334,6 +374,7 @@
 				39A4C9B349AE0CF4DA390704 /* Athkar */,
 				386E0D8B45321204D84131A8 /* AthkarTests */,
 				C3F44EC7B0E83798DB90A34E /* AthkarUITests */,
+				ED58CF5B75F4591B49128A60 /* AthkarWidget */,
 				8BFC91173D6036662E7FE2FC /* Packages */,
 				57A5B2411EE3787C36B17DEF /* Resources */,
 				BC5A628FB3B3EAB729CE859F /* Products */,
@@ -404,6 +445,7 @@
 				3323EC2D7C5109C2B7FFB57A /* CityDirectory.swift */,
 				CB093C7B73DF50B939CB0E4C /* PrayerTimesModel.swift */,
 				43802A54E228E374EADE3ACE /* PrayerTimesView.swift */,
+				4BFE3F2EBE820080C1D234D8 /* PrayerWidgetPublisher.swift */,
 			);
 			path = Prayer;
 			sourceTree = "<group>";
@@ -457,6 +499,7 @@
 				F929F51376FB4D006FBF1BD2 /* Athkar.app */,
 				69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */,
 				91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */,
+				9902C526E04201EDE67E58AE /* AthkarWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -493,6 +536,15 @@
 				77C985807D77FFF05AB9C1F4 /* PrivacyView.swift */,
 			);
 			path = About;
+			sourceTree = "<group>";
+		};
+		ED58CF5B75F4591B49128A60 /* AthkarWidget */ = {
+			isa = PBXGroup;
+			children = (
+				894646259C329A2B1EFB59EF /* Info.plist */,
+				D0C900B43197F91742E73B7F /* PrayerWidget.swift */,
+			);
+			path = AthkarWidget;
 			sourceTree = "<group>";
 		};
 		FDD547B092311CE8B9BE90D7 /* Reminders */ = {
@@ -550,6 +602,25 @@
 			productReference = 69F5965A48DF37F1D5AB620C /* AthkarTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		636D0DECEB1FF462E62322FF /* AthkarWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2A4792B78F67C0101184202 /* Build configuration list for PBXNativeTarget "AthkarWidget" */;
+			buildPhases = (
+				32790E796F7BABC270EBCA09 /* Sources */,
+				29A70D356E3F3FFA5E54712E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AthkarWidget;
+			packageProductDependencies = (
+				227DD3ECEA9974125BD15880 /* AthkarCore */,
+			);
+			productName = AthkarWidget;
+			productReference = 9902C526E04201EDE67E58AE /* AthkarWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		B982E3F066B543AA4AC3C561 /* Athkar */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E901E7F1BD6ECE9AC3112533 /* Build configuration list for PBXNativeTarget "Athkar" */;
@@ -557,10 +628,12 @@
 				4998449685ADCF04BFEAFC1E /* Sources */,
 				E6A28DD3E251FA6ED567F372 /* Resources */,
 				3BEE4D21FC0FEA7F6244489B /* Frameworks */,
+				7BED13F2CED9B7B6EBE8B2E7 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1EDDE06B23585213FC74BD9 /* PBXTargetDependency */,
 			);
 			name = Athkar;
 			packageProductDependencies = (
@@ -585,6 +658,10 @@
 						TestTargetID = B982E3F066B543AA4AC3C561;
 					};
 					5F88B0777994718306F010F2 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					636D0DECEB1FF462E62322FF = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
@@ -613,6 +690,7 @@
 			projectRoot = "";
 			targets = (
 				B982E3F066B543AA4AC3C561 /* Athkar */,
+				636D0DECEB1FF462E62322FF /* AthkarWidget */,
 				5F88B0777994718306F010F2 /* AthkarTests */,
 				3B90CB725DD955C4A3030FCC /* AthkarUITests */,
 			);
@@ -638,6 +716,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		32790E796F7BABC270EBCA09 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63B9FC62B6EFE9916155CE01 /* PrayerWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4998449685ADCF04BFEAFC1E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -675,6 +761,7 @@
 				EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */,
 				626A2510A916FA3FC997C2A1 /* PrayerTimesView.swift in Sources */,
 				FF550089C0CEC658E0D2AD57 /* PrayerTrackerModel.swift in Sources */,
+				15C23442485D8933B156A25C /* PrayerWidgetPublisher.swift in Sources */,
 				D88DA1DDA19B43B372D77AAE /* PrivacyView.swift in Sources */,
 				5339EA1A8C7962FB46FAE974 /* QRScanner.swift in Sources */,
 				B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */,
@@ -734,6 +821,7 @@
 				0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */,
 				0EA61B25B39E91EADE9C0ED9 /* NativeTestSupport.swift in Sources */,
 				AF0B496E10B67A54DB40603B /* PrayerTrackerWiringTests.swift in Sources */,
+				C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */,
 				1BD47DDE727F988DD0643B8D /* ReminderActionTests.swift in Sources */,
 				9C5098C24A1CC7340C43A1CF /* ReminderCompletionInputsTests.swift in Sources */,
 				D64A8F7FDF8F3B54A0C66871 /* ReminderNotificationsTests.swift in Sources */,
@@ -756,6 +844,11 @@
 			isa = PBXTargetDependency;
 			target = B982E3F066B543AA4AC3C561 /* Athkar */;
 			targetProxy = CE758E3A20F00726F9E3596D /* PBXContainerItemProxy */;
+		};
+		D1EDDE06B23585213FC74BD9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 636D0DECEB1FF462E62322FF /* AthkarWidget */;
+			targetProxy = B0C4279CC72ECD54B92E9494 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -968,6 +1061,36 @@
 			};
 			name = Release;
 		};
+		9F1C1A5B0F20465DCE2E87B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = AthkarWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.dev.athkar.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B61D28D7D89D60687890BAC7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = AthkarWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.dev.athkar.widget;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		CBD0BE639F43C832D44020D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1013,6 +1136,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		A2A4792B78F67C0101184202 /* Build configuration list for PBXNativeTarget "AthkarWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B61D28D7D89D60687890BAC7 /* Debug */,
+				9F1C1A5B0F20465DCE2E87B9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		E901E7F1BD6ECE9AC3112533 /* Build configuration list for PBXNativeTarget "Athkar" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1044,6 +1176,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		15B13C389B55D96EC0545171 /* AthkarCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AthkarCore;
+		};
+		227DD3ECEA9974125BD15880 /* AthkarCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AthkarCore;
 		};

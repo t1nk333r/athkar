@@ -246,7 +246,8 @@ computed from that source. Remaining differences from the Xcode-built 1.0 (1) IP
 there is no `BuildMachineOSBuild`, `Assets.car` and the PNGs are not Xcode's bytes, the
 PNGs are standard rather than CgBI, the code directory uses 4 KiB rather than 16 KiB
 pages, and the binary keeps SwiftBuild's `@loader_path` rpath instead of
-`@executable_path/Frameworks`.
+`@executable_path/Frameworks`. It also has no lock-screen widget: the SDK build compiles
+`ios/AthkarWidget`, but the tool packages only the app, not `PlugIns/AthkarWidget.appex`.
 
 A Linux-built IPA has not been run on a device until someone installs it. Packaging,
 the signature check and the comparison above are not runtime evidence; Feather re-signs
@@ -270,9 +271,10 @@ grant. It runs on three events:
   hours of runner time per push; a newer push cancels the older run.
 
 The `ipa` job builds Release for `generic/platform=iOS` without signing, then signs ad hoc with
-no profile, as `tools/ios-mac-run.sh ipa` did. It checks the bundle identifier
-(`local.dev.athkar`), compares each resource `ios/project.yml` bundles with the repository and
-checks that the zip holds only `Payload/`. The job summary records Xcode, the SDK, the size and
+no profile, as `tools/ios-mac-run.sh ipa` did, the lock-screen widget before the app. It checks
+the bundle identifier (`local.dev.athkar`), the widget's (`local.dev.athkar.widget`) and that
+the widget carries the app's versions, compares each resource `ios/project.yml` bundles with the
+repository and checks that the zip holds only `Payload/`. The job summary records Xcode, the SDK, the size and
 the SHA-256.
 
 The `tests` job runs the AthkarTests and AthkarUITests classes the changes reach on an iPhone
@@ -307,6 +309,18 @@ device run against that installation is approved. Runtime acceptance requires a
 separately authorized, isolated route that preserves the user's app, database and
 notifications. Do not use `--reset-data`, uninstall, change bundle identity,
 pairing or device permissions under this source-verification grant.
+
+The lock-screen widget (`ios/AthkarWidget`) reads the times the app writes to one keychain
+item in the default access group (`PrayerWidgetStore`). An App Group needs a provisioning
+profile that names the group, which the wildcard profiles Feather signs with cannot. Feather is
+expected to sign the extension with the app's own entitlements instead
+([claration/feather#723](https://github.com/claration/feather/pull/723)), so both share that
+default group.
+No simulator or test shows this: it needs a Feather-signed install on a device. Add the widget
+to the lock screen after the app has a location. «افتح التطبيق وحدّد موقعك لعرضها.» there
+means the extension cannot read the item under that signature. A build signed per target
+after the identity gate needs a shared `keychain-access-groups` entry for the app and the
+widget.
 
 `ios/project.yml` is authoritative. The committed `ios/Athkar.xcodeproj` was
 regenerated from it on Luna with XcodeGen 2.46.0. It includes the hosted
@@ -358,10 +372,11 @@ untouched. Do not use this script or the retired Mac (terra) for new checks, or
 request that Mac's keys, wake-up or provisioning. Preserve the user's
 physical-device data and the existing signing/publisher identity.
 
-XcodeGen generates `ios/Athkar/Info.plist`. Declare future version/build bumps in
-`ios/project.yml` under `targets.Athkar.info.properties`, using
-`CFBundleShortVersionString` and `CFBundleVersion`. Their current values are
-`1.4` and `5`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`) and `1.3` (`4`) were built before. Feather
+XcodeGen generates `ios/Athkar/Info.plist` and `ios/AthkarWidget/Info.plist`. Declare future
+version/build bumps in `ios/project.yml` under `targets.Athkar.info.properties`, using
+`CFBundleShortVersionString` and `CFBundleVersion`, and the same values under
+`targets.AthkarWidget.info.properties`; the IPA workflow fails when they differ. Their current values are
+`1.5` and `6`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`), `1.3` (`4`) and `1.4` (`5`) were built before. Feather
 lists one entry per `CFBundleShortVersionString` and answers a publish whose short version it
 already lists with "Already present", storing nothing, so every published IPA needs a new
 short version as well as a new build number.

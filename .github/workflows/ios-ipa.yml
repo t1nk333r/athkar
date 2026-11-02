@@ -85,6 +85,10 @@ jobs:
             [[ -e $framework ]] || continue
             codesign --force --sign - --generate-entitlement-der "$framework"
           done
+          for extension in "$app"/PlugIns/*.appex; do
+            [[ -e $extension ]] || continue
+            codesign --force --sign - --generate-entitlement-der "$extension"
+          done
           codesign --force --sign - --generate-entitlement-der "$app"
           codesign --verify --deep --strict "$app"
           if [[ -e $app/embedded.mobileprovision ]]; then
@@ -96,6 +100,20 @@ jobs:
             echo "::error::The bundle identifier is $(plist CFBundleIdentifier), not local.dev.athkar."
             exit 1
           fi
+          # The lock-screen widget, under the app's identifier and with its versions.
+          widget=$app/PlugIns/AthkarWidget.appex/Info.plist
+          [[ -f $widget ]] || { echo "::error::The app has no lock-screen widget (PlugIns/AthkarWidget.appex)."; exit 1; }
+          widget_plist() { /usr/libexec/PlistBuddy -c "Print $1" "$widget"; }
+          if [[ $(widget_plist CFBundleIdentifier) != local.dev.athkar.widget ]]; then
+            echo "::error::The widget's identifier is $(widget_plist CFBundleIdentifier), not local.dev.athkar.widget."
+            exit 1
+          fi
+          for key in CFBundleShortVersionString CFBundleVersion; do
+            if [[ $(widget_plist "$key") != "$(plist "$key")" ]]; then
+              echo "::error::The widget's $key is $(widget_plist "$key"), the app's $(plist "$key"); set both in ios/project.yml."
+              exit 1
+            fi
+          done
           # Each resource ios/project.yml bundles (its buildPhase: resources sources, as
           # tools/affected-tests.py check reads them) is copied byte for byte.
           resources=$(python3 -c 'import re, sys

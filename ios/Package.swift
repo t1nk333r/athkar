@@ -21,6 +21,8 @@ let package = Package(
             exclude: ["Info.plist"],
             resources: [.copy("Assets.xcassets"), .process("Resources")]
         ),
+        // The lock-screen widget extension, compiled only; tools/ios-linux-ipa.sh does not package it.
+        .executableTarget(name: "AthkarWidget", dependencies: [core], path: "AthkarWidget", exclude: ["Info.plist"]),
         .testTarget(name: "AthkarTests", dependencies: ["Athkar", core], path: "AthkarTests"),
     ] : [
         .target(

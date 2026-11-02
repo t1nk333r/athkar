@@ -94,4 +94,31 @@ final class PrayerTrackerWiringTests: XCTestCase {
         XCTAssertEqual(try support.makeAppModel().prayer.iqama, IqamaDelays(fajr: 30, dhuhr: 0))
         XCTAssertNil(app.failure)
     }
+
+    /// The lock-screen widget gets the five times of yesterday and the coming days with their iqama, again when an
+    /// iqama delay changes, and none without a location.
+    @MainActor
+    func testTheWidgetGetsTheTimesOfTheComingDays() throws {
+        let support = try NativeTestSupport()
+        let empty = RecordingPrayerWidget()
+        _ = try support.makeAppModel(widget: empty)
+        XCTAssertEqual(empty.published, [nil])
+
+        try support.database.location.save(LocationProfile(latitude: 24.71, longitude: 46.68, zoneId: "Asia/Riyadh",
+                                                           source: .manual, updatedAt: nil))
+        let widget = RecordingPrayerWidget()
+        let app = try support.makeAppModel(widget: widget)
+        let snapshot = try XCTUnwrap(widget.published.last ?? nil)
+        XCTAssertEqual(snapshot.zone, "Asia/Riyadh")
+        XCTAssertEqual(snapshot.prayers.count, (PrayerWidgetSnapshot.days + 1) * 5)
+        let dhuhr = try XCTUnwrap(app.prayer.schedule(dayOffset: 0)?.dhuhr)
+        XCTAssertTrue(snapshot.prayers.contains(.init(prayer: .dhuhr, adhan: dhuhr,
+                                                      iqama: dhuhr.addingTimeInterval(20 * 60))))
+
+        app.prayer.setIqama(5, for: .dhuhr)
+        let changed = try XCTUnwrap(widget.published.last ?? nil)
+        XCTAssertTrue(changed.prayers.contains(.init(prayer: .dhuhr, adhan: dhuhr,
+                                                     iqama: dhuhr.addingTimeInterval(5 * 60))))
+        XCTAssertNil(app.failure)
+    }
 }

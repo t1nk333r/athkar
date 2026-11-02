@@ -81,10 +81,11 @@ final class MigrationPrivacyUITests: DeckTestCase {
         openSettings()
         scrolledTo(app.buttons["settings.privacy"]).tap()
         XCTAssertTrue(app.navigationBars["الخصوصية"].waitForExistence(timeout: 3))
-        for id in ["device", "location", "reminders", "backups", "delete"] {
-            XCTAssertTrue(element("privacy.\(id)").exists, id)
+        // In order down the page, which can be longer than the screen.
+        for id in ["device", "location", "reminders", "widget", "backups", "delete"] {
+            let section = scrolledTo(element("privacy.\(id)"))
+            if id == "location" { XCTAssertTrue(section.label.contains("منزلتين عشريتين")) }
         }
-        XCTAssertTrue(element("privacy.location").label.contains("منزلتين عشريتين"))
         app.navigationBars["الخصوصية"].buttons.firstMatch.tap()
 
         scrolledTo(app.buttons["settings.about"]).tap()
