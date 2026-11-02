@@ -85,6 +85,7 @@
 		BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4122DE1C89CDB311B8848C /* SectionChips.swift */; };
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
+		C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */; };
 		C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */; };
 		CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */; };
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
@@ -205,6 +206,7 @@
 		8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationPrivacyUITests.swift; sourceTree = "<group>"; };
 		90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarDeckModel.swift; sourceTree = "<group>"; };
 		91C4C2C86BC2CCAA54194818 /* AthkarUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AthkarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidgetStoreTests.swift; sourceTree = "<group>"; };
 		945545DA38A4C9AD29DEE2AF /* TransferImportModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportModel.swift; sourceTree = "<group>"; };
 		9902C526E04201EDE67E58AE /* AthkarWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = AthkarWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihSheets.swift; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 				501E35E5E819164510431A3C /* DeviceLocationTests.swift */,
 				A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */,
 				1ECF728439987926D1A489DB /* PrayerTrackerWiringTests.swift */,
+				92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */,
 				AAB2578D80AE15FA99070698 /* ReminderActionTests.swift */,
 				CC0BB3239231B360B479C37A /* ReminderCompletionInputsTests.swift */,
 				894967E326786673B5F4981D /* ReminderNotificationsTests.swift */,
@@ -818,6 +821,7 @@
 				0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */,
 				0EA61B25B39E91EADE9C0ED9 /* NativeTestSupport.swift in Sources */,
 				AF0B496E10B67A54DB40603B /* PrayerTrackerWiringTests.swift in Sources */,
+				C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */,
 				1BD47DDE727F988DD0643B8D /* ReminderActionTests.swift in Sources */,
 				9C5098C24A1CC7340C43A1CF /* ReminderCompletionInputsTests.swift in Sources */,
 				D64A8F7FDF8F3B54A0C66871 /* ReminderNotificationsTests.swift in Sources */,

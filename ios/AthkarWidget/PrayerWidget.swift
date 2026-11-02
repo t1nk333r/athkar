@@ -42,12 +42,14 @@ struct PrayerTimelineProvider: TimelineProvider {
         completion(context.isPreview && entry.state == nil ? Self.sample : entry)
     }
 
-    /// Read again after the last change it holds, or within the hour when the app has written no times yet.
+    /// Read again after the last change it holds, and at least an hour on; within 15 minutes when it has no times,
+    /// which the app may have written since or the locked phone may not have let it read.
     func getTimeline(in context: Context, completion: @escaping (Timeline<PrayerTimelineEntry>) -> Void) {
         let now = Date()
         let entries = Self.entries(from: now, limit: Self.entryLimit)
         let last = entries.last?.date ?? now
-        completion(Timeline(entries: entries, policy: .after(max(last, now.addingTimeInterval(60 * 60)))))
+        let soonest = now.addingTimeInterval(entries.count == 1 && entries[0].state == nil ? 15 * 60 : 60 * 60)
+        completion(Timeline(entries: entries, policy: .after(max(last, soonest))))
     }
 
     /// At least one entry.

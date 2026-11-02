@@ -4,8 +4,9 @@ import Security
 
 /// Where the app leaves ``PrayerWidgetSnapshot`` for the widget extension: one generic-password keychain item in the
 /// default access group. An App Group would need a provisioning profile that names the group, and the wildcard
-/// profiles Feather signs with cannot; Feather gives the extension the app's own entitlements instead, so both read
-/// the same default group. A build signed per target (NATIVE_APP_PLAN.md §8.1) needs a shared
+/// profiles Feather signs with cannot. Feather is expected to sign the extension with the app's own entitlements
+/// (claration/feather#723), so both read the same default group; only a Feather-signed install on a device shows it
+/// (docs/agents/ios-linux.md). A build signed per target (NATIVE_APP_PLAN.md §8.1) needs a shared
 /// `keychain-access-groups` entry for both.
 ///
 /// The item is readable after the first unlock, so a locked phone's widget can read it, and never leaves the device:
