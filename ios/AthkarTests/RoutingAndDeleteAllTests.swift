@@ -139,8 +139,10 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         XCTAssertTrue(app.tracker.quickLog(PrayerOccurrence(date: app.tracker.today, prayer: .fajr)))
         await app.reminders.replanAndWait()
         XCTAssertFalse(center.pendingIDs.isEmpty)
-        center.delivered = [DeliveredReminder(id: "prayer.isha.\(app.tracker.today)", ruleId: "prayer_isha",
-                                              date: Date())]
+        // Today in Riyadh, read before the deletion: deleting the location moves the tracker to the device's zone,
+        // where the date differs between 21:00 and 24:00 UTC.
+        let today = app.tracker.today
+        center.delivered = [DeliveredReminder(id: "prayer.isha.\(today)", ruleId: "prayer_isha", date: Date())]
         app.tab = .other
         app.otherSection = .calendar
 
@@ -154,13 +156,13 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         }
         XCTAssertFalse(try support.database.contentInstalls.installs().isEmpty, "content_installs stays")
         XCTAssertTrue(center.pendingIDs.isEmpty, "nothing pending")
-        XCTAssertTrue(center.removedDelivered.contains("prayer.isha.\(app.tracker.today)"), "banners removed")
+        XCTAssertTrue(center.removedDelivered.contains("prayer.isha.\(today)"), "banners removed")
         XCTAssertNil(diagnostics.lastReplanAt)
         XCTAssertNil(diagnostics.lastBackgroundRefreshAt)
         XCTAssertTrue(app.reminders.rules.isEmpty)
         XCTAssertNil(app.prayer.location)
         XCTAssertEqual(widget.published.last, .some(nil), "the widget's times are deleted")
-        XCTAssertTrue(app.tracker.records(on: app.tracker.today).isEmpty)
+        XCTAssertTrue(app.tracker.records(on: today).isEmpty)
         XCTAssertEqual(app.settings.theme, .system)
         XCTAssertEqual(app.tab, .morning)
         XCTAssertNil(app.otherSection)
