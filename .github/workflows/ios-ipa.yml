@@ -250,14 +250,43 @@ jobs:
           DEVICE: ${{ steps.simulator.outputs.device }}
         run: |
           set -euo pipefail
-          read -ra only <<< "$ONLY"
+          # The tests that failed in a round's log, as -only-testing arguments.
+          cat > "$RUNNER_TEMP/failed-tests.py" <<'EOF'
+          import re, sys
+          failed = []
+          for line in open(sys.argv[1], errors="replace"):
+              match = re.search(r"Test Case '-\[([^.\s]+)\.(\S+) (\S+)\]' failed", line)
+              if match:
+                  argument = f"-only-testing:{match[1]}/{match[2]}/{match[3]}"
+                  if argument not in failed:
+                      failed.append(argument)
+          print(" ".join(failed))
+          EOF
           # On the hosted runner a UI test fails on timing now and then, so a failed test runs again,
-          # at most three times in all. The next step lists every test that failed a run.
-          xcodebuild -project ios/Athkar.xcodeproj -scheme Athkar \
-            -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
-            -derivedDataPath "$RUNNER_TEMP/DerivedData" -resultBundlePath "$RUNNER_TEMP/tests.xcresult" \
-            -retry-tests-on-failure -test-iterations 3 \
-            CODE_SIGNING_ALLOWED=NO test "${only[@]}" 2>&1 | tee "$RUNNER_TEMP/tests.log"
+          # at most three times in all. Each retry is its own xcodebuild run of the tests that failed:
+          # a UI test failure restarts the test runner, and xcodebuild's own retry then skips the test.
+          # A run that fails without a failed test, such as a build error, is not retried. The next
+          # step lists every test that failed a run.
+          read -ra selection <<< "$ONLY"
+          action=test
+          : > "$RUNNER_TEMP/tests.log"
+          for round in 1 2 3; do
+            status=0
+            xcodebuild -project ios/Athkar.xcodeproj -scheme Athkar \
+              -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
+              -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+              -resultBundlePath "$RUNNER_TEMP/tests-$round.xcresult" \
+              CODE_SIGNING_ALLOWED=NO "$action" "${selection[@]}" 2>&1 \
+              | tee "$RUNNER_TEMP/round.log" || status=$?
+            cat "$RUNNER_TEMP/round.log" >> "$RUNNER_TEMP/tests.log"
+            (( status == 0 )) && exit 0
+            read -ra selection <<< "$(python3 "$RUNNER_TEMP/failed-tests.py" "$RUNNER_TEMP/round.log")"
+            if (( round == 3 || ${#selection[@]} == 0 )); then
+              exit "$status"
+            fi
+            echo "Running again what failed: ${selection[*]}"
+            action=test-without-building
+          done
 
       - name: List the tests that failed a run
         if: always() && steps.select.outputs.run == '1'
@@ -296,7 +325,7 @@ jobs:
         if: always() && steps.select.outputs.run == '1'
         with:
           name: tests-xcresult
-          path: ${{ runner.temp }}/tests.xcresult
+          path: ${{ runner.temp }}/tests-*.xcresult
           if-no-files-found: ignore
 
   release:
