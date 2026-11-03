@@ -78,7 +78,7 @@ struct TransferImportView: View {
 
     private var receive: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("على الجهاز الآخر افتح تطبيق الويب «أذكار المسلم»، واذهب إلى الإعدادات ← «إرسال التقدّم»، ثم اختر الطريقة المتاحة هنا.")
+            Text("على الجهاز الآخر افتح تطبيق الويب «أذكار المسلم» واضغط «إرسال التقدّم» في الإعدادات، ثم اختر هنا الطريقة المتاحة.")
                 .font(.body)
                 .foregroundStyle(palette.textPrimary)
 

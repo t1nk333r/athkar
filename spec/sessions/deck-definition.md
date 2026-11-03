@@ -1,8 +1,8 @@
 # Deck definition
 
-The card-deck screen shared by the four decks: أذكار الصباح, أذكار المساء, رقية القرين and سور
+This document defines the card-deck screen that the four decks share: أذكار الصباح, أذكار المساء, رقية القرين and سور
 (NATIVE_APP_PLAN.md §3.2, §9.2). It describes behaviour, not code. A platform builds one deck component driven by
-this document. iOS builds `DeckView` + `DeckModel` in `ios/Athkar/Deck/`. Android builds a Compose `DeckScreen`.
+this document. iOS builds `DeckView` and `DeckModel` in `ios/Athkar/Deck/`. Android builds a Compose `DeckScreen`.
 The rules below follow the two PWAs: `index.html` in this repository, and `index.html` in `ruqyah-al-qareen`. PWA
 function names are given in backticks.
 
@@ -22,25 +22,26 @@ Session rules that already have fixtures (`spec/sessions/fixtures/`) are the con
 
 A **card's number** is its 1-based position in content order, in Arabic-Indic digits; a ruqyah segment's or a
 «سور» page's is its position in its sura. Long-order never changes it. **Positions** («٢ من ٢٦») are 1-based
-positions in the deck as currently ordered, the shown sura for ruqyah and «سور».
+positions in the deck as currently ordered. For ruqyah and «سور», they are positions in the shown sura.
 
-**Ruqyah sections.** The ruqyah deck has one section per sura, as the ruqyah PWA's `RUQYAH_SUWAR` groups the pack:
-the segments whose IDs share a prefix (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`), consecutive in the pack. Chips
-above the summary pick the sura shown (`.sura-picker`, spoken «اختيار السورة»). Each chip shows the sura's name
-without «سورة », and «✓» once its segments are all complete today; it is spoken «<surah>», or «<surah>، مكتملة
-اليوم», and the shown sura's chip is selected. Each chip starts from its text's width and the chips share the rest of
-the row (`flex: 1 1 auto`), so «الكافرون ✓» is not cut where «ق» needs little. The cards, position, lock, summary row
-and sura dialog are the shown sura's; the today line, the أخرى row and its «✓» are the whole day's. The deck opens on
-ق (the PWA opens there unless a sura deep link names another; the native app has no deep links). Each sura keeps the
-card it showed last until the day changes or the ruqyah is reset.
+**Ruqyah sections.** The ruqyah deck has one section per sura, grouped as the ruqyah PWA's `RUQYAH_SUWAR` groups
+the pack. A section is the segments whose IDs share a prefix (`qaf`, `jinn`, `takwir`, `kafirun`, `nas`), which are
+consecutive in the pack. Chips above the summary pick the sura shown (`.sura-picker`, spoken «اختيار السورة»). Each
+chip shows the sura's name without «سورة », and «✓» once its segments are all complete today. A chip is spoken
+«<surah>», or «<surah>، مكتملة اليوم», and the shown sura's chip is selected. Each chip starts from its text's
+width and the chips share the rest of the row (`flex: 1 1 auto`), so «الكافرون ✓» is not cut where «ق» needs little.
+The cards, position, lock, summary row and sura dialog are the shown sura's; the today line, the أخرى row and its «✓»
+are the whole day's. The deck opens on ق (the PWA opens there unless a sura deep link names another; the native app
+has no deep links). Each sura keeps the card it showed last until the day changes or the ruqyah is reset.
 
-**«سور» sections.** The «سور» deck is the athkar PWA's «سور» tab: one section per sura of `content/suwar.v1.json`, in
-pack order (الكهف, يس, الصافات, الواقعة, الملك). Its chips work as the ruqyah chips do, with «✓» once every page of
-the sura is read today, but take equal shares of the row (`flex: 1 1 0`), as the athkar PWA's do. The cards,
-position, lock, summary row and sura dialog are the shown sura's; the أخرى row and its «✓» are the whole day's. The
-shown sura is stored (`suwar_selected_sura`, the PWA's `athkar-suwar-v1.selected`), so the deck reopens on it. It
-starts on الكهف, and a stored sura the pack no longer has reads as the first (`normalizeSuwarState`). Each sura keeps
-the page it showed last until the day changes or «سور» is reset (`suwarIndices`).
+**«سور» sections.** The «سور» deck is the athkar PWA's «سور» tab. It has one section per sura of
+`content/suwar.v1.json`, in pack order (الكهف, يس, الصافات, الواقعة, الملك). Its chips work as the ruqyah chips do,
+with «✓» once every page of the sura is read today. Unlike the ruqyah chips, they take equal shares of the row
+(`flex: 1 1 0`), as the athkar PWA's chips do. The cards, position, lock, summary row and sura dialog are the shown
+sura's; the أخرى row and its «✓» are the whole day's. The shown sura is stored (`suwar_selected_sura`, the PWA's
+`athkar-suwar-v1.selected`), so the deck reopens on it. It starts on الكهف, and a stored sura the pack no longer has
+is treated as the first (`normalizeSuwarState`). Each sura keeps the page it showed last until the day changes or
+«سور» is reset (`suwarIndices`).
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a list
 of sections (رقية القرين, سور, مسبحة, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app
@@ -48,10 +49,10 @@ opens رقية القرين, سور, مسبحة, أوقات الصلاة and ا�
 summary copy and «✓» once today is complete. «مسبحة» is a counter, not a deck ([`tasbih.md`](tasbih.md)); its row
 shows today's total, «اليوم: N». The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض
 المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title,
-and the tabs are hidden; the back button returns to the list, where they show again. The list has no summary, and its
-reset button is disabled. The أخرى tab never shows «✓»; each row shows completion. Each deck keeps its current card
-while another deck is open. The رقية القرين row shows the whole day's «N من ٣٣ تكرارًا», and the سور row the suras
-complete today, «N من ٥ سور» (native: the PWA's tab has no such line); its «✓» needs all five.
+and the tabs are hidden. The back button returns to the list, where the tabs show again. The list has no summary, and
+its reset button is disabled. The أخرى tab never shows «✓»; each row shows completion. Each deck keeps its current
+card while another deck is open. The رقية القرين row shows the whole day's «N من ٣٣ تكرارًا». The سور row shows the
+suras complete today, «N من ٥ سور» (a native addition; the PWA's tab has no such line), and its «✓» needs all five.
 
 ### Adhkar item fields
 
@@ -70,7 +71,7 @@ Presentation:
 - The card shows `details[0..<noteIndex]`, or every detail when `noteIndex` is absent or out of range.
 - When `noteIndex < details.count`, a «المصدر والتفاصيل» link opens a sheet with all the details. The detail at
   `noteIndex` is styled as a note.
-- `review` items are never counted and cannot be tapped. Their card (`.needs-review`: dashed warning border on a
+- `review` items are never counted and cannot be tapped. Their card (`.needs-review`, a dashed warning border on a
   warning tint) shows only the number with the badge «بحاجة إلى مراجعة», then `reviewTitle` (or `text` when
   absent) in the dhikr text style, then `reviewCopy` in the warning colour (1 rem, bold, line height 1.8). There
   is no requirement row, counter, reset or tap target, and the body is not fitted; it scrolls if it must.
@@ -85,8 +86,8 @@ Layout:
 - The body is centred.
 - When `basmala` is true, the body starts with «بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ» at 0.92× the text size, in
   the accent colour. The pack does not contain this text; the PWA prints it.
-- Then the ayahs, joined by spaces. Each ayah is followed by «﴿n﴾» (Arabic-Indic n) at 0.78× the text size, in the
-  accent colour.
+- Then come the ayahs, joined by spaces. Each ayah is followed by «﴿n﴾» (Arabic-Indic n) at 0.78× the text size, in
+  the accent colour.
 
 ### «سور» page fields
 
@@ -95,11 +96,12 @@ text}]`.
 
 Layout (`suraPageMarkup`, a `.dhikr-card.quran.sura-page`):
 
-- No head; the body is centred.
-- A sura's first page starts with the pack's `basmala` (`.dhikr-prefix`) at the quran prefix size, line height 1.7,
-  in the strong accent colour. Later pages have none.
-- Then the ayahs, joined by spaces, each followed by «﴿n﴾» (Arabic-Indic n) in KFGQPC Uthman Taha in the strong
-  accent colour. The text is set as adhkar `quran` items are: KFGQPC HAFS in the King Fahd Complex's encoding.
+- The card has no head, and the body is centred.
+- A sura's first page starts with the pack's `basmala` (`.dhikr-prefix`) at the quran prefix size with line height
+  1.7, in the strong accent colour. Later pages have none.
+- Then come the ayahs, joined by spaces. Each is followed by «﴿n﴾» (Arabic-Indic n), set in KFGQPC Uthman Taha in the
+  strong accent colour. The text is set as adhkar `quran` items are, in KFGQPC HAFS with the King Fahd Complex's
+  encoding.
 - The footer shows `range` and the counter, in the adhkar card's style with a compact footer.
 
 ## 2. Counters
@@ -114,26 +116,26 @@ Layout (`suraPageMarkup`, a `.dhikr-card.quran.sura-page`):
 - **Count.** Apply `floor` to the stored count. Use 0 when the result is not finite or is negative, then clamp it
   to `min(count, target)`. Storage keeps the raw values.
 - **Complete item.** `count >= target`, or the item is a review item.
-- **Display.** Numeric when `count > 0` (the item field) or `targetOptions` is present (`isExplicitlyCounted`):
-  «count/target», left to right, with «✓» when complete. Otherwise the phrase «اضغط بعد القراءة», which becomes
-  «تمت القراءة» once complete.
+- **Display.** When `count > 0` (the item field) or `targetOptions` is present (`isExplicitlyCounted`), the display
+  is numeric, «count/target», left to right, with «✓» when complete. Otherwise it is the phrase «اضغط بعد القراءة»,
+  which becomes «تمت القراءة» once complete.
 - **Requirement line.** `countLabel`, or «مرة واحدة».
-- **Target picker** (only for items with `targetOptions`). Labelled «الهدف». Options 1, 10 and 100, shown in
-  Arabic-Indic digits.
+- **Target picker** (only for items with `targetOptions`). It is labelled «الهدف». Its options are 1, 10 and 100,
+  shown in Arabic-Indic digits.
 
 ### Ruqyah
 
 - **Count.** The stored count, clamped to `0…repeat` (`normalizeCounts`).
 - **Complete segment.** `count >= repeat`.
-- **Display.** When `repeat == 1`: «اضغط بعد القراءة», which becomes «تمت». Otherwise «count/repeat».
+- **Display.** When `repeat == 1`, it is «اضغط بعد القراءة», which becomes «تمت». Otherwise it is «count/repeat».
 - **Requirement line.** «مرة واحدة» (repeat 1), «مرتان» (repeat 2), «N مرات» (otherwise).
-- **Progress.** The sum of counts, out of the sum of `repeat`: the shown sura's in the summary row, the whole
-  day's (33) in the today line and the أخرى row.
+- **Progress.** The sum of counts, out of the sum of `repeat`. The summary row shows the shown sura's; the today
+  line and the أخرى row show the whole day's (33).
 - **Complete sura.** Every segment of the sura is complete (`suraIsComplete`).
 
 ### «سور»
 
-- **Count.** 1 once the page is read today, otherwise 0: a page is read once (`markPageRead`).
+- **Count.** 1 once the page is read today, otherwise 0. A page is read once (`markPageRead`).
 - **Display.** «اضغط بعد القراءة», which becomes «تمت القراءة» with «✓». The requirement line is the page's `range`.
 - **Progress.** Pages read out of the shown sura's pages in the summary row; suras complete out of five in the أخرى
   row.
@@ -172,28 +174,29 @@ The setting is `long_order` (`last` | `original`; default `original`).
     every page is read (`renderSuraPages`). A day rollover and a reset forget the last pages and keep the shown
     sura.
 - **Back** («السابق», and a swipe back) is enabled when `index > 0`.
-- **Forward** («التالي», and a swipe forward) is enabled when `index < count − 1`, and additionally:
+- **Forward** («التالي», and a swipe forward) is enabled when `index < count − 1` and also:
   - Adhkar: the current item is complete, or is a review item, or the period is manually complete (the lock).
   - Ruqyah: the current segment's repeats are complete (`updateDeckNavigation`, as in the adhkar PWA's «سور» tab).
     The lock holds within the shown sura; the chips switch suras at any time.
   - «سور»: the current page is read. The lock holds within the shown sura.
-- **Position.** Shown as «N من M». Spoken as «الذكر N من M» for adhkar, «المقطع N من M» for ruqyah and «الصفحة N
-  من M» for «سور», where M counts the shown sura's segments or pages, and announced after every navigation. The
-  card list is spoken «<cards>، <position>»: «بطاقات <section>» for adhkar, «مقاطع <surah>» for ruqyah, «صفحات
-  <surah>» for «سور».
+- **Position.** It is shown as «N من M» and spoken as «الذكر N من M» for adhkar, «المقطع N من M» for ruqyah and
+  «الصفحة N من M» for «سور», where M counts the shown sura's segments or pages. It is announced after every
+  navigation. The card list is spoken «<cards>، <position>», where «<cards>» is «بطاقات <section>» for adhkar,
+  «مقاطع <surah>» for ruqyah and «صفحات <surah>» for «سور».
 - **Native quick index.** The position is a button at least 44 pt tall. It opens an RTL sheet titled
   «فهرس الورد» for adhkar, «فهرس الرقية» for ruqyah or «فهرس السورة» for «سور», with «إغلاق» and every card in
-  current deck order.
-  Each row shows its original number, existing opening text or surah/range, counter status and current-row marker.
-  Review rows show their warning and no counter. Quran text uses the same rendering as the card.
+  the current deck order.
+  Each row shows its original number, its existing opening text or its surah and range, and its counter status. The
+  current row has a marker. Review rows show their warning and no counter. Quran text uses the same rendering as the
+  card.
   - Earlier and current rows are selectable. A later row is selectable only when every intervening forward
     step satisfies the existing lock. Keep unavailable rows visible and disabled. Manual completion unlocks
     adhkar. A ruqyah segment or «سور» page opens once every one before it in its sura is read.
-  - Opening the index cancels pending auto-advance. Closing it does not reschedule advance. Selection never
-    changes counts, targets or completion. Dismiss first, resolve the selected card ID against the current deck,
-    recheck day rollover and reachability, then navigate and announce. If rollover changed the deck or the chosen
-    row is no longer reachable, keep the current card and announce its position. Selecting the current row only
-    dismisses.
+  - Opening the index cancels a pending auto-advance. Closing it does not reschedule the advance. Selection never
+    changes counts, targets or completion. Dismiss the index first, resolve the selected card ID against the current
+    deck, recheck day rollover and reachability, then navigate and announce. If rollover changed the deck or the
+    chosen row is no longer reachable, keep the current card and announce its position. Selecting the current row
+    only dismisses the index.
   - Keep `deck.position` and its spoken label. Row labels use `card.progressLabel`, never encoded Quran text;
     their accessibility value gives the deck position, which can differ from the original number in long-order.
     Wrap rows at large text sizes and preserve Reduce Motion, RTL, palette and reading fonts.
@@ -217,7 +220,7 @@ Otherwise:
 2. Play the completion haptic, 45 ms, only when `haptics` is true:
    - Adhkar: when the card just reached a target greater than one. Single-count cards stay quiet.
    - Ruqyah: when the segment just completed, whatever its `repeat` (`if (completesSegment) triggerHaptic`).
-   - «سور»: every page marked read (`markPageRead`).
+   - «سور»: each time a page is marked read (`markPageRead`).
    - Intermediate taps stay quiet.
 3. **Adhkar:** run `syncCompletionState(period)`. If it returns `newlyCompleted`, open the completion dialog and
    do not auto-advance. Otherwise, if the card just completed, auto-advance.
@@ -250,10 +253,10 @@ Any navigation cancels a pending advance.
 2. Store the new target, then set `count = min(count, newTarget)`, where `count` is already clamped to the new
    target.
 3. Run `syncCompletionState`.
-4. If newly completed, open the dialog. Else, if long-order is on, rebuild the order (§3). Else, if the item went
-   from incomplete to complete, auto-advance.
+4. If the period is newly completed, open the dialog. Otherwise, if long-order is on, rebuild the order (§3).
+   Otherwise, if the item went from incomplete to complete, auto-advance.
 
-**Card reset.** Enabled when `count > 0`. It sets `count = 0` and then runs `syncCompletionState` (adhkar), or
+**Card reset.** It is enabled when `count > 0`. It sets `count = 0` and then runs `syncCompletionState` (adhkar), or
 saves the segment and clears its sura's completion today (ruqyah), or marks the page unread and clears its sura's
 completion today («سور», `resetSuraPage`), in one transaction.
 
@@ -261,7 +264,7 @@ completion today («سور», `resetSuraPage`), in one transaction.
   - Title: `card.reset.confirm.adhkar.title` («إعادة عداد الذكر N؟»).
   - Message: `…message` («سيعود العداد من X إلى الصفر.»).
   - Confirm button: «إعادة».
-- Ruqyah always asks: `card.reset.confirm.ruqyah.*`.
+- Ruqyah always asks, with `card.reset.confirm.ruqyah.*`.
 - «سور» never asks.
 
 ## 6. Swipe (`beginCardSwipe` … `finishCardSwipe`)
@@ -283,7 +286,7 @@ Measure the drag in screen coordinates, not layout-mirrored ones. A **rightward*
 
 - `distance = |dx|`
 - `threshold = max(32, min(52, cardWidth × 0.1))`
-- `velocity` in pt/ms: the recent velocity when its sign matches `dx`, taking `max(|recent|, average)`. Otherwise
+- `velocity`, in pt/ms, is `max(|recent|, average)` when the recent velocity's sign matches `dx`. Otherwise it is
   the average (`|dx| / duration`, with the duration measured from touch-down, not from the axis lock).
 - `flick = distance >= 18 && velocity >= 0.35`
 - `horizontal = distance > |dy| × 0.75`
@@ -304,8 +307,8 @@ With Reduce Motion there is no transition.
 
 ### Adhkar (`syncCompletionState`, `setManualCompletion`)
 
-A period is complete when it is complete by counters (`periodCountersComplete`: every non-review item is at its
-target) or manually complete.
+A period is complete when it is complete by counters (`periodCountersComplete`, which holds when every non-review
+item is at its target) or manually complete.
 
 After a counter or target change:
 
@@ -333,13 +336,14 @@ The tab (adhkar) or the أخرى row (ruqyah, «سور») shows «✓» and is s
 
 ### Ruqyah
 
-- A sura is complete once its segments are all complete. It is recorded in `ruqyah_sura_days` once a day, and its
-  segment's card reset clears the record.
+- A sura is complete once its segments are all complete. It is recorded in `ruqyah_sura_days` once a day, and a
+  card reset on one of its segments clears the record.
 - The sura dialog (`openSuraCompletionDialog`) shows `completion.ruqyah.sura.title`,
   `completion.ruqyah.sura.message` and the sura's completion time, «وقت الإكمال: h:mm», with the buttons
   `completion.ruqyah.sura.done` and `completion.ruqyah.sura.switch`. The switch opens the next sura in pack order
-  that is still incomplete today, wrapping round. A sura complete by its counters with no record of its own shows
-  the day's record time, or no time without one (`backfillSuwarCompletions`); nothing is written.
+  that is still incomplete today, and wraps round after the last sura. A sura that is complete by its counters but
+  has no record of its own shows the day's record time, or no time when there is no day record
+  (`backfillSuwarCompletions`). Nothing is written.
 - The day is complete once every segment is complete. It is recorded in `ruqyah_days` once.
 - The day dialog shows `completion.ruqyah.title`, `completion.ruqyah.message` and today's completion time, with
   the buttons `completion.ruqyah.close` and `completion.ruqyah.restart`. «بدء رقية جديدة» is a day reset (§8);
@@ -351,7 +355,7 @@ The tab (adhkar) or the أخرى row (ruqyah, «سور») shows «✓» and is s
 - A sura is complete once every page is read today. It is recorded in `suwar_sura_days` once a day, at the time its
   last page was read; a page reset clears the record (`completedAt`).
 - The sura dialog (`openSuraCompletionDialog`) shows `completion.suwar.title`, `completion.suwar.message` and the
-  sura's completion time, «وقت الإكمال: h:mm», with the one button `completion.suwar.done`: the PWA hides the
+  sura's completion time, «وقت الإكمال: h:mm», with the one button `completion.suwar.done`. The PWA hides the
   switch (`completionSwitch.hidden`).
 - Its أخرى row shows «✓» once all five suras are complete today.
 
@@ -359,14 +363,15 @@ The tab (adhkar) or the أخرى row (ruqyah, «سور») shows «✓» and is s
 
 The header button «↻ إعادة», spoken «خيارات الإعادة», opens a picker for the pillar on screen. Both adhkar periods
 reset together; ruqyah, «سور» and «مسبحة» each reset alone (the PWA's header reset clears every store at once). The
-button first runs the day rollover. «مسبحة» resets as [`tasbih.md`](tasbih.md) §6 describes: unlike the decks, its
+button first runs the day rollover. «مسبحة» resets as [`tasbih.md`](tasbih.md) §6 describes. Unlike the decks, its
 «تقدم اليوم» asks first while a phrase is counted today.
 
 It is enabled when:
 
 - **Adhkar** (`hasResettableState`): any non-review count > 0 in either period, or any manual completion, or any
   earlier completed day.
-- **Ruqyah:** today's readings > 0, or any recorded day: a completed day, or an earlier day with a completed sura.
+- **Ruqyah:** today's readings > 0, or any recorded day, meaning a completed day or an earlier day with a completed
+  sura.
 - **«سور»** (`suwarHasResettableState`): any page read today, any sura complete today, or an earlier day with a
   completed sura.
 
@@ -382,7 +387,7 @@ sura.
 The confirmations use `reset.confirm.week.*` and `reset.confirm.everything.*`, with the recorded-day count `N` from
 `dayCountLabel`:
 
-- `dayCountLabel(N)` is: 1 → «يوم واحد», 2 → «يومين», 3–10 → «N أيام», 11 and more → «N يومًا».
+- `dayCountLabel(N)` is «يوم واحد» for 1, «يومين» for 2, «N أيام» for 3–10, and «N يومًا» for 11 and more.
 - Adhkar counts earlier days with a completion. Ruqyah counts completed days, today included, together with
   earlier days with a completed sura (`historyDates`). «سور» counts earlier days with a completed sura
   (`suwarState.history`).
@@ -394,17 +399,17 @@ The storage for all of this is in `spec/schema.md`.
 **Summary above the deck** (`updateSessionProgress`):
 
 - Adhkar:
-  - «N من M ذكرًا» (M = non-review items; the suffix is «ذكرًا متاحًا» when the morning has a review item).
+  - «N من M ذكرًا» (M counts the non-review items; the suffix is «ذكرًا متاحًا» when the morning has a review item).
   - «اكتملت <section> اليوم» when complete by counters.
   - «اكتملت <section> خارج التطبيق» when manually complete.
   - The progress bar is full when the period is complete.
 - Ruqyah:
-  - The chips (§1), then the shown sura: «N من M تكرارًا», or «اكتملت <surah> اليوم» once it is complete. The
-    progress bar is spoken «<surah>: N من M تكرارًا».
-  - A second line for the whole day (`updateTodayStatus`): «رقية اليوم: N من ٣٣ تكرارًا», or «تمت رقية اليوم في
-    h:mm» once today is recorded, in the completed colour.
-- «سور» (`updateSuraProgress`): the chips (§1), then the shown sura: «N من M صفحة», or «اكتملت <surah> اليوم» once
-  it is complete. The progress bar is spoken «<surah>: N من M صفحة مقروءة».
+  - The summary shows the chips (§1), then the shown sura's progress, «N من M تكرارًا», or «اكتملت <surah> اليوم»
+    once the sura is complete. The progress bar is spoken «<surah>: N من M تكرارًا».
+  - A second line (`updateTodayStatus`) shows the whole day's progress, «رقية اليوم: N من ٣٣ تكرارًا», or «تمت رقية
+    اليوم في h:mm» once today is recorded, in the completed colour.
+- «سور» (`updateSuraProgress`): the summary shows the chips (§1), then the shown sura's progress, «N من M صفحة», or
+  «اكتملت <surah> اليوم» once the sura is complete. The progress bar is spoken «<surah>: N من M صفحة مقروءة».
 
 **Day rollover.** It runs at local midnight, when the app returns to the foreground, when the clock or time zone
 changes, and before each tap, card reset (including a confirmed one), and target change. When the check finds a
@@ -417,16 +422,16 @@ new date, ignore the tap, reset, or target change because it belongs to the prev
 **Labels to speak.** These are the PWAs' live-region strings; announce them after the change.
 
 - Adhkar counter (`progressLabel`):
-  - Counted items: «ذكر N، تم تكراره X من أصل Y مرات», with «، اكتمل» added when complete.
-  - Other items: «ذكر N، لم يُعلَّم كمقروء», or «ذكر N، تمت قراءته» once read.
+  - Counted items: «ذكر N، كُرّر X من أصل Y مرات», with «، اكتمل» added when complete.
+  - Other items: «ذكر N، لم يُعلَّم كمقروء», or «ذكر N، قُرئ» once read.
 - Adhkar tap target:
   - Counted items: «زيادة عداد الذكر N. <label>».
   - Other items: «تحديد كمقروء، الذكر N. <label>», or «اكتمل، الذكر N. <label>» once read.
-- Ruqyah counter (`segmentLabel`): «المقطع N: <surah> <range>. <status>», N within the sura. The status is
-  «لم تُقرأ بعد» or «تمت القراءة» when repeat is 1, and «تم X من Y» otherwise.
+- Ruqyah counter (`segmentLabel`): «المقطع N: <surah> <range>. <status>», with N numbered within the sura. The
+  status is «لم تُقرأ بعد» or «تمت القراءة» when repeat is 1, and «تم X من Y» otherwise.
 - Ruqyah tap target: «تسجيل قراءة المقطع N. <label>», or «اكتمل. <label>» once complete.
-- «سور» counter (`updateSuraPage`): «الصفحة N من <surah>، <range>، لم تُعلَّم كمقروءة», or «…، تمت قراءتها» once
-  read, N within the sura.
+- «سور» counter (`updateSuraPage`): «الصفحة N من <surah>، <range>، لم تُعلَّم كمقروءة», or «…، قُرئت» once
+  read, with N numbered within the sura.
 - «سور» tap target: «تحديد كمقروءة، <label>», or «اكتملت، <label>» once read.
 - Reset buttons: «إعادة عداد الذكر N» / «إعادة عداد المقطع N» / «إعادة الصفحة N».
 - Target picker: «اختيار عدد تكرار الذكر N».
@@ -457,23 +462,23 @@ Line heights (multiples of the font size), by the `line_spacing` setting:
 
 **Fitting.** Show the first step whose content fits the card body's height. Scroll only when no step fits.
 
-- Adhkar `quran` cards: never shrink; they scroll if needed.
+- Adhkar `quran` cards never shrink; they scroll if needed.
 - Other adhkar cards step down twice (`fitCardContent`). A step never makes text larger than the chosen size.
   - Dense: text `min(size, clamp(1.12, 4.9, 1.54))`, line height 1.76; detail `clamp(0.94, 3.85, 1.1)`, line
     height 1.62.
   - Tight: text `clamp(1.08, 4.7, 1.48)`, line height 1.65; detail `clamp(0.9, 3.7, 1.04)`, line height 1.5.
-- Ruqyah (`fitCardText`): (scale, line-height reduction) steps (1, 0), (0.94, 0.12), (0.88, 0.24), (0.82, 0.34),
-  (0.76, 0.44), (0.70, 0.54).
-  - Native adds (0.66, 0.54) and (0.62, 0.54): iOS sets these pages about one step taller than Chromium, and
-    without them some pages scroll at wide spacing and large text on a 375 pt screen.
+- Ruqyah (`fitCardText`) uses these (scale, line-height reduction) steps: (1, 0), (0.94, 0.12), (0.88, 0.24),
+  (0.82, 0.34), (0.76, 0.44), (0.70, 0.54).
+  - Native adds (0.66, 0.54) and (0.62, 0.54). iOS sets these pages about one step taller than Chromium, and
+    without these two steps some pages scroll at wide spacing and large text on a 375 pt screen.
   - A platform that cannot set a line height below the font's natural height adds (0.58, 0.54) and (0.54, 0.54)
     as well. iOS before 26 does this.
 - Acceptance: all 15 ruqyah pages fit without scrolling at the three text sizes, with comfortable and with wide
   line spacing, on a 375 × 667 pt screen (iOS `AutoFitUITests`).
-- «سور» (`fitSuraPage`, `data-fit` 0…6): (scale, line-height factor) steps (1, 1), (0.94, 0.97), (0.88, 0.94),
-  (0.82, 0.91), (0.76, 0.88), (0.70, 0.85), (0.64, 0.82). The text is the quran text size × scale, with line height
-  `max(1.6, quran × factor)`; the basmala is the quran prefix size × scale, line height 1.7. A page that does not fit
-  at the last step scrolls, as in the PWA.
+- «سور» (`fitSuraPage`, `data-fit` 0…6) uses these (scale, line-height factor) steps: (1, 1), (0.94, 0.97),
+  (0.88, 0.94), (0.82, 0.91), (0.76, 0.88), (0.70, 0.85), (0.64, 0.82). The text is the quran text size × scale, with
+  line height `max(1.6, quran × factor)`; the basmala is the quran prefix size × scale, with line height 1.7. A page
+  that does not fit at the last step scrolls, as in the PWA.
 
 **Overflow hint** (native addition; the PWAs show nothing because iOS Safari hides scroll bars). A card that
 scrolls flashes its scroll indicator when it appears. While more than 1 pt of its content lies below the visible
@@ -512,7 +517,7 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `card.requirement.once` / `card.requirement.twice` / `card.requirement.times` | مرة واحدة / مرتان / {n} مرات |
 | `card.target` | الهدف |
 | `card.reset` | إعادة |
-| `card.source` / `card.source.title` | المصدر والتفاصيل / المصدر والتفاصيل — الذكر {n} |
+| `card.source` / `card.source.title` | المصدر والتفاصيل / مصدر الذكر {n} وتفاصيله |
 | `card.review` | بحاجة إلى مراجعة |
 | `card.reset.confirm.adhkar.title` / `.message` | إعادة عداد الذكر {n}؟ / سيعود العداد من {x} إلى الصفر. |
 | `card.reset.confirm.ruqyah.title` / `.message` | إعادة العداد؟ / سيعود عداد {surah} {range} إلى الصفر. |
@@ -523,13 +528,13 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `summary.ruqyah.list.label` | تقدم رقية اليوم: {x} من {y} تكرارًا |
 | `summary.suwar.progress` / `.done` / `.label` | {x} من {y} صفحة / اكتملت {surah} اليوم / {surah}: {x} من {y} صفحة مقروءة |
 | `summary.suwar.list` / `.label` | {x} من {y} سور / سور اليوم: {x} من {y} سور مكتملة |
-| `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / وقت الإكمال: {time} |
+| `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. / وقت الإكمال: {time} |
 | `completion.adhkar.done` / `.switch` | تم / الانتقال إلى {otherSection} |
 | `completion.ruqyah.title` / `.message` | تمت الرقية بحمد الله / اكتملت جميع المقاطع بتكراراتها. |
 | `completion.ruqyah.close` / `.restart` | إغلاق / بدء رقية جديدة |
-| `completion.ruqyah.sura.title` / `.message` | اكتملت قراءة {surah} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. |
+| `completion.ruqyah.sura.title` / `.message` | اكتملت قراءة {surah} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. |
 | `completion.ruqyah.sura.done` / `.switch` | تم / الانتقال إلى {nextSurah} |
-| `completion.suwar.title` / `.message` / `.done` | اكتملت قراءة {surah} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / تم |
+| `completion.suwar.title` / `.message` / `.done` | اكتملت قراءة {surah} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. / تم |
 | `reset.title` / `reset.copy` | ما الذي تريد إعادته؟ / اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز. |
 | `reset.day` / `.detail` | تقدم اليوم / إعادة عدادات اليوم فقط مع بقاء السجل كما هو. |
 | `reset.week` / `.detail` | هذا الأسبوع / إعادة عدادات اليوم وحذف سجل آخر سبعة أيام. |
@@ -543,9 +548,9 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `longOrder.prompt.keep` / `.accept` | لا، أبقِ الترتيب / نعم، أخّرها |
 | `longOrder.setting` / `.note` | تأخير الأذكار الطويلة / الأذكار التي تُكرَّر ١٠ مرات فأكثر تُقرأ في آخر الورد قبل الذكر الأخير، دون تغيير أرقامها ولا عدّاداتها. |
 | `longOrder.done.on` / `.off` | ستُقرأ الأذكار الطويلة قبل الذكر الأخير / عاد ترتيب الأذكار كما هو |
-| `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية. |
+| `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |

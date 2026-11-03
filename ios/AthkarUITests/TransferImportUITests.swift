@@ -29,7 +29,7 @@ final class TransferImportUITests: DeckTestCase {
         XCTAssertTrue(app.staticTexts["سيُضاف إلى هذا الجهاز:"].exists)
         let row = app.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", "يُسجَّل الورد مكتملًا")).firstMatch
-        XCTAssertTrue(row.exists, "«أذكار الصباح — اليوم» row")
+        XCTAssertTrue(row.exists, "«أذكار الصباح اليوم» row")
         let confirm = app.buttons["transfer.confirm"]
         XCTAssertEqual(confirm.label, "إضافة التقدّم")
         confirm.tap()

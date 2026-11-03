@@ -293,7 +293,7 @@ final class AdhkarSessionModel {
             try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse($0)
         }
         return DeckCompletion(
-            title: "اكتملت \(Self.title(period)) بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
+            title: "اكتملت \(Self.title(period)) بحمد الله", message: "حُفظ إكمال اليوم على هذا الجهاز.",
             time: completedAt.map { "وقت الإكمال: \(ArabicFormat.time($0))" }, dismissTitle: "تم",
             primary: (title: "الانتقال إلى \(Self.title(other))",
                       action: .open(other == .morning ? .morning : .evening)))
@@ -354,9 +354,9 @@ final class AdhkarSessionModel {
         let count = state.count(for: item, in: period)
         let complete = count >= target
         let label = content.isCounted
-            ? "ذكر \(n)، تم تكراره \(ArabicFormat.number(count)) من أصل \(ArabicFormat.number(target)) مرات"
+            ? "ذكر \(n)، كُرّر \(ArabicFormat.number(count)) من أصل \(ArabicFormat.number(target)) مرات"
                 + (complete ? "، اكتمل" : "")
-            : count >= 1 ? "ذكر \(n)، تمت قراءته" : "ذكر \(n)، لم يُعلَّم كمقروء"
+            : count >= 1 ? "ذكر \(n)، قُرئ" : "ذكر \(n)، لم يُعلَّم كمقروء"
         return DeckCard(
             id: item.id, number: number, content: .dhikr(content), count: count, target: target,
             requirement: content.countLabel ?? "مرة واحدة", targetOptions: item.targetOptions,

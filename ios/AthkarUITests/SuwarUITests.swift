@@ -21,7 +21,7 @@ final class SuwarUITests: DeckTestCase {
         expectLabel(summary, "١ من ٣٤ صفحة")
         previousButton.tap()
         expectPosition(1, of: 34, noun: "الصفحة")
-        expectLabel(counter, "الصفحة ١ من سورة الكهف، الآيات ١ – ٤، تمت قراءتها")
+        expectLabel(counter, "الصفحة ١ من سورة الكهف، الآيات ١ – ٤، قُرئت")
         XCTAssertFalse(tapTarget.isEnabled, "a read page no longer counts")
         XCTAssertTrue(nextButton.isEnabled)
 

@@ -129,12 +129,12 @@ struct ReminderStatusNote: View {
 
     private var message: String {
         if !hasLocation { return "حدّد الموقع في «أوقات الصلاة» لحساب المواعيد محليًا دون إرسال موقعك." }
-        if !enabled { return "التذكيرات متوقفة ومحفوظة محليًا على هذا الجهاز." }
+        if !enabled { return "التذكيرات متوقفة، وإعداداتها محفوظة على هذا الجهاز." }
         switch reminders.authorization {
         case .denied: return "الإشعارات غير مسموح بها لهذا التطبيق. اسمح بها من الإعدادات لتصلك التذكيرات."
         case .notDetermined: return "سيُطلب إذن الإشعارات عند تشغيل أول تذكير."
         case .allowed:
-            let base = "المواعيد محسوبة محليًا، وتصل التذكيرات ولو كان التطبيق مغلقًا. تُجدول لسبعة أيام قادمة، وما بعدها يُجدول عند فتح التطبيق."
+            let base = "يحسب التطبيق المواعيد على جهازك، وتصل التذكيرات ولو كان التطبيق مغلقًا. يجدولها لسبعة أيام قادمة، ويجدول ما بعدها عند فتحه."
             guard let next = reminders.nextPending else { return base }
             return base + " التذكير القادم: \(next.title) \(Self.when(next.fireAt))."
         }

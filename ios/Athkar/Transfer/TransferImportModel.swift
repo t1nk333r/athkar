@@ -62,7 +62,7 @@ final class TransferImportModel: Identifiable {
     }
 
     static let pasteHelp = "اضغط مطولًا داخل الحقل واختر «لصق»."
-    static let undoNote = "لا يُنقل «التراجع»: إن تراجعت عن عدّة على أحد الجهازين، فلن ينقص العدّ على الجهاز الآخر بالنقل."
+    static let undoNote = "لا يُنقل «التراجع». إن تراجعت عن عدّة على أحد الجهازين، فلن ينقص العدّ على الجهاز الآخر بالنقل."
     static let refreshedNote = "تغيّر التقدّم على هذا الجهاز أثناء المراجعة، فحُدّثت القائمة. راجعها ثم أكّد."
     static let emptyTitle = "لا جديد"
     static let emptyMessage = "كل ما في الرمز موجود على هذا الجهاز بالفعل، فلا شيء لإضافته."
@@ -497,7 +497,7 @@ final class TransferImportModel: Identifiable {
         case .corrupt:
             ("رمز تالف", "الرمز تالف أو ناقص. انسخه كاملًا من الجهاز الآخر وأعد المحاولة؛ بعض تطبيقات المراسلة تغيّر المسافات داخل الرمز، فالمشاركة كملف أضمن.")
         case .clock:
-            ("رمز غير صالح", "رمز غير صالح أو ساعة الجهاز غير مضبوطة: في الرمز أوقات لاحقة لساعة هذا الجهاز. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر.")
+            ("رمز غير صالح", "في الرمز أوقات لاحقة لساعة هذا الجهاز، فإما أن الرمز غير صالح أو أن الساعة غير مضبوطة. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر.")
         case .tooBig:
             ("يتجاوز ما يتسع له التطبيق", "لا يتسع التطبيق لكل ما في الرمز من عبارات المسبحة وسجلها مع ما على هذا الجهاز، فلم يُنقل شيء ولم يتغيّر تقدّمك.")
         case .fileRead:
@@ -594,13 +594,13 @@ final class TransferImportModel: Identifiable {
             case .adhkar:
                 guard let before = adhkar(change.before), let after = adhkar(change.after) else { continue }
                 let name = periodNames[change.unit] ?? change.unit
-                rows.append(Row(title: "أذكار \(name) — اليوم",
+                rows.append(Row(title: "أذكار \(name) اليوم",
                                 detail: "سيُعاد ضبط تقدّم أذكار \(name) اليوم \(because) يصبح المكتمل \(ArabicFormat.number(after.done)) من \(ArabicFormat.number(after.total)) بدل \(ArabicFormat.number(before.done)).",
                                 isReset: true))
             case .suwar:
                 let after = pages(change.after).pages
                 let lost = pages(change.before).pages.filter { !after.contains($0) }.count
-                rows.append(Row(title: "\(change.name) — اليوم",
+                rows.append(Row(title: "\(change.name) اليوم",
                                 detail: "سيُعاد ضبط علامات قراءة \(change.name) اليوم \(because) تُزال العلامة عن \(lostPages(lost)).",
                                 isReset: true))
             case .tasbih:
@@ -612,13 +612,13 @@ final class TransferImportModel: Identifiable {
             let label = dayLabel(date, today: plan.today)
             let before = tasbih[date]!.reduce(0) { $0 + count($1.before) }
             let after = tasbih[date]!.reduce(0) { $0 + count($1.after) }
-            rows.append(Row(title: "المسبحة — \(label)",
+            rows.append(Row(title: "مسبحة \(label)",
                             detail: "سيُعاد ضبط عدّ المسبحة \(label) \(because) ينقص المجموع من \(ArabicFormat.number(before)) إلى \(ArabicFormat.number(after)).",
                             isReset: true))
         }
         for (date, tags) in tagsByDate(resets.filter { $0.store != .tasbih && $0.date < plan.today }) {
             let label = dayLabel(date, today: plan.today)
-            rows.append(Row(title: "السجل — \(label)",
+            rows.append(Row(title: "سجل \(label)",
                             detail: "سيُحذف \(label) من سجل الإكمال \(because) يُزال: \(tags.joined(separator: "، ")).",
                             isReset: true))
         }
@@ -633,7 +633,7 @@ final class TransferImportModel: Identifiable {
             guard let change = today.first(where: { $0.store == .adhkar && $0.unit == period }),
                   let was = adhkar(change.before), let now = adhkar(change.after)
             else { continue }
-            let title = "أذكار \(periodNames[period]!) — اليوم"
+            let title = "أذكار \(periodNames[period]!) اليوم"
             if !was.complete, now.complete {
                 rows.append(now.countersComplete
                     ? Row(title: title, detail: "يكتمل الورد ✓", isComplete: true)
@@ -657,7 +657,7 @@ final class TransferImportModel: Identifiable {
             var parts: [String] = []
             if newPages > 0 { parts.append(self.newPages(newPages)) }
             if !completed.isEmpty { parts.append("\(newPages > 0 ? "وتكتمل" : "تكتمل") \(list(completed))") }
-            if !parts.isEmpty { rows.append(Row(title: "قراءة السور — اليوم", detail: parts.joined(separator: "، "))) }
+            if !parts.isEmpty { rows.append(Row(title: "قراءة السور اليوم", detail: parts.joined(separator: "، "))) }
         }
         let raised = today.filter { $0.store == .tasbih && count($0.after) > count($0.before) }.count
         let phrases = plan.addedPhrases.count
@@ -666,7 +666,7 @@ final class TransferImportModel: Identifiable {
             let text = raised > 0
                 ? "يرتفع العدّ في \(ArabicFormat.number(raised)) من الأذكار" + (phrases > 0 ? "، و\(added)" : "")
                 : added
-            rows.append(Row(title: "المسبحة — اليوم", detail: text))
+            rows.append(Row(title: "مسبحة اليوم", detail: text))
         }
         let history = tagsByDate(additions.filter { $0.date < plan.today })
         if !history.isEmpty {

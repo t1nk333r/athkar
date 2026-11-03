@@ -1,13 +1,13 @@
 # Backup envelope, format 1
 
-The document the native app imports a user's history from (NATIVE_APP_PLAN.md §6.4). The ruqyah PWA exports it as a
-`.athkarbackup` file. The athkar PWA no longer exports a file: its transfer code
+The backup envelope is the document the native app imports a user's history from (NATIVE_APP_PLAN.md §6.4). The
+ruqyah PWA exports it as a `.athkarbackup` file. The athkar PWA no longer exports a file. Its transfer code
 ([`../transfer/transfer-v1.md`](../transfer/transfer-v1.md)) replaced that export and embeds this envelope, without
-`reminders.location`, as its `envelope` field; the native app imports from the athkar PWA by reading a code.
-Machine-checkable schema: [`envelope-v1.schema.json`](envelope-v1.schema.json). Validate an envelope with
+`reminders.location`, as its `envelope` field. The native app imports from the athkar PWA by reading a code.
+The machine-checkable schema is [`envelope-v1.schema.json`](envelope-v1.schema.json). Validate an envelope with
 `node tools/backup-validate.mjs <file>`. [`examples/`](examples/) holds real exports from each PWA, the athkar one
 made before its export moved into the transfer code. The native app's own export is format 2
-([`envelope-v2.md`](envelope-v2.md)); the app keeps importing format 1.
+([`envelope-v2.md`](envelope-v2.md)). The app keeps importing format 1.
 
 - As a file, the envelope is one UTF-8 JSON document with extension `.athkarbackup` and MIME type `application/json`. Its file
   name carries the device's local date. Importers strip one leading BOM (files passed through Mail or Notes can
@@ -46,13 +46,13 @@ made before its export moved into the transfer code. The native app's own export
 | `meta.exportedAt` | UTC instant | `new Date().toISOString()` |
 | `meta.timeZone` | IANA zone | `Intl.DateTimeFormat().resolvedOptions().timeZone`; the zone every `date` field is local to |
 | `adhkar.today` | object | `athkar-progress-v2`: `date`, `progress`, `targets`, `completedAt`, `manualCompletion` |
-| `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | tap counts converted with `Number()`, as `countForState` reads them; entries that come out non-finite or negative are dropped. Not floored and may exceed the target: floor and clamp on read as `countForState` does |
+| `adhkar.today.progress.{morning,evening}` | `{itemId: count}` | tap counts converted with `Number()`, as `countForState` reads them; entries that come out non-finite or negative are dropped. Counts are not floored and may exceed the target, so floor and clamp them on read as `countForState` does |
 | `adhkar.today.targets.{morning,evening}` | `{itemId: target}` | chosen target for items with `targetOptions`; values outside the options mean "use `defaultTarget`" |
 | `adhkar.history` | array, newest first, ≤7 | `date`, `morning`, `evening` (booleans: complete by counters or manually), `morningAt`, `eveningAt` (UTC instant or null) |
 | `ruqyah.today` | object | `ruqyah-daily-v1`: `date`, `counts` (`{segmentId: integer count}`). The ruqyah PWA's export is already clamped to `repeat` by `normalizeCounts`; the schema sets no upper bound. The native importer clamps each count to its segment's `repeat` in the installed pack and drops unknown segment IDs, as `normalizeCounts` does |
 | `ruqyah.history` | `{date: {completedAt}}`, ≤365 | days on which every segment was completed |
 | `reminders` | object | `athkar-reminders-v2`: `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown.{morning,evening}` (local date or null) |
-| `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). The athkar PWA's transfer code never carries it: the saved location stays on the device. Older athkar `.athkarbackup` files carry it only if the user switched on "include location" for that export, a switch that started off every time settings opened. The native importer rounds to 2 decimals with `Math.round(x × 100) / 100` semantics (§7.4, spec/schema.md) |
+| `reminders.location` | object, optional | `latitude`, `longitude` (rounded to 4 decimals, as the PWA stores them), `updatedAt` (UTC instant or null). The athkar PWA's transfer code never carries it, so the saved location stays on the device. Older athkar `.athkarbackup` files carry it only if the user switched on "include location" for that export, a switch that started off every time settings opened. The native importer rounds to 2 decimals with `Math.round(x × 100) / 100` semantics (§7.4, spec/schema.md) |
 | `preferences.theme` | `system` \| `light` \| `dark` | `athkar-theme` / `ruqyah-theme`, effective value |
 | `preferences.textSize` | `small` \| `medium` \| `large` | `athkar-reading-text-size` / `ruqyah-text-size`, effective value |
 | `preferences.lineSpacing` | `compact` \| `comfortable` \| `wide` | `athkar-line-spacing` / `ruqyah-line-spacing`, effective value |

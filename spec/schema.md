@@ -1,25 +1,25 @@
 # Local schema
 
-The native apps' SQLite database (NATIVE_APP_PLAN.md §6). iOS implements it with GRDB migrations in
-`ios/AthkarCore/Sources/AthkarCore/Storage/AppDatabase.swift`. Android will implement the final schema here
-when it starts (§9.2). A test (`StorageSchemaTests`) checks that every table, column, type, nullability and
-primary key below matches what the migrations create, and that the migrations applied are the ones listed below.
-Update this file in the same commit as any migration.
+This file specifies the native apps' SQLite database (NATIVE_APP_PLAN.md §6). iOS implements it with GRDB
+migrations in `ios/AthkarCore/Sources/AthkarCore/Storage/AppDatabase.swift`. Android will implement the final schema
+here when Android development starts (§9.2). A test (`StorageSchemaTests`) checks that every table, column, type,
+nullability and primary key below matches what the migrations create, and that the migrations applied are the ones
+listed below. Update this file in the same commit as any migration.
 
 ## Conventions
 
 - **Types** are SQLite declared types, written exactly as in the `CREATE TABLE` statements.
-- **Local dates** are `TEXT` in the form `YYYY-MM-DD`: the PWAs' `localDateKey`, a civil date in the device's
-  zone at the time of the event. A `CHECK (… GLOB …)` enforces the shape. Writers only store real calendar
-  days.
-- **Instants** are `TEXT` in the form `YYYY-MM-DDTHH:MM:SS.sssZ`: UTC with exactly three fraction digits, as JS
+- **Local dates** are `TEXT` in the form `YYYY-MM-DD`, as the PWAs' `localDateKey` writes them. A local date is a
+  civil date in the device's zone at the time of the event. A `CHECK (… GLOB …)` enforces the shape. Writers only
+  store real calendar days.
+- **Instants** are `TEXT` in the form `YYYY-MM-DDTHH:MM:SS.sssZ`, in UTC with exactly three fraction digits, as JS
   `Date.prototype.toISOString()` writes them. Sub-millisecond precision is truncated, not rounded, as in JS. The
   backup envelope uses the same form. A `CHECK (… GLOB …)` enforces the shape. Text order is time order.
 - **Booleans** are `INTEGER` 0 or 1.
 - **Enumerations** are `TEXT`. The allowed values are listed in the notes and enforced by `CHECK`.
 - **JSON** values are `TEXT` holding one JSON value (object, array, string, number or boolean).
 - **Foreign keys** are enforced (`PRAGMA foreign_keys = ON`).
-- **WAL** journal mode on disk.
+- **WAL** is the journal mode on disk.
 - The schema uses no SQLite features newer than 3.8 (no `STRICT`, no JSON1), so any Android API level can
   implement it.
 
@@ -77,12 +77,12 @@ for the calculation profile (`CalculationSettings`, spec/prayer-times/README.md)
 | `tasbih_custom_phrases` | array of saved phrases, newest first | `[]` (phrases past the eighth, or that clean to nothing or repeat an earlier one or a preset, are dropped on read) | `athkar-tasbih-v1.custom` |
 
 Apply defaults when reading settings, and never write them. A row exists only after the user or an import sets a
-value. This prevents an onboarding import from being shadowed by rows the app created.
+value. This keeps rows the app created from overriding an onboarding import.
 
 ### `content_installs`
 
 This table records the installed version of each bundled content pack (§5.4). It holds nothing the user did or
-chose: «حذف كل البيانات» keeps it, and no backup carries it ("Delete all data").
+chose, so «حذف كل البيانات» keeps it and no backup carries it ("Delete all data").
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -106,7 +106,7 @@ This table stores one row per (date, period) whose adhkar session is complete. I
 ### `adhkar_item_progress`
 
 This table stores each item's tap counts and chosen targets for each (date, period). Today's rows hold the live
-counters. The PWA's `rollStateToDate` collapses past days to booleans; this table keeps their rows.
+counters. The PWA's `rollStateToDate` collapses past days to booleans. This table keeps their rows.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -117,7 +117,7 @@ counters. The PWA's `rollStateToDate` collapses past days to booleans; this tabl
 | `target` | INTEGER | yes | | Chosen target, ≥ 0. Null means the item's default. A value that is not one of the item's `targetOptions` also means the default, as in `targetForState`. |
 | `updated_at` | TEXT | no | | Instant. |
 
-`CHECK (count IS NOT NULL OR target IS NOT NULL)`: a row with neither is deleted instead.
+The table has `CHECK (count IS NOT NULL OR target IS NOT NULL)`. A row with neither is deleted instead.
 
 The rows for one (date, period) are exactly the union of the PWA's `progress[period]` and `targets[period]`
 maps. `target` is stored per day, so changing a target tomorrow does not rewrite yesterday.
@@ -186,7 +186,7 @@ Version 1.0 allows at most one profile.
 | `updated_at` | TEXT | yes | | Instant the coordinates were obtained. Null if unknown (a PWA location without `updatedAt`). |
 
 Rounding is JavaScript/Kotlin `Math.round(x × 100) / 100`, computed as `floor(x × 100 + 0.5) / 100` in IEEE
-doubles: exact halves go toward +∞, so `-33.865` → `-33.86` and `33.865` → `33.87`.
+doubles. Exact halves go toward +∞, so `-33.865` becomes `-33.86` and `33.865` becomes `33.87`.
 
 ## Tables (migration v2)
 
@@ -207,7 +207,7 @@ today, `history` for earlier days). A sura is the segments whose IDs share its p
 ### `suwar_page_reads`
 
 This table stores one row per local date and «سور» page marked read on it (`athkar-suwar-v1.read`). Page IDs are
-unique across the suwar pack, so the page keys the row without its sura.
+unique across the suwar pack, so the row's key uses the page ID without the sura ID.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -246,9 +246,10 @@ This table stores one row per local date and «مسبحة» phrase counted on it
 
 ### `prayer_records`
 
-This table stores the prayer tracker's records (MOBILE_APP_PLAN.md §11 `prayer_logs`, trimmed to the 1.0 fields,
-with the Friday choice): one row per calculation date and prayer, which is the occurrence's identity. The rules
-are in [`tracker/tracker.md`](tracker/tracker.md). The PWAs have no tracker, so no PWA key maps to it.
+This table stores the prayer tracker's records. It is the `prayer_logs` table of MOBILE_APP_PLAN.md §11, trimmed to
+the 1.0 fields, with the Friday choice. It has one row per calculation date and prayer, which is the occurrence's
+identity. The rules are in [`tracker/tracker.md`](tracker/tracker.md). The PWAs have no tracker, so no PWA key maps
+to it.
 
 | Column | Type | Null | Key | Notes |
 | --- | --- | --- | --- | --- |
@@ -270,10 +271,10 @@ Checks:
 - `(logged_at IS NULL) = (state = 'unrecorded')`.
 - `zone_id` and `profile_version` are not empty.
 
-The primary key makes every write idempotent: `PrayerRecordRepository.apply(_:to:context:)` reads the row, runs the
+The primary key makes every write idempotent. `PrayerRecordRepository.apply(_:to:context:)` reads the row, runs the
 transition and writes the result in one transaction, so "record as prayed" sent twice stores one row.
 
-Prayer records are not in backup envelope v1 or the transfer code: a format 1 export leaves them out and a format 1
+Prayer records are not in backup envelope v1 or the transfer code. A format 1 export leaves them out, and a format 1
 import never touches them. Envelope format 2 carries them with their metadata ("Backup envelope format 2" below).
 
 ## Future tables (not in v5)
@@ -292,23 +293,23 @@ import never touches them. Envelope format 2 carries them with their metadata ("
 - Rollover is a pure function of `local_date`. Nothing is deleted at midnight.
 - A ruqyah date is complete if and only if a `ruqyah_days` row exists.
 - A ruqyah sura is recorded complete on a date if and only if a `ruqyah_sura_days` row exists. Today's chip «✓»
-  comes from the counters (the PWA's `suraIsComplete`); the row keeps the completion time. A sura complete by its
-  counters with no row takes today's `ruqyah_days` time, in memory only (`backfillSuwarCompletions`); with no day
-  row it has no time.
+  comes from the counters (the PWA's `suraIsComplete`). The row keeps the completion time. A sura that is complete
+  by its counters but has no row takes today's `ruqyah_days` time, in memory only (`backfillSuwarCompletions`). If
+  there is no day row either, it has no time.
 - A «سور» page is read on a date if and only if a `suwar_page_reads` row exists, and a page ID the current pack does
-  not have is ignored on read. A sura is complete on a date when every page the current pack has for it is read; its
+  not have is ignored on read. A sura is complete on a date when every page the current pack has for it is read. Its
   `suwar_sura_days` row records when, and counts the date as history. The app writes the row with the read that
   completes the sura (keeping a row already there) and deletes it with any of its pages, so the two agree while the
-  pack keeps its page IDs. After a pack changes them, a sura can be complete with no row, and so shows no time, or
-  keep a row with pages unread; the row still makes «سور» resettable, and its recorded time is the one shown once
-  every page is read. The PWA drops such a `completedAt` when it loads (`normalizeSuwarState`).
+  pack keeps its page IDs. After a pack changes them, a sura can be complete with no row, and so show no time. A
+  sura can also keep a row with pages unread. Such a row still makes «سور» resettable, and its recorded time is the
+  one shown once every page is read. The PWA drops such a `completedAt` when it loads (`normalizeSuwarState`).
 - A prayer occurrence `(calculation_date, prayer_key)` has at most one `prayer_records` row. No row and a row with
-  `unrecorded` mean the same: nothing recorded, which is neutral, never missed. Commands never delete a row:
+  `unrecorded` both mean that nothing is recorded. That is neutral, never missed. Commands never delete a row.
   `unrecord`, an undo and clearing a day set it back to `unrecorded` and keep its metadata (`zone_id`,
   `scheduled_at`, `profile_version`), which no write ever changes. Only `PrayerRecordRepository.delete(_:)` with a
-  `HistoryRemoval` deletes rows; no section's scoped reset calls it.
+  `HistoryRemoval` deletes rows, and no section's scoped reset calls it.
 - A «مسبحة» phrase is counted on a date if and only if a `tasbih_counts` row exists, with a count of at least 1.
-  A date holds at most one key per phrase as `tasbihIdentity` reads it: a saved phrase that matches an earlier
+  A date holds at most one key per phrase as `tasbihIdentity` reads it. A saved phrase that matches an earlier
   spelling's counts takes them over (`canonicalTasbihDays`). The stored keys are already the cleaned spelling, so
   the PWA's load-time key migration has nothing to do.
 
@@ -329,15 +330,15 @@ between that shape and the adhkar tables. The rules and their fixtures define th
 - Set `history` to every earlier date with an `adhkar_days` row, newest first, without a count or date-window
   limit. A period is `true` if and only if it has a row, and `morningAt`/`eveningAt` is that row's `completed_at`.
   Native SQL history is unbounded. The PWA rules separately normalize and roll stored history over 31 local
-  dates; envelope-v1 export separately caps history at seven entries. Neither policy prunes SQL rows.
+  dates. Envelope-v1 export separately caps history at seven entries. Neither policy prunes SQL rows.
 
 **Save** (`save(_:)`) makes the rows for `state.date` match the state, in one transaction:
 
 - Upsert or delete item rows to match the union of `progress[p]` and `targets[p]`. Unchanged rows keep their
   `updated_at`.
 - Store an `adhkar_days` row for each period if and only if the rules call it complete (`isComplete`). Set its
-  origin to `counters` unless `manualCompletion` is true. A manual completion keeps an existing `import` origin;
-  otherwise, set the origin to `manual`.
+  origin to `counters` unless `manualCompletion` is true. A manual completion keeps an existing `import` origin.
+  Otherwise, set the origin to `manual`.
 - Do not write `history`. The store wrote earlier days' rows when those dates were current.
 
 Saving and then loading returns the same state except for the shapes below, which the tables cannot store. The
@@ -351,7 +352,7 @@ order remain unchanged:
   non-integer cannot match a target option, so it already means the default.
 - If `progress[p]` or `targets[p]` is an array rather than an object, it has only index keys, which match no
   content item ID. Store no entries.
-- Drop `completedAt[p]` when its period is incomplete (a stale stamp; syncing clears it). Store it as null if it
+- Drop `completedAt[p]` when its period is incomplete (a stale stamp, which syncing clears). Store it as null if it
   is not an ISO-8601 UTC instant.
 - Do not store a history entry when `morning` and `evening` are both false (the PWA rolls one over for a day with
   nothing complete). The entry is absent after load.
@@ -382,11 +383,11 @@ it.
 The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repeat` on read), today's
 `ruqyah_days` row and today's `ruqyah_sura_days` rows (`suraDays(on:)`).
 
-- **Counting.** `setCount(_:for:on:completingSura:completingDayAt:at:)` upserts the segment row in one
-  transaction with what the reading completes, as the PWA's `applyOp` does:
+- **Counting.** `setCount(_:for:on:completingSura:completingDayAt:at:)` upserts the segment row and, in the same
+  transaction, writes what the reading completes, as the PWA's `applyOp` does:
   - When the reading completes its sura, it inserts that sura's `ruqyah_sura_days` row for the date.
   - When it completes every segment, it inserts today's `ruqyah_days` row with `completion_origin = counters`.
-  - It never replaces either row, preserving the first completion time as in the PWA.
+  - It never replaces either row, so the first completion time stays, as in the PWA.
 - **Segment reset.** `resetSegment(_:of:on:)` sets the segment's `count = 0` and deletes its sura's
   `ruqyah_sura_days` row for the date, in one transaction (`resetSegment`). The `ruqyah_days` row stays.
 - **Scoped reset.** `resetCounts(on:removing:)` runs in one transaction:
@@ -396,18 +397,18 @@ The ruqyah deck reads `RuqyahProgress` (`counts(on:)`, each clamped to `0…repe
     included.
   - With no removal (تقدم اليوم, or «بدء رقية جديدة» in the completion dialog), today's `ruqyah_days` row
     stays. Today remains recorded complete.
-- **Confirmation copy.** The confirmation copy uses `recordedDayCount(removal, before: today)`: the distinct dates
-  in scope with a `ruqyah_days` row, today included, together with the earlier dates with a `ruqyah_sura_days`
-  row, as the PWA's `historyDates` counts them. Today's completed suras are today's progress, not history.
-  `dayCount(removal)` still counts `ruqyah_days` rows alone.
+- **Confirmation copy.** The confirmation copy uses `recordedDayCount(removal, before: today)`. It counts the
+  distinct dates in scope with a `ruqyah_days` row, today included, together with the earlier dates with a
+  `ruqyah_sura_days` row, as the PWA's `historyDates` counts them. Today's completed suras are today's progress,
+  not history. `dayCount(removal)` still counts `ruqyah_days` rows alone.
 
 ### Suwar reads and reset
 
 The «سور» section reads today's `suwar_page_reads` (`readPages(on:)`) and `suwar_sura_days` (`suraDays(on:)`).
 
-- **Reading.** `markRead(_:of:on:completingSura:at:)` inserts the page's row in one transaction with what it
-  completes, as the PWA's `markPageRead` does. When the read completes its sura, it also inserts that sura's
-  `suwar_sura_days` row for the date. It never replaces either row, preserving the first time.
+- **Reading.** `markRead(_:of:on:completingSura:at:)` inserts the page's row and, in the same transaction, writes
+  what the read completes, as the PWA's `markPageRead` does. When the read completes its sura, it also inserts that
+  sura's `suwar_sura_days` row for the date. It never replaces either row, so the first time stays.
 - **Page reset.** `unmarkRead(_:of:on:)` deletes the page's row and its sura's `suwar_sura_days` row for the date,
   in one transaction (`resetSuraPage`).
 - **Scoped reset.** `reset(on:removing:)` runs in one transaction:
@@ -416,7 +417,7 @@ The «سور» section reads today's `suwar_page_reads` (`readPages(on:)`) and `
   - With no removal (تقدم اليوم), earlier days keep their rows.
 - **Confirmation copy.** `recordedDayCount(removal, before: today)` counts the distinct earlier dates in scope with
   a `suwar_sura_days` row, as the PWA counts `suwarState.history`. Today's completed suras are today's progress.
-- `suwar_selected_sura` is a preference: no reset changes it.
+- `suwar_selected_sura` is a preference. No reset changes it.
 
 ### Tasbih counts and reset
 
@@ -427,17 +428,17 @@ The «مسبحة» section reads today's `tasbih_counts` in `first_use` order (`
   deletes the row, so its next count puts it last again. The app never writes a count above 99999.
 - **Phrases.** `savePhrases(_:selected:adopting:at:)` writes `tasbih_custom_phrases` and `tasbih_selected` in one
   transaction, as the PWA stores them in one value. A phrase saved in a new spelling of one whose counts remain
-  (a deleted phrase keeps its counts) adopts them: on every date the earlier key's row moves to the new key. A date
-  that already counts the new key sums the two, up to 99999, and keeps the earlier `first_use`. Deleting a saved
-  phrase keeps its counts. The target is `tasbih_target`, written alone.
+  (a deleted phrase keeps its counts) adopts those counts. On every date, the earlier key's row moves to the new
+  key. A date that already counts the new key sums the two, up to 99999, and keeps the earlier `first_use`.
+  Deleting a saved phrase keeps its counts. The target is `tasbih_target`, written alone.
 - **Scoped reset.** `reset(on:removing:)` runs in one transaction:
   - It deletes that date's rows (`resetTasbihProgress`).
   - With `.week(...)` or `.all`, it also deletes the rows in scope (`deleteTasbihHistory`).
   - With no removal (تقدم اليوم), earlier days keep their rows.
 - **Confirmation copy.** `recordedDayCount(removal, before: today)` counts the distinct earlier dates in scope with
   a row, as the PWA counts `tasbihState.history`. Today's counts are today's progress.
-- `tasbih_selected`, `tasbih_target` and `tasbih_custom_phrases` are preferences: no reset changes them.
-- A later stored date than today (the clock moved back) is not merged into today, as for the other sections: each
+- `tasbih_selected`, `tasbih_target` and `tasbih_custom_phrases` are preferences. No reset changes them.
+- A stored date later than today (the clock moved back) is not merged into today, as for the other sections. Each
   date reads its own rows. The PWA sums such days into today's counts (`rollTasbihStateToDate`).
 
 ## Backup import (envelope v1)
@@ -486,7 +487,7 @@ get `updated_at = meta.exportedAt`, which makes import deterministic.
 
 - Each file merges into its own tables. The two files may be imported alone or both, in either order, and the
   result is the same.
-- Merge units, each decided as a whole:
+- These are the merge units, each decided as a whole:
   - adhkar `(local_date, period)`: the `adhkar_days` row and all `adhkar_item_progress` rows for that pair;
   - ruqyah `(local_date)`: `ruqyah_days`;
   - ruqyah `(local_date, segment_id)`: `ruqyah_segment_progress`.
@@ -496,7 +497,7 @@ get `updated_at = meta.exportedAt`, which makes import deterministic.
   - A segment row is empty when its `count` is 0.
   - A `ruqyah_days` row is never empty.
   - An imported adhkar unit with no rows and no completion contributes nothing.
-- Keyed singletons (the two adhkar `reminder_rules`, their `reminder_state`, the `location_profiles` row):
+- For keyed singletons (the two adhkar `reminder_rules`, their `reminder_state`, the `location_profiles` row),
   an existing row wins.
 - `settings` rows go by origin precedence: `native` > `athkar-pwa` > `ruqyah-pwa`. An imported value is written
   only if there is no row, or if the existing row's origin ranks lower. On a tie the existing row stays. So
@@ -515,26 +516,26 @@ caller passes `today` (the local date), the zone, the export instant, and the pe
 - `adhkar.history` lists the dates before `today` that have any adhkar row, newest first, capped at 7. A period
   is `true` if and only if its `adhkar_days` row exists.
 - `ruqyah.history` lists the `ruqyah_days` rows up to `today`, newest 365.
-- `ruqyah_sura_days` is not exported, and import writes none: the ruqyah PWA's backup leaves out
+- `ruqyah_sura_days` is not exported, and import writes none, because the ruqyah PWA's backup leaves out
   `ruqyah-suwar-v1` (its `ruqyah` object is closed).
-- `suwar_page_reads`, `suwar_sura_days` and `suwar_selected_sura` are not exported, and import writes none:
+- `suwar_page_reads`, `suwar_sura_days` and `suwar_selected_sura` are not exported, and import writes none, because
   envelope v1 does not carry `athkar-suwar-v1` (NATIVE_APP_PLAN.md, owner-approved exceptions).
 - `tasbih_counts`, `tasbih_selected`, `tasbih_target` and `tasbih_custom_phrases` are not exported, and import
-  writes none: envelope v1 does not carry `athkar-tasbih-v1` either.
-- `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack; stored counts are
+  writes none, because envelope v1 does not carry `athkar-tasbih-v1` either.
+- `ruqyah.today.counts` are the stored counts as they are. The exporter reads no content pack. Stored counts are
   already within `repeat` because import clamps them and the app bounds them.
 - A setting with no row exports its default.
 - A native-only `calculation_method` (not one of the PWA's five) exports as `"mwl"`, which is what the PWA's
-  loader reads an unknown method as; envelope v1 allows only the five, and import rejects any other value.
-  `high_latitude_rule`, `prayer_adjustments`, `hijri_offset` and `iqama_delays` have no place in envelope v1 and are
+  loader reads an unknown method as. Envelope v1 allows only the five, and import rejects any other value.
+  `high_latitude_rule`, `prayer_adjustments`, `hijri_offset` and `iqama_delays` have no field in envelope v1 and are
   not exported.
 
 Import followed by export with the file's own `meta` reproduces the file in every section it contained, with
 these exceptions:
 
-1. **Location precision.** Coordinates come back rounded to 2 decimals. §7.4 exists so that ≈11 m coordinates
-   are never persisted. Keeping the original next to the rounded value would defeat it, so round-trip equality
-   compares `reminders.location.latitude`/`longitude` after rounding the original to 2 decimals.
+1. **Location precision.** Coordinates come back rounded to 2 decimals. §7.4 exists so that coordinates precise to
+   about 11 m are never persisted. Keeping the original next to the rounded value would defeat it, so round-trip
+   equality compares `reminders.location.latitude`/`longitude` after rounding the original to 2 decimals.
 2. **History days with nothing complete.** The PWA writes a history entry for every day it rolled over, even
    with `morning` and `evening` both false. Such an entry carries no worship data, and the native model
    records completion, not app opens. It is not stored and does not come back. The same applies to a
@@ -549,25 +550,29 @@ The example files in `spec/backup/examples/` contain none of 2, 3 and 4, and rou
 
 ## Backup envelope format 2
 
-The native app's own backup, [`backup/envelope-v2.md`](backup/envelope-v2.md): every row of every user table below
-(`settings`, `adhkar_days`, `adhkar_item_progress`, `ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`,
-`suwar_page_reads`, `suwar_sura_days`, `tasbih_counts`, `prayer_records`, `reminder_rules`, `reminder_state`), and
-`location_profiles` only when the user includes it. `BackupExporter.exportNative` writes it; `BackupImporter`
-reads either format (`BackupFile.decode`, `importFile`) and rejects a format above 2 as `unsupportedFormat`.
+Format 2 is the native app's own backup ([`backup/envelope-v2.md`](backup/envelope-v2.md)). It contains every row
+of every user table below (`settings`, `adhkar_days`, `adhkar_item_progress`, `ruqyah_days`,
+`ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`, `tasbih_counts`,
+`prayer_records`, `reminder_rules`, `reminder_state`), and `location_profiles` only when the user includes it.
+`BackupExporter.exportNative` writes it. `BackupImporter` reads either format (`BackupFile.decode`, `importFile`) and
+rejects a format above 2 as `unsupportedFormat`.
 
-- A setting is exported only when its row exists; an absent one stays absent on import and reads as its default.
+- A setting is exported only when its row exists. An absent one stays absent on import and reads as its default.
 - `updated_at` and a location's `source` are not exported. Import stamps rows with `meta.exportedAt`, and writes the
   location as `import`.
-- Import merges in one transaction, unit by unit, and the device wins wherever it has something: an adhkar
-  `(local_date, period)` unit only when empty (as format 1); a `ruqyah_days` row, a `ruqyah_sura_days` row only
-  when absent; a segment count when absent or 0, clamped to `repeat`, unknown segments dropped (as format 1); a «سور»
-  `(local_date, sura_id)` unit (its pages and completion) only when the device has neither; a «مسبحة» date (all its
-  counts, keeping `first_use`) only when the device has no count that date; a prayer record when absent, or over an
-  `unrecorded` one when the imported record is not; a reminder rule or its `reminder_state` when absent; the
-  location into an empty profile. Settings are imported with origin `native`, so they replace a PWA's rows and never
-  a native one. Re-import is a no-op.
-- Round trip: a fresh database that imported a format 2 file exports it again unchanged, given the same `meta` and
-  location opt-in. Unlike format 1 there are no exceptions: every field maps to one column.
+- Import merges in one transaction, unit by unit, and the device wins wherever it has something. Import writes:
+  - an adhkar `(local_date, period)` unit only when empty (as format 1);
+  - a `ruqyah_days` row, a `ruqyah_sura_days` row only when absent;
+  - a segment count when absent or 0, clamped to `repeat`, unknown segments dropped (as format 1);
+  - a «سور» `(local_date, sura_id)` unit (its pages and completion) only when the device has neither;
+  - a «مسبحة» date (all its counts, keeping `first_use`) only when the device has no count that date;
+  - a prayer record when absent, or over an `unrecorded` one when the imported record is not;
+  - a reminder rule or its `reminder_state` when absent;
+  - the location into an empty profile.
+- Settings are imported with origin `native`, so they replace a PWA's rows and never a native one.
+- Re-import is a no-op.
+- A fresh database that imported a format 2 file exports it again unchanged, given the same `meta` and location
+  opt-in. Unlike format 1, this round trip has no exceptions, because every field maps to one column.
 
 ## Delete all data
 
@@ -575,16 +580,17 @@ reads either format (`BackupFile.decode`, `importFile`) and rejects a format abo
 row of `AppDatabase.userTables` in one transaction: `settings`, `adhkar_days`, `adhkar_item_progress`,
 `ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`,
 `tasbih_counts`, `prayer_records`, `reminder_state`, `reminder_rules` and `location_profiles`. Every table a later
-migration adds is a user table unless this section says otherwise; `AthkarCoreTests` fails when a table is in
+migration adds is a user table unless this section says otherwise. `AthkarCoreTests` fails when a table is in
 neither list.
 
 `content_installs` is kept. Its rows are the bundled packs' versions and checksums, which the app records again at
-every launch (`BundledContent.recordInstalls`); they describe the app, not the user, and «حول التطبيق» reads them.
+every launch (`BundledContent.recordInstalls`). They describe the app, not the user, and «حول التطبيق» reads them.
 Deleting them would only make the next launch write the same rows.
 
-Outside the database the app then removes every pending and delivered notification it owns, its `UserDefaults`
-keys (the diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`, and
-`onboarding.webImportOfferClosed`, so the first-launch import offer of spec/routes.md comes back), and replans
-reminders, which finds no rule and schedules nothing. Every section reads its defaults back, and the app returns to
-the الصباح deck. The confirmation asks twice: «حذف كل البيانات؟», then «تأكيد الحذف».
+Outside the database, the app then removes every pending and delivered notification it owns and its `UserDefaults`
+keys, and it replans reminders, which finds no rule and schedules nothing. The `UserDefaults` keys are the
+diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`, and
+`onboarding.webImportOfferClosed`. Removing `onboarding.webImportOfferClosed` brings back the first-launch import
+offer of spec/routes.md. Every section reads its defaults back, and the app returns to the الصباح deck. The
+confirmation asks twice: «حذف كل البيانات؟», then «تأكيد الحذف».
 

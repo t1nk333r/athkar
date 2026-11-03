@@ -79,7 +79,7 @@ Adhan adds on top of the computed time.
 | `tehran` | `tehran` | 17.7° | 14° | 4.5° below the horizon | none | none |
 | `turkey` | `turkey` | 18° | 17° | sunset + 7 | sunrise −7, Dhuhr +5, Asr +4, Maghrib +7 | none |
 
-The high-latitude rule bounds Isha too: it is never later than sunset + portion × night. Interval methods
+The high-latitude rule bounds Isha too, so Isha is never later than sunset + portion × night. Interval methods
 (`umm-al-qura`, `qatar`) are not bounded. `moonsighting-committee` ignores the rule and uses its own seasonal
 twilight, and above 55° it uses 1/7 of the night.
 
@@ -91,7 +91,7 @@ twilight, and above 55° it uses 1/7 of the night.
 - **Offsets.** Each preset's sunrise, Dhuhr, Asr and Maghrib offsets are checked exactly, to the second, against
   the Umm al-Qura schedule, which has no offsets. That baseline itself matches the reference within 10 s.
 - **Isha interval.** Isha is exactly Maghrib + 90 min for `umm-al-qura` and `qatar`.
-- **Moonsighting Committee.** Fajr and Isha are pinned to within 10 s of an independent computation of Khalid
+- **Moonsighting Committee.** Fajr and Isha are checked to within 10 s of an independent computation of Khalid
   Shaukat's seasonal twilight with shafaq `general`, combined with the 18° times (Fajr the later of the two, Isha
   the earlier). At Istanbul the seasonal value decides both. Switching the adapter to `.ahmer` or `.abyad` fails:
   `.abyad` is 62 s later at Istanbul.
@@ -111,8 +111,8 @@ the app was already using, is stored and always wins.
 ## Default high-latitude rule: twilight angle
 
 The PWA has one fixed rule: Fajr = max(angle Fajr, sunrise − night × fajrAngle/60). It applies at every latitude.
-Adhan's `.twilightAngle` uses the same portion. The difference is the night: the PWA measures it from the previous
-day's sunset to today's sunrise, and Adhan from today's sunset to tomorrow's sunrise.
+Adhan's `.twilightAngle` uses the same portion. The difference is how each measures the night. The PWA measures it
+from the previous day's sunset to today's sunrise, and Adhan from today's sunset to tomorrow's sunrise.
 
 The measurements cover all 3600 vectors. Only Fajr depends on the rule. "Recommended" is Adhan's own default:
 `.seventhOfTheNight` above 48°, `.middleOfTheNight` otherwise.
@@ -151,7 +151,7 @@ dateline date shift, P3 failed for Kiritimati and Apia.
 
 ### Results
 
-There are 3600 vectors. For 20 of them (Tromsø at both solstices), neither side computes times: the PWA returned
+There are 3600 vectors. For 20 of them (Tromsø at both solstices), neither side computes times. The PWA returned
 `null`, and the test asserts that Adhan returns six `nil`s. That leaves 3580 vectors × 4 times.
 
 | Time | Within 120 s | Max \|Δ\| within | Max \|Δ\| at this grid's locations below 59° |
@@ -162,8 +162,8 @@ There are 3600 vectors. For 20 of them (Tromsø at both solstices), neither side
 | Sunset (Maghrib) | 3560 | 76 s | 39 s |
 
 In this grid every vector below 59° is within tolerance, and all 349 times outside tolerance are at Stockholm
-(59.33°), Oslo, Anchorage, Reykjavík or Tromsø. That is a fact about the grid, not a latitude property: the grid has
-no location between Berlin (52.5°) and Stockholm (59.3°).
+(59.33°), Oslo, Anchorage, Reykjavík or Tromsø. That is a fact about the grid, not a latitude property, because the
+grid has no location between Berlin (52.5°) and Stockholm (59.3°).
 
 **How far the classes hold.** Class membership depends on the mechanism, but the numbers in the conditions (the
 agreement bounds and each class's bound) are this grid's maxima plus a little. An external review ran the PWA at 30
@@ -178,14 +178,15 @@ places off the grid (12 dates × 5 methods × 2 schools, 3600 vectors) through t
   (10.x s off the reference against a 10 s bound).
 
 So the classes explain every difference to about 62°. Above that, Asr's sensitivity to the model keeps growing as
-the noon Sun gets lower, and the grid-derived bounds are exceeded by seconds (Asr: tens of seconds). Of the review's
-earlier off-grid list (Fajr 123–148 s on 08-15 at Copenhagen, Riga, Aberdeen and Tallinn; Asr 190 s at Juneau; Asr
-136 s at Adak; Fajr 130 s at Ushuaia), the places in this run (Copenhagen, Riga, Juneau, Adak, Ushuaia) pass.
+the noon Sun gets lower, and the grid-derived bounds are exceeded by seconds (for Asr, by tens of seconds). Of the
+review's earlier off-grid list (Fajr 123–148 s on 08-15 at Copenhagen, Riga, Aberdeen and Tallinn; Asr 190 s at
+Juneau; Asr 136 s at Adak; Fajr 130 s at Ushuaia), the places in this run (Copenhagen, Riga, Juneau, Adak, Ushuaia)
+pass.
 
 **How membership is decided.** The test checks every time outside tolerance in this order:
 
-1. `grazing-sun` when the Sun's noon or midnight altitude is within 2° of the −0.833° sunrise altitude. For Asr only
-   the noon altitude counts. Both altitudes come from `SolarReference`'s declination at noon:
+1. The class is `grazing-sun` when the Sun's noon or midnight altitude is within 2° of the −0.833° sunrise
+   altitude. For Asr only the noon altitude counts. Both altitudes come from `SolarReference`'s declination at noon:
    noon = 90° − |latitude − δ|, midnight = |latitude + δ| − 90°.
 2. Otherwise Adhan's time must agree with `SolarReference`, an independent model in the test target, or the vector
    fails. The agreement bound is 10 s for Fajr, sunrise and sunset, and 30 s for Asr.
@@ -281,9 +282,9 @@ The adapter never returns an Asr outside (Dhuhr, Maghrib]. On such a day `asr` i
 `true`, and the other five times and the all-or-nothing contract stay as they were.
 
 The value is a placeholder that keeps the six times in order, not a computed Asr. By a small-angle estimate, with
-the noon Sun one to three degrees up the real start of Asr is about 10–30 min after Dhuhr. Consumers must treat `asrClamped` as "Asr
-undetermined": the reminder planner does not schedule an Asr-relative reminder that day, and a view shows no Asr
-time. The same flag is set if user adjustments push Asr past Maghrib.
+the noon Sun one to three degrees up, the real start of Asr is about 10–30 min after Dhuhr. Consumers must treat
+`asrClamped` as "Asr undetermined". The reminder planner does not schedule an Asr-relative reminder that day, and a
+view shows no Asr time. The same flag is set if user adjustments push Asr past Maghrib.
 
 ### The yellowing
 
@@ -292,7 +293,7 @@ prohibited times (`ProhibitedTime`, after Shaykh Ibn Baz's fatwa 10693). Ibn Baz
 Uthaymeen says «واصفرار الشمس قريب من أن يكون ظل الشيء مثليه», so the adapter takes hanafi Asr: the moment an
 object's shadow is twice its length plus its noon shadow. The calculation runs on the same solar day as the
 schedule, with the chosen method and without the user's Asr adjustment, which moves the adhan and not the Sun. The
-method's own Asr offset still applies; Dubai and Turkey add a few minutes. Under the hanafi school, with no Asr
+method's own Asr offset still applies, so Dubai adds 3 min and Turkey 4 min. Under the hanafi school, with no Asr
 adjustment, `yellowing` equals `asr`.
 
 A yellowing outside (Dhuhr, Maghrib) is `nil`, as are all times on a day without them. Near the polar night, Adhan
@@ -322,7 +323,7 @@ sunrise. All cases pass. The table marks documented behaviour.
 | DST, both directions | New York 03-08 (forward) and 11-01 (back); Sydney 04-05 (back) and 10-04 (forward); London 03-29, 10-25 | On the transition day and each neighbour: six ordered times, all on their local date; each time 24 h ± 5 min after the previous day's (UTC continuous); Dhuhr's wall clock moves by exactly the offset change ± 5 min |
 | Dateline | Kiritimati (UTC+14, 157° W), Apia (UTC+13, 172° W), Pago Pago (UTC−11, 171° W); 2026-01-01, 06-21 | Six ordered times on the requested local date; Dhuhr between 11:30 and 13:30 local; the next day's Dhuhr 24 h ± 1 min later |
 | Zone about 12 h from the location's solar time | New York (74.01° W) on `Asia/Bangkok` 2026-02-11 (true transit 00:10) and 11-03 (23:40); 135° W on `Africa/Cairo` 2026-10-25 | On the day and each neighbour, Dhuhr falls on its own local date and 24 h ± 1 min after the previous day's. Without the Dhuhr-date check, 2026-02-11 and 2026-10-25 fail |
-| Input | — | Non-calendar dates throw `invalidLocalDate`. Latitude outside ±90, longitude outside ±180, or NaN throws `invalidCoordinates` |
+| Input | Not applicable | Non-calendar dates throw `invalidLocalDate`. Latitude outside ±90, longitude outside ±180, or NaN throws `invalidCoordinates` |
 
 ## P4: cross-platform (Android, later)
 

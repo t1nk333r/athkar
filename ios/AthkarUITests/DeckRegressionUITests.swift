@@ -33,12 +33,12 @@ final class DeckRegressionUITests: DeckTestCase {
         markMorningCompleteManually()
         next(19, count: 26, from: 1)
         chooseTarget(10)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠ مرات")
 
         app.terminate()
         launch(reset: false, answer: nil)
         next(19, count: 26, from: 1)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠ مرات")
     }
 
     /// Coming back to the foreground on a new local date starts that day's session in all three decks
@@ -86,7 +86,7 @@ final class DeckRegressionUITests: DeckTestCase {
         tapCard()
         expectPosition(2, of: 26)
         tapCard(2)
-        expectLabel(counter, "ذكر ٢، تم تكراره ٢ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ٢ من أصل ٣ مرات")
 
         // Midnight passes with the app open: the reset rolls over and resets nothing.
         try setDayOffset(1, clock)
@@ -111,7 +111,7 @@ final class DeckRegressionUITests: DeckTestCase {
         try setDayOffset(0, clock)
         app.activate()
         expectPosition(2, of: 26)
-        expectLabel(counter, "ذكر ٢، تم تكراره ٢ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ٢ من أصل ٣ مرات")
     }
 
     /// A counter of 50 or more asks before its reset, and the question can be declined; a target change that
@@ -122,7 +122,7 @@ final class DeckRegressionUITests: DeckTestCase {
         markMorningCompleteManually()
         next(19, count: 26, from: 1)
         tapCard(2)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٢ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٢ من أصل ١٠٠ مرات")
 
         let question = app.alerts["إعادة عداد الذكر ٢٠؟"]
         resetCardButton.tap()
@@ -130,11 +130,11 @@ final class DeckRegressionUITests: DeckTestCase {
         XCTAssertTrue(question.staticTexts["سيعود العداد من ٢ إلى الصفر."].exists)
         question.buttons["إلغاء"].tap()
         XCTAssertTrue(wait { !question.exists })
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٢ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٢ من أصل ١٠٠ مرات")
         resetCardButton.tap()
         XCTAssertTrue(question.waitForExistence(timeout: 3))
         question.buttons["إعادة"].tap()
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠٠ مرات")
 
         try setDayOffset(1, clock)
         chooseTarget(10)
@@ -252,6 +252,6 @@ final class DeckRegressionUITests: DeckTestCase {
         selectTab("morning")
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         expectPosition(1, of: 26)
-        expectLabel(counter, "ذكر ١، تمت قراءته")
+        expectLabel(counter, "ذكر ١، قُرئ")
     }
 }

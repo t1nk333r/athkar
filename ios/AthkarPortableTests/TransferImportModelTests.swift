@@ -73,9 +73,9 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertTrue(preview.created?.hasPrefix("أُنشئ الرمز: ") == true)
         let total = ArabicFormat.number(morningTotal(support))
         XCTAssertEqual(preview.rows, [
-            .init(title: "أذكار الصباح — اليوم", detail: "يصبح المكتمل ١ من \(total) بعد ٠، ويزيد عدّ ١ من الأذكار"),
-            .init(title: "قراءة السور — اليوم", detail: "صفحتان مقروءتان جديدتان"),
-            .init(title: "المسبحة — اليوم", detail: "يرتفع العدّ في ٢ من الأذكار، وتُضاف ١ من العبارات إلى «عباراتك»"),
+            .init(title: "أذكار الصباح اليوم", detail: "يصبح المكتمل ١ من \(total) بعد ٠، ويزيد عدّ ١ من الأذكار"),
+            .init(title: "قراءة السور اليوم", detail: "صفحتان مقروءتان جديدتان"),
+            .init(title: "مسبحة اليوم", detail: "يرتفع العدّ في ٢ من الأذكار، وتُضاف ١ من العبارات إلى «عباراتك»"),
             .init(title: "السجل", detail: "يوم واحد",
                   dates: ["\(ArabicFormat.shortDate(localDate: Self.yesterday)): الصباح، المساء، سورة الكهف، المسبحة"]),
             .init(title: "الإعدادات", detail: "تُطبَّق: المظهر"),
@@ -136,7 +136,7 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertTrue(preview.hasResets)
         XCTAssertEqual(preview.lead, "سيتغيّر على هذا الجهاز:")
         XCTAssertEqual(preview.rows.first, .init(
-            title: "أذكار الصباح — اليوم",
+            title: "أذكار الصباح اليوم",
             detail: "سيُعاد ضبط تقدّم أذكار الصباح اليوم لأن إعادة الضبط على الجهاز الآخر أحدث. يصبح المكتمل ١ من \(ArabicFormat.number(morningTotal(support))) بدل ١.",
             isReset: true))
         XCTAssertTrue(preview.assurance.hasPrefix("أُعيد ضبط بعض التقدّم على الجهاز الآخر"))
@@ -162,7 +162,7 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertNil(model.outcome)
         XCTAssertEqual(try support.database.tasbih.counts(on: support.today).map(\.count), [40])
         XCTAssertTrue(model.preview?.rows.contains(.init(
-            title: "المسبحة — اليوم", detail: "يرتفع العدّ في ١ من الأذكار، وتُضاف ١ من العبارات إلى «عباراتك»")) == true)
+            title: "مسبحة اليوم", detail: "يرتفع العدّ في ١ من الأذكار، وتُضاف ١ من العبارات إلى «عباراتك»")) == true)
         model.confirm()
         XCTAssertEqual(model.outcome?.succeeded, true)
         XCTAssertEqual(try support.database.tasbih.counts(on: support.today).map(\.count).sorted(), [7, 40])
@@ -204,7 +204,7 @@ final class TransferImportModelTests: XCTestCase {
         XCTAssertEqual(model.preview?.warnings,
                        ["أُنشئ هذا الرمز أول أمس، فلا يحمل ما سُجّل على الجهاز الآخر بعد ذلك."])
         // Its days are history here; the saved phrase is added now.
-        XCTAssertEqual(model.preview?.rows.map(\.title), ["المسبحة — اليوم", "السجل", "الإعدادات"])
+        XCTAssertEqual(model.preview?.rows.map(\.title), ["مسبحة اليوم", "السجل", "الإعدادات"])
         XCTAssertEqual(model.preview?.rows.first?.detail, "تُضاف ١ من العبارات إلى «عباراتك»")
         XCTAssertEqual(model.preview?.rows[1].detail, "يومان")
     }

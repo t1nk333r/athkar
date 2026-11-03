@@ -6,7 +6,7 @@ This document records the stack and sequence for combining three parts into one 
 
 1. The Athkar PWA (`index.html`, `sw.js`, GitHub Pages at https://t1nk333r.github.io/athkar/).
 2. The رقية القرين PWA (`~/Projects/ruqyah-al-qareen/index.html` + `content.js`, https://t1nk333r.github.io/ruqyah-al-qareen/).
-3. A new first-class prayer-times feature with per-prayer reminders and the tracker already designed in `MOBILE_APP_PLAN.md`.
+3. A new, full prayer-times feature with per-prayer reminders and the tracker already designed in `MOBILE_APP_PLAN.md`.
 
 This document replaces only the stack decision in `MOBILE_APP_PLAN.md` (React Native + Expo, Flutter fallback). Section 2 classifies every section of that document as *authoritative*, *superseded*, or *needs rewrite*. This mapping prevents contradictions between the two documents. If the plans disagree, this one takes precedence.
 
@@ -14,7 +14,7 @@ This is a sequencing plan, not an implementation status report. Native code now 
 The current Linux-only verification procedure is in [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md).
 Publisher identity remains a separate release gate.
 
-This plan cites the file and symbol for each claim about current behaviour. Claims that the repositories could not verify are marked `[INFERENCE]`. Effort uses relative bands (S/M/L/XL, defined in section 10), not calendar dates.
+This plan cites the file and symbol for each claim about current behaviour. Claims that could not be checked against the repositories are marked `[INFERENCE]`. Effort estimates use relative bands (S/M/L/XL, defined in section 10), not calendar dates.
 
 ---
 
@@ -45,7 +45,7 @@ This plan cites the file and symbol for each claim about current behaviour. Clai
 Additional reasons specific to this product:
 
 - **Arabic typography is central to the app.** Each card is a page of Quran or dhikr set in KFGQPC Uthman Taha Naskh (`fonts/kfgqpc-uthman-taha-naskh.ttf` in both repos), with auto-fit sizing so no card scrolls (`fitCardContent` in athkar, `fitCardText` in ruqyah). `MOBILE_APP_PLAN.md` §10 already lists RN text-shaping defects as a reason to reject the architecture. SwiftUI `Text` with Core Text shaping and Dynamic Type eliminates that risk on iOS.
-- **Reliable notifications are also central to the app.** The PWA's own status copy admits the limitation: "يعمل المؤقت أثناء فتح التطبيق، ويعتمد العمل بعد إغلاقه على دعم النظام" (`updateReminderControls`). The native app exists to schedule notifications that survive termination. Use `UNUserNotificationCenter` directly, without an intermediary.
+- **Reliable notifications are also central to the app.** The PWA's own status copy states the limitation: "يعمل المؤقت أثناء فتح التطبيق، ويعتمد العمل بعد إغلاقه على دعم النظام" (`updateReminderControls`). The native app exists to schedule notifications that survive termination. Use `UNUserNotificationCenter` directly, without an intermediary.
 - **A solo maintainer pays per token.** Fewer components to maintain on each platform mean fewer upgrade-driven regressions to diagnose with paid assistance. A SwiftUI project uses one toolchain (Xcode) and one package manager (SwiftPM).
 
 ### 1.3 Costs accepted
@@ -65,12 +65,12 @@ Android work may begin only after all of these criteria are met. Each criterion 
 | # | Criterion | How it is observed |
 | --- | --- | --- |
 | S1 | Two consecutive public App Store releases have shipped with no P1 (data loss, duplicate/missed reminders, wrong Quran text, wrong prayer time beyond tolerance) reported or found. | Release notes and the private issue tracker. |
-| S2 | Content pack `adhkar` and `ruqyah` (section 5) have been at the same major version across those two releases, i.e. no item ID, order, or text change was required. | `content/manifest.json` history. |
+| S2 | Content packs `adhkar` and `ruqyah` (section 5) have been at the same major version across those two releases, that is, no item ID, order, or text change was required. | `content/manifest.json` history. |
 | S3 | The physical-device notification matrix (foreground, background, terminated, reboot, time-zone change, clock change, permission revoked) passes on the current release with zero duplicates. | Test log kept with the release. |
 | S4 | At least one real PWA export from each PWA (athkar and ruqyah) has been imported on a real device by someone other than the maintainer with no semantic difference in a re-export. | Round-trip fixture plus a tester confirmation. |
 | S5 | Crash-free sessions at or above 99.5% among users who share analytics with Apple, over the two releases in S1. | App Store Connect metrics. |
 | S6 | The maintainer has closed the iOS backlog to "bug fixes and content only" for one full release cycle without a feature slice in flight. | Repository history. |
-| S7 | The platform-neutral artefacts in section 4 (content packs, golden vectors, planner fixtures, schema doc, backup envelope) are complete and are what the iOS build actually consumes, not a parallel copy. | Build reads them from `content/` and `spec/`; CI validates them. |
+| S7 | The platform-neutral artefacts in section 4 (content packs, golden vectors, planner fixtures, schema doc, backup envelope) are complete and are what the iOS build consumes, not a parallel copy. | The build reads them from `content/` and `spec/`; CI validates them. |
 
 If any criterion regresses after Android starts, Android work pauses until it is restored.
 
@@ -84,31 +84,31 @@ This document classifies every section of the existing plan. "Authoritative" mea
 | --- | --- | --- |
 | Status | Superseded | This document is the status. |
 | 1. Product outcome | Needs rewrite | Keep the definition of a complete release. Change "on both platforms" to "on iOS; Android inherits when started". Add the ruqyah pillar (section 3 here). |
-| 2. Product principles | Authoritative, one edit | Principle 9 ("shared … pure TypeScript rules") is superseded by section 4 here: shared *data and fixtures*, not TypeScript. |
-| 3. Current PWA baseline | Needs rewrite | Item counts are stale: the repo now has 26 morning (`morning-01`…`morning-26`) and 24 evening (`evening-01`…`evening-24`) cards, including `comprehensiveDua` (البقرة ٢٠١) inserted before `salatUponProphet`. The long-order feature (`buildDeck`, `athkar-long-order-v1`), the scoped reset picker (`resetWeek`, `resetEverything`, `dayCountLabel`), and the ruqyah tab did not exist when §3 was written. Section 3 here is the replacement baseline. |
+| 2. Product principles | Authoritative, one edit | Section 4 here supersedes principle 9 ("shared … pure TypeScript rules"). The platforms share *data and fixtures*, not TypeScript. |
+| 3. Current PWA baseline | Needs rewrite | Item counts are stale. The repo now has 26 morning (`morning-01`…`morning-26`) and 24 evening (`evening-01`…`evening-24`) cards, including `comprehensiveDua` (البقرة ٢٠١) inserted before `salatUponProphet`. The long-order feature (`buildDeck`, `athkar-long-order-v1`), the scoped reset picker (`resetWeek`, `resetEverything`, `dayCountLabel`), and the ruqyah tab did not exist when §3 was written. Section 3 here is the replacement baseline. |
 | 4. Scope and release boundaries | Superseded | Section 3.3 here redefines 1.0/1.1 for a solo iOS-first build. |
 | 5. Information architecture | Needs rewrite | Add a رقية pillar and keep the Today / Prayer times / Tracker / Athkar / Calendar / Settings structure. See section 3.2 here. |
-| 6. Prayer tracker domain (6.1–6.9) | **Authoritative** | Occurrence identity, recording states, Friday, travel, not-applicable, make-up, optional prayers, midnight rules. Not restated here. Only the *release* of travel/make-up/optional prayers moves (section 3.3). |
+| 6. Prayer tracker domain (6.1–6.9) | **Authoritative** | It covers occurrence identity, recording states, Friday, travel, not-applicable, make-up, optional prayers, and midnight rules. This document does not restate them. Only the *release* of travel/make-up/optional prayers moves (section 3.3). |
 | 7. The eight README features | Needs rewrite | Keep the contracts, but change their release assignments (section 3.3). |
 | 8. Prayer calculations, location, Hijri | Authoritative in intent, superseded in library | Keep the intent but replace "Adhan JS" with the native Adhan editions. The correctness gate (30 locations × 12 dates, authority tables, edge cases) remains and section 7 expands it. Keep the location policy, with one change to rounding (section 7.4). |
-| 9. Native reminders | Needs rewrite | Planner requirements and replan triggers are authoritative. "via Expo Notifications" is removed. Android subsection is deferred but retained as the Android spec. Section 7.5 here. |
-| 10. Recommended architecture | **Superseded** | Entire section (stack, falsifiers, repo shape, module seams) replaced by sections 1, 4, 8 here. |
+| 9. Native reminders | Needs rewrite | Planner requirements and replan triggers are authoritative. Drop "via Expo Notifications". The Android subsection is deferred but retained as the Android spec. See section 7.5 here. |
+| 10. Recommended architecture | **Superseded** | Sections 1, 4, and 8 here replace the entire section (stack, falsifiers, repo shape, module seams). |
 | 11. Persistence and data model | Authoritative, extended | Keep the table set. Section 6 adds ruqyah tables, the long-order setting, and the iOS storage engine choice. |
 | 12. Content-pack system and governance | Authoritative, extended | Section 5 here adds the ruqyah pack, the two-source Quran check, and native shipping. |
 | 13. Backup, migration, sync | Authoritative, extended | Section 6.4 here adds the ruqyah keys and removes "Web Crypto and React Native" from the encryption requirement. |
-| 14. Widgets, quick actions, deep links | Authoritative | Widgets stay 1.1; "Expo configuration" references removed by implication. |
+| 14. Widgets, quick actions, deep links | Authoritative | Widgets stay in 1.1. Treat its "Expo configuration" references as removed by implication. |
 | 15. Privacy and security | **Authoritative** | Unchanged. |
 | 16. Accessibility and localization | Authoritative | Unchanged; the Android-specific device tests apply when Android starts. |
 | 17. Quality strategy | Authoritative | Section 4.3 builds on the fixture-first approach. |
 | 18. Nonfunctional targets | Authoritative | Android baseline-device targets apply when Android starts. |
 | 19. Delivery phases and gates | **Superseded** | Section 8 here is the iOS slice plan; section 9 the Android plan. |
-| 20. CI/CD and release operations | Split | The **iOS publisher-identity procedure (individual→organization migration, developer name, app transfer, Keychain/Team-ID cautions, identity gate)** remains **authoritative** and is restated as a gate in section 8.1. Replace "Expo/EAS" references in the build-cutover subsection with Xcode Cloud or local `xcodebuild` (section 8.6). |
+| 20. CI/CD and release operations | Split | The iOS publisher-identity procedure (individual-to-organization migration, developer name, app transfer, Keychain/Team-ID cautions, identity gate) remains **authoritative**, and section 8.1 restates it as a gate. Replace "Expo/EAS" references in the build-cutover subsection with Xcode Cloud or local `xcodebuild` (section 8.6). |
 | 21. Major risks | Authoritative, extended | Section 10 here adds Swift-first and PWA-lifecycle risks. |
 | 22. Decisions required | Superseded | Section 11 here. |
 | 23. Final launch checklist | Authoritative, one edit | "on iOS and Android" becomes "on iOS" for the first launch; Android reruns the checklist. |
 | 24. References | Needs rewrite | Drop Expo links; add Adhan Swift/Kotlin, GRDB, BGTaskScheduler, UNUserNotificationCenter limits. |
 
-Going forward, edit `MOBILE_APP_PLAN.md` only to add a banner at the top that points to this document and to strike §10 and §19. Maintain domain sections (6, 8, 11, 12, 13, 15, 16, 17, 20-identity) in place.
+Going forward, edit `MOBILE_APP_PLAN.md` only to add a banner at the top that points to this document and to strike §10 and §19. Maintain the domain sections (6, 8, 11, 12, 13, 15, 16, 17, 20-identity) in place.
 
 ---
 
@@ -119,17 +119,17 @@ Going forward, edit `MOBILE_APP_PLAN.md` only to add a banner at the top that po
 | Pillar | Source today | In the native app |
 | --- | --- | --- |
 | أذكار الصباح والمساء | `index.html` `morningAthkar` (26) and `eveningAthkar` (24) | Same two decks, same IDs, same targets, same completion semantics. |
-| رقية القرين | `ruqyah-al-qareen/content.js` `RUQYAH_SEGMENTS` (15 segments, 33 readings) | A third deck type: scroll-free Quran pages with per-segment `repeat` counters, daily completion, own history. Currently reachable from athkar only through the launcher tab (`#ruqyah-tab` → external link to the other PWA, `index.html` line 1701). |
+| رقية القرين | `ruqyah-al-qareen/content.js` `RUQYAH_SEGMENTS` (15 segments, 33 readings) | A third deck type: scroll-free Quran pages with per-segment `repeat` counters, daily completion, and its own history. Athkar currently reaches it only through the launcher tab `#ruqyah-tab`, an external link to the other PWA (`index.html` line 1701). |
 | مواقيت الصلاة والتتبع | Internal only: `prayerTimesForDate` computes Fajr/Sunrise/Asr/Sunset and derives `morning = fajr+60min`, `evening = asr+60min` for reminders | Full six-time display, next-prayer countdown, per-prayer notification offsets, five-prayer tracker per `MOBILE_APP_PLAN.md` §6. |
 
-All three pillars share a theme, text size, line spacing, haptics (45 ms in both PWAs: `hapticDurationMs = 45`), reduced motion, the scoped-reset picker (day / last 7 calendar days / everything; both PWAs implement `resetDayProgress`, `resetWeek`, and `resetEverything` with the same Arabic wording), swipe navigation with axis lock, auto-advance, and completion dialogs.
+All three pillars share a theme, text size, line spacing, haptics (45 ms in both PWAs: `hapticDurationMs = 45`), reduced motion, the scoped-reset picker, swipe navigation with axis lock, auto-advance, and completion dialogs. The scoped-reset picker offers day / last 7 calendar days / everything; both PWAs implement `resetDayProgress`, `resetWeek`, and `resetEverything` with the same Arabic wording.
 
 ### 3.2 Information architecture (iOS)
 
 Use a four-tab bar in RTL order:
 
 1. **اليوم** (Today): Gregorian + Hijri date, next prayer with countdown, five prayer rows with quick log, morning/evening/ruqyah status chips, non-blocking notices (no location, notifications denied, stale schedule).
-2. **الأذكار**: segmented control الصباح / المساء / الرقية over one card-deck view. The deck view is a single SwiftUI component parameterised by a deck definition (section 6.1), so ruqyah is not a fork of the adhkar deck.
+2. **الأذكار**: a segmented control الصباح / المساء / الرقية over one card-deck view. The deck view is a single SwiftUI component parameterised by a deck definition (section 6.1), so ruqyah is not a fork of the adhkar deck.
 3. **المواقيت**: six times for the selected day, previous/next day, method/school/location summary, per-prayer reminder toggles and offsets.
 4. **الإعدادات**: reading and appearance; reminders (adhkar + prayers + personal); location and calculation; long-order toggle (ترتيب الأذكار الطويلة); history (calendar); backup/import including "استيراد من تطبيق الويب"; privacy, delete-all, about/content version, sources.
 
@@ -155,7 +155,7 @@ The PWA's tab hash routes (`#morning`, `#evening`, `#ruqyah` in `tabOrder`) beco
 | Widgets (WidgetKit), Qibla | | Yes | |
 | Audio, Ramadan mode, English UI, biometric lock, sync | | | Per `MOBILE_APP_PLAN.md` §4 |
 
-This trim is a scope change to the reviewed plan and is listed as a decision the user must confirm (section 11, item 4).
+This trim is a scope change to the reviewed plan. Section 11 lists it as a decision the user must confirm (item 4).
 
 ### 3.4 What happens to رقية القرين as a separate app
 
@@ -164,7 +164,7 @@ The ruqyah PWA stops being a product and becomes a distribution channel for non-
 1. Move `RUQYAH_SEGMENTS` from `content.js` to `content/ruqyah.v1.json` in the athkar repo (section 5). Generate the ruqyah repo's `content.js` from that file instead of editing it by hand. This gives the content pack one source of truth from the day it exists.
 2. The ruqyah PWA gets the same export button as athkar (section 6.4), because a native app cannot read its `ruqyah-daily-v1` localStorage.
 3. Keep the athkar PWA's ruqyah tab as a launcher for the separate PWA. Do not embed the deck in the athkar PWA; that work belongs in the native app.
-4. When the iOS app is public, both PWAs show an install banner on iOS Safari only (user-agent gated, as the existing `isIosDevice` check already does for the install dialog) pointing to the App Store listing. On Android and desktop the PWAs remain the primary experience until Android ships.
+4. When the iOS app is public, both PWAs show an install banner that points to the App Store listing. The banner appears on iOS Safari only, gated by user agent as the existing `isIosDevice` check already does for the install dialog. On Android and desktop the PWAs remain the primary experience until Android ships.
 5. Keep the ruqyah PWA online while Android remains unshipped. Its published URL stays valid indefinitely. After Android ships, it may become a redirect page to the unified app with a one-line export instruction for remaining users (decision 11.9).
 6. Users' local progress is stored in `ruqyah-daily-v1`, which holds `{date, counts, history: {date: {completedAt}}}`. The history is trimmed to 365 entries (`trimHistory`), and the app displays 30 entries (`historyLimit`). All 365 days can be imported. On load, `loadState` already migrates and removes the legacy `ruqyah-progress-v1` key, so the export needs only the daily key.
 
@@ -198,7 +198,7 @@ Write everything else separately for each platform, including views, view models
 | Alternative | Why rejected |
 | --- | --- |
 | **Pure duplication** (no shared artefacts, Android re-derives everything from the iOS app) | Quran text must never diverge. Two hand-maintained copies of `content.js` could let a text error ship on only one platform. Fixtures also make a later Android port testable instead of relying on whether it looks the same. |
-| **Kotlin Multiplatform core** (domain + calculation + planner in Kotlin, consumed on iOS as an XCFramework) | Genuine shared logic, but: it adds a Gradle toolchain to every iOS build on a solo project whose second platform is deferred indefinitely; Swift-side debugging through KMP interop is materially worse than native Swift; the domain code in question is a few hundred lines; and for prayer times a maintained native library already exists on each platform. KMP would be the right answer for a team building both platforms concurrently. Revisit only if Android starts and the Swift domain layer has grown beyond what fixtures can pin (section 9.3 states the trigger). |
+| **Kotlin Multiplatform core** (domain + calculation + planner in Kotlin, consumed on iOS as an XCFramework) | KMP gives genuine shared logic. But it adds a Gradle toolchain to every iOS build on a solo project whose second platform is deferred indefinitely. Swift-side debugging through KMP interop is materially worse than native Swift. The domain code in question is a few hundred lines. For prayer times, a maintained native library already exists on each platform. KMP would be the right answer for a team building both platforms concurrently. Revisit KMP only if Android starts and the Swift domain layer has grown beyond what fixtures can pin (section 9.3 states the trigger). |
 | **Spec + golden vectors for calculation, hand-ported from the PWA's `solarDay`** | The PWA engine computes only Fajr, sunrise, Asr, and sunset (`solarDay` returns exactly those four), plus one high-latitude clamp (`safeFajr` in `prayerTimesForDate`, a night-fraction rule). It has no Dhuhr, Maghrib, Isha, Isha-interval methods (Umm al-Qura), or configurable high-latitude rules. Porting it would mean adding these features. Adhan already contains audited versions of them. The PWA engine remains the comparison reference for its four computed values. |
 | **WebView reuse** (ship `index.html` inside a native shell) | WebView reuse retains every limitation the native app exists to remove. Notifications still need a native scheduler and a native data store the web code cannot see. Auto-fit and RTL layout inside a WKWebView are no better than in Safari. App Store review treats thin wrappers unfavourably. WebView reuse would also make the iOS app a third front end to maintain instead of replacing the PWA. |
 | **Sharing TypeScript via a JS engine (JavaScriptCore)** | Sharing TypeScript through JavaScriptCore has the same issues as KMP and worse tooling. The rules are too small to justify a runtime. |
@@ -207,7 +207,7 @@ Write everything else separately for each platform, including views, view models
 
 Before writing native code, capture the PWA's current behaviour in fixtures. This follows the "golden fixtures before extraction" principle from `MOBILE_APP_PLAN.md` §17 and applies it concretely:
 
-- For each stored `athkar-progress-v2` state and a `"now"` value, record the expected results of `rollStateToDate`, `periodIsComplete` (counters vs `manualCompletion`), `firstIncompleteIndex`, and `buildDeck` when `longAdhkarLast = true`. Move long items, those with target ≥ `longDhikrThreshold` 10 and not marked `review`, to just before the last item. A small Node script loads the PWA's functions and generates the fixtures. Keep the script as throwaway tooling in `tools/`; commit its outputs as fixtures.
+- For each stored `athkar-progress-v2` state and a `"now"` value, record the expected results of `rollStateToDate`, `periodIsComplete` (counters versus `manualCompletion`), `firstIncompleteIndex`, and `buildDeck` when `longAdhkarLast = true`. With that setting, `buildDeck` moves long items to just before the last item. Long items are those with a target of at least `longDhikrThreshold` (10) that are not marked `review`. A small Node script loads the PWA's functions and generates the fixtures. Keep the script as throwaway tooling in `tools/`; commit its outputs as fixtures.
 - Generate prayer-time fixtures from the PWA's `prayerTimesForDate` output for the 30-location × 12-date grid from `MOBILE_APP_PLAN.md` §8. Cover each of the five `prayerCalculationMethods` (`mwl` 18°, `umm-al-qura` 18.5°, `egyptian` 19.5°, `karachi` 18°, `north-america` 15°) and both `asrShadowFactors` (standard 1, hanafi 2). Store the results as vectors with a stated tolerance (section 7.2).
 - `nextReminderTime` fires at `morning`/`evening` if the time is in the future and `lastShown` is not today. If the time was within 15 minutes in the past, it fires "now"; otherwise, it fires tomorrow. It never fires when `periodIsComplete` is true.
 
@@ -219,7 +219,7 @@ The Swift implementation must pass these fixtures. The Kotlin implementation mus
 
 ### 5.1 Current state
 
-- `index.html` contains the adhkar text as JavaScript object literals (`ayatAlKursi`, `alIkhlas`, …, `comprehensiveDua`) composed into `morningAthkar`/`eveningAthkar` with IDs `morning-NN`/`evening-NN`. The observed item fields are `id`, `text`, `prefix`, `details[]`, `count`, `countLabel`, `targetOptions`, `defaultTarget`, `quran`, and `noteIndex`, along with the `review`/`reviewTitle`/`reviewCopy` mechanism (`cardMarkup`). `[INFERENCE]` No current item sets `review: true`. The mechanism exists in the code: `periodCountersComplete` excludes `review` items, and `updateSessionProgress` changes the suffix to "ذكرًا متاحًا" when one exists. The current content does not use it.
+- `index.html` contains the adhkar text as JavaScript object literals (`ayatAlKursi`, `alIkhlas`, …, `comprehensiveDua`) composed into `morningAthkar`/`eveningAthkar` with IDs `morning-NN`/`evening-NN`. The observed item fields are `id`, `text`, `prefix`, `details[]`, `count`, `countLabel`, `targetOptions`, `defaultTarget`, `quran`, and `noteIndex`, along with the `review`/`reviewTitle`/`reviewCopy` mechanism (`cardMarkup`). `[INFERENCE]` No current item sets `review: true`. The mechanism exists in the code. `periodCountersComplete` excludes `review` items, and `updateSessionProgress` changes the suffix to "ذكرًا متاحًا" when one exists. The current content does not use it.
 - Ruqyah text is in `content.js` under `RUQYAH_SEGMENTS`, with fields `id`, `surah`, `range`, `repeat`, `basmala`, and `ayahs[{number, text}]`. The text uses AlQuran Cloud `quran-uthmani` and was cross-checked against Quran.com v4 uthmani per the assignment. The repositories have no tooling for that check, so `[INFERENCE]` it was performed manually.
 - The two corpora use different orthographies. Ruqyah uses full Uthmani (`ٱلْقُرْءَانِ`, `مُّنذِرٌۭ`), while the adhkar Quran items use a simplified rasm with `﴿١﴾` ayah markers (`قُلْ هُوَ اللَّهُ أَحَدٌ ﴿١﴾`). Both corpora are shipped and reviewed. This plan does not change either text (non-goal), but the pack schema must record each Quran item's edition so verification compares matching editions.
 
@@ -248,16 +248,16 @@ Pack schema additions over today's fields: `kind` (`quran` | `dhikr` | `review`)
 ### 5.3 Verification rules (unchanged in principle, made tooling)
 
 1. Validate the schema and check ID uniqueness. Once shipped, IDs cannot change because `athkar-progress-v2` `progress`/`targets` and `ruqyah-daily-v1` `counts` are keyed by them.
-2. For every `kind: quran` item, compare every character, after documented normalisation (strip ayah markers `﴿…﴾`, collapse whitespace), against **both** reference snapshots for the addressed ayah range. Any mismatch fails CI. Refresh snapshots only in a deliberate commit that records the upstream version.
-3. Named human review recorded in `REVIEW.md` for every text or order change. CI checks that the pack's `reviewRecord` in `manifest.json` points at an entry whose `scope` covers the changed item IDs. The reviewer's name is a required field; a pack with no named reviewer cannot bump version.
-4. Version bump plus changelog entry for any change.
-5. Migration test: stored progress referencing every ID in the previous pack version still resolves.
+2. For every `kind: quran` item, apply the documented normalisation (strip ayah markers `﴿…﴾`, collapse whitespace). Then compare every character against **both** reference snapshots for the addressed ayah range. Any mismatch fails CI. Refresh snapshots only in a deliberate commit that records the upstream version.
+3. Every text or order change needs a named human review recorded in `REVIEW.md`. CI checks that the pack's `reviewRecord` in `manifest.json` points at an entry whose `scope` covers the changed item IDs. The reviewer's name is a required field; a pack with no named reviewer cannot bump version.
+4. Any change needs a version bump and a changelog entry.
+5. A migration test checks that stored progress referencing every ID in the previous pack version still resolves.
 
 ### 5.4 Shipping natively
 
-- Packs are **bundled resources** in the iOS app. No remote content in 1.0 (same as `MOBILE_APP_PLAN.md` §12).
+- Packs are **bundled resources** in the iOS app. Version 1.0 has no remote content (same as `MOBILE_APP_PLAN.md` §12).
 - On launch the app compares `manifest.json` pack versions against `content_installs` (section 6.2) and records the installed version. The About screen shows it.
-- **Users receive content fixes only through an app update.** This is slower than the PWA, where `sw.js` `athkar-static-v21` bumps propagate on next load through the update banner. The delay is deliberate. A remote content channel needs signing, rollback, and a privacy re-declaration. It would mitigate the risk of a wrong Quran letter, which the two-source CI check is designed to prevent before release. If an error ships, fix the pack, bump its version, request expedited App Store review, and publish a release note naming the item ID. Reconsider remote packs only after the pipeline is proven (`MOBILE_APP_PLAN.md` §4 "2.0").
+- **Users receive content fixes only through an app update.** This is slower than the PWA, where `sw.js` `athkar-static-v21` bumps reach users on next load through the update banner. The delay is deliberate. A remote content channel needs signing, rollback, and a privacy re-declaration. It would mitigate the risk of a wrong Quran letter, which the two-source CI check is designed to prevent before release. If an error ships, fix the pack, bump its version, request expedited App Store review, and publish a release note naming the item ID. Reconsider remote packs only after the pipeline is proven (`MOBILE_APP_PLAN.md` §4 "2.0").
 
 ---
 
@@ -265,7 +265,7 @@ Pack schema additions over today's fields: `kind` (`quran` | `dhikr` | `review`)
 
 ### 6.1 Storage engine on iOS
 
-**SQLite via GRDB.swift**, WAL mode, forward-only numbered migrations, schema documented in `spec/schema.md`.
+Use **SQLite via GRDB.swift** in WAL mode, with forward-only numbered migrations and the schema documented in `spec/schema.md`.
 
 Reject SwiftData/Core Data because their schemas are opaque to a non-Apple port, migration behavior is harder to test against seeded previous-version databases (`MOBILE_APP_PLAN.md` §17 requires this), and SwiftData raises the minimum OS. A plain SQL schema is the shared artifact Android will implement with Room or SQLDelight.
 
@@ -273,20 +273,20 @@ Store settings unrelated to worship data (theme, text size, line spacing, haptic
 
 ### 6.2 Tables
 
-Extends `MOBILE_APP_PLAN.md` §11 (authoritative) with the ruqyah pillar and the settings observed in the PWAs.
+This table set extends `MOBILE_APP_PLAN.md` §11 (authoritative) with the ruqyah pillar and the settings observed in the PWAs.
 
 | Table | Purpose | Notes |
 | --- | --- | --- |
 | `settings` | key/value JSON | Includes `long_order` (`last`/`original`, from `athkar-long-order-v1`), `long_order_prompt_answered` (from `athkar-long-order-prompt-v1`), calculation profile, Hijri offset. |
 | `content_installs` | pack id, version, checksum, installed_at | |
-| `adhkar_days` | `local_date, period, completed_at, completion_origin` | `completion_origin` ∈ `counters`, `manual` (from `manualCompletion`), `import`. One row per (date, period) whenever the period was complete. Replaces the 7-entry `history` array. |
+| `adhkar_days` | `local_date, period, completed_at, completion_origin` | `completion_origin` is one of `counters`, `manual` (from `manualCompletion`), `import`. One row per (date, period) whenever the period was complete. It replaces the 7-entry `history` array. |
 | `adhkar_item_progress` | `local_date, period, item_id, count, target, updated_at` | Today's rows are live counters (`state.progress`, `state.targets`); past days retain their rows instead of being collapsed to booleans as `rollStateToDate` does now. `target` is stored per day so a target change tomorrow does not rewrite yesterday. |
 | `ruqyah_days` | `local_date, completed_at` | From `ruqyah-daily-v1.history`. |
 | `ruqyah_segment_progress` | `local_date, segment_id, count, updated_at` | Bounded by `repeat` from the pack. |
 | `prayer_records` | per `MOBILE_APP_PLAN.md` §11 `prayer_logs` | Unique on `(calculation_date, prayer_key)`. |
 | `not_applicable_ranges` | per §11 | 1.1 (section 3.3). |
 | `location_profiles` | per §11 | 1.0 has at most one profile. |
-| `reminder_rules` | `id, kind, prayer_key, offset_minutes, local_time, weekday_mask, enabled` | `kind` ∈ `adhkar_morning`, `adhkar_evening`, `prayer`, `personal`. Adhkar rules carry `prayer_key = fajr`/`asr`, `offset_minutes = 60` by default, reproducing today's fixed `+60` in `prayerTimesForDate`. |
+| `reminder_rules` | `id, kind, prayer_key, offset_minutes, local_time, weekday_mask, enabled` | `kind` is one of `adhkar_morning`, `adhkar_evening`, `prayer`, `personal`. Adhkar rules carry `prayer_key = fajr`/`asr`, `offset_minutes = 60` by default. This reproduces today's fixed `+60` in `prayerTimesForDate`. |
 | `reminder_state` | `rule_id, last_shown_local_date` | From `athkar-reminders-v2.lastShown`; needed for the 15-minute catch-up rule. |
 | `notification_audit` | per §11 | Redacted. |
 
@@ -300,7 +300,7 @@ Both PWAs roll at local civil midnight. `scheduleDayRollover` sets 00:00:01, and
 
 Safari's localStorage is inaccessible to a native app. As `MOBILE_APP_PLAN.md` §13 already concludes, both PWAs must ship an **export** before the iOS app ships an **import**.
 
-Both exports carry envelope v1 (format 1, one JSON document). The ruqyah PWA writes it as a `.athkarbackup` file. The athkar PWA's export is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)): it replaced the athkar PWA's `.athkarbackup` export, and every code embeds envelope v1 as its `envelope` field (`buildBackup()`). The native importer decodes the code (text, `.txt` file or QR frames) and imports that envelope; it may ignore the code's `athkar` part or read its 31-day `athkar.adhkar.history`.
+Both exports carry envelope v1 (format 1, one JSON document). The ruqyah PWA writes it as a `.athkarbackup` file. The athkar PWA's export is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)). It replaced the athkar PWA's `.athkarbackup` export, and every code embeds envelope v1 as its `envelope` field (`buildBackup()`). The native importer decodes the code (text, `.txt` file or QR frames) and imports that envelope; it may ignore the code's `athkar` part or read its 31-day `athkar.adhkar.history`.
 
 | Section | Populated by athkar PWA from | Populated by ruqyah PWA from |
 | --- | --- | --- |
@@ -312,14 +312,14 @@ Both exports carry envelope v1 (format 1, one JSON document). The ruqyah PWA wri
 | `reminders` | `athkar-reminders-v2` → `morning.enabled`, `evening.enabled`, `calculationMethod`, `asrSchool`, `lastShown`; never `location` in a transfer code (an older `.athkarbackup` carries it only if the user switched on its inclusion option) | absent |
 | `preferences` | `athkar-theme`, `athkar-reading-text-size`, `athkar-line-spacing`, `athkar-haptics`, `athkar-long-order-v1`, `athkar-long-order-prompt-v1` | `ruqyah-theme`, `ruqyah-text-size`, `ruqyah-line-spacing`, `ruqyah-haptics` |
 
-The export omits `athkar-install-onboarding-v1` because the install-prompt state has no meaning natively.
+The export omits `athkar-install-onboarding-v1` because the install-prompt state has no meaning in the native app.
 
 Import rules:
 
 - Import either file independently and in either order. Merge each into its own tables. If both files contain preferences, use the athkar file because it has the superset, including long-order.
 - Merge by `(local_date, period)` / `(local_date)` / `(local_date, segment_id)`. An existing native row wins over an imported row unless the native row is empty. This makes re-import idempotent.
 - The PWA loaders (`loadState`, `loadReminderPreferences`, and the inline text-size shim) already normalise legacy keys (`athkar-progress-v1`, `athkar-reminders-v1`, `athkar-text-size`, `ruqyah-progress-v1`). The export does not need to handle them.
-- The ruqyah PWA delivers its file with the Web Share API when available, otherwise as a download; the athkar PWA delivers a transfer code the same way as a `.txt` file, or as copied text or QR frames. On iOS, declare a UTType for `.athkarbackup` and accept the transfer `.txt` file so opening either from Files/Mail/AirDrop launches import. Keep the payload out of URLs so history does not pass through browser history.
+- The ruqyah PWA delivers its file with the Web Share API when available, otherwise as a download. The athkar PWA delivers a transfer code the same way as a `.txt` file, or as copied text or QR frames. On iOS, declare a UTType for `.athkarbackup` and accept the transfer `.txt` file so opening either from Files/Mail/AirDrop launches import. Keep the payload out of URLs so the exported history does not pass through browser history.
 - For the round-trip fixture, re-exporting a PWA file after native import must reproduce every section in the original (`MOBILE_APP_PLAN.md` §13 step 5), except for the cases listed in `spec/schema.md` "Export". Coordinates return rounded to 2 decimals (§7.4). The app does not store adhkar history days when neither period was complete because they contain no worship data; those days are absent from re-export.
 - Envelope v1 carries only data the PWAs hold. A native-to-native restore therefore loses native-only prayer settings: the Adhan-only methods (which a v1 export writes as `mwl`), the high-latitude rule, per-prayer adjustments, and Hijri offset. Before the native app ships its own export (backup UI), envelope format 2 adds a `prayerSettings` section; importers keep accepting format 1.
 
@@ -339,7 +339,7 @@ Do not port the PWA's `solarDay` or `prayerTimesForDate`. Use them as the compar
 
 | Check | Reference | Tolerance | Fails the gate if |
 | --- | --- | --- | --- |
-| P1 Legacy parity | PWA `prayerTimesForDate` for Fajr/sunrise/Asr/sunset over 30 locations × 12 dates × 5 methods × 2 schools | 2 minutes | Any vector outside tolerance without a written explanation (e.g. the PWA `safeFajr` night-fraction clamp vs Adhan's chosen high-latitude rule). |
+| P1 Legacy parity | PWA `prayerTimesForDate` for Fajr/sunrise/Asr/sunset over 30 locations × 12 dates × 5 methods × 2 schools | 2 minutes | Any vector outside tolerance without a written explanation (for example, the PWA `safeFajr` night-fraction clamp versus Adhan's chosen high-latitude rule). |
 | P2 Authority tables | Published tables for representative launch regions (decision 11.6) for all six times | 2 minutes, 3 for Fajr/Isha | Any systematic offset. |
 | P3 Edge cases | Equator, 60°N+ in June, southern hemisphere, DST transitions in both directions, dateline | Documented per case | Nil result, negative night, or Fajr after sunrise. |
 | P4 Cross-platform | Android later runs the identical vector file | 0 seconds difference between platforms for the same Adhan version; 1 minute across Adhan versions | Any difference not explained by a library version bump. |
@@ -355,7 +355,7 @@ Record P1 findings in `spec/prayer-times/README.md`. Include the method paramete
 ### 7.4 Location and privacy
 
 - Request one-shot location access with `CLLocationManager`. Tolerate `.reducedAccuracy`, use when-in-use access only, and request access only when the user taps تحديد الموقع (the PWA button) or enables a reminder without a location (`setReminderEnabled` behaviour today).
-- Round stored coordinates to **two decimals** (≈1 km) before persistence. The PWA rounds to four (`toFixed(4)`, ≈11 m). Two-decimal rounding changes prayer times by seconds at most and identifies users less precisely. Use rounded coordinates in parity vectors so the gate reflects what ships.
+- Round coordinates to **two decimals** (about 1 km) before storing them. The PWA rounds to four (`toFixed(4)`, about 11 m). Two-decimal rounding changes prayer times by seconds at most and identifies users less precisely. Use rounded coordinates in parity vectors so the gate reflects what ships.
 - Accept manual coordinates when users deny location. Use the device's current time zone in 1.0.
 - Do not access location in the background or store it off-device. Exclude it from backup unless the user opts in during export. The athkar PWA's transfer code never carries it.
 
@@ -367,10 +367,10 @@ Record P1 findings in `spec/prayer-times/README.md`. Include the method paramete
 - Schedule adhkar relative to prayers with the same offsets as today (`fajr + 60`, `asr + 60`), so no special case is needed. Use the current body copy: "مرّت ساعة على صلاة الفجر. حان وقت أذكار الصباح."
 - Do not plan an adhkar notification for a completed period (`periodIsComplete` logic) or a prayer notification for an occurrence already marked `prayed` or `not_applicable`.
 - If a rule's instant was up to 15 minutes ago and it has not been shown today, plan it for "now" (from `nextReminderTime`).
-- iOS caps pending local notifications at 64. Seven rules per day (five prayers and two adhkar) over a **7-day horizon** use 49 requests, leaving headroom for personal rules. Give the planner a budget and have it truncate furthest-first. The diagnostics screen shows planned and pending counts.
+- iOS caps pending local notifications at 64. Seven rules per day (five prayers and two adhkar) over a **7-day horizon** use 49 requests, which leaves 15 requests for personal rules. Give the planner a budget and have it drop the furthest requests first. The diagnostics screen shows planned and pending counts.
 - Replan on foreground, `significantTimeChangeNotification`, `NSSystemTimeZoneDidChange`, any settings/rule/location change, any completion or log write, import, day change, and an opportunistic `BGAppRefreshTask`. To replan, compute the desired set, compare it with `UNUserNotificationCenter.pendingNotificationRequests`, and add or remove requests by ID. The operation is idempotent by construction.
 - Prayer notifications carry a "سجّل الصلاة" action that writes the same idempotent command as the tracker screen. Adhkar notifications open the deck (deep link `#morning`/`#evening`).
-- Settings copy states that reminders beyond the horizon require the app to have been opened, replacing the PWA's current disclosure.
+- The Settings copy states that reminders beyond the horizon require the app to have been opened. This copy replaces the PWA's current disclosure.
 
 Capture all of these requirements in fixtures under `spec/reminders/fixtures/` before implementation (section 4.3).
 
@@ -422,7 +422,7 @@ Each slice ends with an observable exit criterion. Section 10.1 defines the effo
 | --- | --- | --- | --- | --- |
 | 0 | Fixtures and packs | `content/` packs extracted from `index.html` and `content.js`; `tools/content-validate.mjs` with two-source Quran check; `content-export-pwa.mjs` regenerates `ruqyah/content.js` byte-identically; session/reminder/prayer-time fixtures generated from the PWA. Pin `adhan-swift` and confirm method presets. | CI passes on the packs; regenerated `content.js` diff is empty; fixture files exist for every rule in 4.3. No native code yet. | M |
 | 1 | PWA export | Export in both PWAs producing envelope v1 (section 6.4): the ruqyah PWA's `.athkarbackup` button; in athkar the transfer code, which replaced its export button and embeds envelope v1. Ruqyah PWA reads regenerated `content.js`. Ship both PWAs. | A real export from each live PWA (the athkar code's `envelope`) validates against the envelope schema; this is the last PWA feature before maintenance mode. | S |
-| 2 | Core package and storage | `AthkarCore`: models, GRDB schema + migration 1, repositories, session rules passing session fixtures, import of envelope v1 with round-trip test. | All session fixtures pass; import→export round-trip equals input for both PWA files. | M |
+| 2 | Core package and storage | `AthkarCore`: models, GRDB schema + migration 1, repositories, session rules passing session fixtures, import of envelope v1 with round-trip test. | All session fixtures pass; the import-then-export round trip equals the input for both PWA files. | M |
 | 3 | Prayer-time port | `PrayerTimesPort` + Adhan adapter; parity suite P1–P3; location adapter; calculation settings model. | P1–P3 pass with documented exceptions; `spec/prayer-times/README.md` written. | M |
 | 4 | Deck UI | One `DeckView` driven by a deck definition; adhkar morning/evening with counters, targets, manual completion, long-order (with the one-time prompt), scoped reset picker, completion dialog, swipe with axis lock, auto-advance, haptics, Uthman Taha font, auto-fit; ruqyah deck with `repeat` counters and daily completion. Settings for theme/text/spacing/haptics. | Every workflow in section 3.1 works on a device in airplane mode; VoiceOver script for tap-count, target change, manual completion, reset; screenshots at three text sizes in light/dark RTL. | L |
 | **Gate** | **Identity** | Section 8.1 complete. | Organization provider visible in App Store Connect; Team ID recorded. | – |
@@ -453,8 +453,8 @@ Slices 2–4 may proceed while the identity gate is pending; nothing in them dep
 
 ### 8.6 Build and release operations
 
-- Local `xcodebuild` archives from tagged commits are sufficient for a solo maintainer; Xcode Cloud is optional and can be added later without changing anything else. No Expo/EAS.
-- New verification runs on Linux: `tools/content-validate.mjs`, the AthkarCore suite, supported production-source XCTest and SDK compilation. Required UI/device cases remain open until an authorized iOS runtime result. A live CI migration requires its own reviewed change; existing remote jobs retain their owners.
+- Local `xcodebuild` archives from tagged commits are sufficient for a solo maintainer; Xcode Cloud is optional and can be added later without changing anything else. The build uses no Expo/EAS.
+- New verification runs on Linux: `tools/content-validate.mjs`, the AthkarCore suite, supported production-source XCTest and SDK compilation. Required UI/device cases remain open until there is an authorized iOS runtime result. A live CI migration requires its own reviewed change; existing remote jobs retain their owners.
 - Signing credentials, Apple verification documents, and the Team ID live outside the repository (`MOBILE_APP_PLAN.md` §20).
 
 ---
@@ -469,7 +469,7 @@ Defer all Android UI, `adhan-kotlin` integration, Room/SQLDelight persistence, `
 
 Android uses everything in section 4.1's table, plus:
 
-- Keep the iOS `AthkarCore` package free of UIKit/SwiftUI/CoreLocation/UserNotifications dependencies. The package's lack of these dependencies enforces the rule. Its public types are the de facto Kotlin interface list.
+- Keep the iOS `AthkarCore` package free of UIKit/SwiftUI/CoreLocation/UserNotifications dependencies. The package declares none of these dependencies, and that enforces the rule. Its public types are the de facto Kotlin interface list.
 - Update `spec/schema.md` with every GRDB migration. Android implements the *final* schema when its work starts and imports every envelope version iOS has ever exported.
 - Describe the deck definition format (which deck, which items, counter semantics, long-order eligibility) in `spec/sessions/deck-definition.md`. Build Compose's `DeckScreen` from that same description.
 - Seed the Arabic UI String Catalog from `content/ui-copy.json`. Add new keys to the JSON first, then generate Android's `strings.xml` from the same file.
@@ -499,7 +499,7 @@ These bands estimate one maintainer's focused work with AI assistance, not elaps
 | L | About 40–100 hours |
 | XL | More than 100 hours |
 
-Section 8.3 has two S slices, four M slices, and three L slices. The honest estimate for iOS 1.0 is in the **XL range, plausibly 250–400 hours of focused work**. Slices 4–6 dominate the estimate because they cover deck UI fidelity, the tracker, and notifications. Physical-device testing also takes time that AI assistance cannot shorten. First-time Swift/SwiftUI learning adds time if the maintainer has not shipped SwiftUI before `[INFERENCE: prior Swift experience is unknown]`. Android later adds another L–XL, but should take less time than iOS because the spec and fixtures already exist.
+Section 8.3 has two S slices, four M slices, and three L slices. The estimate for iOS 1.0 is in the **XL range, plausibly 250–400 hours of focused work**. Slices 4–6 dominate the estimate because they cover deck UI fidelity, the tracker, and notifications. Physical-device testing also takes time that AI assistance cannot shorten. First-time Swift/SwiftUI learning adds time if the maintainer has not shipped SwiftUI before `[INFERENCE: prior Swift experience is unknown]`. Android later adds another L–XL, but should take less time than iOS because the spec and fixtures already exist.
 
 AI token costs are highest in phases with long feedback loops, such as SwiftUI layout for auto-fit Arabic cards and notification edge cases. Fixture-first ordering, with Slice 0 before UI work, helps keep later prompts short and verifiable.
 
@@ -510,7 +510,7 @@ AI token costs are highest in phases with long feedback loops, such as SwiftUI l
 | Identity gate stalls (no legal entity, D-U-N-S delays) | Slices 5–9 blocked; work continues on 2–4 but cannot ship. | Start the gate before Slice 0; it has no code dependency. |
 | iOS runtime result unavailable | Linux core/model tests and SDK compilation can proceed; required device cases remain open. | Use the existing documented device route when authorized. Record unrun cases using [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). |
 | Dropping the PWAs too early | Android users and non-App-Store iOS users lose the only working app; ruqyah users lose their history if they never exported. | Section 10.4 policy; PWAs are never removed before Android ships; export stays available indefinitely. |
-| Maintaining PWA + iOS + Android simultaneously | Three codebases for one person; every content fix triples. | PWAs in maintenance mode with regenerated content (`content-export-pwa.mjs`) so a pack fix is one commit; Android only after S6 shows the iOS load has dropped. |
+| Maintaining PWA + iOS + Android simultaneously | Three codebases for one person; every content fix must be made three times. | PWAs in maintenance mode with regenerated content (`content-export-pwa.mjs`) so a pack fix is one commit; Android only after S6 shows the iOS load has dropped. |
 | Silent divergence between PWA and native rules during the long overlap | Users see different completion or reminder behaviour in the PWA and native app. | Freeze PWA rule changes (10.4). Any exception must first update the fixtures, which requires the native side to follow. |
 | Quran text regression during extraction | Worst-case product failure. | Slice 0 regenerates `content.js` byte-identically and compares every Quran item to two references before any native code. |
 | Adhan preset mismatch with PWA angles | Prayer times shift for existing reminder users. | P1 parity gate with written exceptions; release note if any material shift is accepted. |
@@ -535,19 +535,19 @@ This policy takes effect at the end of Slice 1:
 | The export feature (Slice 1) and, at 1.0, the iOS install banner | Import into the PWA (native is the destination, not the PWA) |
 | `sw.js` cache-name bumps to deliver the above | Any change to `normalizeState`, `rollStateToDate`, `buildDeck`, `prayerTimesForDate`, `nextReminderTime` unless the corresponding fixture is updated first |
 
-**Owner-approved exceptions (2026-10-04).** The owner approved additions to the live PWAs that fall in the "not allowed" column. In athkar, the exceptions are the «سور» tab (`athkar-suwar-v1`, shipped 2026-10-02) and the «مسبحة» tab (`#tasbih`, `athkar-tasbih-v1`, shipped 2026-10-04). In ruqyah, the exception is one tab per sura (shipped 2026-10-03), using `ruqyah-suwar-v1` and an IndexedDB database named `ruqyah`. The database has an object store named `state`, with `daily` and `suwar` records. Backup envelope v1 does not carry the per-sura or tasbih state: `athkar-suwar-v1`, `athkar-tasbih-v1`, `ruqyah-suwar-v1`, or the `suwar` record. The `daily` record has the shape of `ruqyah-daily-v1` and is exported as before. The native app carries all three as their own sections: ruqyah per sura and «سور» in AthkarCore migrations v2 and v3, and «مسبحة» in v4 ([`spec/sessions/tasbih.md`](spec/sessions/tasbih.md)). Like the envelope, it imports none of this state from the PWAs.
+**Owner-approved exceptions (2026-10-04).** The owner approved additions to the live PWAs that fall in the "not allowed" column. In athkar, the exceptions are the «سور» tab (`athkar-suwar-v1`, shipped 2026-10-02) and the «مسبحة» tab (`#tasbih`, `athkar-tasbih-v1`, shipped 2026-10-04). In ruqyah, the exception is one tab per sura (shipped 2026-10-03), which uses `ruqyah-suwar-v1` and an IndexedDB database named `ruqyah`. The database has an object store named `state`, with `daily` and `suwar` records. Backup envelope v1 does not carry the per-sura or tasbih state: `athkar-suwar-v1`, `athkar-tasbih-v1`, `ruqyah-suwar-v1`, or the `suwar` record. The `daily` record has the shape of `ruqyah-daily-v1` and is exported as before. The native app carries all three as their own sections: ruqyah per sura and «سور» in AthkarCore migrations v2 and v3, and «مسبحة» in v4 ([`spec/sessions/tasbih.md`](spec/sessions/tasbih.md)). Like the envelope, it imports none of this state from the PWAs.
 
-**Owner-approved exception: transfer import (2026-10-05).** The owner allowed import into the PWAs for one purpose only: moving progress between copies of the same PWA (for example Safari and the Home Screen app, or phone and iPad). It is the offline transfer code of [`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md): copied text, a file or animated QR frames, with no server, relay or WebRTC. The receiving PWA validates the code, shows a preview, and merges it with idempotent joins under reset epochs, which the three athkar stores now record in a `resets` field. It may also read an envelope-v1 `.athkarbackup` file for its adhkar part. Any other import into the PWAs remains "not allowed". The native app stays the destination for backups.
+**Owner-approved exception: transfer import (2026-10-05).** The owner allowed import into the PWAs for one purpose only, moving progress between copies of the same PWA (for example Safari and the Home Screen app, or phone and iPad). It is the offline transfer code of [`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md): copied text, a file or animated QR frames, with no server, relay or WebRTC. The receiving PWA validates the code, shows a preview, and merges it with idempotent joins under reset epochs, which the three athkar stores now record in a `resets` field. It may also read an envelope-v1 `.athkarbackup` file for its adhkar part. Any other import into the PWAs remains "not allowed". The native app stays the destination for backups.
 
 **Transfer replaces the athkar backup export (2026-10-06).** The owner judged «نقل التقدّم» and «النسخة الاحتياطية» to do the same job, so the athkar PWA's settings keep only the transfer. The `.athkarbackup` export button and its "include location" switch were removed. Every transfer code embeds envelope v1 (`envelope`, never with `reminders.location`), which is the native app's import path from the athkar PWA (section 6.4). `spec/backup/` and `tools/backup-validate.mjs` remain the envelope's specification, and the PWA still reads existing `.athkarbackup` files on receive.
 
-The athkar PWA's ruqyah launcher tab remains unchanged. `MOBILE_APP_PLAN.md` and this document are linked from the athkar README; the ruqyah README gains one line pointing here.
+The athkar PWA's ruqyah launcher tab remains unchanged. The athkar README links to `MOBILE_APP_PLAN.md` and this document; the ruqyah README gains one line pointing here.
 
 ---
 
 ## 11. Open decisions before implementation
 
-1. **Legal entity and Apple identity.** Which entity will hold the organization membership, its public developer name, the support/privacy domain, and who is Account Holder. Nothing in Slice 5+ can ship without this (section 8.1).
+1. **Legal entity and Apple identity.** Which entity will hold the organization membership, its public developer name, the support/privacy domain, and who is Account Holder. Nothing in Slice 5 or later can ship without this (section 8.1).
 2. **Runtime evidence.** New checks are Linux-only; see [`docs/agents/ios-linux.md`](docs/agents/ios-linux.md). Physical iPhone coverage for the notification matrix remains to be recorded.
 3. **Minimum iOS version.** Recommendation: iOS 17, for SwiftUI maturity and `@Observable`; lower only if a known user base demands it.
 4. **Scope trim approval.** Confirm the 1.0 / 1.1 split in section 3.3, in particular moving travel/make-up/not-applicable ranges, search, favorites and personal reminders to 1.1.
@@ -556,6 +556,6 @@ The athkar PWA's ruqyah launcher tab remains unchanged. `MOBILE_APP_PLAN.md` and
 7. **Product name and English metadata.** The PWA titles itself "أذكار المسلم" (document title in `selectTab`); confirm the App Store name and whether English store metadata is provided at launch.
 8. **Quran edition policy for adhkar items.** Keep the simplified rasm for `ayatAlKursi`, `alIkhlas`, `alFalaq`, `anNas`, `comprehensiveDua` and verify against a matching reference, or migrate them to the same Uthmani edition as ruqyah. Recommendation: keep as shipped for 1.0, record the edition in the pack, and treat unification as a reviewed content change later. **Decided 2026-09-28:** migrated to the Uthmani edition (adhkar 1.1.0, REVIEW.md R6), set in KFGQPC HAFS like the ruqyah; the validator now requires it.
 9. **Fate of the ruqyah PWA after Android ships.** Keep live indefinitely, or convert to a redirect page with export instructions. Recommendation: keep live; the maintenance cost is near zero once content is regenerated from the pack.
-10. **How Android demand will be judged.** **Decided 2026-10-03:** the **PWA** counts page loads on a self-hosted GoatCounter on the developer's own server (`https://count.aloqaili.xyz`), and its browser/OS breakdown judges trigger T1. An inline beacon (no remote script) sends one `GET /count?p=%2F&s=<screen width 0–99999>&b=<bot code>&rnd=<random>` per page load, with no referrer, no cookies, no title, query, hash, tab or sura, and no `localStorage` read except the `skipgc` opt-out flag. The server receives the IP address and user agent transiently and keeps aggregates (browser/OS, screen width, country); the relay keeps no access log. Exception: requests GoatCounter classifies as bots keep their raw user agent for filtering until a server maintenance job purges them hourly, normally within about an hour; the job is best-effort, not a hard bound, and GoatCounter's own ~30-day cleanup is the fallback if it fails. The PWA's Settings discloses it; details in `MOBILE_APP_PLAN.md` §15. The native app ships no counter, and its "no data collected" privacy label and release gate (section 8.5, `MOBILE_APP_PLAN.md` §15) are unchanged.
+10. **How Android demand will be judged.** **Decided 2026-10-03:** the **PWA** counts page loads on a self-hosted GoatCounter on the developer's own server (`https://count.aloqaili.xyz`), and its browser/OS breakdown judges trigger T1. An inline beacon (no remote script) sends one `GET /count?p=%2F&s=<screen width 0–99999>&b=<bot code>&rnd=<random>` per page load, with no referrer, no cookies, no title, query, hash, tab or sura, and no `localStorage` read except the `skipgc` opt-out flag. The server receives the IP address and user agent transiently and keeps aggregates (browser/OS, screen width, country); the relay keeps no access log. Exception: requests GoatCounter classifies as bots keep their raw user agent for filtering until a server maintenance job purges them hourly, normally within about an hour. The job is best-effort, not a hard bound, and GoatCounter's own cleanup after roughly 30 days is the fallback if it fails. The PWA's Settings discloses it, and `MOBILE_APP_PLAN.md` §15 has the details. The native app ships no counter, and its "no data collected" privacy label and release gate (section 8.5, `MOBILE_APP_PLAN.md` §15) are unchanged.
 11. **Location rounding.** Confirm two decimals (section 7.4) versus the PWA's four.
 12. **Backup encryption.** Whether iOS 1.0 ships plaintext-only export (with the location exclusion default) and defers the passphrase envelope to 1.1, as this plan recommends.
