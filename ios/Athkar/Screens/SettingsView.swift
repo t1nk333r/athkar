@@ -1,8 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// «الإعدادات» for this slice: reading and appearance, reminders, long-order, manual completion, haptics, with the athkar
-/// PWA's wording. Every change is written to the `settings` table (or the adhkar session) as it is made.
+/// «الإعدادات» for this slice: reading and appearance, the app icon, reminders, long-order, manual completion,
+/// haptics, with the athkar PWA's wording. Every change is written to the `settings` table (or the adhkar session) as
+/// it is made, except the icon, which iOS keeps.
 struct SettingsView: View {
     let app: AppModel
 
@@ -26,6 +27,10 @@ struct SettingsView: View {
                               options: [(.small, "صغير"), (.medium, "متوسط"), (.large, "كبير")])
                     segmented("تباعد السطور", selection: $settings.lineSpacing, identifier: "settings.lineSpacing",
                               options: [(.compact, "متقارب"), (.comfortable, "مريح"), (.wide, "واسع")])
+                }
+
+                if AppIconChoice.isAvailable {
+                    AppIconSection()
                 }
 
                 AdhkarReminderSection(app: app)

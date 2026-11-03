@@ -73,7 +73,8 @@ UI_TESTS = "ios/AthkarUITests/"
 NO_TESTS = ["**/*.md", "docs/**", "plans/**", "**/.gitignore", ".nojekyll", "vendor/LICENSE-*"]
 # Known files no test covers: PWA assets, generators and packaging. `plan` names them.
 UNTESTED = ["sw.js", "manifest.webmanifest", "icons/*", "vendor/*.js", "tools/cities-build.mjs",
-            "tools/content-reference-refresh.mjs", "tools/ios-linux-ipa.sh", "tools/ios-linux-ipa.py"]
+            "tools/content-reference-refresh.mjs", "tools/ios-linux-ipa.sh", "tools/ios-linux-ipa.py",
+            "tools/app-icons.py"]
 # Every lane in full: package manifests and pins, the Xcode project and the runners that build every suite.
 SHARED = ["ios/Package.swift", "ios/Package.resolved", "ios/AthkarCore/Package.swift",
           "ios/AthkarCore/Package.resolved", "ios/project.yml", "ios/Athkar.xcodeproj/**", "ios/Athkar/Info.plist",
@@ -122,18 +123,20 @@ NODE_CHECKS = {
 # test: each launches the app onto the home screen's morning deck with the bundled packs.
 PRAYER = [APP + "Prayer/*.swift", APP + "DeviceLocation.swift", APP + "OneShotLocationRequest.swift",
           "data/cities.tsv"]
+# «أيقونة التطبيق» sits at the top of الإعدادات, so every UI test that opens it renders the section.
+SETTINGS_ICON = [APP + "Screens/AppIconSection.swift", APP + "Platform/AppIcon.swift"]
 UI_BLACK_BOX = {
     "*": [APP + "AthkarApp.swift", APP + "App/*.swift", APP + "Content/BundledContent.swift", APP + "Design/*.swift",
           APP + "Screens/HomeView.swift", APP + "Deck/DeckView.swift", APP + "Deck/DeckCardView.swift",
           APP + "Deck/DeckModel.swift", APP + "Deck/AdhkarDeckModel.swift", *BUNDLED_PACKS],
     "AutoFitUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
-                       APP + "Screens/SettingsView.swift", "fonts/*.ttf"],
+                       APP + "Screens/SettingsView.swift", *SETTINGS_ICON, "fonts/*.ttf"],
     "DeckIndexUITests": [APP + "Deck/DeckIndexView.swift", APP + "Deck/RuqyahDeckModel.swift",
                          APP + "Deck/SectionChips.swift", APP + "Screens/DeckDialogs.swift"],
     "DeckRegressionUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
                               APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", "fonts/*.ttf"],
     # It records today's prayers on «اليوم» and reads the counts on «التشخيص».
-    "DiagnosticsUITests": [APP + "Reminders/*.swift", APP + "Screens/SettingsView.swift",
+    "DiagnosticsUITests": [APP + "Reminders/*.swift", APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
                            APP + "Screens/OtherSectionsView.swift", APP + "Tracker/TodayView.swift",
                            APP + "Tracker/TrackerViews.swift", APP + "Tracker/TrackerText.swift", *PRAYER],
     "DeckUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
@@ -153,13 +156,14 @@ UI_BLACK_BOX = {
                       APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
     # Export, delete-all, privacy and about in الإعدادات; a deep link; the first-launch offer on أخرى.
     "MigrationPrivacyUITests": [APP + "Backup/*.swift", APP + "About/*.swift", APP + "Platform/QuickActions.swift",
-                                APP + "Screens/SettingsView.swift", APP + "Screens/OtherSectionsView.swift",
+                                APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
+                                APP + "Screens/OtherSectionsView.swift",
                                 APP + "Tracker/TodayView.swift", APP + "Tracker/TrackerViews.swift",
                                 APP + "Tracker/TrackerText.swift", APP + "Tracker/PrayerTrackerModel.swift",
                                 APP + "Transfer/*.swift", APP + "Reminders/ReminderModel.swift",
                                 APP + "Prayer/PrayerTimesModel.swift", APP + "Tasbih/TasbihModel.swift",
                                 APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SuwarDeckModel.swift"],
-    "TransferImportUITests": [APP + "Transfer/*.swift", APP + "Screens/SettingsView.swift",
+    "TransferImportUITests": [APP + "Transfer/*.swift", APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
                               APP + "Screens/DeckDialogs.swift", APP + "Deck/SuwarDeckModel.swift",
                               APP + "Tasbih/TasbihModel.swift", APP + "Prayer/PrayerTimesModel.swift"],
 }

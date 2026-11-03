@@ -85,6 +85,7 @@
 		BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4122DE1C89CDB311B8848C /* SectionChips.swift */; };
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
+		C27845DD0E8A137595283AD0 /* AppIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C76CA9088A9C99CF035EF0 /* AppIconTests.swift */; };
 		C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */; };
 		C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */; };
 		CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */; };
@@ -97,10 +98,12 @@
 		D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */; };
 		DFDF1111CCFA43A6D30C55BF /* kfgqpc-hafs-v30.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */; };
 		E07DC50005FE72F2D25F8DA2 /* BackupExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FAD2307E294785D686E6D07 /* BackupExportView.swift */; };
+		E12B2A8215DBA945ABE328AC /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6C80B8DF9E7A2E7322014F /* AppIcon.swift */; };
 		E86F1D7AF6E9F041D330B258 /* DayRollover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134B2928ABCD0502572ED37 /* DayRollover.swift */; };
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
 		EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB093C7B73DF50B939CB0E4C /* PrayerTimesModel.swift */; };
 		EF7F3B0BA2B89E02051BBD04 /* TrackerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F40DFA5D331C844BC793D0A /* TrackerViews.swift */; };
+		F0AAB812DA5C4B29A62124C2 /* AppIconSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF659CAC977464A8BC800B7 /* AppIconSection.swift */; };
 		F428B2B4E128D7221469B0CC /* AthkarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9902C526E04201EDE67E58AE /* AthkarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4280DECA9C457370A36B4B3 /* HomeView.swift */; };
 		F96134CFA1F9A4AF648287CC /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 3CADA9419CAC70B90CD19CFD /* manifest.json */; };
@@ -177,6 +180,7 @@
 		4BFE3F2EBE820080C1D234D8 /* PrayerWidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidgetPublisher.swift; sourceTree = "<group>"; };
 		4CA5829C92066B2E935FB84C /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
+		4EF659CAC977464A8BC800B7 /* AppIconSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconSection.swift; sourceTree = "<group>"; };
 		501E35E5E819164510431A3C /* DeviceLocationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocationTests.swift; sourceTree = "<group>"; };
 		51E500B0D3D703EAE93C102C /* ReminderNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotifications.swift; sourceTree = "<group>"; };
 		51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRowUITests.swift; sourceTree = "<group>"; };
@@ -192,6 +196,7 @@
 		6BC25390B547669C1BA3AF86 /* TasbihModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihModel.swift; sourceTree = "<group>"; };
 		6D4122DE1C89CDB311B8848C /* SectionChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionChips.swift; sourceTree = "<group>"; };
 		6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsView.swift; sourceTree = "<group>"; };
+		6D6C80B8DF9E7A2E7322014F /* AppIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIcon.swift; sourceTree = "<group>"; };
 		6E301EE1F11B7A2E59401A62 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		6F4A7DAF059476E447785AE3 /* QiblaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QiblaView.swift; sourceTree = "<group>"; };
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
@@ -241,6 +246,7 @@
 		DEDDB713CE939FA556214E4E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuqyahDeckModel.swift; sourceTree = "<group>"; };
 		E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRow.swift; sourceTree = "<group>"; };
+		E2C76CA9088A9C99CF035EF0 /* AppIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconTests.swift; sourceTree = "<group>"; };
 		E6F9DC84406C078E0310E0A3 /* DiagnosticsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsUITests.swift; sourceTree = "<group>"; };
 		E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUITests.swift; sourceTree = "<group>"; };
 		EBC80EB016E62A55F7388473 /* DeckCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCardView.swift; sourceTree = "<group>"; };
@@ -286,6 +292,7 @@
 		0B6738EC7BA2292971E87FB5 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
+				6D6C80B8DF9E7A2E7322014F /* AppIcon.swift */,
 				A9B85A291084AF937C35C88A /* Haptics.swift */,
 				7E635BAF5C6A1B0F1FE998DE /* QuickActions.swift */,
 			);
@@ -304,6 +311,7 @@
 		386E0D8B45321204D84131A8 /* AthkarTests */ = {
 			isa = PBXGroup;
 			children = (
+				E2C76CA9088A9C99CF035EF0 /* AppIconTests.swift */,
 				06750E28AA29F8F17A5D8A5E /* DeviceHeadingTests.swift */,
 				501E35E5E819164510431A3C /* DeviceLocationTests.swift */,
 				A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */,
@@ -359,6 +367,7 @@
 		4A19A294B20B9DCEC455FD7F /* Screens */ = {
 			isa = PBXGroup;
 			children = (
+				4EF659CAC977464A8BC800B7 /* AppIconSection.swift */,
 				58B2E2B3B44466BF8C29FE4A /* DeckDialogs.swift */,
 				E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */,
 				F4280DECA9C457370A36B4B3 /* HomeView.swift */,
@@ -731,6 +740,8 @@
 				9C1E61C79829055E1DA38114 /* AboutReport.swift in Sources */,
 				880975DAF02097F5D183D38D /* AboutView.swift in Sources */,
 				BBB61F362C89406FBF1C96F5 /* AdhkarDeckModel.swift in Sources */,
+				E12B2A8215DBA945ABE328AC /* AppIcon.swift in Sources */,
+				F0AAB812DA5C4B29A62124C2 /* AppIconSection.swift in Sources */,
 				5885800F296C6AA0500D00D9 /* AppModel.swift in Sources */,
 				FFDF791CD0F2EB4FCCCB89F6 /* AppRoute.swift in Sources */,
 				331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */,
@@ -817,6 +828,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C27845DD0E8A137595283AD0 /* AppIconTests.swift in Sources */,
 				749F95A4450C8B5F4B1C455B /* DeviceHeadingTests.swift in Sources */,
 				0B83C74F96A964CB5E8BDE0B /* DeviceLocationTests.swift in Sources */,
 				0EA61B25B39E91EADE9C0ED9 /* NativeTestSupport.swift in Sources */,
@@ -1049,6 +1061,7 @@
 		936E46F5108CE657B8BFC335 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIconHorizon;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Athkar/Info.plist;
@@ -1094,6 +1107,7 @@
 		CBD0BE639F43C832D44020D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIconHorizon;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Athkar/Info.plist;

@@ -264,6 +264,10 @@ class Project:
         with (self.ios / self.setting("INFOPLIST_FILE")).open("rb") as handle:
             return self.expand_plist(plistlib.load(handle))
 
+    def alternate_icons(self) -> list[str]:
+        """The alternate app icon sets the asset catalog compiler includes, none when unset."""
+        return self.expand(self.settings.get("ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES", "")).split()
+
     def families(self) -> list[int]:
         families = [int(f) for f in self.setting("TARGETED_DEVICE_FAMILY").split(",")]
         if not families or any(f not in DEVICE_FAMILIES for f in families):
@@ -585,12 +589,15 @@ def write_plist(path: Path, data: dict) -> None:
 def compile_catalogs(project: Project, catalogs: list[Path], app: Path, actool: Path) -> dict:
     devices = [DEVICE_FAMILIES[f] for f in project.families()]
     icon = project.setting("ASSETCATALOG_COMPILER_APPICON_NAME")
+    alternates = project.alternate_icons()
     with tempfile.TemporaryDirectory() as tmp:
         partial = Path(tmp) / "partial.plist"
         command = [str(actool), *map(str, catalogs), "--compile", str(app), "--platform", "iphoneos",
                    "--minimum-deployment-target", project.setting("IPHONEOS_DEPLOYMENT_TARGET"),
                    "--app-icon", icon, "--output-partial-info-plist", str(partial),
                    "--output-format", "human-readable-text"]
+        for name in alternates:
+            command += ["--alternate-app-icon", name]
         for device in devices:
             command += ["--target-device", device]
         say("actool: " + " ".join(command))
@@ -607,18 +614,41 @@ def compile_catalogs(project: Project, catalogs: list[Path], app: Path, actool: 
             keys = plistlib.load(handle)
     if not (app / "Assets.car").is_file():
         die("actool wrote no Assets.car")
-    repair_loose_icons(catalogs, icon, keys, app)
+    # The Linux actool (darwin-tools d993142) accepts --alternate-app-icon but compiles no
+    # alternate .appiconset, so the app declares no CFBundleAlternateIcons and iOS reports
+    # that it cannot change its icon; «أيقونة التطبيق» in الإعدادات then stays hidden.
+    compiled = {name for key in ("CFBundleIcons", "CFBundleIcons~ipad")
+                for name in keys.get(key, {}).get("CFBundleAlternateIcons", {})}
+    if compiled and compiled != set(alternates):
+        die(f"actool compiled the alternate icons {sorted(compiled)}, not {alternates}")
+    if alternates and not compiled:
+        say(f"actool compiled no alternate icons {alternates}; this IPA has only {icon}")
+    files = {name: set() for name in (icon, *sorted(compiled))}
+    for key in ("CFBundleIcons", "CFBundleIcons~ipad"):
+        icons = keys.get(key, {})
+        entries = {icon: icons.get("CFBundlePrimaryIcon", {}), **icons.get("CFBundleAlternateIcons", {})}
+        for name, entry in entries.items():
+            files[name].update(entry.get("CFBundleIconFiles", []))
+    loose = sorted(p for p in app.glob("*.png") if p.name.startswith(tuple(files)))
+    for name, names in files.items():
+        repair_loose_icons(catalogs, name, names, [p for p in loose if icon_match(name, p.name)], app)
+    for path in loose:
+        if not any(icon_match(name, path.name) for name in files):
+            die(f"actool wrote an unexpected icon {path.name}")
     return keys
 
 
-def repair_loose_icons(catalogs: list[Path], icon: str, keys: dict, app: Path) -> None:
+def icon_match(icon: str, filename: str):
+    return re.fullmatch(rf"{re.escape(icon)}(\d+)x\1@(\d)x(~ipad)?\.png", filename)
+
+
+def repair_loose_icons(catalogs: list[Path], icon: str, names: set, paths: list[Path], app: Path) -> None:
     """The Linux actool's loose-icon downsampler (darwin-tools d993142,
     SingleSizeIcon.downsampleRGBA) multiplies the alpha-weighted colour by 255 again, so every
     opaque pixel saturates and each loose PNG is solid white. SpringBoard can read these PNGs
     when its Assets.car lookup misses. A uniform output from a varied source is that defect;
-    it is replaced by the same area average, computed correctly from the same source image."""
-    names = {name for k in ("CFBundleIcons", "CFBundleIcons~ipad")
-             for name in keys.get(k, {}).get("CFBundlePrimaryIcon", {}).get("CFBundleIconFiles", [])}
+    it is replaced by the same area average, computed correctly from the same source image.
+    `paths` are the loose PNGs actool wrote for this icon set, the primary or an alternate."""
     sets = [c / f"{icon}.appiconset" for c in catalogs if (c / f"{icon}.appiconset").is_dir()]
     if len(sets) != 1:
         die(f"expected one {icon}.appiconset, found {len(sets)}")
@@ -627,9 +657,9 @@ def repair_loose_icons(catalogs: list[Path], icon: str, keys: dict, app: Path) -
     if len(base) != 1 or base[0].get("size") != "1024x1024" or base[0].get("idiom") != "universal":
         die(f"{icon} is not a single-size 1024 universal icon")
     source = None
-    for path in sorted(app.glob(f"{icon}*.png")):
-        match = re.fullmatch(rf"{re.escape(icon)}(\d+)x\1@(\d)x(~ipad)?\.png", path.name)
-        if not match or path.name.split("@")[0] not in names:
+    for path in paths:
+        match = icon_match(icon, path.name)
+        if path.name.split("@")[0] not in names:
             die(f"actool wrote an unexpected icon {path.name}")
         side = int(match.group(1)) * int(match.group(2))
         width, height, pixels = png_decode(path.read_bytes())
@@ -900,8 +930,13 @@ def verify(ipa: Path, project: Project, expected: dict, extensions: dict) -> lis
     for font in info.get("UIAppFonts", []):
         check(font in files, f"UIAppFonts {font} is at the bundle root")
     check("Assets.car" in files and "PkgInfo" in files, "Assets.car and PkgInfo")
-    icons = info.get("CFBundleIcons", {}).get("CFBundlePrimaryIcon", {})
-    check(icons.get("CFBundleIconName") == project.setting("ASSETCATALOG_COMPILER_APPICON_NAME"), "primary icon name")
+    icons = info.get("CFBundleIcons", {})
+    check(icons.get("CFBundlePrimaryIcon", {}).get("CFBundleIconName")
+          == project.setting("ASSETCATALOG_COMPILER_APPICON_NAME"), "primary icon name")
+    alternates = icons.get("CFBundleAlternateIcons", {})
+    check(sorted(alternates) in ([], sorted(project.alternate_icons()))
+          and all(entry.get("CFBundleIconName") == name for name, entry in alternates.items()),
+          f"alternate icons {sorted(alternates)} are none or {sorted(project.alternate_icons())}")
     for name in sorted(n for n in files if n.endswith(".png") and "/" not in n):
         width, height, pixels = png_decode(files[name])
         check(not uniform(pixels), f"{name} ({width}x{height}) is not a uniform placeholder")

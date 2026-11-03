@@ -256,6 +256,12 @@ PNGs are standard rather than CgBI, the code directory uses 4 KiB rather than 16
 pages, and the binaries keep SwiftBuild's `@loader_path` rpath instead of
 `@executable_path/Frameworks` (and, for the widget, `@executable_path/../../Frameworks`).
 
+The same actool accepts `--alternate-app-icon` but compiles no alternate `.appiconset`. The tool
+passes `ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` to it anyway and logs that the IPA has
+only `AppIcon`. Without `CFBundleAlternateIcons`, iOS reports that the app cannot change its
+icon, so a Linux-built IPA has no horizon icon and الإعدادات hides «أيقونة التطبيق».
+`tools/app-icons.py` draws both icons, their dark and tinted versions and the previews.
+
 A Linux-built IPA has not been run on a device until someone installs it. Packaging,
 the signature check and the comparison above are not runtime evidence; Feather re-signs
 the app when it installs it. Publishing remains the coordinator's step. This tool does
