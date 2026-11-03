@@ -4,6 +4,7 @@ import SwiftUI
 /// the other one changes the icon at once; iOS then shows its own alert.
 struct AppIconSection: View {
     @Environment(\.palette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
     @State private var current = AppIconChoice.letter
     @State private var isChanging = false
     @State private var failed = false
@@ -38,10 +39,15 @@ struct AppIconSection: View {
             }
         } label: {
             VStack(spacing: 8) {
-                Image(choice.preview)
+                preview(choice)
                     .resizable()
                     .frame(width: 60, height: 60)
                     .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
+                    .overlay {
+                        // The tile is the page's own paper, so a rule gives it its edge.
+                        RoundedRectangle(cornerRadius: 13.5, style: .continuous)
+                            .strokeBorder(palette.border, lineWidth: 1)
+                    }
                     .padding(4)
                     .overlay {
                         RoundedRectangle(cornerRadius: 17, style: .continuous)
@@ -58,5 +64,13 @@ struct AppIconSection: View {
         .accessibilityLabel("أيقونة \(choice.title)")
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
         .accessibilityIdentifier("settings.appIcon.\(choice.rawValue)")
+    }
+
+    /// The icon in the page's light or dark colours. An asset image in a list row keeps the version it first drew when
+    /// the theme changes with الإعدادات open, so the version is picked here from the colour scheme.
+    private func preview(_ choice: AppIconChoice) -> Image {
+        let traits = UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+        return UIImage(named: choice.preview, in: nil, compatibleWith: traits).map(Image.init(uiImage:))
+            ?? Image(choice.preview)
     }
 }
