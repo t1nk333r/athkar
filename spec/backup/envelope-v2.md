@@ -1,18 +1,18 @@
 # Backup envelope, format 2
 
-The native app's own backup (NATIVE_APP_PLAN.md §6.4, §11 item 12). «تصدير نسخة احتياطية» in الإعدادات writes it as a
-`.athkarbackup` file and hands it to the share sheet; the same app on another device, or on this one after
-«حذف كل البيانات», restores it from «استيراد ملف» or by opening the file. Machine-checkable schema:
+Format 2 is the native app's own backup (NATIVE_APP_PLAN.md §6.4, §11 item 12). «تصدير نسخة احتياطية» in الإعدادات
+writes it as a `.athkarbackup` file and hands it to the share sheet. The same app on another device, or on this one
+after «حذف كل البيانات», restores it from «استيراد ملف» or by opening the file. The machine-checkable schema is
 [`envelope-v2.schema.json`](envelope-v2.schema.json). Validate a file with `node tools/backup-validate.mjs <file>`,
 which reads either format. [`examples/native.athkarbackup`](examples/native.athkarbackup) is a format 2 file.
 
 Format 1 ([`envelope-v1.md`](envelope-v1.md)) stays the PWAs' format, and the app keeps importing it. A PWA cannot
-read format 2: it carries tables the PWAs never had.
+read format 2, because format 2 carries tables the PWAs never had.
 
 ## The file
 
-- One UTF-8 JSON document, extension `.athkarbackup`, MIME type `application/json`, named
-  `athkar-backup-YYYY-MM-DD.athkarbackup` after the device's local date. Read as format 1 is: one leading BOM is
+- The file is one UTF-8 JSON document with extension `.athkarbackup` and MIME type `application/json`, named
+  `athkar-backup-YYYY-MM-DD.athkarbackup` after the device's local date. It is read as format 1 is: one leading BOM is
   stripped, bytes that are not UTF-8 reject the file, and the text follows `JSON.parse` (a duplicated key keeps its
   last value). `meta.format` is read first, so a later format is reported as such (`unsupportedFormat`), not as a
   damaged file.
@@ -22,12 +22,12 @@ read format 2: it carries tables the PWAs never had.
   that export; the switch starts off every time the screen opens. The coordinates are the stored ones, rounded to 2
   decimals (§7.4).
 - Every section is required; a section's array may be empty. A preference or prayer setting appears only when the
-  user set it (its `settings` row exists); an absent one reads as its default on import, and stays absent.
+  user set it (its `settings` row exists). An absent one reads as its default on import, and stays absent.
 - Rows are the tables' rows (spec/schema.md), sorted by their keys as text (adhkar days by date then period, so
   `evening` before `morning`), «مسبحة» counts by date then first use, prayer records by date then Fajr … Isha. The
-  whole history is exported: the native tables keep no window, and nothing is trimmed.
+  whole history is exported. The native tables keep no window, and nothing is trimmed.
 - `updated_at` is not exported. Each imported row is stamped with `meta.exportedAt`, as format 1's are. A
-  location's `source` is not exported either; an imported location is `import`.
+  location's `source` is not exported either, and an imported location has source `import`.
 - Keys whose value may be `null` (`completedAt` of an adhkar day, `count`/`target` of an item, a prayer record's
   `scheduledAt`, `timing`, `noonPrayer`, `loggedAt`, a rule's `prayer`, `offsetMinutes`, `localTime`, a location's
   `label`, `zoneId`, `updatedAt`) are always written, as `null` when empty. No other key may be `null`, and no key
@@ -85,7 +85,7 @@ checks:
 
 ## Import rules (native side)
 
-The file merges into the tables in one transaction. The device wins wherever it already has something: a unit is
+The file merges into the tables in one transaction. The device wins wherever it already has something. A unit is
 imported only when the device has nothing for it. So a file restores everything on a fresh install, adds what is
 missing on a device in use, and importing it again writes nothing.
 
@@ -100,10 +100,10 @@ missing on a device in use, and importing it again writes nothing.
 | prayer record `(date, prayer)`, metadata as written | the device has no record, or its record is still `unrecorded` and the file's is not |
 | reminder rule `(id)`; its last shown date | the device has no rule with that `id`; no last shown date for it |
 | location | the device has none (source `import`) |
-| each setting | as format 1's settings, with origin `native`: it replaces a row a PWA import wrote, never one the user set in the app |
+| each setting | as format 1's settings, with origin `native`. It replaces a row a PWA import wrote, never one the user set in the app |
 
-A dry run of the same merge, rolled back, gives the review screen its list (what each section would add); the
-confirmation then runs it for real.
+A dry run of the same merge, rolled back, gives the review screen its list of what each section would add. The
+confirmation then runs the merge for real.
 
 ## Round trip
 

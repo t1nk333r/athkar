@@ -34,7 +34,7 @@ A release is complete only when it:
 1. **Arabic first and RTL first.** Arabic is the launch language; design the layout in RTL rather than mirroring it as an afterthought.
 2. **Local first.** Reading, counting, prayer calculations, tracking, history, search, and reminders work without an account or network.
 3. **Private by default.** Prayer logs, exemptions, location, favorites, and history stay on the device unless the user explicitly exports them.
-4. **Record, do not judge.** No leaderboards, public sharing, guilt copy, red “failed day” treatment, or competitive streaks.
+4. **Record, do not judge.** No leaderboards, public sharing, guilt copy, red "failed day" treatment, or competitive streaks.
 5. **Verified content.** Quran text, adhkar, sources, audio, and prayer-calculation parameters have named provenance and review.
 6. **User-selected religious settings.** The app exposes calculation methods and recording options but does not issue rulings.
 7. **Reliable but honest reminders.** Use native scheduling and clearly disclose platform or permission limitations instead of promising impossible precision.
@@ -47,7 +47,7 @@ The native app must preserve these existing behaviors:
 
 - 25 morning cards and 23 evening cards, including Quran styling, details, source notes, configurable targets, and the existing review-card mechanism.
 - Tap counting, per-item reset, whole-session reset, previous/next controls, touch swipe, auto-advance, and first-incomplete resume.
-- Completion by counters or by “completed outside the app.” Manual completion leaves counters untouched and allows free browsing.
+- Completion by counters or by "completed outside the app." Manual completion leaves counters untouched and allows free browsing.
 - Completion dialog, completion time, switching between morning and evening, and reminder suppression after completion.
 - Local midnight rollover and the existing seven-day history, migrated into an unbounded history store.
 - Fajr-relative morning reminder and Asr-relative evening reminder, current calculation methods, Asr school selection, location, and the 15-minute catch-up rule.
@@ -124,7 +124,7 @@ The PWA's reminder timers work reliably only while the page is open. The native 
 
 ### Calendar and insights
 
-- Month grid showing prayer and morning/evening completion without a “failed” state.
+- Month grid showing prayer and morning/evening completion without a "failed" state.
 - Day detail with edit and undo.
 - Plain counts and patterns only; no public scores or competitive presentation.
 
@@ -153,7 +153,7 @@ Changing a method later must not move, duplicate, or silently recalculate a hist
 
 Use a small neutral core state:
 
-- `unrecorded`: default; never rendered as “missed.”
+- `unrecorded`: default; never rendered as "missed."
 - `prayed`: recorded by the user.
 - `not_applicable`: the user explicitly selects this state for a prayer or date range.
 
@@ -179,7 +179,7 @@ Optional modifiers are separate fields rather than new completion states:
 - **Details:** open a sheet to choose timing and optional modifiers.
 - **Correction:** users can edit or clear every value later. Ask for confirmation before clearing a day.
 - **Past days:** calendar day detail supports the same controls as today.
-- **Notification action:** “record as prayed” uses the same idempotent domain command as the app screen.
+- **Notification action:** "record as prayed" uses the same idempotent domain command as the app screen.
 - **No automatic completion:** receiving or opening a notification never marks a prayer by itself.
 
 ### 6.4 Friday
@@ -188,9 +188,9 @@ On Friday, the app may display the Dhuhr occurrence as a Jumu'ah/Dhuhr choice. T
 
 ### 6.5 Travel, combining, and shortening
 
-- Travel mode is manually enabled for today or a selected date range.
+- The user enables travel mode manually for today or a selected date range.
 - Available combining pairs and shortening rows come from a versioned rule set approved by a named reviewer, not from hard-coded product assumptions.
-- The app surfaces only options in that reviewed rule set and never applies them automatically.
+- The app offers only the options in that reviewed rule set and never applies them automatically.
 - A neutral explanation tells users to follow their own trusted scholarly guidance.
 - Changing travel mode never rewrites existing records without an explicit confirmation.
 
@@ -203,7 +203,7 @@ On Friday, the app may display the Dhuhr occurrence as a Jumu'ah/Dhuhr choice. T
 
 ### 6.7 Make-up tracking
 
-- Entirely opt-in.
+- Make-up tracking is entirely opt-in.
 - The app never turns old `unrecorded` rows into a make-up debt.
 - A user can select a historical occurrence and link a later `made_up` record to it.
 - Undoing the later record restores the original state.
@@ -218,7 +218,7 @@ Sunnah, Witr, Duha, Qiyam, and Tarawih are separate optional modules. They never
 - Athkar sessions continue to reset at local civil midnight.
 - Prayer records stay attached to their original occurrence even when recorded after midnight.
 - Users can always reach the previous day's Isha through day navigation. The app makes no claim about its validity window.
-- Time-zone changes create new local schedule context. The app never shifts or deletes existing records.
+- Time-zone changes create a new local schedule context. The app never shifts or deletes existing records.
 - A backward device-clock change triggers a quiet warning and must not discard history.
 
 ## 7. The eight README features
@@ -238,7 +238,7 @@ Sunnah, Witr, Duha, Qiyam, and Tarawih are separate optional modules. They never
 
 ### Calculation boundary
 
-Adopt the MIT-licensed [Adhan JS](https://github.com/batoulapps/adhan-js) library behind a project-owned `PrayerTimesPort`, pinning and auditing the selected version. Keep the current solar implementation only as a parity oracle during migration.
+Adopt the MIT-licensed [Adhan JS](https://github.com/batoulapps/adhan-js) library behind a project-owned `PrayerTimesPort`. Pin and audit the selected version. Keep the current solar implementation only as a parity oracle during migration.
 
 The port returns UTC instants plus the IANA zone for:
 
@@ -262,9 +262,9 @@ The port returns UTC instants plus the IANA zone for:
 
 ### Location policy
 
-- Request only when the user asks for current-location calculations.
-- Use one-shot, when-in-use location; never background-track.
-- Round stored coordinates and keep them on device.
+- Request location only when the user asks for current-location calculations.
+- Use one-shot, when-in-use location. Never track location in the background.
+- Round stored coordinates and keep them on the device.
 - Offer an offline city list and manual coordinates when permission is denied.
 - Pair automatic current location with the device's current IANA zone; manual cities carry their own zone and allow an override.
 - Display which location and time zone produced the schedule and when it was last updated.
@@ -304,26 +304,26 @@ Completion cancels the pending notification immediately. Replanning with the sam
 - Explain that reminders can lapse if the app remains unopened beyond the scheduled horizon.
 - While the app is terminated, iOS may not notify it promptly about a time-zone or manual clock change. The app recalculates on the next launch or foreground event and discloses that already scheduled reminders may retain the old zone until then.
 
-Apple documents system delivery while an app is not running and provides an API for removing pending requests; Athkar uses that cancellation API after completion: [Scheduling a notification locally](https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app).
+Apple documents system delivery while an app is not running and provides an API for removing pending requests. Athkar uses that cancellation API after completion. See [Scheduling a notification locally](https://developer.apple.com/documentation/usernotifications/scheduling-a-notification-locally-from-your-app).
 
 ### Android
 
 - Use notification channels for prayer, adhkar, and custom reminders.
 - Use inexact alarms by default where acceptable.
 - Evaluate user-granted exact-alarm access because prayer reminders are core, but complete the Google Play policy review before requesting it.
-- Android 14 and later do not pregrant `SCHEDULE_EXACT_ALARM` to fresh installs, and `USE_EXACT_ALARM` is restricted by Google Play to qualifying alarm/calendar use cases. Exact mode remains conditional on policy approval and granted access.
+- Android 14 and later do not pregrant `SCHEDULE_EXACT_ALARM` to fresh installs, and Google Play restricts `USE_EXACT_ALARM` to qualifying alarm/calendar use cases. Exact mode remains conditional on policy approval and granted access.
 - If exact access is unavailable, show the user that delivery may be delayed and use the supported inexact fallback.
 - Reschedule from receivers for reboot, time change, time-zone change, package replacement, and permission change.
 - Do not run a permanent background service or poll location.
 
-Android's official guidance explains the battery and permission tradeoffs for exact alarms: [Schedule alarms](https://developer.android.com/develop/background-work/services/alarms).
+Android's official guidance, [Schedule alarms](https://developer.android.com/develop/background-work/services/alarms), explains the battery and permission tradeoffs for exact alarms.
 
 ### Notification behavior
 
-- Permission is requested only after the user enables a reminder.
-- Notification actions may open the exact prayer/wird or record a prayer with undo available on next app open.
+- The app requests notification permission only after the user enables a reminder.
+- Notification actions may open the exact prayer/wird, or record a prayer with undo available the next time the app opens.
 - Adhkar reminders retain the existing 15-minute foreground catch-up behavior.
-- Optional sound respects silent and focus modes; no claim that a full adhan can bypass platform restrictions.
+- Optional sound respects silent and focus modes. The app does not claim that a full adhan can bypass platform restrictions.
 - Diagnostics show planned, pending, delivered, opened, and cancelled IDs without storing worship text or precise location.
 
 ## 10. Recommended architecture
@@ -343,11 +343,11 @@ Do not use Expo Go as the production architecture; widgets, boot receivers, and 
 
 ### Architecture falsifiers
 
-Run a native spike before committing. Switch the recommendation if:
+Run a native spike before committing to this stack. Switch the recommendation if:
 
 - Uthman Taha text has unacceptable shaping or diacritic defects in React Native on representative Android devices and Flutter passes the same visual corpus.
 - The selected notification layer cannot preserve multi-day scheduled notifications while the app is terminated, even with a thin native scheduler.
-- The project intentionally retires the PWA, removing the primary shared-TypeScript advantage.
+- The project intentionally retires the PWA, which removes the primary shared-TypeScript advantage.
 
 ### Proposed repository shape
 
@@ -456,8 +456,8 @@ Malformed input must never partially modify the database. Import runs in one tra
 
 Native applications cannot read the PWA's localStorage sandbox. Migration therefore requires:
 
-1. Give the PWA an export in the shared envelope. In the athkar PWA this is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)), which replaced its `.athkarbackup` export: every code embeds envelope v1 as its `envelope` field. The ruqyah PWA exports envelope v1 as a `.athkarbackup` file.
-2. Offer “Import from the web app” during native onboarding and later in settings.
+1. Give the PWA an export in the shared envelope. In the athkar PWA this is the transfer code ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)), which replaced its `.athkarbackup` export. Every code embeds envelope v1 as its `envelope` field. The ruqyah PWA exports envelope v1 as a `.athkarbackup` file.
+2. Offer "Import from the web app" during native onboarding and later in settings.
 3. Accept a transfer code (pasted text, a `.txt` file or the animated QR frames) and an envelope-v1 file through the document picker/share sheet. A custom deep link may be used for convenience with non-sensitive payloads.
 4. Map current progress, targets, manual completion, seven-day history, reminder preferences, theme, reading settings, and haptics. A transfer code never carries the saved location, so the user sets the location again in the native app; an older `.athkarbackup` file carries it only if the user switched on its location-inclusion option at export.
 5. Compare a native re-export with the PWA's envelope (a code's `envelope`, or a PWA file) in an automated round-trip fixture.
@@ -480,7 +480,7 @@ Native applications cannot read the PWA's localStorage sandbox. Migration theref
 - Evening adhkar.
 - Log a prayer.
 
-Each launches the precise route on a cold start.
+Each launches the exact route on a cold start.
 
 ### 1.1 widgets
 
@@ -510,7 +510,7 @@ Support routes for morning, evening, a specific card, a prayer occurrence, searc
   If it fails, GoatCounter's own cleanup (about 30 days) is the fallback. The PWA's Settings discloses this.
 - The native app's 1.0 release gate of "no data collected/shared" (Store declarations below) is unchanged. It ships no counter.
 - No worship or location data leaves the device during ordinary use.
-- PWA transfer codes ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)) are built on the device, are plaintext, and travel only by a channel the user picks (copy, file, or a QR code shown on screen). No server is involved. The transfer code is the athkar PWA's only export: it replaced the `.athkarbackup` backup file and embeds envelope v1, never with the saved location.
+- PWA transfer codes ([`spec/transfer/transfer-v1.md`](spec/transfer/transfer-v1.md)) are built on the device, are plaintext, and travel only by a channel the user picks (copy, file, or a QR code shown on screen). No server is involved. The transfer code is the athkar PWA's only export. It replaced the `.athkarbackup` backup file and embeds envelope v1, never with the saved location.
 - The app uses one-shot location requests, uses a coarse location sufficient for calculations, rounds coordinates before storage, and never collects location in the background.
 - Notification text contains no personal prayer history.
 - Exclude sensitive details from default exports and redact them from diagnostics.
@@ -582,11 +582,11 @@ Apple requires privacy details for apps and third-party SDKs. Google requires a 
 ## 18. Nonfunctional targets
 
 - All 1.0 core features work in airplane mode after installation.
-- No permanent background service and no background location polling.
+- The app runs no permanent background service and does not poll location in the background.
 - Reach an interactive Today/adhkar screen within 1.5 seconds of a cold start on the agreed baseline Android device.
 - Respond to a card tap within 50 ms and keep navigation smooth at supported font sizes.
 - Do not lose a committed row after process termination.
-- Notification planner never exceeds the validated platform request budget.
+- The notification planner never exceeds the validated platform request budget.
 - When policy approves exact Android scheduling and the user grants access, target one-minute accuracy. Measure and disclose fallback behavior.
 - Crash-free sessions target at least 99.5% using Play vitals and the subset of App Store users who opted into analytics sharing. Never attach worship data to crash diagnostics.
 - The app without optional audio remains within a 30 MB download target.
@@ -668,7 +668,7 @@ Proceed only after a threat model and product decision confirm demand.
 
 #### What can and cannot be hidden
 
-Apple must know the real Account Holder and legal entity. The goal is to remove the person's name from public App Store surfaces, not to give Apple false information.
+Apple must know the real Account Holder and legal entity. The goal is to remove the person's name from everything the App Store shows publicly, not to give Apple false information.
 
 | Surface | What controls it | Required action |
 | --- | --- | --- |
@@ -678,7 +678,7 @@ Apple must know the real Account Holder and legal entity. The goal is to remove 
 | Support, privacy, marketing, copyright, and trader details | App Store Connect metadata and compliance records | Use organization-owned domains, email addresses, phone numbers, and lawful business details in every public field. |
 | Bundle ID, Team ID, and signing certificate | Developer and build configuration | These are technical identifiers. Changing the app name does not change the public seller; changing teams requires a signing and entitlement cutover. |
 
-Apple does not offer a supported self-service switch from an individual seller name to a brand. Apple says changing the Apple Account profile name does not change an existing individual membership or App Store seller name in its [account-information guidance](https://developer.apple.com/help/account/membership/updating-your-account-information/). If no qualifying legal entity exists, create one and have Apple verify it, keep the legal personal seller name, or delay iOS distribution. A DBA or trade name alone does not qualify as the organization legal entity.
+Apple does not offer a supported self-service switch from an individual seller name to a brand. Apple's [account-information guidance](https://developer.apple.com/help/account/membership/updating-your-account-information/) says that changing the Apple Account profile name does not change an existing individual membership or App Store seller name. If no qualifying legal entity exists, create one and have Apple verify it, keep the legal personal seller name, or delay iOS distribution. A DBA or trade name alone does not qualify as the organization legal entity.
 
 #### Recommended path: convert the existing individual membership
 

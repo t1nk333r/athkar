@@ -69,8 +69,8 @@ that the planner leaves out a prayer notification for an occurrence the tracker 
   permission is not `granted`, when `periodIsComplete` is true, or when no time can be computed.
 - The catch-up time is `now + 300 ms`, exactly as the PWA does it.
 - A prayer occurrence recorded `prayed` or `not_applicable` is not planned, on any day of the horizon, catch-up
-  included. `unrecorded` keeps its notification, whether it was never recorded, undone, unrecorded, unmarked or
-  cleared. Adhkar reminders do not depend on the tracker.
+  included. An `unrecorded` occurrence keeps its notification, whether it was never recorded, undone, unrecorded,
+  unmarked or cleared. Adhkar reminders do not depend on the tracker.
 - The native notification IDs (`adhkar.<period>.<local_date>`, §7.5) are new. The PWA has no
   equivalent at scheduling time, so the fixtures do not record them.
 
@@ -105,12 +105,21 @@ The adapter configuration, the P1 results and the written explanation for every 
 
 ## Backup envelope
 
-`backup/envelope-v1.md` specifies envelope v1, the import format of the native app (NATIVE_APP_PLAN.md §6.4). The athkar PWA no longer exports a `.athkarbackup` file: its transfer code (`transfer/transfer-v1.md`) replaced that export and embeds envelope v1 as its `envelope` field. The ruqyah PWA exports the envelope as a `.athkarbackup` file. `backup/examples/` holds real exports from both PWAs, made before the athkar PWA's export moved into the transfer code. `backup/envelope-v2.md` specifies format 2, the native app's own export («تصدير نسخة احتياطية»): every user table, the calculation profile as `prayerSettings`, and the location only when the user includes it; `backup/examples/native.athkarbackup` is one. The native app imports both formats. Validate any envelope, of either format, with `node tools/backup-validate.mjs <file>`.
+`backup/envelope-v1.md` specifies envelope v1, the import format of the native app (NATIVE_APP_PLAN.md §6.4). The
+athkar PWA no longer exports a `.athkarbackup` file. Its transfer code (`transfer/transfer-v1.md`) replaced that
+export and embeds envelope v1 as its `envelope` field. The ruqyah PWA exports the envelope as a `.athkarbackup` file.
+`backup/examples/` holds real exports from both PWAs, made before the athkar PWA's export moved into the transfer
+code.
+
+`backup/envelope-v2.md` specifies format 2, the native app's own export («تصدير نسخة احتياطية»). Format 2 contains
+every user table, the calculation profile as `prayerSettings`, and the location only when the user includes it.
+`backup/examples/native.athkarbackup` is a format 2 export. The native app imports both formats. Validate any
+envelope, of either format, with `node tools/backup-validate.mjs <file>`.
 
 ## Transfer code
 
 `transfer/transfer-v1.md` specifies the code that moves progress between copies of the PWA: container, deflate +
-base45 codec, QR frames, limits, validation, and the merge with reset epochs. Its fixtures:
+base45 codec, QR frames, limits, validation, and the merge with reset epochs. It has these fixtures:
 
 | File | Function(s) | Content |
 | --- | --- | --- |
@@ -121,15 +130,15 @@ base45 codec, QR frames, limits, validation, and the merge with reset epochs. It
 | `transfer/fixtures/apply.json` | `applyTransfer` | storage before and the plan's writes → result and storage after, including the write-ahead record, rollback (and a failed rollback finished by the next start) and refusal cases |
 | `transfer/fixtures/recover.json` | `recoverTransferPending` | storage with an interrupted transfer's write-ahead record → what the next start did (`forward`, `back`, `conflict`, `invalid`) and the storage after |
 
-Codes in `codec.json` use stored (uncompressed) deflate blocks, so they are byte-identical on every zlib; the round
+Codes in `codec.json` use stored (uncompressed) deflate blocks, so they are byte-identical on every zlib. The round
 trips use the host's `CompressionStream` and record only the container.
 
 ## Prayer tracker
 
 `tracker/tracker.md` specifies the 1.0 prayer tracker: occurrences, the neutral states, commands and their
 transitions, metadata captured once, the calendar month summary and the next prayer across a DST change. The PWAs
-have no tracker, so its fixtures are written by hand (the next-prayer times are copied from
-`prayer-times/vectors.json`), not generated:
+have no tracker, so its fixtures are written by hand, not generated. Their next-prayer times are copied from
+`prayer-times/vectors.json`. The tracker's fixtures are:
 
 | File | Rule | Content |
 | --- | --- | --- |
