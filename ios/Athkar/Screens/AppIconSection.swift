@@ -9,7 +9,7 @@ struct AppIconSection: View {
     @State private var failed = false
 
     var body: some View {
-        Section {
+        PageSection("أيقونة التطبيق") {
             HStack(spacing: 32) {
                 ForEach(AppIconChoice.allCases) { choice in
                     option(choice)
@@ -17,8 +17,6 @@ struct AppIconSection: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
-        } header: {
-            Text("أيقونة التطبيق")
         } footer: {
             Text("في iOS 18 وما بعده تتبع الأيقونة مظهر الشاشة الرئيسية: فاتح أو داكن أو ملوّن.")
         }

@@ -125,28 +125,30 @@ PRAYER = [APP + "Prayer/*.swift", APP + "DeviceLocation.swift", APP + "OneShotLo
           "data/cities.tsv"]
 # «أيقونة التطبيق» sits at the top of الإعدادات, so every UI test that opens it renders the section.
 SETTINGS_ICON = [APP + "Screens/AppIconSection.swift", APP + "Platform/AppIcon.swift"]
+# The tests that open الإعدادات scroll down its rows in page order, so moving a row can break them.
+SETTINGS = [APP + "Screens/SettingsView.swift", *SETTINGS_ICON]
 UI_BLACK_BOX = {
     "*": [APP + "AthkarApp.swift", APP + "App/*.swift", APP + "Content/BundledContent.swift", APP + "Design/*.swift",
           APP + "Screens/HomeView.swift", APP + "Deck/DeckView.swift", APP + "Deck/DeckCardView.swift",
           APP + "Deck/DeckModel.swift", APP + "Deck/AdhkarDeckModel.swift", *BUNDLED_PACKS],
-    "AutoFitUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
-                       APP + "Screens/SettingsView.swift", *SETTINGS_ICON, "fonts/*.ttf"],
+    "AutoFitUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", *SETTINGS, "fonts/*.ttf"],
     "DeckIndexUITests": [APP + "Deck/DeckIndexView.swift", APP + "Deck/RuqyahDeckModel.swift",
-                         APP + "Deck/SectionChips.swift", APP + "Screens/DeckDialogs.swift"],
+                         APP + "Deck/SectionChips.swift", APP + "Screens/DeckDialogs.swift", *SETTINGS],
     "DeckRegressionUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
-                              APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", "fonts/*.ttf"],
+                              APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", "fonts/*.ttf",
+                              *SETTINGS],
     # It records today's prayers on «اليوم» and reads the counts on «التشخيص».
-    "DiagnosticsUITests": [APP + "Reminders/*.swift", APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
+    "DiagnosticsUITests": [APP + "Reminders/*.swift", *SETTINGS,
                            APP + "Screens/OtherSectionsView.swift", APP + "Tracker/TodayView.swift",
                            APP + "Tracker/TrackerViews.swift", APP + "Tracker/TrackerText.swift", *PRAYER],
     "DeckUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift",
-                    APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
-    "HomePrayerRowUITests": [APP + "Screens/HomePrayerRow.swift", *PRAYER],
+                    APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", *SETTINGS],
+    "HomePrayerRowUITests": [APP + "Screens/HomePrayerRow.swift", *SETTINGS, *PRAYER],
     "LaunchTests": [APP + "Screens/HomePrayerRow.swift", APP + "Prayer/PrayerTimesModel.swift"],
     "PrayerTimesUITests": [APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "PrayerTrackerUITests": [APP + "Tracker/*.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "QiblaUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Qibla/*.swift", *PRAYER],
-    "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *PRAYER],
+    "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *SETTINGS, *PRAYER],
     "ScreenshotUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", APP + "Screens/*.swift",
                           "fonts/*.ttf"],
     "SuwarUITests": [APP + "Deck/SuwarDeckModel.swift", APP + "Deck/SectionChips.swift",
@@ -156,14 +158,13 @@ UI_BLACK_BOX = {
                       APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift"],
     # Export, delete-all, privacy and about in الإعدادات; a deep link; the first-launch offer on أخرى.
     "MigrationPrivacyUITests": [APP + "Backup/*.swift", APP + "About/*.swift", APP + "Platform/QuickActions.swift",
-                                APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
-                                APP + "Screens/OtherSectionsView.swift",
+                                *SETTINGS, APP + "Screens/OtherSectionsView.swift",
                                 APP + "Tracker/TodayView.swift", APP + "Tracker/TrackerViews.swift",
                                 APP + "Tracker/TrackerText.swift", APP + "Tracker/PrayerTrackerModel.swift",
                                 APP + "Transfer/*.swift", APP + "Reminders/ReminderModel.swift",
                                 APP + "Prayer/PrayerTimesModel.swift", APP + "Tasbih/TasbihModel.swift",
                                 APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SuwarDeckModel.swift"],
-    "TransferImportUITests": [APP + "Transfer/*.swift", APP + "Screens/SettingsView.swift", *SETTINGS_ICON,
+    "TransferImportUITests": [APP + "Transfer/*.swift", *SETTINGS,
                               APP + "Screens/DeckDialogs.swift", APP + "Deck/SuwarDeckModel.swift",
                               APP + "Tasbih/TasbihModel.swift", APP + "Prayer/PrayerTimesModel.swift"],
 }

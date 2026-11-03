@@ -6,12 +6,12 @@ import UIKit
 struct AdhkarReminderSection: View {
     let app: AppModel
 
+    @Environment(\.palette) private var palette
+
     var body: some View {
-        Section {
+        PageSection("التذكيرات المرتبطة بالصلاة") {
             toggle(.morning, note: "بعد الفجر بساعة", prayer: .fajr)
             toggle(.evening, note: "بعد العصر بساعة", prayer: .asr)
-        } header: {
-            Text("التذكيرات المرتبطة بالصلاة")
         } footer: {
             ReminderStatusNote(reminders: app.reminders, hasLocation: app.prayer.location != nil,
                                enabled: app.reminders.isEnabled(.morning) || app.reminders.isEnabled(.evening))
@@ -28,7 +28,8 @@ struct AdhkarReminderSection: View {
         })) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(AdhkarSessionModel.title(period)).font(.body.weight(.semibold))
-                Text(detail ?? note).font(.footnote).foregroundStyle(.secondary)
+                    .foregroundStyle(palette.textPrimary)
+                Text(detail ?? note).font(.footnote).foregroundStyle(palette.textSecondary)
             }
         }
         .accessibilityIdentifier("settings.reminder.\(period.rawValue)")

@@ -1,9 +1,10 @@
 import AthkarCore
 import SwiftUI
 
-/// «الإعدادات» for this slice: reading and appearance, the app icon, reminders, long-order, manual completion,
-/// haptics, with the athkar PWA's wording. Every change is written to the `settings` table (or the adhkar session) as
-/// it is made, except the icon, which iOS keeps.
+/// «الإعدادات»: reading and appearance, the app icon, reminders, long-order and haptics, manual completion, the data,
+/// mostly in the athkar PWA's wording, laid out like its settings sheet: sections on the page, rules between rows.
+/// Every change is written to the `settings` table (or the adhkar session) as it is made, except the icon, which iOS
+/// keeps.
 struct SettingsView: View {
     let app: AppModel
 
@@ -19,14 +20,19 @@ struct SettingsView: View {
     var body: some View {
         @Bindable var settings = app.settings
         NavigationStack {
-            Form {
-                Section("القراءة والمظهر") {
+            List {
+                PageSection("القراءة والمظهر") {
                     segmented("المظهر", selection: $settings.theme, identifier: "settings.theme",
                               options: [(.system, "تلقائي"), (.light, "فاتح"), (.dark, "داكن")])
                     segmented("حجم نص الأذكار", selection: $settings.textSize, identifier: "settings.textSize",
                               options: [(.small, "صغير"), (.medium, "متوسط"), (.large, "كبير")])
                     segmented("تباعد السطور", selection: $settings.lineSpacing, identifier: "settings.lineSpacing",
                               options: [(.compact, "متقارب"), (.comfortable, "مريح"), (.wide, "واسع")])
+                    Toggle(isOn: $settings.homePrayerRow) {
+                        toggleCopy("المواقيت في أعلى الصفحة",
+                                   "الأذان القادم والتاريخ الهجري وتنبيه أوقات النهي عن الصلاة، مكان عنوان «بكرة وأصيلا».")
+                    }
+                    .accessibilityIdentifier("settings.homePrayerRow")
                 }
 
                 if AppIconChoice.isAvailable {
@@ -35,7 +41,7 @@ struct SettingsView: View {
 
                 AdhkarReminderSection(app: app)
 
-                Section("ترتيب الأذكار الطويلة") {
+                PageSection("أثناء القراءة") {
                     Toggle(isOn: Binding(get: { app.settings.longOrder == .last }, set: { enabled in
                         app.setLongOrder(enabled)
                         guard app.settings.longOrder == (enabled ? .last : .original) else { return }
@@ -45,18 +51,6 @@ struct SettingsView: View {
                                    "الأذكار التي تُكرَّر ١٠ مرات فأكثر تُقرأ في آخر الورد قبل الذكر الأخير، دون تغيير أرقامها ولا عدّاداتها.")
                     }
                     .accessibilityIdentifier("settings.longOrder")
-                }
-
-                Section {
-                    manualCompletionToggle(.morning)
-                    manualCompletionToggle(.evening)
-                } header: {
-                    Text("إكمال الورد يدويًا")
-                } footer: {
-                    Text("فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح.")
-                }
-
-                Section("الاهتزاز") {
                     Toggle(isOn: Binding(get: { settings.haptics }, set: { enabled in
                         settings.haptics = enabled
                         guard settings.haptics == enabled else { return }
@@ -64,79 +58,49 @@ struct SettingsView: View {
                         announce(enabled ? "شُغّل الاهتزاز" : "أُوقف الاهتزاز")
                     })) {
                         toggleCopy("الاهتزاز عند إكمال العداد",
-                                   "يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده.")
+                                   "عند إكمال ذكر يُكرَّر أكثر من مرة أو مقطع من الرقية أو صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده.")
                     }
                     .accessibilityIdentifier("settings.haptics")
                 }
 
-                Section {
+                PageSection("إكمال الورد يدويًا") {
+                    manualCompletionToggle(.morning)
+                    manualCompletionToggle(.evening)
+                } footer: {
+                    Text("فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح.")
+                }
+
+                PageSection("البيانات") {
                     Button {
                         transfer = app.makeTransferImport()
                     } label: {
-                        toggleCopy("استيراد من تطبيق الويب",
-                                   "انقل تقدّمك من تطبيق الويب «أذكار المسلم» إلى هذا الجهاز: الصق رمز النقل، أو اختر ملفه، أو امسح رمز QR. لا يُحذف شيء من هذا الجهاز قبل أن تراجع ما سيتغيّر وتؤكده.")
-                            .foregroundStyle(palette.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                        rowCopy("استيراد من تطبيق الويب",
+                                "انقل تقدّمك من «أذكار المسلم» على الويب برمز النقل أو ملفه أو رمز QR. لا يتغيّر شيء على هذا الجهاز قبل أن تراجعه وتؤكده.")
                     }
                     .accessibilityIdentifier("settings.transferImport")
-                } header: {
-                    Text("النقل")
-                }
-
-                Section {
                     NavigationLink {
                         BackupExportView(app: app)
                     } label: {
                         toggleCopy("تصدير نسخة احتياطية",
-                                   "يجمع كل ما سجّلته وإعداداتك في ملف واحد تحتفظ به أو تنقله إلى جهاز آخر.")
+                                   "ملف واحد فيه كل ما سجّلته وإعداداتك، تحتفظ به أو تنقله إلى جهاز آخر.")
                     }
                     .accessibilityIdentifier("settings.backupExport")
                     Button {
                         choosesBackup = true
                     } label: {
-                        toggleCopy("استعادة نسخة احتياطية",
-                                   "اختر ملف نسخة احتياطية (‎.athkarbackup) من هذا التطبيق أو من تطبيقَي الويب. يُضاف ما ينقص هذا الجهاز فقط، بعد أن تراجعه وتؤكده.")
-                            .foregroundStyle(palette.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
+                        rowCopy("استعادة نسخة احتياطية",
+                                "ملف ‎.athkarbackup من هذا التطبيق أو من تطبيقَي الويب. يُضاف ما ينقص هذا الجهاز فقط، بعد أن تراجعه وتؤكده.")
                     }
                     .accessibilityIdentifier("settings.backupRestore")
-                } header: {
-                    Text("النسخ الاحتياطي")
                 }
 
-                Section("الصفحة الرئيسية") {
-                    Toggle(isOn: $settings.homePrayerRow) {
-                        toggleCopy("المواقيت في أعلى الصفحة",
-                                   "يعرض الأذان القادم والتاريخ الهجري وتنبيه أوقات النهي عن الصلاة مكان عنوان «بكرة وأصيلا».")
-                    }
-                    .accessibilityIdentifier("settings.homePrayerRow")
+                PageSection {
+                    link("الخصوصية", identifier: "settings.privacy") { PrivacyView() }
+                    link("حول التطبيق", identifier: "settings.about") { AboutView(app: app) }
+                    link("التشخيص", identifier: "settings.diagnostics") { DiagnosticsView(app: app) }
                 }
 
-                Section {
-                    NavigationLink {
-                        PrivacyView()
-                    } label: {
-                        toggleCopy("الخصوصية", "ما يبقى على جهازك، والموقع، والتذكيرات، والنسخ الاحتياطية.")
-                    }
-                    .accessibilityIdentifier("settings.privacy")
-                    NavigationLink {
-                        AboutView(app: app)
-                    } label: {
-                        toggleCopy("حول التطبيق", "الإصدار، ومصادر الأذكار والقرآن، والخطوط، وحساب مواقيت الصلاة.")
-                    }
-                    .accessibilityIdentifier("settings.about")
-                    NavigationLink {
-                        DiagnosticsView(app: app)
-                    } label: {
-                        toggleCopy("التشخيص",
-                                   "عدد التذكيرات المجدولة وإصدارات المحتوى والتطبيق، دون أي شيء من أذكارك أو صلواتك.")
-                    }
-                    .accessibilityIdentifier("settings.diagnostics")
-                }
-
-                Section {
+                PageSection {
                     Button(role: .destructive) {
                         asksDelete = true
                     } label: {
@@ -150,6 +114,7 @@ struct SettingsView: View {
                     Text("يحذف من هذا الجهاز كل ما سجّلته وإعداداتك، ويلغي التذكيرات المجدولة.")
                 }
             }
+            .pageList()
             .navigationTitle("الإعدادات")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -198,7 +163,7 @@ struct SettingsView: View {
     private func segmented<Value: Hashable>(_ title: String, selection: Binding<Value>, identifier: String,
                                             options: [(Value, String)]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(palette.textPrimary)
             Picker(title, selection: selection) {
                 ForEach(options, id: \.0) { option in
                     Text(option.1).tag(option.0)
@@ -212,9 +177,23 @@ struct SettingsView: View {
 
     private func toggleCopy(_ title: String, _ note: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.body.weight(.semibold))
-            Text(note).font(.footnote).foregroundStyle(.secondary)
+            Text(title).font(.body.weight(.semibold)).foregroundStyle(palette.textPrimary)
+            Text(note).font(.footnote).foregroundStyle(palette.textSecondary)
         }
+    }
+
+    /// A button row's copy: the whole row is the tap target, in ink rather than the button tint.
+    private func rowCopy(_ title: String, _ note: String) -> some View {
+        toggleCopy(title, note)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+    }
+
+    private func link(_ title: String, identifier: String, @ViewBuilder to destination: () -> some View) -> some View {
+        NavigationLink(destination: destination) {
+            Text(title).font(.body).foregroundStyle(palette.textPrimary)
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     /// `updateManualCompletionControls` / `setManualCompletion`: on while complete; locked on when the counters
@@ -237,6 +216,8 @@ struct SettingsView: View {
             toggleCopy(title, status)
         }
         .disabled(byCounters)
+        // The PWA's `.settings-toggle-control:has(:disabled)`: the whole row fades, not only the switch.
+        .opacity(byCounters ? 0.6 : 1)
         .accessibilityIdentifier("settings.manual.\(period.rawValue)")
     }
 

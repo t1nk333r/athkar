@@ -18,16 +18,20 @@ struct PrivacyView: View {
          "يحذف «حذف كل البيانات» في الإعدادات كل ما سجّلته على هذا الجهاز، ويلغي التذكيرات المجدولة."),
     ]
 
+    @Environment(\.palette) private var palette
+
     var body: some View {
-        Form {
+        List {
             ForEach(Self.sections, id: \.id) { section in
-                Section(section.title) {
+                PageSection(section.title) {
                     Text(section.text)
                         .font(.subheadline)
+                        .foregroundStyle(palette.textPrimary)
                         .accessibilityIdentifier("privacy.\(section.id)")
                 }
             }
         }
+        .pageList()
         .navigationTitle("الخصوصية")
         .navigationBarTitleDisplayMode(.inline)
     }

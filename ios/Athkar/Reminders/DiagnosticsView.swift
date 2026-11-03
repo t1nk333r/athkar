@@ -9,21 +9,20 @@ struct DiagnosticsView: View {
                                        authorization: app.reminders.authorization, zone: app.prayer.zone,
                                        contentVersions: app.contentVersions,
                                        info: Bundle.main.infoDictionary ?? [:])
-        Form {
-            Section {
+        List {
+            PageSection("التذكيرات") {
                 rows(report.reminders)
-            } header: {
-                Text("التذكيرات")
             } footer: {
                 Text("يقرّر iOS متى يجري التحديث في الخلفية، وقد لا يجريه إذا قلّ استخدام التطبيق.")
             }
-            Section("المحتوى") { rows(report.content) }
-            Section {
+            PageSection("المحتوى") { rows(report.content) }
+            PageSection {
                 rows(report.app)
             } footer: {
                 Text("تعرض هذه الصفحة أعدادًا وأوقاتًا وإصدارات فقط، دون شيء من أذكارك أو صلواتك، فيمكن مشاركتها عند الإبلاغ عن مشكلة.")
             }
         }
+        .pageList()
         .navigationTitle("التشخيص")
         .navigationBarTitleDisplayMode(.inline)
         .task { await app.reminders.refreshDiagnostics() }

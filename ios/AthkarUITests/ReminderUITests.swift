@@ -53,8 +53,8 @@ final class ReminderUITests: DeckTestCase {
 
         launch(reset: false, answer: nil)
         openSettings()
-        XCTAssertTrue(isOn(app.switches["settings.reminder.morning"]))
-        XCTAssertTrue(isOn(app.switches["settings.reminder.evening"]))
+        XCTAssertTrue(isOn(reveal(app.switches["settings.reminder.morning"])))
+        XCTAssertTrue(isOn(reveal(app.switches["settings.reminder.evening"])))
         closeSettings()
     }
 }

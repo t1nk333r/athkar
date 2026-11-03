@@ -19,6 +19,7 @@
 		1BD47DDE727F988DD0643B8D /* ReminderActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAB2578D80AE15FA99070698 /* ReminderActionTests.swift */; };
 		1C2F3444B40453DD1C20BCFB /* DeckCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBC80EB016E62A55F7388473 /* DeckCardView.swift */; };
 		1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC25390B547669C1BA3AF86 /* TasbihModel.swift */; };
+		1E0F4173602FFE708B24D04F /* PageSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E8C477DC13B395E1CAFC88 /* PageSection.swift */; };
 		2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFAF5DB1A7749351672C27D /* LaunchTests.swift */; };
 		31C4579D00ACA12576F06DA9 /* adhkar.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = C91EA781FB90F2751708543C /* adhkar.v1.json */; };
 		331C903B842175A6D0DB58DC /* ArabicFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */; };
@@ -218,6 +219,7 @@
 		9E77ABE613735CFD9204EB27 /* TrackerText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerText.swift; sourceTree = "<group>"; };
 		A14E2AE94C0EABD5B7BF87A4 /* NativeTestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTestSupport.swift; sourceTree = "<group>"; };
 		A1A056AC9F2B37B12DF33623 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
+		A4E8C477DC13B395E1CAFC88 /* PageSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageSection.swift; sourceTree = "<group>"; };
 		A69E443B335C7F687972315F /* AdhkarDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdhkarDeckModel.swift; sourceTree = "<group>"; };
 		A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "kfgqpc-hafs-v30.ttf"; path = "../fonts/kfgqpc-hafs-v30.ttf"; sourceTree = "<group>"; };
 		A9B85A291084AF937C35C88A /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
@@ -464,6 +466,7 @@
 			children = (
 				0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */,
 				6A33D04CDB3BEE71D726B1BF /* Corner.swift */,
+				A4E8C477DC13B395E1CAFC88 /* PageSection.swift */,
 				BFB58FFE726BCFBEEA1ED7E4 /* Palette.swift */,
 				17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */,
 			);
@@ -768,6 +771,7 @@
 				F4819FD0FD6DC7F32DF5BAAA /* HomeView.swift in Sources */,
 				A08FFA9CB3E954AF3384F2B3 /* OneShotLocationRequest.swift in Sources */,
 				5C915E6E494ED2A237B9DB4C /* OtherSectionsView.swift in Sources */,
+				1E0F4173602FFE708B24D04F /* PageSection.swift in Sources */,
 				86D1B76D0D17EED9D512AC23 /* Palette.swift in Sources */,
 				EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */,
 				626A2510A916FA3FC997C2A1 /* PrayerTimesView.swift in Sources */,
