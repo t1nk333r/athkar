@@ -1,8 +1,9 @@
 """Lays out, signs, archives and verifies Athkar.app for tools/ios-linux-ipa.sh.
 
 The Xcode project that XcodeGen generated from ios/project.yml in the build snapshot
-describes the app: the app target's Release settings, its Info.plist file and its
-Resources phase. The published Xcode-built 1.0 (1) IPA is the layout this follows.
+describes the app: the app target's Release settings, its Info.plist file, its Resources
+phase and the app extensions its Embed Foundation Extensions phase copies into PlugIns.
+The published Xcode-built IPAs are the layout this follows.
 Python standard library only. See docs/agents/ios-linux.md.
 
     ios-linux-ipa.py name    --repo DIR
@@ -30,9 +31,17 @@ from pathlib import Path
 
 PROJECT = "ios/Athkar.xcodeproj/project.pbxproj"
 APPLICATION = "com.apple.product-type.application"
+APP_EXTENSION = "com.apple.product-type.app-extension"
+# The CFBundlePackageType Xcode gives each product type.
+PACKAGE_TYPES = {APPLICATION: "APPL", APP_EXTENSION: "XPC!"}
+# PBXCopyFilesBuildPhase dstSubfolderSpec for the bundle's PlugIns folder.
+PLUGINS_FOLDER = "13"
 # TARGETED_DEVICE_FAMILY values and the actool --target-device names Xcode passes for them.
 DEVICE_FAMILIES = {1: "iphone", 2: "ipad"}
+LC_SEGMENT_64 = 0x19
+LC_SYMTAB = 0x2
 LC_CODE_SIGNATURE = 0x1D
+LC_MAIN = 0x80000028
 LC_BUILD_VERSION = 0x32
 LC_RPATH = 0x8000001C
 LOAD_DYLIB_COMMANDS = {0xC, 0x80000018, 0x8000001F, 0x80000023}
@@ -121,22 +130,34 @@ VARIABLE = re.compile(r"\$[({]([A-Za-z0-9_]+)(:[^)}]*)?[)}]")
 
 
 class Project:
-    """The application target of the generated project, with its Release settings resolved."""
+    """One target of the generated project, the application unless `identifier` names another,
+    with its Release settings resolved."""
 
-    def __init__(self, repo: Path):
+    def __init__(self, repo: Path, identifier: str | None = None):
         self.repo = repo
         self.ios = repo / "ios"
         root = openstep((repo / PROJECT).read_text(encoding="utf-8"))
         self.objects = root["objects"]
         project = self.objects[root["rootObject"]]
-        apps = [self.objects[i] for i in project["targets"] if self.objects[i].get("productType") == APPLICATION]
-        if len(apps) != 1:
-            die(f"expected one application target in {PROJECT}, found {len(apps)}")
-        self.target = apps[0]
+        if identifier is None:
+            apps = [i for i in project["targets"] if self.objects[i].get("productType") == APPLICATION]
+            if len(apps) != 1:
+                die(f"expected one application target in {PROJECT}, found {len(apps)}")
+            identifier = apps[0]
+        self.target = self.objects[identifier]
         self.name = self.target["name"]
-        # Xcode's defaults for an application target, then the project and target Release levels.
+        self.product_type = self.target.get("productType")
+        if self.product_type not in PACKAGE_TYPES:
+            die(f"{self.name}: product type {self.product_type} is not packaged")
+        # The bundle the target builds, as its product reference names it: Athkar.app, AthkarWidget.appex.
+        self.bundle_name = self.objects[self.target["productReference"]]["path"]
+        # Each target's identifier, by its product reference, for the phases that copy products.
+        self.products = {self.objects[i]["productReference"]: i for i in project["targets"]
+                         if "productReference" in self.objects[i]}
+        # Xcode's defaults for the target's product type, then the project and target Release levels.
         self.settings = {"TARGET_NAME": self.name, "PRODUCT_NAME": "$(TARGET_NAME)",
-                         "EXECUTABLE_NAME": "$(PRODUCT_NAME)", "PRODUCT_BUNDLE_PACKAGE_TYPE": "APPL",
+                         "EXECUTABLE_NAME": "$(PRODUCT_NAME)",
+                         "PRODUCT_BUNDLE_PACKAGE_TYPE": PACKAGE_TYPES[self.product_type],
                          "DEVELOPMENT_LANGUAGE": project.get("developmentRegion", "en")}
         self.settings.update(self.release_settings(project))
         self.settings.update(self.release_settings(self.target))
@@ -200,15 +221,36 @@ class Project:
             die(f"{path} is outside the repository")
         return path
 
-    def resources(self) -> list[tuple[dict, Path]]:
+    def phases(self) -> list[dict]:
+        """The target's build phases, refusing any this packager does not perform. The one
+        copy-files phase it performs is an app's Embed Foundation Extensions (``extensions``)."""
         phases = [self.objects[i] for i in self.target["buildPhases"]]
         unsupported = [p["isa"] for p in phases
-                       if p["isa"] in ("PBXShellScriptBuildPhase", "PBXCopyFilesBuildPhase", "PBXHeadersBuildPhase")]
+                       if p["isa"] in ("PBXShellScriptBuildPhase", "PBXHeadersBuildPhase")
+                       or p["isa"] == "PBXCopyFilesBuildPhase" and not self.embeds_extensions(p)]
         if unsupported:
             die(f"{self.name} has build phases this packager does not perform: {unsupported}")
-        phase = [p for p in phases if p["isa"] == "PBXResourcesBuildPhase"]
-        if len(phase) != 1:
+        return phases
+
+    def embeds_extensions(self, phase: dict) -> bool:
+        """Whether a copy-files phase copies only app extension products into an app's PlugIns."""
+        if self.product_type != APPLICATION or phase.get("dstSubfolderSpec") != PLUGINS_FOLDER \
+                or phase.get("dstPath", "") != "" or not phase["files"]:
+            return False
+        targets = [self.products.get(self.objects[f]["fileRef"]) for f in phase["files"]]
+        return all(t is not None and self.objects[t].get("productType") == APP_EXTENSION for t in targets)
+
+    def extensions(self) -> list["Project"]:
+        """The app extension targets the app embeds in PlugIns, in phase order."""
+        return [Project(self.repo, self.products[self.objects[f]["fileRef"]])
+                for p in self.phases() if p["isa"] == "PBXCopyFilesBuildPhase" for f in p["files"]]
+
+    def resources(self) -> list[tuple[dict, Path]]:
+        phase = [p for p in self.phases() if p["isa"] == "PBXResourcesBuildPhase"]
+        if len(phase) > 1:
             die(f"{self.name} has {len(phase)} resource phases")
+        if not phase:
+            return []
         result = []
         for build_file in phase[0]["files"]:
             identifier = self.objects[build_file]["fileRef"]
@@ -394,6 +436,31 @@ def prepare_executable(path: Path, sdk_version: str) -> list[str]:
     struct.pack_into("<II", data, 16, count, len(kept))
     path.write_bytes(data)
     return dropped
+
+
+def entry_point(data: bytes) -> tuple[str | None, set[str]]:
+    """The section LC_MAIN's entry offset falls in, and the undefined external symbols the binary
+    imports. Xcode links an app extension to start at a stub for Foundation's _NSExtensionMain."""
+    entry, sections, imported = None, [], set()
+    for command, offset, size in load_commands(data):
+        if command == LC_MAIN:
+            entry, = struct.unpack_from("<Q", data, offset + 8)
+        elif command == LC_SEGMENT_64:
+            count, = struct.unpack_from("<I", data, offset + 64)
+            for index in range(count):
+                section = offset + 72 + index * 80
+                length, start = struct.unpack_from("<QI", data, section + 40)
+                sections.append((data[section:section + 16].split(b"\0")[0].decode(), start, length))
+        elif command == LC_SYMTAB:
+            symbols, count, strings, _ = struct.unpack_from("<IIII", data, offset + 8)
+            for index in range(count):
+                name, kind = struct.unpack_from("<IB", data, symbols + index * 16)
+                if kind & 0x0E == 0 and kind & 0x01:  # N_UNDF and N_EXT
+                    start = strings + name
+                    imported.add(data[start:data.index(b"\0", start)].decode())
+    if entry is None:
+        return None, imported
+    return next((name for name, start, length in sections if start <= entry < start + length), None), imported
 
 
 def version_text(raw: int) -> str:
@@ -582,7 +649,7 @@ def repair_loose_icons(catalogs: list[Path], icon: str, keys: dict, app: Path) -
             die(f"actool wrote no loose PNG for {name}")
 
 
-def layout(args: argparse.Namespace, project: Project) -> tuple[Path, dict]:
+def layout(args: argparse.Namespace, project: Project) -> tuple[Path, dict, dict]:
     stage, products = Path(args.stage), Path(args.products)
     app = stage / "Payload" / f"{project.setting('PRODUCT_NAME')}.app"
     app.mkdir(parents=True)
@@ -617,18 +684,8 @@ def layout(args: argparse.Namespace, project: Project) -> tuple[Path, dict]:
     own = [b for b in products.glob(f"*_{project.name}.bundle")]
     if len(own) != 1:
         die(f"expected the adapter's own *_{project.name}.bundle, found {own}")
-    for bundle in sorted(products.glob("*.bundle")):
-        if bundle in own:
-            continue
-        destination = app / bundle.name
-        shutil.copytree(bundle, destination, symlinks=True)
-        with (destination / "Info.plist").open("rb") as handle:
-            bundle_info = plistlib.load(handle)
-        # SwiftBuild records a placeholder Xcode (10989, 99T999) and no platform build.
-        bundle_info.update(dt_keys)
-        bundle_info.setdefault("UIDeviceFamily", families)
-        write_plist(destination / "Info.plist", bundle_info)
-        say(f"package resources: {bundle.name}")
+    package_bundles = [b for b in sorted(products.glob("*.bundle")) if b not in own]
+    copy_package_bundles(package_bundles, app, dt_keys, families)
 
     # The keys Xcode adds while processing Info.plist for an arm64 iphoneos build.
     info = project.info_plist()
@@ -644,21 +701,80 @@ def layout(args: argparse.Namespace, project: Project) -> tuple[Path, dict]:
         die(f"CFBundleExecutable {info.get('CFBundleExecutable')} is not {executable}")
     write_plist(app / "Info.plist", info)
     (app / "PkgInfo").write_bytes(info["CFBundlePackageType"].encode() + info.get("CFBundleSignature", "????").encode())
-    return app, info
+    extensions = {}
+    for extension in project.extensions():
+        extensions[extension.bundle_name] = (extension, embed_extension(
+            extension, info, app / "PlugIns", products, package_bundles, sdk_version, dt_keys))
+    return app, info, extensions
 
 
-def sign(app: Path, rcodesign: str) -> None:
+def copy_package_bundles(bundles: list[Path], destination: Path, dt_keys: dict, families: list[int],
+                         label: str = "") -> None:
+    for bundle in bundles:
+        target = destination / bundle.name
+        shutil.copytree(bundle, target, symlinks=True)
+        with (target / "Info.plist").open("rb") as handle:
+            bundle_info = plistlib.load(handle)
+        # SwiftBuild records a placeholder Xcode (10989, 99T999) and no platform build.
+        bundle_info.update(dt_keys)
+        bundle_info.setdefault("UIDeviceFamily", families)
+        write_plist(target / "Info.plist", bundle_info)
+        say(f"package resources: {label}{bundle.name}")
+
+
+def embed_extension(extension: Project, app_info: dict, plugins: Path, products: Path,
+                    package_bundles: list[Path], sdk_version: str, dt_keys: dict) -> dict:
+    """Lays out an app extension in PlugIns as Xcode builds it: its executable, the package
+    resource bundles it links and its stamped Info.plist, without PkgInfo. The adapter builds
+    the extension as a SwiftPM executable linked to start at _NSExtensionMain (ios/Package.swift)."""
+    if extension.resources() or any(products.glob(f"*_{extension.name}.bundle")):
+        die(f"{extension.name} has resources this packager does not embed")
+    bundle = plugins / extension.bundle_name
+    bundle.mkdir(parents=True)
+    executable = extension.setting("EXECUTABLE_NAME")
+    shutil.copyfile(products / executable, bundle / executable)
+    os.chmod(bundle / executable, 0o755)
+    dropped = prepare_executable(bundle / executable, sdk_version)
+    say(f"{extension.bundle_name}: dropped build-host rpaths {dropped}; LC_BUILD_VERSION sdk {sdk_version}")
+    families = extension.families()
+    copy_package_bundles(package_bundles, bundle, dt_keys, families, f"PlugIns/{extension.bundle_name}/")
+    info = extension.info_plist()
+    add_keys(info, {
+        "CFBundleSupportedPlatforms": ["iPhoneOS"],
+        "MinimumOSVersion": extension.setting("IPHONEOS_DEPLOYMENT_TARGET"),
+        "UIDeviceFamily": families,
+        "UIRequiredDeviceCapabilities": ["arm64"],
+        **dt_keys,
+    }, "ios/project.yml")
+    if info.get("CFBundleExecutable") != executable:
+        die(f"{extension.name}: CFBundleExecutable {info.get('CFBundleExecutable')} is not {executable}")
+    if info.get("CFBundlePackageType") != PACKAGE_TYPES[APP_EXTENSION] \
+            or not isinstance(info.get("NSExtension"), dict) or "NSExtensionPointIdentifier" not in info["NSExtension"]:
+        die(f"{extension.name}: Info.plist does not declare an app extension")
+    if not info.get("CFBundleIdentifier", "").startswith(app_info["CFBundleIdentifier"] + "."):
+        die(f"{extension.name}: {info.get('CFBundleIdentifier')} is not under {app_info['CFBundleIdentifier']}")
+    for key in ("CFBundleShortVersionString", "CFBundleVersion"):
+        if info.get(key) != app_info[key]:
+            die(f"{extension.name}: {key} {info.get(key)} is not the app's {app_info[key]}")
+    write_plist(bundle / "Info.plist", info)
+    return info
+
+
+def sign(app: Path, extensions: list[Path], rcodesign: str) -> None:
     """Ad hoc, with no identity and no entitlements, like the published Xcode build. The empty
-    configuration keeps rcodesign from loading any default signing settings. Shallow signing
-    seals resource bundles, which have no executable, in the app's CodeResources as Xcode
-    does, instead of giving each its own. `verify` checks the result in the archive."""
-    command = [rcodesign, "sign", "--config-file", "/dev/null", "--shallow", str(app)]
-    say(" ".join(command))
-    result = subprocess.run(command, capture_output=True, text=True)
-    print(result.stdout, end="")
-    print(result.stderr, end="", file=sys.stderr)
-    if result.returncode != 0:
-        die(f"rcodesign sign failed ({result.returncode})")
+    configuration keeps rcodesign from loading any default signing settings. Each extension is
+    signed first, then the app, as the iOS IPA workflow runs codesign. Shallow signing seals
+    resource bundles, which have no executable, in their bundle's CodeResources as Xcode does,
+    instead of giving each its own, and seals each signed extension's files in the app's.
+    `verify` checks the result in the archive."""
+    for bundle in [*extensions, app]:
+        command = [rcodesign, "sign", "--config-file", "/dev/null", "--shallow", str(bundle)]
+        say(" ".join(command))
+        result = subprocess.run(command, capture_output=True, text=True)
+        print(result.stdout, end="")
+        print(result.stderr, end="", file=sys.stderr)
+        if result.returncode != 0:
+            die(f"rcodesign sign failed ({result.returncode}) for {bundle.name}")
 
 
 # -- archive ------------------------------------------------------------------
@@ -703,7 +819,35 @@ def unsealed_files(files: dict, executable: str) -> list[str]:
     return problems
 
 
-def verify(ipa: Path, project: Project, expected: dict) -> list[str]:
+def check_code(check, files: dict, info: dict, label: str) -> None:
+    """The checks of one signed bundle's executable and seal: the app's, or an extension's
+    with `files` relative to its own directory."""
+    executable = info["CFBundleExecutable"]
+    facts = macho_facts(files[executable])
+    check(facts["cpu"] == CPU_TYPE_ARM64, f"{label}{executable} is arm64")
+    platform, minos, sdk = facts["build"]
+    check(platform == PLATFORM_IOS and minos == info["MinimumOSVersion"],
+          f"{label}LC_BUILD_VERSION platform {platform} (iOS) minos {minos}")
+    check(sdk == info["DTPlatformVersion"], f"{label}LC_BUILD_VERSION sdk {sdk}")
+    check(not any(host_rpath(r) for r in facts["rpaths"]), f"{label}no build-host rpath: {facts['rpaths']}")
+    check(all(d.startswith(("/System/Library/", "/usr/lib/")) for d in facts["dylibs"]),
+          f"{label}only system libraries are loaded ({len(facts['dylibs'])})")
+    check(not any(d.endswith("/SwiftUICore") for d in facts["dylibs"]), f"{label}SwiftUICore is not loaded directly")
+    signature = facts["signature"] or {"slots": {}}
+    check(signature.get("flags") is not None and signature["flags"] & CS_ADHOC, f"{label}ad hoc code directory")
+    check(signature.get("identifier") == info["CFBundleIdentifier"],
+          f"{label}signing identifier {signature.get('identifier')}")
+    check(signature["slots"].get(CSSLOT_SIGNATURESLOT, 8) <= 8, f"{label}no CMS signature (no identity)")
+    check(CSSLOT_ENTITLEMENTS not in signature["slots"], f"{label}no entitlements")
+    if facts["signature"]:
+        broken, summary = code_directory_failures(
+            files[executable], signature, {1: files["Info.plist"], 3: files.get("_CodeSignature/CodeResources")})
+        check(not broken, f"{label}code directory hashes match: {summary or broken}")
+    unsealed = unsealed_files(files, executable)
+    check(not unsealed, f"{label}CodeResources seals every file {unsealed}")
+
+
+def verify(ipa: Path, project: Project, expected: dict, extensions: dict) -> list[str]:
     """Independent checks of the archive as it will be published; returns the report lines."""
     failures, report = [], []
 
@@ -726,31 +870,23 @@ def verify(ipa: Path, project: Project, expected: dict) -> list[str]:
                  if e.filename.startswith(prefix) and not e.is_dir()}
     info = plistlib.loads(files["Info.plist"])
     check(info == expected, "Info.plist is the generated and stamped dictionary")
-    executable = info["CFBundleExecutable"]
-    facts = macho_facts(files[executable])
-    check(facts["cpu"] == CPU_TYPE_ARM64, f"{executable} is arm64")
-    platform, minos, sdk = facts["build"]
-    check(platform == PLATFORM_IOS and minos == info["MinimumOSVersion"],
-          f"LC_BUILD_VERSION platform {platform} (iOS) minos {minos}")
-    check(sdk == info["DTPlatformVersion"], f"LC_BUILD_VERSION sdk {sdk}")
-    check(not any(host_rpath(r) for r in facts["rpaths"]), f"no build-host rpath: {facts['rpaths']}")
-    check(all(d.startswith(("/System/Library/", "/usr/lib/")) for d in facts["dylibs"]),
-          f"only system libraries are loaded ({len(facts['dylibs'])})")
-    check(not any(d.endswith("/SwiftUICore") for d in facts["dylibs"]), "SwiftUICore is not loaded directly")
-    signature = facts["signature"] or {"slots": {}}
-    check(signature.get("flags") is not None and signature["flags"] & CS_ADHOC, "ad hoc code directory")
-    check(signature.get("identifier") == info["CFBundleIdentifier"],
-          f"signing identifier {signature.get('identifier')}")
-    check(signature["slots"].get(CSSLOT_SIGNATURESLOT, 8) <= 8, "no CMS signature (no identity)")
-    check(CSSLOT_ENTITLEMENTS not in signature["slots"], "no entitlements")
-    if facts["signature"]:
-        broken, summary = code_directory_failures(
-            files[executable], signature, {1: files["Info.plist"], 3: files.get("_CodeSignature/CodeResources")})
-        check(not broken, f"code directory hashes match: {summary or broken}")
-    unsealed = unsealed_files(files, executable)
-    check(not unsealed, f"CodeResources seals every resource {unsealed}")
+    # The app's CodeResources seals each extension's files as resources, as codesign does.
+    check_code(check, files, info, "")
+    embedded = sorted({n.split("/")[1] for n in files if n.startswith("PlugIns/")})
+    check(embedded == sorted(extensions), f"PlugIns holds the embedded extensions {embedded}")
+    for directory, (extension, extension_expected) in sorted(extensions.items()):
+        inner = {n[len(f"PlugIns/{directory}/"):]: data for n, data in files.items()
+                 if n.startswith(f"PlugIns/{directory}/")}
+        extension_info = plistlib.loads(inner["Info.plist"])
+        check(extension_info == extension_expected, f"{directory}/Info.plist is the generated and stamped dictionary")
+        check_code(check, inner, extension_info, f"{directory}/")
+        section, imported = entry_point(inner[extension_info["CFBundleExecutable"]])
+        check(section in ("__stubs", "__auth_stubs") and "_NSExtensionMain" in imported,
+              f"{directory} enters a stub ({section}) and imports _NSExtensionMain")
+        check("PkgInfo" not in inner, f"{directory} has no PkgInfo")
     nested = sorted(n for n in files if "/_CodeSignature/" in n)
-    check(not nested, f"only the app carries a code signature {nested}")
+    signed = sorted(f"PlugIns/{d}/_CodeSignature/CodeResources" for d in extensions)
+    check(nested == signed, f"only the app and its extensions carry code signatures {nested}")
     for reference, path in project.resources():
         if path.suffix == ".xcassets":
             continue
@@ -769,7 +905,7 @@ def verify(ipa: Path, project: Project, expected: dict) -> list[str]:
     for name in sorted(n for n in files if n.endswith(".png") and "/" not in n):
         width, height, pixels = png_decode(files[name])
         check(not uniform(pixels), f"{name} ({width}x{height}) is not a uniform placeholder")
-    for bundle in sorted({n.split("/")[0] for n in files if n.endswith(".bundle/Info.plist")}):
+    for bundle in sorted({n[:n.index(".bundle/") + len(".bundle")] for n in files if n.endswith(".bundle/Info.plist")}):
         bundle_info = plistlib.loads(files[f"{bundle}/Info.plist"])
         check(bundle_info.get("CFBundlePackageType") == "BNDL" and bundle_info.get("DTXcode") == info["DTXcode"],
               f"{bundle} is a stamped resource bundle")
@@ -780,7 +916,7 @@ def verify(ipa: Path, project: Project, expected: dict) -> list[str]:
     return report
 
 
-def publish(args: argparse.Namespace, project: Project, info: dict) -> None:
+def publish(args: argparse.Namespace, project: Project, info: dict, extensions: dict) -> None:
     out = Path(args.out_dir)
     final = out / ipa_name(project, info)
     digest_file = out / f"{final.name}.sha256"
@@ -793,7 +929,7 @@ def publish(args: argparse.Namespace, project: Project, info: dict) -> None:
             write_archive(Path(args.stage), handle, args.epoch)
             handle.flush()
             os.fsync(handle.fileno())
-        report = verify(Path(temporary), project, info)
+        report = verify(Path(temporary), project, info, extensions)
         for line in report:
             print(line)
         os.chmod(temporary, 0o644)
@@ -824,9 +960,9 @@ def publish(args: argparse.Namespace, project: Project, info: dict) -> None:
 
 def package(args: argparse.Namespace) -> None:
     project = Project(Path(args.repo))
-    app, info = layout(args, project)
-    sign(app, args.rcodesign)
-    publish(args, project, info)
+    app, info, extensions = layout(args, project)
+    sign(app, [app / "PlugIns" / directory for directory in extensions], args.rcodesign)
+    publish(args, project, info, extensions)
 
 
 def main() -> None:
