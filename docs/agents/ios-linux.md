@@ -290,7 +290,9 @@ attempts, on three different tests, and each of those tests passed in another at
 failed test runs again, at most three times in all, and a test that passes on a retry passes the
 job. Each retry is its own `xcodebuild test-without-building` run of the tests that failed. A UI
 test failure restarts the test runner, and xcodebuild's `-retry-tests-on-failure` then skips the
-test. A run that fails without a failed test, such as a build error, is not retried. The job
+test. A retry passes only if its log shows each of its tests passing. A run that fails without a
+failed test, such as a build error, is not retried, and neither is one whose "Failing tests" list
+names a test the log shows no failure for. The job
 summary lists the selection and every test that failed a run, and a test that passed only on a
 retry also raises a warning annotation. Each run's xcresult bundle is a run artifact. The simulator holds no
 user data, so the hosted AthkarTests startup touches nothing of the user's installation. A
