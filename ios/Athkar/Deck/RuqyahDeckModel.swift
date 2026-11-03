@@ -158,7 +158,7 @@ final class RuqyahDeckModel: DeckModel {
         let position = suwar.firstIndex(of: sura) ?? 0
         let next = (suwar[(position + 1)...] + suwar[..<position]).first { !isComplete($0) } ?? sura
         return DeckCompletion(title: "اكتملت قراءة \(sura.surah) بحمد الله",
-                              message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
+                              message: "حُفظ إكمال اليوم على هذا الجهاز.",
                               time: suraCompletedAt(sura).map { "وقت الإكمال: \(ArabicFormat.time($0))" },
                               dismissTitle: "تم",
                               primary: (title: "الانتقال إلى \(next.surah)", action: .openSection(next.id)))

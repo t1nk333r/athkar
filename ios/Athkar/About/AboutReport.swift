@@ -39,7 +39,7 @@ struct AboutReport: Equatable {
             Row(id: "prayerTimes", title: "مواقيت الصلاة",
                 value: "تُحسب على جهازك بمكتبة Adhan من Batoul Apps (رخصة MIT)، بالطريقة والمذهب المختارين في «أوقات الصلاة»."),
             Row(id: "prohibitedTimes", title: "أوقات النهي عن الصلاة",
-                value: "كما في فتوى الشيخ عبد العزيز بن باز رقم ١٠٦٩٣ (binbaz.org.sa)."),
+                value: "تتبع فتوى الشيخ عبد العزيز بن باز رقم ١٠٦٩٣ (binbaz.org.sa)."),
         ]
     }
 }

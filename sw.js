@@ -1,11 +1,11 @@
 "use strict";
 
 const CACHE_NAME_PREFIX = "athkar-static-";
-const CACHE_NAME = "athkar-static-v66";
+const CACHE_NAME = "athkar-static-v67";
 // Navigations are answered from the network and fall back to ./index.html, so "./" is never read from the cache.
 const APP_SHELL = [
   "./index.html",
-  "./manifest.webmanifest?v=13",
+  "./manifest.webmanifest?v=14",
   "./icons/icon.svg?v=13",
   "./icons/icon-192.png?v=13",
   "./icons/icon-512.png?v=13",

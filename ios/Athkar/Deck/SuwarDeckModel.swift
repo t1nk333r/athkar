@@ -156,7 +156,7 @@ final class SuwarDeckModel: DeckModel {
     var completion: DeckCompletion {
         let sura = selectedSura
         return DeckCompletion(title: "اكتملت قراءة \(sura.surah) بحمد الله",
-                              message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
+                              message: "حُفظ إكمال اليوم على هذا الجهاز.",
                               time: completedSuwar[sura.id].map { "وقت الإكمال: \(ArabicFormat.time($0))" },
                               dismissTitle: "تم", primary: nil)
     }
@@ -284,7 +284,7 @@ final class SuwarDeckModel: DeckModel {
         cards = sura.pages.enumerated().map { index, page in
             let n = ArabicFormat.number(index + 1)
             let read = readPages.contains(page.id)
-            let label = "الصفحة \(n) من \(sura.surah)، \(page.range)، \(read ? "تمت قراءتها" : "لم تُعلَّم كمقروءة")"
+            let label = "الصفحة \(n) من \(sura.surah)، \(page.range)، \(read ? "قُرئت" : "لم تُعلَّم كمقروءة")"
             return DeckCard(
                 id: page.id, number: index + 1,
                 content: .page(page, surah: sura.surah, basmala: index == 0 ? content.basmala : nil),

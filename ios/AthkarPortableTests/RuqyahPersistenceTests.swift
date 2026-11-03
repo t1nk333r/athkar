@@ -349,7 +349,7 @@ final class RuqyahPersistenceTests: XCTestCase {
         XCTAssertEqual(deck.sections[0], DeckSection(id: "qaf", title: "ق", isComplete: true,
                                                      accessibilityLabel: "سورة ق، مكتملة اليوم"))
         XCTAssertEqual(deck.completion, DeckCompletion(
-            title: "اكتملت قراءة سورة ق بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
+            title: "اكتملت قراءة سورة ق بحمد الله", message: "حُفظ إكمال اليوم على هذا الجهاز.",
             time: "وقت الإكمال: \(ArabicFormat.time(qaf))", dismissTitle: "تم",
             primary: (title: "الانتقال إلى سورة الجن", action: .openSection("jinn"))))
 

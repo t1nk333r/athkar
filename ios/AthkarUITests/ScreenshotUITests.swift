@@ -63,10 +63,10 @@ final class ScreenshotUITests: DeckTestCase {
         }
     }
 
-    /// From the counter's spoken label: «ذكر ٢، تم تكراره ١ من أصل ٣ مرات» leaves 2; a single item leaves 1.
+    /// From the counter's spoken label: «ذكر ٢، كُرّر ١ من أصل ٣ مرات» leaves 2; a single item leaves 1.
     private func remainingTaps() -> Int {
         let label = counter.label
-        guard let done = label.range(of: "تم تكراره "), let of = label.range(of: " من أصل "),
+        guard let done = label.range(of: "كُرّر "), let of = label.range(of: " من أصل "),
               let times = label.range(of: " مرات")
         else { return 1 }
         return max(0, number(label[of.upperBound..<times.lowerBound]) - number(label[done.upperBound..<of.lowerBound]))

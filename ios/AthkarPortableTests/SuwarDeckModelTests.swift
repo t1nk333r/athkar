@@ -78,7 +78,7 @@ final class SuwarDeckModelTests: XCTestCase {
         XCTAssertTrue(deck.cards[0].isComplete)
         XCTAssertEqual(deck.cards[0].count, 1)
         XCTAssertEqual(deck.cards[0].status, .text("تمت القراءة"))
-        let label = "الصفحة ١ من سورة الكهف، الآيات ١ – ٤، تمت قراءتها"
+        let label = "الصفحة ١ من سورة الكهف، الآيات ١ – ٤، قُرئت"
         XCTAssertEqual(deck.cards[0].progressLabel, label)
         XCTAssertEqual(deck.cards[0].tapLabel, "اكتملت، \(label)")
         XCTAssertEqual(deck.summary.copy, "١ من ٣٤ صفحة")
@@ -122,7 +122,7 @@ final class SuwarDeckModelTests: XCTestCase {
         XCTAssertEqual(deck.sections[4], DeckSection(id: "mulk", title: "الملك", isComplete: true,
                                                      accessibilityLabel: "سورة الملك، مكتملة اليوم"))
         XCTAssertEqual(deck.completion, DeckCompletion(
-            title: "اكتملت قراءة سورة الملك بحمد الله", message: "تم حفظ إكمال اليوم محليًا على هذا الجهاز.",
+            title: "اكتملت قراءة سورة الملك بحمد الله", message: "حُفظ إكمال اليوم على هذا الجهاز.",
             time: "وقت الإكمال: \(ArabicFormat.time(mulk))", dismissTitle: "تم", primary: nil))
 
         // A sura completed out of order is complete once its last unread page is read.

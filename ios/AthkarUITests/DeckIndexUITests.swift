@@ -21,7 +21,7 @@ final class DeckIndexUITests: DeckTestCase {
         let second = row("morning-02")
         XCTAssertFalse(second.isEnabled, "locked behind card 1")
         XCTAssertFalse(second.isSelected)
-        XCTAssertEqual(second.label, "ذكر ٢، تم تكراره ٠ من أصل ٣ مرات")
+        XCTAssertEqual(second.label, "ذكر ٢، كُرّر ٠ من أصل ٣ مرات")
         expectLabel(lockNote, "يُتاح بعد إكمال الذكر ١")
         XCTAssertFalse(revealRow("morning-25").isEnabled, "the last row is listed, disabled")
 
@@ -45,15 +45,15 @@ final class DeckIndexUITests: DeckTestCase {
         XCTAssertFalse(row("morning-04").isEnabled, "locked behind card 3")
         row("morning-01").tap()
         expectPosition(1, of: 26)
-        expectLabel(counter, "ذكر ١، تمت قراءته")
+        expectLabel(counter, "ذكر ١، قُرئ")
         expectLabel(summary, "٢ من ٢٦ ذكرًا")
 
         openIndex()
         XCTAssertTrue(row("morning-01").isSelected)
-        XCTAssertEqual(row("morning-02").label, "ذكر ٢، تم تكراره ٣ من أصل ٣ مرات، اكتمل")
+        XCTAssertEqual(row("morning-02").label, "ذكر ٢، كُرّر ٣ من أصل ٣ مرات، اكتمل")
         row("morning-03").tap()
         expectPosition(3, of: 26)
-        expectLabel(counter, "ذكر ٣، تم تكراره ٠ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٣، كُرّر ٠ من أصل ٣ مرات")
 
         // The current row only closes the index.
         openIndex()
@@ -143,7 +143,7 @@ final class DeckIndexUITests: DeckTestCase {
         long.tap()
         expectPosition(23, of: 26)
         XCTAssertTrue(card("morning-20").exists)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠٠ مرات")
     }
 
     /// Opening the index cancels a pending auto-advance and closing it does not bring it back; a row chosen while an
@@ -157,7 +157,7 @@ final class DeckIndexUITests: DeckTestCase {
         closeIndex()
         RunLoop.current.run(until: Date().addingTimeInterval(3))
         expectPosition(1, of: 26)
-        expectLabel(counter, "ذكر ١، تمت قراءته")
+        expectLabel(counter, "ذكر ١، قُرئ")
 
         nextButton.tap()
         expectPosition(2, of: 26)

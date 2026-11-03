@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="أذكار الصباح والمساء بواجهة عربية هادئة، تذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
+  <meta name="description" content="أذكار الصباح والمساء بعدّاد لكل ذكر، وتذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f7f5ef" id="theme-color">
-  <link rel="manifest" href="./manifest.webmanifest?v=13">
+  <link rel="manifest" href="./manifest.webmanifest?v=14">
   <link rel="icon" href="./icons/icon.svg?v=13" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icons/icon-192.png?v=13">
   <link rel="preload" href="./fonts/kfgqpc-uthman-taha-naskh.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="أذكار المسلم">
-  <title>أذكار المسلم — الصباح والمساء</title>
+  <title>أذكار المسلم للصباح والمساء</title>
   <script>
     (() => {
       try {
@@ -2470,7 +2470,7 @@
         </div>
         <div class="location-row">
           <button class="settings-action" id="prayer-location-button" type="button">تحديد الموقع</button>
-          <p class="settings-note" id="prayer-location-status">لم يُحدّد الموقع بعد. يبقى محفوظًا على هذا الجهاز.</p>
+          <p class="settings-note" id="prayer-location-status">لم يُحدَّد الموقع بعد. إذا حدّدته فسيُحفظ على هذا الجهاز.</p>
         </div>
         <div class="reminder-row">
           <label class="reminder-toggle" for="morning-reminder-enabled">
@@ -2497,7 +2497,7 @@
 
       <section class="settings-section" aria-labelledby="manual-completion-title">
         <h3 id="manual-completion-title">إكمال الورد يدويًا</h3>
-        <p class="settings-note" id="manual-completion-note">فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية.</p>
+        <p class="settings-note" id="manual-completion-note">فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح.</p>
         <div class="manual-completion-list">
           <label class="settings-toggle-control" for="morning-manual-completion">
             <span class="settings-toggle-copy">
@@ -2533,7 +2533,7 @@
               </svg>
               <span>الاهتزاز عند إكمال العداد</span>
             </strong>
-            <small id="haptics-note">اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند بلوغ هدف المسبحة أو قراءة صفحة من السور.</small>
+            <small id="haptics-note">يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند بلوغ هدف المسبحة، وعند قراءة صفحة من السور.</small>
           </span>
           <span class="toggle-switch">
             <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-describedby="haptics-note">
@@ -2563,7 +2563,7 @@
         <ol class="history-list" id="history-list"></ol>
       </section>
       <section class="settings-section">
-        <p class="settings-note" id="visit-count-note">تُحصى مرات فتح التطبيق على خادم المطوّر الخاص. يتلقى الخادم عنوان IP ومعرّف المتصفح مؤقتًا لإجراء العدّ، ثم يحتفظ بأرقام إجمالية: المتصفح والنظام وعرض الشاشة والبلد. إذا بدا الطلب آليًا يُحفظ معرّف المتصفح مدة قصيرة لتصفيته ثم يُحذف، عادةً خلال ساعة. لا يُرسل شيء عن قراءتك أو تقدّمك أو سجلك أو موقعك، ولا تُستخدم ملفات تعريف الارتباط.</p>
+        <p class="settings-note" id="visit-count-note">يحصي خادم المطوّر الخاص مرات فتح التطبيق. يتلقى الخادم عنوان IP ومعرّف المتصفح مؤقتًا لإجراء العدّ، ثم يحتفظ بأرقام إجمالية: المتصفح والنظام وعرض الشاشة والبلد. إذا بدا الطلب آليًا، يحفظ الخادم معرّف المتصفح مدة قصيرة لتصفيته ثم يحذفه، عادةً خلال ساعة. لا يرسل التطبيق شيئًا عن قراءتك أو تقدّمك أو سجلك أو موقعك، ولا يستخدم ملفات تعريف الارتباط.</p>
       </section>
     </div>
   </dialog>
@@ -2669,7 +2669,7 @@
   <dialog id="install-dialog" aria-labelledby="install-dialog-title" aria-describedby="install-dialog-copy">
     <div class="dialog-body">
       <h2 id="install-dialog-title">ثبّت أذكار المسلم</h2>
-      <p id="install-dialog-copy">ثبّت التطبيق لفتحه بسرعة والقراءة دون اتصال.</p>
+      <p id="install-dialog-copy">ثبّت التطبيق ليفتح في نافذة مستقلة ويعمل دون اتصال.</p>
     </div>
     <div class="dialog-actions">
       <button class="dialog-button" id="install-dialog-later" type="button">ليس الآن</button>
@@ -6502,11 +6502,11 @@
     function progressLabel(item, index, count, target) {
       if (!isExplicitlyCounted(item)) {
         return count >= 1
-          ? `ذكر ${formatNumber(index + 1)}، تمت قراءته`
+          ? `ذكر ${formatNumber(index + 1)}، قُرئ`
           : `ذكر ${formatNumber(index + 1)}، لم يُعلَّم كمقروء`;
       }
       const completed = count >= target;
-      return `ذكر ${formatNumber(index + 1)}، تم تكراره ${formatNumber(count)} من أصل ${formatNumber(target)} مرات${completed ? "، اكتمل" : ""}`;
+      return `ذكر ${formatNumber(index + 1)}، كُرّر ${formatNumber(count)} من أصل ${formatNumber(target)} مرات${completed ? "، اكتمل" : ""}`;
     }
 
     function updateCard(item, card, index, announce = false) {
@@ -6853,7 +6853,7 @@
 
     function updateSuraPage(sura, page, card, index, announce = false) {
       const read = Boolean(suwarState.read[sura.id][page.id]);
-      const label = `الصفحة ${formatNumber(index + 1)} من ${sura.surah}، ${page.range}، ${read ? "تمت قراءتها" : "لم تُعلَّم كمقروءة"}`;
+      const label = `الصفحة ${formatNumber(index + 1)} من ${sura.surah}، ${page.range}، ${read ? "قُرئت" : "لم تُعلَّم كمقروءة"}`;
       card.classList.toggle("is-complete", read);
       card.querySelector(".card-reset").disabled = !read;
       const tapTarget = card.querySelector(".card-tap-target");
@@ -6974,7 +6974,7 @@
 
     function openSuraCompletionDialog(sura) {
       completionTitle.textContent = `اكتملت قراءة ${sura.surah} بحمد الله`;
-      completionCopy.textContent = "تم حفظ إكمال اليوم محليًا على هذا الجهاز.";
+      completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
       completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(new Date(suwarState.completedAt[sura.id]))}`;
       completionSwitch.hidden = true;
       completionDialog.showModal();
@@ -7173,7 +7173,7 @@
       const completedAt = new Date(state.completedAt[period]);
       completionTitle.textContent = `اكتملت ${sectionNames[period]} بحمد الله`;
       completionSwitch.hidden = false;
-      completionCopy.textContent = "تم حفظ إكمال اليوم محليًا على هذا الجهاز.";
+      completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
       completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(completedAt)}`;
       completionSwitch.dataset.period = otherPeriod;
       completionSwitch.textContent = `الانتقال إلى ${sectionNames[otherPeriod]}`;
@@ -7182,7 +7182,7 @@
 
     function openSourceDetails(item, index) {
       const details = item.details || [];
-      sourceDialogTitle.textContent = `المصدر والتفاصيل — الذكر ${formatNumber(index + 1)}`;
+      sourceDialogTitle.textContent = `مصدر الذكر ${formatNumber(index + 1)} وتفاصيله`;
       sourceDialogContent.innerHTML = details.map((detail, detailIndex) =>
         `<p class="dhikr-detail${detailIndex === item.noteIndex ? " dhikr-note" : ""}">${escapeHtml(detail)}</p>`
       ).join("");
@@ -7783,7 +7783,7 @@
     function updateSessionTitle() {
       const title = activePeriod === "suwar" ? activeSura().surah : sectionNames[activePeriod];
       sessionTitle.textContent = title;
-      document.title = `${title} — أذكار المسلم`;
+      document.title = `${title}، أذكار المسلم`;
     }
 
     // `#morning`, `#evening`, `#suwar` and `#tasbih` name a tab. `#suwar` opens on the last sura read; `#kahf`, `#yasin`,
@@ -8129,8 +8129,8 @@
       }
 
       prayerLocationStatus.textContent = reminderPreferences.location
-        ? "تم تحديد الموقع وحفظه محليًا على هذا الجهاز."
-        : "لم يُحدّد الموقع بعد. يبقى محفوظًا على هذا الجهاز.";
+        ? "حُدّد الموقع وحُفظ على هذا الجهاز."
+        : "لم يُحدَّد الموقع بعد. إذا حدّدته فسيُحفظ على هذا الجهاز.";
 
       const permission = notificationPermission();
       if (reminderStatusOverride) {
@@ -8145,10 +8145,10 @@
         reminderStatus.textContent = "الإشعارات محظورة. اسمح بها من إعدادات المتصفح لتشغيل التذكيرات.";
       } else if (reminderPreferences.morning.enabled || reminderPreferences.evening.enabled) {
         reminderStatus.textContent = permission === "granted"
-          ? "الموعدان محسوبان محليًا. يعمل المؤقت أثناء فتح التطبيق، ويعتمد العمل بعد إغلاقه على دعم النظام."
+          ? "يحسب التطبيق الموعدين على جهازك. تصل التذكيرات ما دام التطبيق مفتوحًا، أما بعد إغلاقه فتصل إن كان النظام يدعم ذلك."
           : "سيطلب المتصفح إذن الإشعارات عند تشغيل أول تذكير.";
       } else {
-        reminderStatus.textContent = "التذكيرات متوقفة ومحفوظة محليًا على هذا الجهاز.";
+        reminderStatus.textContent = "التذكيرات متوقفة، وإعداداتها محفوظة على هذا الجهاز.";
       }
     }
 
@@ -8183,7 +8183,7 @@
         if (!location) throw new Error("Invalid coordinates");
         reminderPreferences.location = location;
         saveReminderPreferences();
-        if (announce) liveRegion.textContent = "تم تحديد الموقع وحساب مواعيد التذكير";
+        if (announce) liveRegion.textContent = "حُدّد الموقع وحُسبت مواعيد التذكير";
         return true;
       }).catch(error => {
         reminderStatusOverride = geolocationErrorMessage(error);
@@ -8326,11 +8326,11 @@
     function updateInstallDialogUi() {
       if (isIosDevice()) {
         installDialogCopy.textContent =
-          "على آيفون وآيباد: افتح الموقع في سفاري، واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».";
+          "على آيفون وآيباد، افتح الموقع في سفاري واضغط زر المشاركة، ثم اختر «إضافة إلى الشاشة الرئيسية».";
         installDialogConfirm.textContent = "فهمت";
       } else if (deferredInstallPrompt) {
         installDialogCopy.textContent =
-          "ثبّت التطبيق لفتحه بسرعة، واستخدامه كنافذة مستقلة، والقراءة دون اتصال.";
+          "ثبّت التطبيق ليفتح في نافذة مستقلة ويعمل دون اتصال.";
         installDialogConfirm.textContent = "تثبيت الآن";
       } else {
         installDialogCopy.textContent =
@@ -8350,7 +8350,7 @@
         installStatus.textContent = "يُثبّت من سفاري عبر «المشاركة» ثم «إضافة إلى الشاشة الرئيسية».";
       } else if (deferredInstallPrompt) {
         installButton.disabled = false;
-        installStatus.textContent = "يمكن تثبيت التطبيق ليعمل كنافذة مستقلة ويسهل فتحه.";
+        installStatus.textContent = "يمكن تثبيت التطبيق ليفتح في نافذة مستقلة ويعمل دون اتصال.";
       } else {
         installButton.disabled = false;
         installButton.textContent = "طريقة التثبيت";
@@ -10180,15 +10180,15 @@
       "too-long": ["ليس رمز نقل", "النص أطول من أي رمز نقل. تأكد أنك لصقت الرمز وحده."],
       "one-frame": ["رمز ناقص", "هذا جزء واحد من رمز QR متعدد الأجزاء. انسخ الرمز كاملًا من «نسخ الرمز»."],
       "wrong-app": ["رمز تطبيق آخر", "هذا رمز من تطبيق «رقية القرين». افتح «رقية القرين» على هذا الجهاز واستلمه هناك."],
-      newer: ["إصدار أحدث", "أُنشئ هذا الرمز بإصدار أحدث من التطبيق. حدّث التطبيق على هذا الجهاز ثم أعد المحاولة: أغلقه تمامًا وافتحه وأنت متصل بالإنترنت."],
+      newer: ["إصدار أحدث", "أُنشئ هذا الرمز بإصدار أحدث من التطبيق. لتحديث التطبيق على هذا الجهاز، أغلقه تمامًا وافتحه وأنت متصل بالإنترنت، ثم أعد المحاولة."],
       corrupt: ["رمز تالف", transferCorruptText],
-      clock: ["رمز غير صالح", "رمز غير صالح أو ساعة الجهاز غير مضبوطة: في الرمز أوقات لاحقة لساعة هذا الجهاز. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر."],
+      clock: ["رمز غير صالح", "في الرمز أوقات لاحقة لساعة هذا الجهاز، فإما أن الرمز غير صالح أو أن الساعة غير مضبوطة. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر."],
       "too-big": ["يتجاوز ما يتسع له التطبيق", "لا يتسع التطبيق لكل ما في الرمز من عبارات المسبحة وسجلها مع ما على هذا الجهاز، فلم يُنقل شيء ولم يتغيّر تقدّمك."],
       "file-read": ["تعذّرت قراءة الملف", "تعذّرت قراءة الملف. اختر ملف رمز النقل أو ملف نسخة احتياطية من «أذكار المسلم»."],
       unsupported: ["غير مدعوم", transferUnsupportedText],
       write: ["تعذّر الحفظ", "لم يُحفظ شيء ولم يتغيّر تقدّمك. تأكد من وجود مساحة كافية على الجهاز وأنك لا تستخدم التصفح الخاص، ثم أعد المحاولة."],
       // A write failed and a write-ahead record is still stored: the next start completes or undoes the transfer.
-      "write-pending": ["لم يكتمل النقل", "لم يكتمل النقل؛ سيُستكمل أو يُتراجع عنه عند فتح التطبيق مرة أخرى. أغلق التطبيق وافتحه من جديد، ثم تحقّق من تقدّمك."]
+      "write-pending": ["لم يكتمل النقل", "سيُكمل التطبيق النقل أو يتراجع عنه عند فتحه مرة أخرى. أغلق التطبيق وافتحه من جديد، ثم تحقّق من تقدّمك."]
     };
     const transferPeriodNames = { morning: "الصباح", evening: "المساء" };
     const transferSettingNames = {
@@ -10350,8 +10350,8 @@
       setTransferNote(transferSendStatus, "", false);
       setTransferSendButtons(true);
       transferTip(transferSendTip, !isIosDevice() ? "" : isInstalled()
-        ? "لنقل التقدّم إلى سفاري على الجهاز نفسه: انسخ الرمز، ثم افتح الموقع في سفاري واذهب إلى الإعدادات ← «استلام التقدّم» والصقه. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه."
-        : "لنقل التقدّم إلى التطبيق المثبّت على الشاشة الرئيسية: انسخ الرمز، ثم افتح التطبيق واذهب إلى الإعدادات ← «استلام التقدّم» والصقه. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه.");
+        ? "لنقل التقدّم إلى سفاري على الجهاز نفسه، انسخ الرمز ثم افتح الموقع في سفاري، واضغط «استلام التقدّم» في الإعدادات والصق الرمز. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه."
+        : "لنقل التقدّم إلى التطبيق المثبّت على الشاشة الرئيسية، انسخ الرمز ثم افتح التطبيق، واضغط «استلام التقدّم» في الإعدادات والصق الرمز. لا يتشارك سفاري والتطبيق المثبّت البيانات، ولا تقرأ الكاميرا شاشة الجهاز نفسه.");
       showTransferView("send");
       // Only a slow build shows «يُجهَّز الرمز…»; a fast one does not flash it.
       const slow = setTimeout(() => {
@@ -10570,8 +10570,8 @@
       transferScanOpen.hidden = !canScan;
       transferScanUnavailable.hidden = canScan;
       transferTip(transferReceiveTip, !isIosDevice() ? "" : isInstalled()
-        ? "إن كان تقدّمك في سفاري على هذا الجهاز: افتح الموقع في سفاري، واذهب إلى الإعدادات ← «إرسال التقدّم» ← «نسخ الرمز»، ثم عُد إلى هنا والصقه. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف»."
-        : "إن كان تقدّمك في التطبيق المثبّت على هذا الجهاز: افتحه، واذهب إلى الإعدادات ← «إرسال التقدّم» ← «نسخ الرمز»، ثم عُد إلى سفاري والصقه هنا. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف».");
+        ? "إن كان تقدّمك في سفاري على هذا الجهاز، فافتح الموقع في سفاري واضغط «إرسال التقدّم» في الإعدادات ثم «نسخ الرمز»، وعُد إلى هنا والصقه. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف»."
+        : "إن كان تقدّمك في التطبيق المثبّت على هذا الجهاز، فافتحه واضغط «إرسال التقدّم» في الإعدادات ثم «نسخ الرمز»، وعُد إلى سفاري والصقه هنا. ويمكنك بدل ذلك «مشاركة كملف» ثم «حفظ في الملفات»، وفتحه هنا من «اختيار ملف».");
       showTransferView("receive", focusTarget);
     }
 
@@ -10927,7 +10927,7 @@
       transferScanStallShown = false;
       if (transferScanHint.textContent.startsWith("لم تكتمل")) setTransferNote(transferScanHint, "", false);
       renderTransferScanProgress();
-      if (first) announceTransfer(`بدأت القراءة: قُرئ ١ من ${formatNumber(frame.count)}.`, true);
+      if (first) announceTransfer(`بدأت القراءة، وقُرئ ١ من ${formatNumber(frame.count)}.`, true);
       if (transferScanFrames.size < transferScanCount) return false;
       finishTransferScan([...transferScanFrames.values()]);
       return true;
@@ -10973,7 +10973,7 @@
       const { unit: period, before, after } = row;
       const was = transferAdhkarDone(period, before);
       const now = transferAdhkarDone(period, after);
-      const title = `أذكار ${transferPeriodNames[period]} — اليوم`;
+      const title = `أذكار ${transferPeriodNames[period]} اليوم`;
       if (!(was.complete || before.manualCompletion) && (now.complete || after.manualCompletion)) {
         return transferChange(title, now.complete ? transferSmall("يكتمل الورد ✓", "is-complete") : transferSmall("يُسجَّل الورد مكتملًا"));
       }
@@ -10989,9 +10989,9 @@
 
     function transferUnitTitle(row, today) {
       const day = transferDayLabel(row.date, today);
-      if (row.store === "adhkar") return row.date < today ? `السجل — ${day}` : `أذكار ${transferPeriodNames[row.unit]} — ${day}`;
-      if (row.store === "suwar") return row.date < today ? `السجل — ${day}` : `${suwarById[row.unit]?.surah ?? row.unit} — ${day}`;
-      return `المسبحة — ${day}`;
+      if (row.store === "adhkar") return row.date < today ? `سجل ${day}` : `أذكار ${transferPeriodNames[row.unit]} ${day}`;
+      if (row.store === "suwar") return row.date < today ? `سجل ${day}` : `${suwarById[row.unit]?.surah ?? row.unit} ${day}`;
+      return `مسبحة ${day}`;
     }
 
     function transferHistoryTag(row) {
@@ -11022,11 +11022,11 @@
           const p = transferPeriodNames[row.unit];
           const was = transferAdhkarDone(row.unit, row.before);
           const now = transferAdhkarDone(row.unit, row.after);
-          rows.push(transferChange(`أذكار ${p} — اليوم`, transferSmall(`سيُعاد ضبط تقدّم أذكار ${p} اليوم ${because} يصبح المكتمل ${formatNumber(now.done)} من ${formatNumber(now.total)} بدل ${formatNumber(was.done)}.`), " is-reset"));
+          rows.push(transferChange(`أذكار ${p} اليوم`, transferSmall(`سيُعاد ضبط تقدّم أذكار ${p} اليوم ${because} يصبح المكتمل ${formatNumber(now.done)} من ${formatNumber(now.total)} بدل ${formatNumber(was.done)}.`), " is-reset"));
         } else if (row.store === "suwar" && row.date === today) {
           const name = suwarById[row.unit]?.surah ?? row.unit;
           const lost = row.before.pages.filter(page => !row.after.pages.includes(page)).length;
-          rows.push(transferChange(`${name} — اليوم`, transferSmall(`سيُعاد ضبط علامات قراءة ${name} اليوم ${because} تُزال العلامة عن ${transferLostPages(lost)}.`), " is-reset"));
+          rows.push(transferChange(`${name} اليوم`, transferSmall(`سيُعاد ضبط علامات قراءة ${name} اليوم ${because} تُزال العلامة عن ${transferLostPages(lost)}.`), " is-reset"));
         }
       }
       const tasbihDays = new Map();
@@ -11038,11 +11038,11 @@
       }
       for (const [date, day] of [...tasbihDays].sort((a, b) => b[0].localeCompare(a[0]))) {
         const label = transferDayLabel(date, today);
-        rows.push(transferChange(`المسبحة — ${label}`, transferSmall(`سيُعاد ضبط عدّ المسبحة ${label} ${because} ينقص المجموع من ${formatNumber(day.before)} إلى ${formatNumber(day.after)}.`), " is-reset"));
+        rows.push(transferChange(`مسبحة ${label}`, transferSmall(`سيُعاد ضبط عدّ المسبحة ${label} ${because} ينقص المجموع من ${formatNumber(day.before)} إلى ${formatNumber(day.after)}.`), " is-reset"));
       }
       for (const [date, tags] of transferTagsByDate(history)) {
         const label = transferDayLabel(date, today);
-        rows.push(transferChange(`السجل — ${label}`, transferSmall(`سيُحذف ${label} من سجل الإكمال ${because} يُزال: ${tags.join("، ")}.`), " is-reset"));
+        rows.push(transferChange(`سجل ${label}`, transferSmall(`سيُحذف ${label} من سجل الإكمال ${because} يُزال: ${tags.join("، ")}.`), " is-reset"));
       }
       return rows;
     }
@@ -11062,7 +11062,7 @@
         const parts = [];
         if (pages) parts.push(transferNewPages(pages));
         if (completed.length) parts.push(`${pages ? "وتكتمل" : "تكتمل"} ${transferList(completed)}`);
-        if (parts.length) rows.push(transferChange("قراءة السور — اليوم", transferSmall(parts.join("، "))));
+        if (parts.length) rows.push(transferChange("قراءة السور اليوم", transferSmall(parts.join("، "))));
       }
       const raised = todayRows.filter(row => row.store === "tasbih" && row.unit !== "custom" && row.after > row.before).length;
       const custom = todayRows.find(row => row.store === "tasbih" && row.unit === "custom");
@@ -11070,7 +11070,7 @@
       if (raised || phrases) {
         const added = `تُضاف ${formatNumber(phrases)} من العبارات إلى «عباراتك»`;
         const text = raised ? `يرتفع العدّ في ${formatNumber(raised)} من الأذكار${phrases ? `، و${added}` : ""}` : added;
-        rows.push(transferChange("المسبحة — اليوم", transferSmall(text)));
+        rows.push(transferChange("مسبحة اليوم", transferSmall(text)));
       }
       const history = transferTagsByDate(plan.additions.filter(row => row.date < today));
       if (history.length) {
@@ -11146,7 +11146,7 @@
         ${hasResets
           ? `<p class="transfer-warning">أُعيد ضبط بعض التقدّم على الجهاز الآخر بعد آخر ما سُجّل هنا، فسيُطبَّق هنا كما هو موضّح أعلاه. لا شيء غير ذلك يُحذف أو ينقص، وتبقى إعداداتك الحالية كما هي.</p>`
           : `<p class="transfer-assure">لن يُحذف شيء من هذا الجهاز ولن ينقص أي عدد. يُضاف ما ينقصه فقط، وتبقى إعداداتك الحالية كما هي.</p>`}
-        <p class="settings-note">لا يُنقل «التراجع»: إن تراجعت عن عدّة على أحد الجهازين، فلن ينقص العدّ على الجهاز الآخر بالنقل.</p>
+        <p class="settings-note">لا يُنقل «التراجع». إن تراجعت عن عدّة على أحد الجهازين، فلن ينقص العدّ على الجهاز الآخر بالنقل.</p>
         ${transferWarnings(plan)}
         <div class="transfer-footer">
           <button class="dialog-button" type="button" data-transfer-action="cancel">إلغاء</button>
@@ -11442,7 +11442,7 @@
       markInstallOnboardingSeen();
       if (installDialog.open) installDialog.close();
       updateInstallUi();
-      liveRegion.textContent = "تم تثبيت التطبيق";
+      liveRegion.textContent = "ثُبّت التطبيق";
     });
     standaloneDisplay.addEventListener?.("change", () => {
       if (isInstalled()) markInstallOnboardingSeen();
@@ -11466,7 +11466,7 @@
     hapticsToggle.addEventListener("change", () => {
       hapticsEnabled = hapticsToggle.checked;
       try { if (!journalHolds(hapticsStorageKey)) localStorage.setItem(hapticsStorageKey, hapticsEnabled ? "on" : "off"); } catch (_) {}
-      liveRegion.textContent = hapticsEnabled ? "تم تشغيل الاهتزاز" : "تم إيقاف الاهتزاز";
+      liveRegion.textContent = hapticsEnabled ? "شُغّل الاهتزاز" : "أُوقف الاهتزاز";
       syncHapticArm();
     });
 

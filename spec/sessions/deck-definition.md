@@ -417,15 +417,15 @@ new date, ignore the tap, reset, or target change because it belongs to the prev
 **Labels to speak.** These are the PWAs' live-region strings; announce them after the change.
 
 - Adhkar counter (`progressLabel`):
-  - Counted items: «ذكر N، تم تكراره X من أصل Y مرات», with «، اكتمل» added when complete.
-  - Other items: «ذكر N، لم يُعلَّم كمقروء», or «ذكر N، تمت قراءته» once read.
+  - Counted items: «ذكر N، كُرّر X من أصل Y مرات», with «، اكتمل» added when complete.
+  - Other items: «ذكر N، لم يُعلَّم كمقروء», or «ذكر N، قُرئ» once read.
 - Adhkar tap target:
   - Counted items: «زيادة عداد الذكر N. <label>».
   - Other items: «تحديد كمقروء، الذكر N. <label>», or «اكتمل، الذكر N. <label>» once read.
 - Ruqyah counter (`segmentLabel`): «المقطع N: <surah> <range>. <status>», N within the sura. The status is
   «لم تُقرأ بعد» or «تمت القراءة» when repeat is 1, and «تم X من Y» otherwise.
 - Ruqyah tap target: «تسجيل قراءة المقطع N. <label>», or «اكتمل. <label>» once complete.
-- «سور» counter (`updateSuraPage`): «الصفحة N من <surah>، <range>، لم تُعلَّم كمقروءة», or «…، تمت قراءتها» once
+- «سور» counter (`updateSuraPage`): «الصفحة N من <surah>، <range>، لم تُعلَّم كمقروءة», or «…، قُرئت» once
   read, N within the sura.
 - «سور» tap target: «تحديد كمقروءة، <label>», or «اكتملت، <label>» once read.
 - Reset buttons: «إعادة عداد الذكر N» / «إعادة عداد المقطع N» / «إعادة الصفحة N».
@@ -512,7 +512,7 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `card.requirement.once` / `card.requirement.twice` / `card.requirement.times` | مرة واحدة / مرتان / {n} مرات |
 | `card.target` | الهدف |
 | `card.reset` | إعادة |
-| `card.source` / `card.source.title` | المصدر والتفاصيل / المصدر والتفاصيل — الذكر {n} |
+| `card.source` / `card.source.title` | المصدر والتفاصيل / مصدر الذكر {n} وتفاصيله |
 | `card.review` | بحاجة إلى مراجعة |
 | `card.reset.confirm.adhkar.title` / `.message` | إعادة عداد الذكر {n}؟ / سيعود العداد من {x} إلى الصفر. |
 | `card.reset.confirm.ruqyah.title` / `.message` | إعادة العداد؟ / سيعود عداد {surah} {range} إلى الصفر. |
@@ -523,13 +523,13 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `summary.ruqyah.list.label` | تقدم رقية اليوم: {x} من {y} تكرارًا |
 | `summary.suwar.progress` / `.done` / `.label` | {x} من {y} صفحة / اكتملت {surah} اليوم / {surah}: {x} من {y} صفحة مقروءة |
 | `summary.suwar.list` / `.label` | {x} من {y} سور / سور اليوم: {x} من {y} سور مكتملة |
-| `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / وقت الإكمال: {time} |
+| `completion.adhkar.title` / `.message` / `.time` | اكتملت {section} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. / وقت الإكمال: {time} |
 | `completion.adhkar.done` / `.switch` | تم / الانتقال إلى {otherSection} |
 | `completion.ruqyah.title` / `.message` | تمت الرقية بحمد الله / اكتملت جميع المقاطع بتكراراتها. |
 | `completion.ruqyah.close` / `.restart` | إغلاق / بدء رقية جديدة |
-| `completion.ruqyah.sura.title` / `.message` | اكتملت قراءة {surah} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. |
+| `completion.ruqyah.sura.title` / `.message` | اكتملت قراءة {surah} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. |
 | `completion.ruqyah.sura.done` / `.switch` | تم / الانتقال إلى {nextSurah} |
-| `completion.suwar.title` / `.message` / `.done` | اكتملت قراءة {surah} بحمد الله / تم حفظ إكمال اليوم محليًا على هذا الجهاز. / تم |
+| `completion.suwar.title` / `.message` / `.done` | اكتملت قراءة {surah} بحمد الله / حُفظ إكمال اليوم على هذا الجهاز. / تم |
 | `reset.title` / `reset.copy` | ما الذي تريد إعادته؟ / اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز. |
 | `reset.day` / `.detail` | تقدم اليوم / إعادة عدادات اليوم فقط مع بقاء السجل كما هو. |
 | `reset.week` / `.detail` | هذا الأسبوع / إعادة عدادات اليوم وحذف سجل آخر سبعة أيام. |
@@ -543,9 +543,9 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `longOrder.prompt.keep` / `.accept` | لا، أبقِ الترتيب / نعم، أخّرها |
 | `longOrder.setting` / `.note` | تأخير الأذكار الطويلة / الأذكار التي تُكرَّر ١٠ مرات فأكثر تُقرأ في آخر الورد قبل الذكر الأخير، دون تغيير أرقامها ولا عدّاداتها. |
 | `longOrder.done.on` / `.off` | ستُقرأ الأذكار الطويلة قبل الذكر الأخير / عاد ترتيب الأذكار كما هو |
-| `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. سيُسجل كمكتمل ويوقف تذكيره اليوم، ثم يُعاد تلقائيًا غدًا. لا تتغير العدادات، ويمكنك تصفح بطاقات الورد بحرية. |
+| `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / اهتزاز لمدة ٤٥ مللي ثانية عند إكمال عداد يتطلب التكرار أكثر من مرة، وعند اكتمال تكرار كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |

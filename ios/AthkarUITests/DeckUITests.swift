@@ -16,9 +16,9 @@ final class DeckUITests: DeckTestCase {
         expectLabel(summary, "١ من ٢٦ ذكرًا")
 
         // A counted item: three taps, then it advances.
-        expectLabel(counter, "ذكر ٢، تم تكراره ٠ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ٠ من أصل ٣ مرات")
         tapCard(2)
-        expectLabel(counter, "ذكر ٢، تم تكراره ٢ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ٢ من أصل ٣ مرات")
         expectPosition(2, of: 26)
         XCTAssertFalse(nextButton.isEnabled)
         tapCard()
@@ -29,7 +29,7 @@ final class DeckUITests: DeckTestCase {
         previousButton.tap()
         previousButton.tap()
         expectPosition(1, of: 26)
-        expectLabel(counter, "ذكر ١، تمت قراءته")
+        expectLabel(counter, "ذكر ١، قُرئ")
         XCTAssertFalse(tapTarget.isEnabled, "a completed card no longer counts")
         XCTAssertTrue(nextButton.isEnabled)
         resetCardButton.tap()
@@ -77,19 +77,19 @@ final class DeckUITests: DeckTestCase {
         markMorningCompleteManually()
         next(19, count: 26, from: 1)
         XCTAssertTrue(card("morning-20").exists)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠٠ مرات")
 
         chooseTarget(10)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ٠ من أصل ١٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ٠ من أصل ١٠ مرات")
         tapCard(10)
         expectPosition(21, of: 26)
         previousButton.tap()
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ١٠ من أصل ١٠ مرات، اكتمل")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ١٠ من أصل ١٠ مرات، اكتمل")
 
         chooseTarget(1)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ١ من أصل ١ مرات، اكتمل")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ١ من أصل ١ مرات، اكتمل")
         chooseTarget(100)
-        expectLabel(counter, "ذكر ٢٠، تم تكراره ١ من أصل ١٠٠ مرات")
+        expectLabel(counter, "ذكر ٢٠، كُرّر ١ من أصل ١٠٠ مرات")
         XCTAssertTrue(tapTarget.isEnabled)
     }
 
@@ -289,7 +289,7 @@ final class DeckUITests: DeckTestCase {
         tapCard()
         expectPosition(2, of: 26)
         tapCard()
-        expectLabel(counter, "ذكر ٢، تم تكراره ١ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ١ من أصل ٣ مرات")
         openSettings()
         choose("داكن", in: "settings.theme")
         choose("كبير", in: "settings.textSize")
@@ -305,7 +305,7 @@ final class DeckUITests: DeckTestCase {
         launch(reset: false, answer: nil)
         XCTAssertFalse(app.alerts["تأجيل الأذكار الطويلة؟"].waitForExistence(timeout: 2), "asked only once")
         expectPosition(2, of: 26)
-        expectLabel(counter, "ذكر ٢، تم تكراره ١ من أصل ٣ مرات")
+        expectLabel(counter, "ذكر ٢، كُرّر ١ من أصل ٣ مرات")
         expectLabel(summary, "١ من ٢٦ ذكرًا")
         XCTAssertEqual(app.buttons["tab.evening"].label, "أذكار المساء، مكتملة اليوم")
 

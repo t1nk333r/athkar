@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// «المصدر والتفاصيل — الذكر ٢٠»: every detail of the item, the note (`noteIndex`) set apart.
+/// «مصدر الذكر ٢٠ وتفاصيله»: every detail of the item, the note (`noteIndex`) set apart.
 struct SourceSheet: View {
     let number: Int
     let item: AdhkarItemContent
@@ -36,7 +36,7 @@ struct SourceSheet: View {
                 .padding()
             }
             .background(palette.background)
-            .navigationTitle("المصدر والتفاصيل — الذكر \(ArabicFormat.number(number))")
+            .navigationTitle("مصدر الذكر \(ArabicFormat.number(number)) وتفاصيله")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -18,7 +18,7 @@ struct PrayerWidget: Widget {
             PrayerWidgetView(entry: entry)
         }
         .configurationDisplayName("الصلاة")
-        .description("الصلاة الحالية نصف ساعة بعد أذانها، ثم الصلاة القادمة.")
+        .description("تعرض الصلاة الحالية نصف ساعة بعد أذانها، ثم الصلاة القادمة.")
         .supportedFamilies([.accessoryRectangular, .accessoryInline, .accessoryCircular])
     }
 }
