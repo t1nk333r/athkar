@@ -74,10 +74,10 @@ struct TasbihPhraseSheet: View {
         }
     }
 
-    /// `tasbihOptionMarkup`: the phrase with its tashkeel and today's count; the one counted is pressed.
+    /// `tasbihOptionMarkup`: the phrase with its tashkeel and today's count, over a rule; the one counted is in the
+    /// accent with «✓».
     private func optionButton(_ option: TasbihModel.Option, identifier: String) -> some View {
-        let shape = Corner.box
-        return Button {
+        Button {
             if let change = model.select(option.key) {
                 dismiss()
                 apply(change)
@@ -90,18 +90,19 @@ struct TasbihPhraseSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if option.count > 0 {
                     Text(ArabicFormat.number(option.count))
-                        .font(.caption.weight(.semibold))
+                        .font(.footnote)
                         .monospacedDigit()
+                }
+                if option.isSelected {
+                    Text("✓").accessibilityHidden(true)
                 }
             }
             .foregroundStyle(option.isSelected ? palette.accentStrong : palette.textPrimary)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 4)
             .padding(.vertical, 8)
             .frame(minHeight: 48)
-            .background(shape.fill(option.isSelected ? palette.accentSoft : palette.surfaceRaised))
-            .overlay(shape.strokeBorder(option.isSelected ? palette.accent.mixed(0.55, with: palette.border)
-                                                          : palette.border))
-            .contentShape(shape)
+            .overlay(alignment: .bottom) { Rule() }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(option.accessibilityLabel)
@@ -119,12 +120,10 @@ struct TasbihPhraseSheet: View {
             focus = left > 0 ? .custom(min(index, left - 1)) : .input
         } label: {
             Text("×")
-                .font(.title3.weight(.bold))
+                .font(.title3)
                 .foregroundStyle(palette.textSecondary)
                 .frame(width: 44, height: 44)
-                .background(Circle().fill(palette.surfaceRaised))
-                .overlay(Circle().strokeBorder(palette.border))
-                .contentShape(Circle())
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("حذف العبارة: \(TasbihText.stripTashkeel(phrase))")
@@ -251,18 +250,17 @@ struct TasbihTargetSheet: View {
 
     private func option(_ title: String, detail: String, identifier: String, pressed: Bool,
                         action: @escaping () -> Void) -> some View {
-        let shape = Corner.box
-        return Button(action: action) {
+        Button(action: action) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.body.weight(.bold))
+                Text(pressed ? title + " ✓" : title).font(.body.weight(.bold))
                 Text(detail).font(.footnote).foregroundStyle(palette.textSecondary)
             }
             .foregroundStyle(pressed ? palette.accentStrong : palette.textPrimary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(shape.fill(pressed ? palette.accentSoft : palette.surfaceRaised))
-            .overlay(shape.strokeBorder(pressed ? palette.accent.mixed(0.55, with: palette.border) : palette.border))
-            .contentShape(shape)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 12)
+            .overlay(alignment: .bottom) { Rule() }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

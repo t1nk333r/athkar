@@ -73,7 +73,7 @@ struct HomePrayerRow: View {
 
     private func name(_ next: PrayerCountdown?) -> some View {
         Text(next.map { Self.title($0) } ?? "أوقات الصلاة")
-            .font(.headline.weight(.heavy))
+            .font(.headline.weight(.bold))
             .foregroundStyle(next == nil ? palette.textSecondary : palette.textPrimary)
             .lineLimit(1)
             .minimumScaleFactor(0.75)
@@ -81,8 +81,8 @@ struct HomePrayerRow: View {
 
     private func timeLeft(_ next: PrayerCountdown?, now: Date) -> some View {
         Text(next.map { "بعد " + Self.left(from: now, to: $0.at) } ?? "حدّد موقعك")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(palette.accentStrong)
+            .font(.subheadline)
+            .foregroundStyle(palette.textSecondary)
             .monospacedDigit()
             .lineLimit(1)
             .minimumScaleFactor(0.75)
@@ -90,11 +90,8 @@ struct HomePrayerRow: View {
 
     private func noticeLine(_ notice: ProhibitedTime) -> some View {
         HStack(spacing: 7) {
-            Capsule()
-                .fill(palette.warning)
-                .frame(width: 3, height: 16)
             Text("وقت نهي")
-                .font(.caption.weight(.heavy))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(palette.warning)
             Text(Self.until(notice, zone: prayer.zone))
                 .font(.caption.weight(.semibold))
@@ -105,22 +102,19 @@ struct HomePrayerRow: View {
         .minimumScaleFactor(0.7)
     }
 
+    /// The Hijri date as plain text at the row's end: the day over the month and year.
     private func dateBox(_ date: HijriDay) -> some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .trailing, spacing: 0) {
             Text(date.day)
-                .font(.title2.weight(.heavy))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(palette.textPrimary)
             Text(date.monthYear)
-                .font(.caption2.weight(.semibold))
+                .font(.caption)
                 .foregroundStyle(palette.textSecondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .frame(minWidth: 72)
-        .background(Corner.box.fill(palette.surfaceRaised))
-        .overlay(Corner.box.strokeBorder(palette.border))
+        .frame(minWidth: 72, alignment: .trailing)
         .accessibilityIdentifier("home.hijri")
     }
 

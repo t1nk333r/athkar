@@ -43,7 +43,7 @@ struct TrackerCalendarView: View {
             monthButton("الشهر السابق", systemImage: "chevron.backward", identifier: "calendar.previous",
                         target: LocalDate.month(-1, from: month))
             Text(TrackerText.month(month))
-                .font(.headline.weight(.heavy))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(palette.textPrimary)
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
@@ -79,7 +79,7 @@ struct TrackerCalendarView: View {
         return LazyVGrid(columns: columns, spacing: 4) {
             ForEach(TrackerText.weekdays, id: \.letter) { weekday in
                 Text(weekday.letter)
-                    .font(.caption.weight(.heavy))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(palette.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 24)
                     .accessibilityLabel(weekday.name)
@@ -101,7 +101,7 @@ struct TrackerCalendarView: View {
         } label: {
             VStack(spacing: 2) {
                 Text(TrackerText.dayNumber(day.date))
-                    .font(.subheadline.weight(isToday ? .heavy : .semibold))
+                    .font(.subheadline.weight(isToday ? .bold : .semibold))
                     .foregroundStyle(isToday ? palette.accentStrong : palette.textPrimary)
                 Text(day.hasPrayerRecords ? "\(ArabicFormat.number(day.prayed))/\(ArabicFormat.number(day.applicable))"
                                           : " ")
@@ -116,7 +116,6 @@ struct TrackerCalendarView: View {
                 .foregroundStyle(palette.accent)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
-            .background(Corner.box.fill(isToday ? palette.accentSoft : Color.clear))
             .overlay(Corner.box.strokeBorder(isToday ? palette.accent : Color.clear))
             .contentShape(Corner.box)
         }
@@ -149,7 +148,7 @@ struct TrackerCalendarView: View {
     private func totals(_ totals: PrayerMonthTotals) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("هذا الشهر")
-                .font(.subheadline.weight(.heavy))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(palette.textPrimary)
             ForEach(TrackerText.totals(totals), id: \.self) { line in
                 Text(line)
@@ -158,7 +157,7 @@ struct TrackerCalendarView: View {
         .font(.caption.weight(.semibold))
         .foregroundStyle(palette.textSecondary)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
+        .padding(.vertical, 12).padding(.horizontal, 4)
         .card(palette)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("calendar.totals")
@@ -199,7 +198,7 @@ struct TrackerDaySheet: View {
                             confirmsClear = true
                         } label: {
                             Label("مسح اليوم", systemImage: "arrow.counterclockwise")
-                                .font(.subheadline.weight(.heavy))
+                                .font(.subheadline.weight(.bold))
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
                         .buttonStyle(.plain)
@@ -243,7 +242,7 @@ struct TrackerDaySheet: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(palette.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(12)
+            .padding(.vertical, 12).padding(.horizontal, 4)
             .card(palette)
             .accessibilityIdentifier("calendar.completions")
     }

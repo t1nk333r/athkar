@@ -104,15 +104,13 @@ struct TasbihView: View {
                 title()
                 Text("▾").accessibilityHidden(true)
             }
-            .font(.footnote.weight(.heavy))
+            .font(.subheadline)
             .foregroundStyle(palette.textSecondary)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
-            .padding(.horizontal, 12.8)
-            .frame(maxWidth: .infinity, minHeight: 36.8)
-            .background(Corner.box.fill(palette.surfaceRaised))
-            .overlay(Corner.box.strokeBorder(palette.border))
-            .contentShape(Corner.box)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -137,7 +135,7 @@ struct TasbihView: View {
             VStack(spacing: 12) {
                 Text(model.phrase.label)
                     .font(ReadingFont.quran(metrics.dhikrText))
-                    .foregroundStyle(palette.accentStrong)
+                    .foregroundStyle(palette.textPrimary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
@@ -149,11 +147,8 @@ struct TasbihView: View {
             .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            shape
-                .fill(palette.surface)
-                .overlay(shape.strokeBorder(palette.border))
-                .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
+        .overlay {
+            shape.fill(palette.accent).opacity(isPressed ? 0.07 : 0).allowsHitTesting(false)
         }
         .scaleEffect(isPressed ? 0.993 : 1)
         .animation(.easeOut(duration: 0.11), value: isPressed)
@@ -174,7 +169,7 @@ struct TasbihView: View {
                             style: StrokeStyle(lineWidth: line, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Text(ArabicFormat.number(model.count))
-                    .font(.system(size: side * Self.numberScale(model.count), weight: .heavy))
+                    .font(.system(size: side * Self.numberScale(model.count), weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(model.count == 0 ? palette.textSecondary
                                      : model.isLap ? palette.completed : palette.textPrimary)
@@ -214,7 +209,7 @@ struct TasbihView: View {
             }
             Text(status.text)
         }
-        .font(.subheadline.weight(.heavy))
+        .font(.subheadline)
         .foregroundStyle(model.isReached ? palette.completed : palette.textSecondary)
         .keyframeAnimator(initialValue: 1.0, trigger: reached) { content, opacity in
             content.opacity(opacity)
@@ -230,7 +225,16 @@ struct TasbihView: View {
 
     private var controls: some View {
         let empty = model.count == 0
-        return HStack(spacing: 12) {
+        return VStack(spacing: 2) {
+            Rule()
+            controlRow(empty: empty)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("أدوات المسبحة")
+    }
+
+    private func controlRow(empty: Bool) -> some View {
+        HStack(spacing: 12) {
             controlButton(identifier: "tasbih.undo", enabled: !empty) {
                 Text("تراجع")
             } action: {
@@ -239,7 +243,7 @@ struct TasbihView: View {
             .accessibilityLabel("تراجع عن العدّة الأخيرة")
             Spacer(minLength: 0)
             Text(model.totalText)
-                .font(.subheadline.weight(.heavy))
+                .font(.subheadline)
                 .foregroundStyle(palette.textSecondary)
                 .monospacedDigit()
                 .lineLimit(1)
@@ -256,22 +260,17 @@ struct TasbihView: View {
             }
             .accessibilityLabel(model.resetLabel)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("أدوات المسبحة")
     }
 
     private func controlButton(identifier: String, enabled: Bool, @ViewBuilder title: () -> some View,
                                action: @escaping () -> Void) -> some View {
         Button(action: action) {
             title()
-                .font(.subheadline.weight(.heavy))
+                .font(.body.weight(.medium))
                 .foregroundStyle(palette.textPrimary)
-                .padding(.horizontal, 14)
-                .frame(minWidth: 99, minHeight: 44)
-                .background(Corner.box.fill(palette.surfaceRaised))
-                .overlay(Corner.box.strokeBorder(palette.border))
-                .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
-                .contentShape(Corner.box)
+                .padding(.horizontal, 4)
+                .frame(minWidth: 80, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(!enabled)

@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// The PWAs' CSS colour variables: a shared base per colour scheme, with the accent family of the deck on screen
-/// (the athkar PWA's morning rose, its default teal for the evening, its «سور» gold and «مسبحة» indigo, and the
-/// ruqyah PWA's blue).
+/// The PWA's CSS colour variables, one set per colour scheme: paper and ink, with one accent for every deck. The
+/// accent marks the selected tab, the progress line, the counter and a screen's main button; rules (`border`) separate the parts
+/// of a screen instead of boxes.
 struct Palette: Sendable {
     var background: Color
-    var backgroundGlow: Color
     var surface: Color
     var surfaceRaised: Color
     var textPrimary: Color
@@ -14,6 +13,8 @@ struct Palette: Sendable {
     var accent: Color
     var accentStrong: Color
     var accentSoft: Color
+    /// Text and symbols on an `accent` or `completed` fill.
+    var onAccent: Color
     var border: Color
     var divider: Color
     var completed: Color
@@ -21,71 +22,25 @@ struct Palette: Sendable {
     var warning: Color
     var warningSoft: Color
 
-    static func resolve(_ deck: DeckID, _ scheme: ColorScheme) -> Palette {
-        var palette = scheme == .dark ? darkBase : lightBase
-        switch (deck, scheme) {
-        case (.morning, .dark):
-            palette.accent(0xef8d86, strong: 0xffc1bb, soft: 0x4c302f, divider: 0x704b4a, reference: 0x8cc7ef,
-                           glow: 0x3b3038)
-        case (.morning, _):
-            palette.accent(0xb85f59, strong: 0x914640, soft: 0xf7e6e3, divider: 0xe6c2bf, reference: 0x143872,
-                           glow: 0xfaeeee)
-        case (.ruqyah, .dark):
-            palette.accent(0x6fa8dc, strong: 0xa6cdf0, soft: 0x1d3852, divider: 0x52657a, reference: 0x28b6d2,
-                           glow: 0x24384a)
-        case (.ruqyah, _):
-            palette.accent(0x3f6ea8, strong: 0x2f5a8f, soft: 0xe4ecf7, divider: 0xc7d3e2, reference: 0x15557a,
-                           glow: 0xeef2f7)
-        case (.suwar, .dark):
-            palette.accent(0xd6b064, strong: 0xefd398, soft: 0x463b23, divider: 0x6b5a36, reference: 0x28b6d2,
-                           glow: 0x38332a)
-        case (.suwar, _):
-            palette.accent(0x8a6a24, strong: 0x6c521a, soft: 0xf4ecd8, divider: 0xe2d3ad, reference: 0x15557a,
-                           glow: 0xf8f1e1)
-        case (.evening, _):
-            break
-        }
-        return palette
+    static func resolve(_ scheme: ColorScheme) -> Palette {
+        scheme == .dark ? dark : light
     }
 
-    /// `body[data-period="tasbih"]`.
-    static func tasbih(_ scheme: ColorScheme) -> Palette {
-        var palette = scheme == .dark ? darkBase : lightBase
-        if scheme == .dark {
-            palette.accent(0xa2a8ea, strong: 0xcfd2f7, soft: 0x353858, divider: 0x55597e, reference: 0x28b6d2,
-                           glow: 0x2d3046)
-        } else {
-            palette.accent(0x5c62a3, strong: 0x454a86, soft: 0xebebf6, divider: 0xd0d2e8, reference: 0x15557a,
-                           glow: 0xf1f1f9)
-        }
-        return palette
-    }
+    private static let light = Palette(
+        background: Color(hex: 0xf5f1e8), surface: Color(hex: 0xf9f6ef), surfaceRaised: Color(hex: 0xfdfbf6),
+        textPrimary: Color(hex: 0x1e1c17), textSecondary: Color(hex: 0x6d675b), reference: Color(hex: 0x4f4a40),
+        accent: Color(hex: 0x8f3424), accentStrong: Color(hex: 0x74281b), accentSoft: Color(hex: 0xefe1d6),
+        onAccent: Color(hex: 0xfbf7f0), border: Color(hex: 0xddd6c7), divider: Color(hex: 0xddd6c7),
+        completed: Color(hex: 0x2e6a4e), completedSoft: Color(hex: 0xe2ebdf), warning: Color(hex: 0x87602a),
+        warningSoft: Color(hex: 0xf3e8d2))
 
-    private mutating func accent(_ accent: UInt32, strong: UInt32, soft: UInt32, divider: UInt32, reference: UInt32,
-                                 glow: UInt32) {
-        self.accent = Color(hex: accent)
-        accentStrong = Color(hex: strong)
-        accentSoft = Color(hex: soft)
-        self.divider = Color(hex: divider)
-        self.reference = Color(hex: reference)
-        backgroundGlow = Color(hex: glow)
-    }
-
-    private static let lightBase = Palette(
-        background: Color(hex: 0xf7f5ef), backgroundGlow: Color(hex: 0xeef7f7), surface: Color(hex: 0xfffefa),
-        surfaceRaised: Color(hex: 0xffffff), textPrimary: Color(hex: 0x18232d), textSecondary: Color(hex: 0x69747d),
-        reference: Color(hex: 0x15557a), accent: Color(hex: 0x137d91), accentStrong: Color(hex: 0x0d6879),
-        accentSoft: Color(hex: 0xe2f1f1), border: Color(hex: 0xdeddd5), divider: Color(hex: 0xc9d7d9),
-        completed: Color(hex: 0x327557), completedSoft: Color(hex: 0xe8f2e9), warning: Color(hex: 0x8a622c),
-        warningSoft: Color(hex: 0xfbf1dd))
-
-    private static let darkBase = Palette(
-        background: Color(hex: 0x202c38), backgroundGlow: Color(hex: 0x263b47), surface: Color(hex: 0x293946),
-        surfaceRaised: Color(hex: 0x30414f), textPrimary: Color(hex: 0xf6f3ec), textSecondary: Color(hex: 0xaeb8c1),
-        reference: Color(hex: 0x28b6d2), accent: Color(hex: 0x23b4cf), accentStrong: Color(hex: 0x6bd2e2),
-        accentSoft: Color(hex: 0x183f4a), border: Color(hex: 0x435361), divider: Color(hex: 0x536775),
-        completed: Color(hex: 0x70c58d), completedSoft: Color(hex: 0x254838), warning: Color(hex: 0xe0bc70),
-        warningSoft: Color(hex: 0x4b4028))
+    private static let dark = Palette(
+        background: Color(hex: 0x161512), surface: Color(hex: 0x1f1d1a), surfaceRaised: Color(hex: 0x26241f),
+        textPrimary: Color(hex: 0xece6d9), textSecondary: Color(hex: 0x9d978b), reference: Color(hex: 0xb9b2a5),
+        accent: Color(hex: 0xdb8f71), accentStrong: Color(hex: 0xf0b59c), accentSoft: Color(hex: 0x3b2a21),
+        onAccent: Color(hex: 0x1b130e), border: Color(hex: 0x3a3731), divider: Color(hex: 0x3a3731),
+        completed: Color(hex: 0x82c49a), completedSoft: Color(hex: 0x1e3227), warning: Color(hex: 0xe0bc70),
+        warningSoft: Color(hex: 0x3a3121))
 }
 
 extension Color {
@@ -109,5 +64,5 @@ extension Color {
 }
 
 extension EnvironmentValues {
-    @Entry var palette = Palette.resolve(.morning, .light)
+    @Entry var palette = Palette.resolve(.light)
 }

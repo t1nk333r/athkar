@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="أذكار الصباح والمساء بعدّاد لكل ذكر، وتذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#f7f5ef" id="theme-color">
+  <meta name="theme-color" content="#f5f1e8" id="theme-color">
   <link rel="manifest" href="./manifest.webmanifest?v=14">
   <link rel="icon" href="./icons/icon.svg?v=13" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icons/icon-192.png?v=13">
@@ -68,27 +68,28 @@
 
     :root {
       color-scheme: light;
-      --background: #f7f5ef;
-      --background-glow: #eef7f7;
-      --surface: #fffefa;
-      --surface-raised: #ffffff;
-      --text-primary: #18232d;
-      --text-secondary: #69747d;
-      --reference: #15557a;
-      --accent: #137d91;
-      --accent-strong: #0d6879;
-      --accent-soft: #e2f1f1;
-      --border: #deddd5;
-      --divider: #c9d7d9;
-      --completed: #327557;
-      --completed-soft: #e8f2e9;
-      --warning: #8a622c;
-      --warning-soft: #fbf1dd;
-      --focus: #176f87;
-      --shadow: 0 14px 38px rgba(35, 49, 58, 0.08);
-      --shadow-soft: 0 6px 22px rgba(35, 49, 58, 0.06);
-      --radius-xl: 1.75rem;
-      --radius-lg: 1.25rem;
+      /* Paper and ink, with one accent for every tab. The accent marks the selected tab, the progress line and the
+         counter, nothing else; rules (--border) separate the parts of a page instead of boxes. */
+      --background: #f5f1e8;
+      --surface: #f9f6ef;
+      --surface-raised: #fdfbf6;
+      --text-primary: #1e1c17;
+      --text-secondary: #6d675b;
+      --reference: #4f4a40;
+      --accent: #8f3424;
+      --accent-strong: #74281b;
+      --accent-soft: #efe1d6;
+      --on-accent: #fbf7f0;
+      --border: #ddd6c7;
+      --divider: #ddd6c7;
+      --completed: #2e6a4e;
+      --completed-soft: #e2ebdf;
+      --warning: #87602a;
+      --warning-soft: #f3e8d2;
+      --focus: #8f3424;
+      --shadow: 0 10px 30px rgba(30, 24, 14, 0.14);
+      --radius-xl: 0.9rem;
+      --radius-lg: 0.6rem;
       --content-width: 49rem;
       --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Traditional Arabic", Tahoma, Arial, sans-serif;
       --dhikr-text-size: clamp(1.24rem, 5.35vw, 1.72rem);
@@ -128,46 +129,26 @@
 
     :root[data-resolved-theme="dark"] {
       color-scheme: dark;
-      --background: #202c38;
-      --background-glow: #263b47;
-      --surface: #293946;
-      --surface-raised: #30414f;
-      --text-primary: #f6f3ec;
-      --text-secondary: #aeb8c1;
-      --reference: #28b6d2;
-      --accent: #23b4cf;
-      --accent-strong: #6bd2e2;
-      --accent-soft: #183f4a;
-      --border: #435361;
-      --divider: #536775;
-      --completed: #70c58d;
-      --completed-soft: #254838;
+      --background: #161512;
+      --surface: #1f1d1a;
+      --surface-raised: #26241f;
+      --text-primary: #ece6d9;
+      --text-secondary: #9d978b;
+      --reference: #b9b2a5;
+      --accent: #db8f71;
+      --accent-strong: #f0b59c;
+      --accent-soft: #3b2a21;
+      --on-accent: #1b130e;
+      --border: #3a3731;
+      --divider: #3a3731;
+      --completed: #82c49a;
+      --completed-soft: #1e3227;
       --warning: #e0bc70;
-      --warning-soft: #4b4028;
-      --focus: #75d7e7;
-      --shadow: 0 18px 48px rgba(4, 11, 18, 0.22);
-      --shadow-soft: 0 8px 28px rgba(4, 11, 18, 0.16);
+      --warning-soft: #3a3121;
+      --focus: #db8f71;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    body[data-period="morning"] {
-      --accent: #b85f59;
-      --accent-strong: #914640;
-      --accent-soft: #f7e6e3;
-      --divider: #e6c2bf;
-      --focus: #a9514b;
-      --reference: #143872;
-      --background-glow: #faeeee;
-    }
-
-    :root[data-resolved-theme="dark"] body[data-period="morning"] {
-      --accent: #ef8d86;
-      --accent-strong: #ffc1bb;
-      --accent-soft: #4c302f;
-      --divider: #704b4a;
-      --focus: #ffaaa4;
-      --reference: #8cc7ef;
-      --background-glow: #3b3038;
-    }
 
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -182,9 +163,7 @@
       min-height: 100dvh;
       margin: 0;
       overflow-x: hidden;
-      background:
-        radial-gradient(circle at 50% -10rem, var(--background-glow), transparent 34rem),
-        var(--background);
+      background: var(--background);
       color: var(--text-primary);
       font-family: var(--font-arabic);
       text-rendering: optimizeLegibility;
@@ -236,19 +215,10 @@
       gap: 0.5rem;
     }
 
-
-    .eyebrow {
-      margin: 0 0 0.2rem;
-      color: var(--accent-strong);
-      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
-    }
-
     h1 {
       margin: 0;
-      font-size: clamp(1.7rem, 8vw, 2.35rem);
-      font-weight: 800;
+      font-size: clamp(1.5rem, 7vw, 2rem);
+      font-weight: 700;
       line-height: 1.15;
     }
 
@@ -257,48 +227,35 @@
       position: sticky;
       inset-block-start: max(0.65rem, env(safe-area-inset-top));
       z-index: 20;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 0.35rem;
-      padding: 0.35rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      gap: 1.6rem;
+      border-block-end: 1px solid var(--border);
+      background: var(--background);
     }
 
     .period-tab {
       display: inline-flex;
-      min-height: 3.15rem;
+      min-height: 2.9rem;
       align-items: center;
-      justify-content: center;
-      gap: 0.55rem;
-      padding: 0.55rem 0.8rem;
+      gap: 0.3rem;
+      padding: 0.4rem 0 0.55rem;
       border: 0;
-      border-radius: 999px;
+      border-radius: 0;
       background: transparent;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-weight: 800;
+      font-size: 1rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: color 150ms ease, background-color 150ms ease, transform 100ms ease;
+      transition: color 150ms ease, box-shadow 150ms ease;
       min-width: 0;
       white-space: nowrap;
     }
 
     .period-tab[aria-selected="true"] {
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-    }
-
-    .period-tab:active { transform: scale(0.985); }
-
-    .period-icon {
-      width: 1.2rem;
-      height: 1.2rem;
-      flex: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--accent);
     }
     .period-status {
       display: none;
@@ -316,12 +273,7 @@
     .tab-label-short { display: none; }
 
     .session-summary {
-      margin-block-start: 0.85rem;
-      padding: 0.7rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      background: color-mix(in srgb, var(--surface) 94%, transparent);
-      box-shadow: var(--shadow-soft);
+      margin-block-start: 0.7rem;
     }
 
     .summary-row {
@@ -364,7 +316,7 @@
       inset: 0;
       border: 1px solid var(--border);
       border-radius: 999px;
-      background: var(--divider);
+      background: color-mix(in srgb, var(--text-secondary) 35%, var(--background));
       pointer-events: none;
       transition: background-color 150ms ease, border-color 150ms ease;
     }
@@ -439,21 +391,21 @@
       align-items: center;
       justify-content: center;
       gap: 0.32rem;
-      padding: 0.4rem 0.68rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--surface-raised);
+      padding: 0.4rem 0.5rem;
+      border: 0;
+      border-radius: var(--radius-lg);
+      background: transparent;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: opacity 120ms ease, transform 100ms ease, border-color 120ms ease;
+      transition: opacity 120ms ease, color 120ms ease;
     }
 
     .session-reset:active,
     .settings-button:active,
-    .card-reset:active { transform: scale(0.96); }
+    .card-reset:active { color: var(--text-primary); }
 
     .session-reset:disabled,
     .card-reset:disabled {
@@ -463,26 +415,26 @@
 
     .reset-options {
       display: grid;
-      gap: 0.5rem;
-      margin-block-start: 0.9rem;
+      margin-block-start: 0.6rem;
     }
 
     .reset-option {
       display: grid;
       gap: 0.12rem;
-      padding: 0.7rem 0.85rem;
-      border: 1px solid var(--border);
-      border-radius: 0.85rem;
-      background: var(--surface-raised);
+      padding: 0.75rem 0;
+      border: 0;
+      border-block-end: 1px solid var(--border);
+      border-radius: 0;
+      background: transparent;
       color: inherit;
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
       text-align: start;
       cursor: pointer;
-      transition: border-color 150ms ease, background-color 150ms ease, transform 100ms ease;
     }
 
-    .reset-option:active { transform: scale(0.99); }
-    .reset-option strong { font-size: 0.88rem; }
+    .reset-option:last-child { border-block-end: 0; }
+    .reset-option:active { color: var(--accent-strong); }
+    .reset-option strong { font-size: 0.95rem; }
 
     .reset-option small {
       color: var(--text-secondary);
@@ -490,44 +442,41 @@
       font-weight: 600;
     }
 
-    .reset-option:focus-visible { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
-
     @media (hover: hover) {
-      .reset-option:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+      .reset-option:hover strong { color: var(--accent-strong); }
     }
 
+    .settings-button { color: var(--text-primary); }
+
     .settings-button svg {
-      width: 1.15rem;
-      height: 1.15rem;
+      width: 1.3rem;
+      height: 1.3rem;
     }
 
 
     .progress-track {
       width: auto;
       min-width: 5rem;
-      height: 0.34rem;
+      height: 2px;
       flex: 1 1 auto;
       margin: 0;
       overflow: hidden;
       border: 0;
-      border-radius: 999px;
+      border-radius: 0;
       appearance: none;
       background: var(--border);
     }
 
     .progress-track::-webkit-progress-bar {
-      border-radius: 999px;
       background: var(--border);
     }
 
     .progress-track::-webkit-progress-value {
-      border-radius: 999px;
       background: var(--accent);
       transition: width 220ms ease;
     }
 
     .progress-track::-moz-progress-bar {
-      border-radius: 999px;
       background: var(--accent);
     }
 
@@ -548,31 +497,6 @@
       touch-action: pan-y pinch-zoom;
     }
 
-    .athkar-list::before,
-    .athkar-list::after {
-      content: "";
-      position: absolute;
-      z-index: 0;
-      inset-block-end: 0.1rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      background: color-mix(in srgb, var(--surface) 82%, var(--background));
-      box-shadow: var(--shadow-soft);
-      pointer-events: none;
-    }
-
-    .athkar-list::before {
-      inset-block-start: 1rem;
-      inset-inline: 1.15rem;
-      opacity: 0.48;
-    }
-
-    .athkar-list::after {
-      inset-block-start: 0.55rem;
-      inset-block-end: 0.55rem;
-      inset-inline: 0.58rem;
-      opacity: 0.72;
-    }
 
     .athkar-list > li {
       position: relative;
@@ -601,39 +525,39 @@
       align-items: center;
       gap: 0.75rem;
       margin-block-start: 0.3rem;
+      padding-block-start: 0.35rem;
+      border-block-start: 1px solid var(--border);
     }
 
     .deck-button {
       display: inline-flex;
-      min-width: 6.2rem;
+      min-width: 5rem;
       min-height: 3rem;
       align-items: center;
-      justify-content: center;
-      gap: 0.45rem;
-      padding: 0.55rem 0.9rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--surface-raised);
+      gap: 0.4rem;
+      padding: 0.5rem 0.25rem;
+      border: 0;
+      border-radius: var(--radius-lg);
+      background: transparent;
       color: var(--text-primary);
-      box-shadow: var(--shadow-soft);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.88rem;
-      font-weight: 800;
+      font-size: 0.95rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform 100ms ease, opacity 120ms ease, border-color 120ms ease;
+      transition: opacity 120ms ease, color 120ms ease;
     }
 
     .deck-button:first-child { justify-self: start; }
     .deck-button:last-child { justify-self: end; }
-    .deck-button:active { transform: scale(0.97); }
+    .deck-button:active { color: var(--accent-strong); }
     .deck-button:disabled { opacity: 0.34; cursor: default; }
 
     .card-position {
       min-width: 5.4rem;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.85rem;
-      font-weight: 800;
+      font-size: 0.9rem;
+      font-weight: 500;
       text-align: center;
     }
 
@@ -665,25 +589,13 @@
       overflow: hidden;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      padding: clamp(1.15rem, 4vw, 1.75rem);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      --card-background: var(--surface);
+      padding: clamp(1rem, 3vw, 1.5rem) 0.25rem 0.6rem;
+      border: 0;
+      border-radius: var(--radius-lg);
+      --card-background: var(--background);
       background: var(--card-background);
-      box-shadow: var(--shadow-soft);
       transform: translateZ(0);
-      transition: transform 110ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
-    }
-
-    .dhikr-card::before {
-      content: "";
-      position: absolute;
-      inset-block: 1.1rem;
-      inset-inline-start: 0;
-      width: 0.22rem;
-      border-radius: 999px;
-      background: var(--divider);
-      transition: background-color 180ms ease, width 180ms ease;
+      transition: transform 110ms ease, background-color 180ms ease;
     }
 
     .dhikr-card::after {
@@ -708,26 +620,14 @@
     .dhikr-card:has(.card-tap-target:focus-visible),
     .dhikr-card:not(.tasbih-card):focus-within,
     .dhikr-card.tasbih-card:focus-visible {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 24%, transparent), var(--shadow-soft);
-    }
-
-    .dhikr-card.is-complete {
-      border-color: color-mix(in srgb, var(--completed) 48%, var(--border));
-      --card-background: color-mix(in srgb, var(--completed-soft) 42%, var(--surface));
-      background: var(--card-background);
-    }
-
-    .dhikr-card.is-complete::before {
-      width: 0.3rem;
-      background: var(--completed);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 40%, transparent);
     }
 
 
     .dhikr-card.needs-review {
-      border-style: dashed;
-      border-color: color-mix(in srgb, var(--warning) 60%, var(--border));
-      background: color-mix(in srgb, var(--warning-soft) 55%, var(--surface));
+      padding-inline: 0.9rem;
+      border: 1px dashed color-mix(in srgb, var(--warning) 60%, var(--border));
+      background: color-mix(in srgb, var(--warning-soft) 55%, var(--background));
       display: block;
       overflow-y: auto;
       overscroll-behavior-y: contain;
@@ -745,21 +645,9 @@
       border: 0;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.75rem;
-      font-weight: 800;
+      font-size: 0.8rem;
+      font-weight: 500;
       line-height: 1;
-    }
-
-    .card-index::after {
-      content: "";
-      position: absolute;
-      inset-block-end: 0;
-      left: 50%;
-      width: 1.2rem;
-      height: 0.12rem;
-      border-radius: 999px;
-      background: var(--divider);
-      transform: translateX(-50%);
     }
 
 
@@ -769,7 +657,7 @@
       align-items: center;
       margin-inline-start: 0.45rem;
       padding: 0.25rem 0.65rem;
-      border-radius: 999px;
+      border-radius: var(--radius-lg);
       background: var(--warning-soft);
       color: var(--warning);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
@@ -779,7 +667,7 @@
 
     .dhikr-prefix {
       margin: 0 0 0.85rem;
-      color: var(--accent-strong);
+      color: var(--text-primary);
       font-size: clamp(1.2rem, 5vw, 1.58rem);
       font-weight: 800;
       line-height: 1.7;
@@ -831,17 +719,15 @@
       margin: 0;
       color: var(--reference);
       font-size: var(--detail-text-size);
-      font-weight: 600;
+      font-weight: 400;
       line-height: var(--detail-line-height);
       text-align: start;
       unicode-bidi: plaintext;
     }
 
     .dhikr-note {
-      padding: 0.9rem 1rem;
-      border-inline-start: 0.2rem solid var(--divider);
-      border-radius: 0.5rem;
-      background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+      padding-block-start: 0.7rem;
+      border-block-start: 1px solid var(--border);
     }
     .source-button {
       position: relative;
@@ -851,10 +737,10 @@
       border: 0;
       border-block-end: 1px solid currentColor;
       background: transparent;
-      color: var(--reference);
+      color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.78rem;
-      font-weight: 800;
+      font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
     }
 
@@ -878,7 +764,7 @@
     }
 
     .dhikr-card.is-content-dense .dhikr-note {
-      padding: 0.5rem 0.7rem;
+      padding-block-start: 0.45rem;
     }
 
     .dhikr-card.is-content-dense .requirement-row {
@@ -908,7 +794,7 @@
     }
 
     .dhikr-card.is-content-tight .dhikr-note {
-      padding: 0.35rem 0.6rem;
+      padding-block-start: 0.35rem;
     }
 
     .dhikr-card.is-content-tight .requirement-row {
@@ -931,15 +817,15 @@
       gap: 0.75rem;
       margin-block-start: 1.2rem;
       padding-block-start: 1rem;
-      border-block-start: 1px solid var(--divider);
+      border-block-start: 1px solid var(--border);
     }
 
     .count-requirement {
       margin: 0;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.83rem;
-      font-weight: 750;
+      font-size: 0.88rem;
+      font-weight: 500;
     }
 
     .counter-cluster {
@@ -957,23 +843,22 @@
       align-items: center;
       justify-content: center;
       gap: 0.35rem;
-      padding: 0.48rem 0.82rem;
-      border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent-strong);
+      padding: 0.55rem 1.1rem;
+      border: 0;
+      border-radius: var(--radius-lg);
+      background: var(--accent);
+      color: var(--on-accent);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.98rem;
-      font-weight: 850;
+      font-size: 1rem;
+      font-weight: 700;
       line-height: 1;
     }
 
     .counter-status.numeric { direction: ltr; }
-    .counter-check { display: none; color: var(--completed); }
+    .counter-check { display: none; }
     .is-complete .counter-status {
-      border-color: color-mix(in srgb, var(--completed) 55%, var(--border));
-      background: var(--completed-soft);
-      color: var(--completed);
+      background: var(--completed);
+      color: var(--on-accent);
     }
     .is-complete .counter-check { display: inline; }
 
@@ -994,8 +879,8 @@
       min-height: 2.75rem;
       padding: 0.35rem 0.6rem;
       border: 1px solid var(--border);
-      border-radius: 0.8rem;
-      background: var(--surface-raised);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
       color: var(--text-primary);
       text-align: center;
       cursor: pointer;
@@ -1085,19 +970,18 @@
       padding: 0;
       overflow: hidden;
       border: 1px solid var(--border);
-      border-radius: 1.4rem;
-      background: var(--surface-raised);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
       color: var(--text-primary);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+      box-shadow: var(--shadow);
     }
 
     dialog::backdrop {
-      background: rgba(12, 18, 23, 0.52);
-      backdrop-filter: blur(3px);
+      background: rgba(20, 16, 10, 0.45);
     }
 
     .dialog-body { padding: 1.4rem 1.4rem 1.1rem; }
-    .dialog-body h2 { margin: 0 0 0.45rem; font-size: 1.35rem; }
+    .dialog-body h2 { margin: 0 0 0.45rem; font-size: 1.25rem; font-weight: 700; }
     .dialog-body p { margin: 0; color: var(--text-secondary); line-height: 1.75; }
     .dialog-actions {
       display: grid;
@@ -1109,26 +993,26 @@
     .dialog-button {
       min-height: 3rem;
       border: 1px solid var(--border);
-      border-radius: 0.9rem;
-      background: var(--surface);
+      border-radius: var(--radius-lg);
+      background: transparent;
       color: var(--text-primary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-weight: 800;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .dialog-button.danger {
-      border-color: color-mix(in srgb, #a84c45 52%, var(--border));
-      background: color-mix(in srgb, #a84c45 12%, var(--surface));
-      color: #a84c45;
+      border-color: transparent;
+      background: #a8382a;
+      color: #fbf7f0;
     }
 
-    :root[data-resolved-theme="dark"] .dialog-button.danger { color: #ffaaa3; }
+    :root[data-resolved-theme="dark"] .dialog-button.danger { background: #e0866f; color: #1b130e; }
     .dialog-button.primary,
     .settings-action {
-      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-      background: var(--accent-soft);
-      color: var(--accent-strong);
+      border-color: transparent;
+      background: var(--accent);
+      color: var(--on-accent);
     }
 
     .sheet-dialog {
@@ -1161,12 +1045,12 @@
       min-height: 2.55rem;
       padding: 0.4rem 0.8rem;
       border: 1px solid var(--border);
-      border-radius: 0.8rem;
-      background: var(--surface);
+      border-radius: var(--radius-lg);
+      background: transparent;
       color: var(--text-primary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.8rem;
-      font-weight: 800;
+      font-size: 0.85rem;
+      font-weight: 700;
       cursor: pointer;
     }
 
@@ -1207,11 +1091,11 @@
       min-height: 2.65rem;
       padding: 0.45rem 0.6rem;
       border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      background: var(--surface);
+      border-radius: var(--radius-lg);
+      background: var(--surface-raised);
       color: var(--text-primary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .reminder-row {
@@ -1266,28 +1150,22 @@
 
     .manual-completion-list {
       display: grid;
-      gap: 0.55rem;
       margin-block-start: 0.85rem;
     }
 
     .settings-toggle-control {
       display: flex;
-      min-height: 3.65rem;
+      min-height: 3.4rem;
       align-items: center;
       justify-content: space-between;
       gap: 0.8rem;
-      padding: 0.65rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 0.85rem;
-      background: var(--surface);
+      padding: 0.55rem 0;
+      border-block-end: 1px solid var(--border);
       cursor: pointer;
-      transition: border-color 150ms ease, background-color 150ms ease, opacity 150ms ease;
+      transition: opacity 150ms ease;
     }
 
-    .settings-toggle-control:has(.toggle-input:checked) {
-      border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-      background: var(--accent-soft);
-    }
+    .settings-toggle-control:last-child { border-block-end: 0; }
 
     .settings-toggle-control:has(.toggle-input:disabled) {
       opacity: 0.6;
@@ -1350,7 +1228,6 @@
     }
 
     #settings-dialog .manual-completion-list {
-      gap: 0.65rem;
       margin-block-start: 0;
     }
 
@@ -1411,7 +1288,6 @@
 
     .history-list {
       display: grid;
-      gap: 0.5rem;
       margin: 0;
       padding: 0;
       list-style: none;
@@ -1422,18 +1298,15 @@
       grid-template-columns: minmax(0, 1fr) auto auto;
       align-items: center;
       gap: 0.6rem;
-      padding: 0.65rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 0.8rem;
+      padding: 0.65rem 0;
+      border-block-end: 1px solid var(--border);
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.76rem;
+      font-size: 0.8rem;
     }
 
-    .history-row.is-today {
-      border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-      background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
-    }
+    .history-row:last-child { border-block-end: 0; }
+    .history-row.is-today { color: var(--text-primary); font-weight: 600; }
 
     .history-state.is-complete {
       color: var(--completed);
@@ -1487,8 +1360,8 @@
       gap: 0.75rem;
       padding: 0.75rem 0.85rem;
       border: 1px solid var(--border);
-      border-radius: 1rem;
-      background: var(--surface-raised);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
       box-shadow: var(--shadow);
       transform: translateX(50%);
     }
@@ -1508,9 +1381,9 @@
     }
 
     .update-actions button:last-child {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-      color: var(--accent-strong);
+      border-color: transparent;
+      background: var(--accent);
+      color: var(--on-accent);
     }
 
 
@@ -1547,43 +1420,6 @@
     }
 
     /* «سور» tab: Al-Kahf, Ya-Sin, As-Saffat, Al-Waqi'a, Al-Mulk as scroll-free pages (fitSuraPage steps data-fit 0…6). */
-    body[data-period="suwar"] {
-      --accent: #8a6a24;
-      --accent-strong: #6c521a;
-      --accent-soft: #f4ecd8;
-      --divider: #e2d3ad;
-      --focus: #7f6220;
-      --background-glow: #f8f1e1;
-    }
-
-    :root[data-resolved-theme="dark"] body[data-period="suwar"] {
-      --accent: #d6b064;
-      --accent-strong: #efd398;
-      --accent-soft: #463b23;
-      --divider: #6b5a36;
-      --focus: #e8c886;
-      --background-glow: #38332a;
-    }
-
-    /* «مسبحة» tab: a muted indigo accent, same variable names as the other tabs. */
-    body[data-period="tasbih"] {
-      --accent: #5c62a3;
-      --accent-strong: #454a86;
-      --accent-soft: #ebebf6;
-      --divider: #d0d2e8;
-      --focus: #50569a;
-      --background-glow: #f1f1f9;
-    }
-
-    :root[data-resolved-theme="dark"] body[data-period="tasbih"] {
-      --accent: #a2a8ea;
-      --accent-strong: #cfd2f7;
-      --accent-soft: #353858;
-      --divider: #55597e;
-      --focus: #b6bbf2;
-      --background-glow: #2d3046;
-    }
-
     .sura-picker {
       display: flex;
       gap: 0.3rem;
@@ -1596,29 +1432,29 @@
       display: inline-flex;
       flex: 1 1 0;
       min-width: 0;
-      min-height: 2.3rem;
+      min-height: 2.5rem;
       align-items: center;
       justify-content: center;
       gap: 0.25rem;
-      padding: 0.2rem 0.4rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--surface-raised);
+      padding: 0.2rem 0.3rem;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
       color: var(--text-secondary);
       font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
-      font-size: 0.82rem;
-      font-weight: 800;
+      font-size: 0.9rem;
+      font-weight: 500;
       white-space: nowrap;
       cursor: pointer;
-      transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, transform 100ms ease;
+      transition: color 150ms ease, box-shadow 150ms ease;
     }
 
-    .sura-chip:active { transform: scale(0.97); }
+    .sura-chip:active { color: var(--text-primary); }
 
     .sura-chip[aria-pressed="true"] {
-      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-      background: var(--accent-soft);
-      color: var(--accent-strong);
+      color: var(--text-primary);
+      font-weight: 700;
+      box-shadow: inset 0 -2px 0 var(--accent);
     }
 
     .sura-chip-status { color: var(--completed); }
@@ -1650,7 +1486,7 @@
       line-height: 1.7;
     }
 
-    .dhikr-card.sura-page .ayah-number { color: var(--accent-strong); }
+    .dhikr-card.sura-page .ayah-number { color: var(--text-secondary); }
 
     .dhikr-card.sura-page .requirement-row {
       align-items: center;
@@ -1719,7 +1555,7 @@
       max-inline-size: 100%;
       margin: 0;
       overflow: hidden;
-      color: var(--accent-strong);
+      color: var(--text-primary);
       font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
       font-size: var(--dhikr-text-size);
       line-height: 1.6;
@@ -1829,7 +1665,6 @@
 
     .tasbih-options {
       display: grid;
-      gap: 0.5rem;
       margin: 0;
       padding: 0;
       list-style: none;
@@ -1855,9 +1690,13 @@
 
     .tasbih-option[aria-pressed="true"],
     .tasbih-target-option[aria-pressed="true"] {
-      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-      background: var(--accent-soft);
       color: var(--accent-strong);
+    }
+
+    .tasbih-option[aria-pressed="true"] strong::after,
+    .tasbih-target-option[aria-pressed="true"] strong::after {
+      content: " ✓";
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
     }
 
     .tasbih-custom-row {
@@ -1923,7 +1762,7 @@
       .app-shell { padding-inline: 1.75rem; }
       .brand-row { padding-block-start: 1.2rem; }
       .session-summary { padding: 0.8rem 1.15rem; }
-      .dhikr-card { padding: 1.8rem 2rem; }
+      .dhikr-card { padding: 1.5rem 0.5rem 0.8rem; }
     }
 
     @media (max-width: 45rem) and (orientation: portrait) {
@@ -1943,33 +1782,23 @@
       .header-actions { gap: 0.35rem; }
 
 
-      .eyebrow { display: none; }
-      h1 { font-size: 1.6rem; }
+      h1 { font-size: 1.45rem; }
 
 
       .period-tabs {
         position: relative;
         inset-block-start: auto;
-        gap: 0.25rem;
-        padding: 0.25rem;
+        gap: 1.35rem;
       }
 
       .period-tab {
         min-height: 2.65rem;
-        gap: 0.4rem;
-        padding: 0.35rem 0.55rem;
-        font-size: 0.9rem;
-      }
-
-      .period-icon {
-        width: 1.05rem;
-        height: 1.05rem;
+        padding: 0.3rem 0 0.45rem;
+        font-size: 0.98rem;
       }
 
       .session-summary {
-        margin-block-start: 0.35rem;
-        padding: 0.42rem 0.65rem;
-        border-radius: 0.9rem;
+        margin-block-start: 0.5rem;
       }
 
       .summary-row { gap: 0.6rem; }
@@ -1978,7 +1807,7 @@
         max-width: none;
         max-height: 88svh;
         margin: auto 0 0;
-        border-radius: 1.4rem 1.4rem 0 0;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       }
 
       .sheet-body {
@@ -2044,15 +1873,8 @@
         scroll-margin-block-start: 0.75rem;
       }
 
-      .athkar-list::before { inset-block-start: 0.65rem; }
-      .athkar-list::after {
-        inset-block-start: 0.35rem;
-        inset-block-end: 0.35rem;
-      }
-
       .dhikr-card {
-        padding: 0.95rem 1.1rem;
-        border-radius: 1.5rem;
+        padding: 0.9rem 0.15rem 0.5rem;
       }
 
       .deck-navigation {
@@ -2061,15 +1883,15 @@
       }
 
       .deck-button {
-        min-width: 5.7rem;
-        min-height: 2.6rem;
-        padding: 0.4rem 0.75rem;
-        font-size: 0.8rem;
+        min-width: 4.5rem;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.2rem;
+        font-size: 0.92rem;
       }
 
       .card-position {
         min-width: 4.7rem;
-        font-size: 0.78rem;
+        font-size: 0.85rem;
       }
 
       .deck-hint {
@@ -2082,26 +1904,21 @@
     @media (max-width: 23rem) {
       .app-shell { padding-inline: 0.62rem; }
       .brand-row { align-items: flex-end; }
-      .eyebrow { display: none; }
-      .period-tab { min-height: 3rem; padding-inline: 0.5rem; }
-      .session-summary { padding-inline: 0.65rem; }
-      .dhikr-card { border-radius: 1.4rem; }
+      .period-tab { min-height: 3rem; }
       .requirement-row { align-items: flex-start; }
       #transfer-dialog .sheet-header { gap: 0.5rem; }
       #transfer-dialog .sheet-header h2 { font-size: 1.1rem; }
     }
 
-    /* Four tabs on one row: up to 40rem the tabs drop their icons and show the short labels («الصباح», «المساء»), so a
-       label and its ✓ never wrap (about 5px to spare for «المساء ✓» at 320px); at 23rem and below the padding tightens. */
+    /* Four tabs on one row: up to 40rem they show the short labels («الصباح», «المساء»), so a label and its ✓ never
+       wrap; at 23rem and below the gap between them tightens. */
     @media (max-width: 40rem) {
-      .period-icon { display: none; }
-      .period-tab { gap: 0.3rem; padding-inline: 0.3rem; }
       .tab-label-full { display: none; }
       .tab-label-short { display: inline; }
     }
 
     @media (max-width: 23rem) {
-      .period-tab { gap: 0.2rem; padding-inline: 0.2rem; }
+      .period-tabs { gap: 1rem; }
     }
 
     @media (max-width: 20rem) {
@@ -2121,8 +1938,8 @@
     }
 
     @media (prefers-contrast: more) {
-      :root { --border: #7b8083; }
-      .dhikr-card, .session-summary, .period-tabs { border-width: 2px; }
+      :root { --border: #7b7568; }
+      .period-tabs, .deck-navigation, .requirement-row { border-width: 2px; }
     }
   </style>
   <script>
@@ -2166,10 +1983,7 @@
   <div class="app-shell">
     <header class="app-header">
       <div class="brand-row">
-        <div>
-          <p class="eyebrow">وِرْدُكَ اليومي</p>
-          <h1>أذكار المسلم</h1>
-        </div>
+        <h1>أذكار المسلم</h1>
         <div class="header-actions">
           <button class="session-reset" id="session-reset" type="button" disabled aria-haspopup="dialog" aria-label="خيارات الإعادة">
             <span aria-hidden="true">↻</span><span class="reset-label">إعادة</span>
@@ -2184,31 +1998,18 @@
 
       <nav class="period-tabs" role="tablist" aria-label="اختيار القسم">
         <button class="period-tab" id="morning-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="true" data-period="morning">
-          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.4"></circle><path d="M12 2.2v2.1M12 19.7v2.1M2.2 12h2.1M19.7 12h2.1M5.1 5.1l1.5 1.5M17.4 17.4l1.5 1.5M18.9 5.1l-1.5 1.5M6.6 17.4l-1.5 1.5"></path>
-          </svg>
           <span class="tab-label-full">أذكار الصباح</span><span class="tab-label-short">الصباح</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="evening-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="evening" tabindex="-1">
-          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M20.2 15.3A8.4 8.4 0 0 1 8.7 3.8 8.5 8.5 0 1 0 20.2 15.3Z"></path>
-          </svg>
           <span class="tab-label-full">أذكار المساء</span><span class="tab-label-short">المساء</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="suwar-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="suwar" tabindex="-1">
-          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 6.2C10 4.7 7.3 4.2 3.5 4.4v13.8c3.8-.2 6.5.3 8.5 1.8 2-1.5 4.7-2 8.5-1.8V4.4c-3.8-.2-6.5.3-8.5 1.8Z"></path><path d="M12 6.2V20"></path>
-          </svg>
           <span class="tab-label-full">سور</span><span class="tab-label-short">سور</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
         <button class="period-tab" id="tasbih-tab" type="button" role="tab" aria-controls="tasbih-panel" aria-selected="false" data-period="tasbih" tabindex="-1">
-          <svg class="period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-            <circle cx="12" cy="9.6" r="6.4" stroke-width="2.6" stroke-dasharray="0 3.351"></circle>
-            <path d="M12 16v2.4M10.3 21.6 12 18.4l1.7 3.2"></path>
-          </svg>
           <span class="tab-label-full">مسبحة</span><span class="tab-label-short">مسبحة</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
@@ -7899,7 +7700,7 @@
       root.dataset.theme = normalized;
       root.dataset.resolvedTheme = resolved;
       themeSelect.value = normalized;
-      themeColor.content = resolved === "dark" ? "#202c38" : "#f7f5ef";
+      themeColor.content = resolved === "dark" ? "#161512" : "#f5f1e8";
       if (save) {
         try { if (!journalHolds("athkar-theme")) localStorage.setItem("athkar-theme", normalized); } catch (_) {}
       }

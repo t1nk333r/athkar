@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The chips that pick a deck's section (the ruqyah PWA's `.sura-picker`): one per sura, in pack order from the
-/// right, the selected one raised, and «✓» on each sura complete today. The chips switch suras at any time; the
+/// The chips that pick a deck's section (the ruqyah PWA's `.sura-picker`): one title per sura, in pack order from the
+/// right, the selected one in ink and underlined like the tabs, and «✓» on each sura complete today. The chips switch suras at any time; the
 /// «التالي» lock applies only within a sura.
 struct SectionChips: View {
     let model: any DeckModel
@@ -21,15 +21,16 @@ struct SectionChips: View {
                             Text("✓").foregroundStyle(palette.completed)
                         }
                     }
-                    .font(.footnote.weight(.heavy))
-                    .foregroundStyle(selected ? palette.accentStrong : palette.textSecondary)
+                    .font(.subheadline.weight(selected ? .bold : .regular))
+                    .foregroundStyle(selected ? palette.textPrimary : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                    .padding(.horizontal, 6.4)
-                    .frame(maxWidth: .infinity, minHeight: 36.8)
-                    .background(Corner.box.fill(selected ? palette.accentSoft : palette.surfaceRaised))
-                    .overlay(Corner.box.strokeBorder(selected ? palette.accent.opacity(0.55) : palette.border))
-                    .contentShape(Corner.box)
+                    .padding(.horizontal, 4)
+                    .frame(maxWidth: .infinity, minHeight: 40)
+                    .overlay(alignment: .bottom) {
+                        if selected { Rectangle().fill(palette.accent).frame(height: 2) }
+                    }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(section.accessibilityLabel)

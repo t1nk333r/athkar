@@ -67,7 +67,6 @@ struct DeckView<Model: DeckModel>: View {
         VStack(spacing: 8) {
             GeometryReader { proxy in
                 ZStack {
-                    stackDecoration
                     if let card = cards[safe: index] {
                         DeckCardView(
                             card: card,
@@ -79,7 +78,7 @@ struct DeckView<Model: DeckModel>: View {
                                     sheet = .source(SourceItem(number: card.number, item: item))
                                 }
                             })
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 4)
                         .id(card.id)
                         .transition(cardTransition)
                         .offset(x: visualOffset)
@@ -117,25 +116,6 @@ struct DeckView<Model: DeckModel>: View {
 
     // MARK: Layout
 
-    /// `.athkar-list::before` / `::after`: two paler cards peeking under the current one.
-    private var stackDecoration: some View {
-        let fill = palette.surface.mixed(0.82, with: palette.background)
-        return ZStack {
-            Corner.box
-                .fill(fill)
-                .overlay(Corner.box.strokeBorder(palette.border))
-                .padding(EdgeInsets(top: 16, leading: 18.4, bottom: 1.6, trailing: 18.4))
-                .opacity(0.48)
-            Corner.box
-                .fill(fill)
-                .overlay(Corner.box.strokeBorder(palette.border))
-                .padding(EdgeInsets(top: 8.8, leading: 9.3, bottom: 8.8, trailing: 9.3))
-                .opacity(0.72)
-        }
-        .accessibilityHidden(true)
-        .allowsHitTesting(false)
-    }
-
     /// `card-forward` enters from 1rem to the physical left, `card-back` from the right.
     private var cardTransition: AnyTransition {
         guard !reduceMotion else { return .identity }
@@ -153,7 +133,8 @@ struct DeckView<Model: DeckModel>: View {
     private func navigation(index: Int, count: Int) -> some View {
         let canGoBack = index > 0
         let canGoForward = index < count - 1 && model.canMoveForward(from: index)
-        return VStack(spacing: 6) {
+        return VStack(spacing: 2) {
+            Rule()
             HStack(spacing: 12) {
                 navigationButton("السابق", arrow: "→", arrowFirst: true, enabled: canGoBack,
                                  identifier: "deck.previous") {
@@ -173,8 +154,8 @@ struct DeckView<Model: DeckModel>: View {
         .accessibilityHint(model.definition.hint)
     }
 
-    /// «٢ من ٢٦», which opens the quick index: a quiet capsule, so «السابق» and «التالي» stay primary. Its glyph
-    /// shows only up to the default text size; above it the position keeps the room it had as plain text.
+    /// «٢ من ٢٦», which opens the quick index: quieter than «السابق» and «التالي». Its glyph shows only up to the
+    /// default text size; above it the position keeps the room it had as plain text.
     private func positionButton(index: Int, count: Int) -> some View {
         let showsGlyph = dynamicTypeSize <= .large
         return Button(action: openIndex) {
@@ -184,14 +165,13 @@ struct DeckView<Model: DeckModel>: View {
                 }
                 Text(model.positionLabel(index))
             }
-            .font(.subheadline.weight(.heavy))
+            .font(.subheadline)
             .foregroundStyle(palette.textSecondary)
             .monospacedDigit()
             .fixedSize(horizontal: showsGlyph, vertical: false)
             .padding(.horizontal, showsGlyph ? 8 : 0)
             .frame(minWidth: 72, minHeight: 44)
-            .overlay(Corner.box.strokeBorder(palette.border))
-            .contentShape(Corner.box)
+            .contentShape(Rectangle())
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(count == 0)
@@ -208,14 +188,11 @@ struct DeckView<Model: DeckModel>: View {
                 Text(title)
                 if !arrowFirst { Text(arrow).accessibilityHidden(true) }
             }
-            .font(.subheadline.weight(.heavy))
+            .font(.body.weight(.medium))
             .foregroundStyle(palette.textPrimary)
-            .padding(.horizontal, 14)
-            .frame(minWidth: 99, minHeight: 44)
-            .background(Corner.box.fill(palette.surfaceRaised))
-            .overlay(Corner.box.strokeBorder(palette.border))
-            .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
-            .contentShape(Corner.box)
+            .padding(.horizontal, 4)
+            .frame(minWidth: 80, minHeight: 44, alignment: arrowFirst ? .leading : .trailing)
+            .contentShape(Rectangle())
         }
         .buttonStyle(DeckButtonStyle())
         .disabled(!enabled)
@@ -376,9 +353,9 @@ struct DeckView<Model: DeckModel>: View {
     }
 }
 
-/// `.deck-button:active { transform: scale(0.97) }`, also on «مسبحة»'s buttons.
+/// `.deck-button:active`: the label dims while pressed, also on «مسبحة»'s buttons.
 struct DeckButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.scaleEffect(configuration.isPressed ? 0.97 : 1)
+        configuration.label.opacity(configuration.isPressed ? 0.55 : 1)
     }
 }

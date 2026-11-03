@@ -27,7 +27,7 @@ struct HomeView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let palette = app.showsTasbih ? Palette.tasbih(colorScheme) : Palette.resolve(app.selection, colorScheme)
+            let palette = Palette.resolve(colorScheme)
             let width = proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing
             content(palette: palette, width: width)
                 .environment(\.palette, palette)
@@ -77,14 +77,7 @@ struct HomeView: View {
         // Controls stop growing at the largest standard size so the one-screen layout holds; the reading text keeps
         // following every size, accessibility sizes included, through `typeScale`. Sheets below are not capped.
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-        .background {
-            ZStack {
-                palette.background
-                RadialGradient(colors: [palette.backgroundGlow, palette.background.opacity(0)],
-                               center: UnitPoint(x: 0.5, y: -0.25), startRadius: 0, endRadius: 544)
-            }
-            .ignoresSafeArea()
-        }
+        .background(palette.background.ignoresSafeArea())
         .sheet(isPresented: $showsSettings) {
             SettingsView(app: app)
                 .environment(\.palette, palette)
@@ -160,9 +153,9 @@ struct HomeView: View {
                     app.otherSection = nil
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: "chevron.backward").font(.body.weight(.bold))
+                        Image(systemName: "chevron.backward").font(.body.weight(.semibold))
                         Text(section.title)
-                            .font(.title3.weight(.heavy))
+                            .font(.title3.weight(.bold))
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                     }
@@ -181,7 +174,7 @@ struct HomeView: View {
                 }
             } else {
                 Text("بكرة وأصيلا")
-                    .font(.title2.weight(.heavy))
+                    .font(.title2.weight(.bold))
                     .foregroundStyle(palette.textPrimary)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityIdentifier("title")
@@ -217,11 +210,8 @@ struct HomeView: View {
             .accessibilityIdentifier("header.settings")
         } label: {
             Image(systemName: "ellipsis")
-                .font(.body.weight(.bold))
-                .foregroundStyle(palette.textSecondary)
-                .frame(width: 34, height: 34)
-                .background(Circle().fill(palette.surfaceRaised))
-                .overlay(Circle().strokeBorder(palette.border))
+                .font(.body.weight(.semibold))
+                .foregroundStyle(palette.textPrimary)
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -231,8 +221,9 @@ struct HomeView: View {
 
     // MARK: Tabs (`.period-tabs`)
 
+    /// The tab titles on a rule, the selected one in ink and underlined in the accent.
     private func tabs(palette: Palette) -> some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 24) {
             ForEach(HomeTab.allCases) { id in
                 let selected = app.tab == id
                 let complete = Self.deck(id).map { app.deck($0).isComplete } ?? false
@@ -247,20 +238,21 @@ struct HomeView: View {
                     case .other: app.tab = .other
                     }
                 } label: {
-                    HStack(spacing: 6.4) {
-                        Image(systemName: Self.icon(id)).imageScale(.small)
+                    HStack(spacing: 4) {
                         Text(Self.tabTitle(id))
                         if complete {
                             Text("✓").foregroundStyle(palette.completed)
                         }
                     }
-                    .font(.subheadline.weight(.heavy))
-                    .foregroundStyle(selected ? palette.accentStrong : palette.textSecondary)
+                    .font(.body.weight(selected ? .bold : .regular))
+                    .foregroundStyle(selected ? palette.textPrimary : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(Corner.inner(gap: 4).fill(selected ? palette.accentSoft : .clear))
-                    .contentShape(Corner.inner(gap: 4))
+                    .frame(minHeight: 44)
+                    .overlay(alignment: .bottom) {
+                        if selected { Rectangle().fill(palette.accent).frame(height: 2) }
+                    }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Self.tabLabel(id) + (complete ? "، مكتملة اليوم" : ""))
@@ -268,18 +260,9 @@ struct HomeView: View {
                 .accessibilityIdentifier("tab.\(id.rawValue)")
             }
         }
-        .padding(4)
-        .background(Corner.box.fill(palette.surfaceRaised.opacity(0.92)))
-        .overlay(Corner.box.strokeBorder(palette.border))
-        .shadow(color: .black.opacity(0.08), radius: 19, y: 14)
-    }
-
-    private static func icon(_ id: HomeTab) -> String {
-        switch id {
-        case .morning: "sun.max"
-        case .evening: "moon"
-        case .other: "square.grid.2x2"
-        }
+        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .bottom) { Rule() }
     }
 
     private static func tabTitle(_ id: HomeTab) -> String {
@@ -309,40 +292,37 @@ struct HomeView: View {
 
     // MARK: Summary (`.session-summary`)
 
-    /// The deck's section chips, if it has sections, above its summary row and today line.
+    /// The deck's section chips, if it has sections, above its summary line and today line: plain text on the page.
     private func summary(_ deck: any DeckModel, palette: Palette) -> some View {
         let summary = deck.summary
-        return VStack(alignment: .leading, spacing: 3) {
+        return VStack(alignment: .leading, spacing: 2) {
             if !deck.sections.isEmpty {
                 SectionChips(model: deck)
-                    .padding(.bottom, 4.2)
+                    .padding(.bottom, 2)
             }
-            HStack(spacing: 9.6) {
+            HStack(spacing: 10) {
                 Text(summary.copy)
-                    .font(.caption.weight(.heavy))
+                    .font(.footnote)
                     .foregroundStyle(summary.isComplete ? palette.completed : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .accessibilityIdentifier("summary.copy")
-                ProgressView(value: Double(summary.value), total: Double(max(1, summary.total)))
-                    .tint(summary.isComplete ? palette.completed : palette.accent)
+                ProgressLine(value: Double(summary.value), total: Double(summary.total),
+                             tint: summary.isComplete ? palette.completed : palette.accent)
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(summary.accessibilityLabel)
-                    .accessibilityValue("")
                 moreMenu(palette: palette)
                     .padding(.vertical, -8)
-                    .padding(.trailing, -6)
+                    .padding(.trailing, -10)
             }
             if let status = summary.status {
                 Text(status)
-                    .font(.caption2.weight(.semibold))
+                    .font(.caption)
                     .foregroundStyle(summary.statusIsComplete ? palette.completed : palette.textSecondary)
                     .accessibilityIdentifier("summary.status")
             }
         }
-        .padding(.horizontal, 10.4)
-        .padding(.vertical, 6.7)
-        .background(Corner.box.fill(palette.surface.opacity(0.94)))
-        .overlay(Corner.box.strokeBorder(palette.border))
+        .padding(.horizontal, 4)
     }
 
     // MARK: Deck

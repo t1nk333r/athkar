@@ -1,9 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// One card: the PWAs' `.dhikr-card` (an adhkar item, or a «سور» `.sura-page`) / `.surah-card`. The whole card is the
-/// tap target (a button under the content, as `.card-tap-target` is); the reset button, the target picker and
-/// «المصدر والتفاصيل» sit above it.
+/// One card: the PWAs' `.dhikr-card` (an adhkar item, or a «سور» `.sura-page`) / `.surah-card`. The text sits on the
+/// page with no box around it; a rule sets off the footer. The whole card is the tap target (a button under the
+/// content, as `.card-tap-target` is); the reset button, the target picker and «المصدر والتفاصيل» sit above it.
 /// Text steps down through the PWA's fit steps until it fits the card, and scrolls only if none fits.
 struct DeckCardView: View {
     let card: DeckCard
@@ -70,7 +70,7 @@ struct DeckCardView: View {
         }
         .background(background)
         .overlay {
-            shape.fill(palette.accent).opacity(isPressed ? 0.09 : 0).allowsHitTesting(false)
+            shape.fill(palette.accent).opacity(isPressed ? 0.07 : 0).allowsHitTesting(false)
         }
         .clipShape(shape)
         .scaleEffect(isPressed ? 0.993 : 1)
@@ -79,15 +79,15 @@ struct DeckCardView: View {
         .accessibilityIdentifier("deck.card.\(card.id)")
     }
 
-    private var padding: CGFloat {
-        let vw = metrics.viewportWidth * 0.04
-        return isDhikrCard ? min(max(18.4, vw), 28) : min(max(16.8, vw), 25.6)
+    /// The text runs nearly to the screen's margins; a review card keeps an inset inside its dashed border.
+    private var padding: EdgeInsets {
+        if card.isReview { return EdgeInsets(top: 16, leading: 14, bottom: 16, trailing: 14) }
+        return EdgeInsets(top: isDhikrCard ? 14 : 8, leading: 3, bottom: 8, trailing: 3)
     }
 
-    /// `.dhikr-card.is-complete`, and `.dhikr-card.needs-review`: a dashed warning border on a warning tint.
+    /// The page, or for `.dhikr-card.needs-review` a warning tint inside a dashed warning border.
     private var fill: Color {
-        if card.isReview { return palette.warningSoft.mixed(0.55, with: palette.surface) }
-        return card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surface
+        card.isReview ? palette.warningSoft.mixed(0.55, with: palette.background) : palette.background
     }
 
     private var background: some View {
@@ -97,27 +97,15 @@ struct DeckCardView: View {
                 if card.isReview {
                     shape.strokeBorder(palette.warning.mixed(0.6, with: palette.border),
                                        style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-                } else {
-                    shape.strokeBorder(card.isComplete
-                        ? palette.completed.mixed(0.48, with: palette.border) : palette.border)
                 }
             }
-            .overlay(alignment: .leading) {
-                if isDhikrCard {
-                    Capsule()
-                        .fill(card.isComplete && !card.isReview ? palette.completed : palette.divider)
-                        .frame(width: card.isComplete && !card.isReview ? 4.8 : 3.5)
-                        .padding(.vertical, 17.6)
-                }
-            }
-            .shadow(color: .black.opacity(0.06), radius: 11, y: 6)
     }
 
     // MARK: Footer (`.requirement-row`, `.card-foot`)
 
     private var footer: some View {
         VStack(spacing: 0) {
-            Rectangle().fill(isDhikrCard ? palette.divider : palette.border).frame(height: 1)
+            Rule()
             HStack(alignment: isDhikr ? .bottom : .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(card.requirement)
@@ -148,26 +136,18 @@ struct DeckCardView: View {
             case let .text(copy):
                 Text(copy)
             }
-            if complete, isDhikrCard {
-                Text("✓").foregroundStyle(palette.completed)
+            if complete {
+                Text("✓")
             }
         }
         .environment(\.layoutDirection, card.status == .numeric ? .leftToRight : .rightToLeft)
-        .font((isDhikrCard ? Font.subheadline : .footnote).weight(.heavy))
-        .foregroundStyle(complete ? palette.completed : palette.accentStrong)
+        .font((isDhikrCard ? Font.body : .subheadline).weight(.bold))
+        .foregroundStyle(palette.onAccent)
         .lineLimit(1)
         .fixedSize()
-        .padding(.horizontal, isDhikrCard ? 13 : 10)
-        .frame(minWidth: isDhikrCard ? 85 : 54, minHeight: isDhikr ? 44 : isPage ? 38.4 : 42)
-        .background {
-            Corner.box
-                .fill(isDhikrCard ? (complete ? palette.completedSoft : palette.accentSoft) : palette.surfaceRaised)
-        }
-        .overlay {
-            Corner.box.strokeBorder(complete
-                ? palette.completed.mixed(0.55, with: isDhikrCard ? palette.border : palette.divider)
-                : isDhikrCard ? palette.accent.mixed(0.45, with: palette.border) : palette.divider)
-        }
+        .padding(.horizontal, isDhikrCard ? 18 : 14)
+        .frame(minWidth: isDhikrCard ? 85 : 64, minHeight: isDhikr ? 44 : isPage ? 38.4 : 42)
+        .background(Corner.box.fill(complete ? palette.completed : palette.accent))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.progressLabel)
         .accessibilityIdentifier("deck.card.counter")
@@ -180,15 +160,13 @@ struct DeckCardView: View {
                 Text("↻").accessibilityHidden(true)
                 Text("إعادة")
             }
-            .font(.caption.weight(.bold))
+            .font(.subheadline)
             .lineLimit(1)
             .fixedSize()
             .foregroundStyle(palette.textSecondary)
-            .padding(.horizontal, 10)
-            .frame(minWidth: 43, minHeight: 44)
-            .background(Corner.box.fill(palette.surfaceRaised))
-            .overlay(Corner.box.strokeBorder(palette.border))
-            .contentShape(Corner.box)
+            .padding(.horizontal, 6)
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(card.count == 0)
@@ -222,7 +200,6 @@ struct DeckCardView: View {
                 .foregroundStyle(palette.textPrimary)
                 .padding(.horizontal, 12)
                 .frame(minWidth: 72, minHeight: 44)
-                .background(Corner.box.fill(palette.surfaceRaised))
                 .overlay(Corner.box.strokeBorder(palette.border))
                 .contentShape(Corner.box)
             }
@@ -324,13 +301,11 @@ private struct OverflowScroll<Content: View>: View {
                     Text("المزيد")
                     Image(systemName: "chevron.down").imageScale(.small)
                 }
-                .font(.caption.weight(.heavy))
-                .foregroundStyle(palette.accentStrong)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(palette.textSecondary)
                 .padding(.horizontal, 12)
-                .padding(.vertical, 5)
-                .background(Corner.box.fill(palette.accentSoft))
-                .overlay(Corner.box.strokeBorder(palette.accent.mixed(0.45, with: palette.border)))
-                .contentShape(Corner.box)
+                .frame(minHeight: 32)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
@@ -393,10 +368,10 @@ struct DhikrCardBody: View {
                 Text(item.isMushafText ? MushafEncoding.kfgqpc(prefix) : prefix)
                     .font(item.isMushafText ? ReadingFont.mushaf(metrics.quranPrefix)
                           : item.isQuran ? ReadingFont.quran(metrics.quranPrefix)
-                          : .system(size: metrics.quranPrefix, weight: .heavy))
+                          : .system(size: metrics.quranPrefix, weight: .bold))
                     .cssLineHeight(1.7, size: metrics.quranPrefix,
                                    face: item.isMushafText ? .mushaf : item.isQuran ? .quran : .system)
-                    .foregroundStyle(palette.accentStrong)
+                    .foregroundStyle(palette.textPrimary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 13.6)
@@ -431,8 +406,8 @@ struct DhikrCardBody: View {
                     if item.hasExtendedDetails {
                         Button(action: onSource) {
                             Text("المصدر والتفاصيل")
-                                .font(.caption.weight(.heavy))
-                                .foregroundStyle(palette.reference)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(palette.textSecondary)
                                 .underline()
                                 .padding(.vertical, 5)
                                 .contentShape(Rectangle())
@@ -469,12 +444,9 @@ private struct ReviewCardBody: View {
             HStack(alignment: .firstTextBaseline, spacing: 7.2) {
                 CardNumber(number: number)
                 Text("بحاجة إلى مراجعة")
-                    .font(.caption.weight(.heavy))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(palette.warning)
-                    .padding(.horizontal, 10.4)
-                    .padding(.vertical, 4)
                     .frame(minHeight: 32)
-                    .background(Corner.box.fill(palette.warningSoft))
                     .accessibilityIdentifier("deck.card.review.badge")
             }
             Text(item.reviewTitle ?? item.text)
@@ -500,21 +472,16 @@ private struct ReviewCardBody: View {
     }
 }
 
-/// `.card-index`: the item's number over a short rule; hidden from VoiceOver, which hears it in the labels.
+/// `.card-index`: the item's number; hidden from VoiceOver, which hears it in the labels.
 struct CardNumber: View {
     let number: Int
     @Environment(\.palette) private var palette
 
     var body: some View {
         Text(ArabicFormat.number(number))
-            .font(.caption.weight(.heavy))
+            .font(.footnote)
             .foregroundStyle(palette.textSecondary)
-            .frame(minWidth: 27)
-            .padding(.bottom, 5)
-            .overlay(alignment: .bottom) {
-                Capsule().fill(palette.divider).frame(width: 19, height: 2)
-            }
-            .padding(.bottom, 8)
+            .padding(.bottom, 10)
             .accessibilityHidden(true)
             .allowsHitTesting(false)
     }
@@ -573,7 +540,7 @@ private struct RuqyahCardBody: View {
                 Text(MushafEncoding.kfgqpc(Self.basmala))
                     .font(ReadingFont.mushaf(basmalaSize))
                     .cssLineHeight(lineHeight, size: basmalaSize, face: .mushaf)
-                    .foregroundStyle(palette.accentStrong)
+                    .foregroundStyle(palette.textPrimary)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, index == 0 ? 11.2 : 8)
             }
@@ -590,7 +557,7 @@ private struct RuqyahCardBody: View {
         .allowsHitTesting(false)
     }
 
-    /// Each ayah followed by its number in ornate parentheses at 0.78em in the accent colour.
+    /// Each ayah followed by its number in ornate parentheses at 0.78em in the muted text colour.
     private func ayat(size: CGFloat) -> AttributedString {
         var result = AttributedString()
         for (offset, ayah) in segment.ayahs.enumerated() {
@@ -599,7 +566,7 @@ private struct RuqyahCardBody: View {
             result += AttributedString(MushafEncoding.kfgqpc(ayah.text) + " ")
             var marker = AttributedString("﴿\(ArabicFormat.number(ayah.number))﴾")
             marker.font = ReadingFont.quran(size * 0.78)
-            marker.foregroundColor = palette.accentStrong
+            marker.foregroundColor = palette.textSecondary
             result += marker
         }
         return result
@@ -609,7 +576,7 @@ private struct RuqyahCardBody: View {
 // MARK: - «سور» page (`.sura-page`)
 
 /// A «سور» page as `suraPageMarkup` sets it: the basmala above a sura's first page, then the ayat, each followed by its
-/// ﴿number﴾ in the accent colour, centred and stepped down through `fitSuraPage` until the page fits.
+/// ﴿number﴾ in the muted text colour, centred and stepped down through `fitSuraPage` until the page fits.
 private struct SuwarPageBody: View {
     let page: SuwarPageContent
     let basmala: String?
@@ -633,7 +600,7 @@ private struct SuwarPageBody: View {
                 Text(MushafEncoding.kfgqpc(basmala))
                     .font(ReadingFont.mushaf(prefixSize))
                     .cssLineHeight(1.7, size: prefixSize, face: .mushaf)
-                    .foregroundStyle(palette.accentStrong)
+                    .foregroundStyle(palette.textPrimary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 5.6)
@@ -651,7 +618,7 @@ private struct SuwarPageBody: View {
     }
 
     /// `quranTextMarkup` of `${ayah.text} ﴿n﴾` joined by spaces: the text in the KFGQPC encoding, each number in Uthman
-    /// Taha (`.ayah-number`) in the accent colour.
+    /// Taha (`.ayah-number`) in the muted text colour.
     private func ayat(size: CGFloat) -> AttributedString {
         var result = AttributedString()
         for (offset, ayah) in page.ayahs.enumerated() {
@@ -659,7 +626,7 @@ private struct SuwarPageBody: View {
             result += AttributedString(MushafEncoding.kfgqpc(ayah.text) + " ")
             var marker = AttributedString("﴿\(ArabicFormat.number(ayah.number))﴾")
             marker.font = ReadingFont.quran(size)
-            marker.foregroundColor = palette.accentStrong
+            marker.foregroundColor = palette.textSecondary
             result += marker
         }
         return result
