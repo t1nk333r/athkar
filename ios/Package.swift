@@ -21,8 +21,12 @@ let package = Package(
             exclude: ["Info.plist"],
             resources: [.copy("Assets.xcassets"), .process("Resources")]
         ),
-        // The lock-screen widget extension, compiled only; tools/ios-linux-ipa.sh does not package it.
-        .executableTarget(name: "AthkarWidget", dependencies: [core], path: "AthkarWidget", exclude: ["Info.plist"]),
+        // The lock-screen widget extension, which tools/ios-linux-ipa.sh embeds in PlugIns. Xcode links an app
+        // extension to start at Foundation's _NSExtensionMain, which finds the @main WidgetBundle itself.
+        .executableTarget(
+            name: "AthkarWidget", dependencies: [core], path: "AthkarWidget", exclude: ["Info.plist"],
+            linkerSettings: [.unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_NSExtensionMain"])]
+        ),
         .testTarget(name: "AthkarTests", dependencies: ["Athkar", core], path: "AthkarTests"),
     ] : [
         .target(

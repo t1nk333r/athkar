@@ -214,10 +214,11 @@ ATHKAR_SWIFT=/home/t1nk33r/.local/share/swift-6.4.0/usr/bin/swift \
 It holds both lanes for the whole build, in the runners' order. A busy lane exits 3
 and names its holder. `--wait` retries every 150 seconds for up to 90 minutes and
 holds no lock while it waits. The tool archives the clean HEAD and runs XcodeGen 2.46.0
-in that snapshot. The committed `ios/Athkar.xcodeproj` and `ios/Athkar/Info.plist` must
-equal the regenerated files. It then builds Release through `tools/ios-linux-compile.sh`
-with the lanes it holds. `tools/ios-linux-ipa.py` lays out `Payload/Athkar.app` from the
-generated project's Release settings, Info.plist and Resources phase:
+in that snapshot. The committed `ios/Athkar.xcodeproj`, `ios/Athkar/Info.plist` and
+`ios/AthkarWidget/Info.plist` must equal the regenerated files. It then builds Release through
+`tools/ios-linux-compile.sh` with the lanes it holds. `tools/ios-linux-ipa.py` lays out
+`Payload/Athkar.app` from the generated project's Release settings, Info.plist, Resources phase
+and Embed Foundation Extensions phase:
 
 - Each resource file is copied byte for byte. The SDK's actool compiles the asset
   catalogue into `Assets.car` and the loose icons, and SwiftBuild's `GRDB_GRDB.bundle`
@@ -226,15 +227,22 @@ generated project's Release settings, Info.plist and Resources phase:
   SDK and the Xcode 27.0 record that xtool kept for it.
 - Build-host rpaths are dropped, and LC_BUILD_VERSION records SDK 27.0 instead of the
   deployment target that the Linux link writes.
-- rcodesign 0.29.0 signs ad hoc, with no identity and no entitlements. Like Xcode, it
-  seals `GRDB_GRDB.bundle` in the app's `CodeResources`. The zip carries no extended
-  attributes.
+- The lock-screen widget goes into `PlugIns/AthkarWidget.appex` as Xcode builds it: its
+  executable, its own `GRDB_GRDB.bundle` and its Info.plist with the same build keys, without
+  `PkgInfo`. Its versions must equal the app's. `ios/Package.swift` links the widget with
+  `-e _NSExtensionMain`, as Xcode links an app extension, so it starts at Foundation's
+  extension entry point, which finds the `@main` widget bundle.
+- rcodesign 0.29.0 signs ad hoc, with no identity and no entitlements: the widget first, then
+  the app, as the iOS IPA workflow runs codesign. Like Xcode, it seals each `GRDB_GRDB.bundle`
+  in its bundle's `CodeResources`, and every widget file in the app's. The zip carries no
+  extended attributes.
 
 The tool writes `Athkar-<CFBundleShortVersionString>+<CFBundleVersion>-linux.ipa` and
 its `.sha256` to `~/Projects/athkar-builds` or `--out`. It never replaces an IPA. Before
-publishing, it checks the archive: architecture, LC_BUILD_VERSION, every code page and
-special-slot hash, sealed resources, each resource against the repository and the pack
-digests against `manifest.json`. `rcodesign verify` cannot serve as that check, because
+publishing, it checks the archive: for the app and the widget, architecture,
+LC_BUILD_VERSION, every code page and special-slot hash and sealed files; the widget's entry
+point, which must be a stub for `_NSExtensionMain`; each resource against the repository; and
+the pack digests against `manifest.json`. `rcodesign verify` cannot serve as that check, because
 it rejects every ad hoc signature, including the Xcode build's. Results hold
 `resource.log`, `toolchain.log`, the XcodeGen and package logs, the compile runner's own
 `build/` directory and a `.done` exit marker.
@@ -245,9 +253,8 @@ detects a uniform icon from a varied source and replaces it with the same area a
 computed from that source. Remaining differences from the Xcode-built 1.0 (1) IPA:
 there is no `BuildMachineOSBuild`, `Assets.car` and the PNGs are not Xcode's bytes, the
 PNGs are standard rather than CgBI, the code directory uses 4 KiB rather than 16 KiB
-pages, and the binary keeps SwiftBuild's `@loader_path` rpath instead of
-`@executable_path/Frameworks`. It also has no lock-screen widget: the SDK build compiles
-`ios/AthkarWidget`, but the tool packages only the app, not `PlugIns/AthkarWidget.appex`.
+pages, and the binaries keep SwiftBuild's `@loader_path` rpath instead of
+`@executable_path/Frameworks` (and, for the widget, `@executable_path/../../Frameworks`).
 
 A Linux-built IPA has not been run on a device until someone installs it. Packaging,
 the signature check and the comparison above are not runtime evidence; Feather re-signs
