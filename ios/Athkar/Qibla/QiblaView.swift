@@ -63,7 +63,7 @@ struct QiblaView: View {
             .accessibilityIdentifier("qibla.compass")
 
             Text(Self.status(bearing: bearing, heading: deviceHeading, facing: facing))
-                .font(.headline.weight(.heavy))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(aligned ? palette.completed : palette.textPrimary)
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("qibla.status")
@@ -94,7 +94,7 @@ struct QiblaView: View {
             }
             ForEach(Array(["ش", "ق", "ج", "غ"].enumerated()), id: \.offset) { index, letter in
                 Text(letter)
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.bold))
                     .fixedSize()
                     .foregroundStyle(index == 0 ? palette.accentStrong : palette.textSecondary)
                     .rotationEffect(.degrees(-Double(index) * 90 + heading))
@@ -146,13 +146,14 @@ struct QiblaView: View {
         VStack(alignment: .leading, spacing: 8) {
             detailRow("اتجاه القبلة", "\(Self.degrees(Qibla.bearing(from: place))) من الشمال")
                 .accessibilityIdentifier("qibla.bearing")
-            Divider().overlay(palette.border)
+            Rule()
             detailRow("المسافة إلى الكعبة", Self.kilometres(Qibla.distanceKilometres(from: place)))
-            Divider().overlay(palette.border)
+            Rule()
             detailRow("الموقع", prayer.location.flatMap { CityDirectory.shared.nearestName($0) }
                 ?? PrayerDates.coordinates(place.latitude, place.longitude))
         }
-        .padding(14)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 4)
         .qiblaCard(palette)
     }
 
@@ -160,7 +161,7 @@ struct QiblaView: View {
         HStack {
             Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(palette.textSecondary)
             Spacer(minLength: 8)
-            Text(value).font(.subheadline.weight(.heavy)).foregroundStyle(palette.textPrimary).monospacedDigit()
+            Text(value).font(.subheadline.weight(.bold)).foregroundStyle(palette.textPrimary).monospacedDigit()
         }
         .accessibilityElement(children: .combine)
     }
@@ -169,11 +170,8 @@ struct QiblaView: View {
 
     private var noLocation: some View {
         VStack(spacing: 12) {
-            Image(systemName: "location.north.line")
-                .font(.largeTitle)
-                .foregroundStyle(palette.accentStrong)
             Text("حدّد موقعك لمعرفة اتجاه القبلة")
-                .font(.headline.weight(.heavy))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(palette.textPrimary)
             Text("يُستعمل الموقع نفسه الذي تُحسب منه مواقيت الصلاة، ولا يُرسل إلى أي جهة.")
                 .font(.footnote.weight(.semibold))
@@ -181,11 +179,7 @@ struct QiblaView: View {
                 .multilineTextAlignment(.center)
             Button(action: openPrayerTimes) {
                 Text("تحديد الموقع في أوقات الصلاة")
-                    .font(.subheadline.weight(.heavy))
-                    .padding(.horizontal, 16)
-                    .frame(minHeight: 44)
-                    .background(Corner.box.fill(palette.accentSoft))
-                    .foregroundStyle(palette.accentStrong)
+                    .pill(palette, prominent: true)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("qibla.setLocation")
@@ -217,7 +211,6 @@ struct QiblaView: View {
 
 private extension View {
     func qiblaCard(_ palette: Palette) -> some View {
-        background(Corner.box.fill(palette.surface.opacity(0.94)))
-            .overlay(Corner.box.strokeBorder(palette.border))
+        card(palette)
     }
 }

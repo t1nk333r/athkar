@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// «مصدر الذكر ٢٠ وتفاصيله»: every detail of the item, the note (`noteIndex`) set apart.
+/// «مصدر الذكر ٢٠ وتفاصيله»: every detail of the item, the note (`noteIndex`) set apart by a rule.
 struct SourceSheet: View {
     let number: Int
     let item: AdhkarItemContent
@@ -20,16 +20,9 @@ struct SourceSheet: View {
                             .cssLineHeight(metrics.detailLineHeight, size: metrics.detailText, face: .system)
                             .foregroundStyle(palette.reference)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(isNote ? 14 : 0)
-                            .background {
-                                if isNote {
-                                    Corner.box.fill(palette.accentSoft.opacity(0.45))
-                                        .overlay(alignment: .leading) {
-                                            Rectangle().fill(palette.divider).frame(width: 3.2)
-                                        }
-                                        // The bar follows the box's corners.
-                                        .clipShape(Corner.box)
-                                }
+                            .padding(.top, isNote ? 12 : 0)
+                            .overlay(alignment: .top) {
+                                if isNote { Rule() }
                             }
                     }
                 }
@@ -55,14 +48,17 @@ struct ResetScopeSheet: View {
     @Environment(\.palette) private var palette
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 0) {
             Text("ما الذي تريد إعادته؟")
                 .font(.title3.weight(.bold))
                 .accessibilityAddTraits(.isHeader)
             Text("اختر نطاق الإعادة. لا يُرسل شيء خارج هذا الجهاز.")
                 .font(.subheadline)
                 .foregroundStyle(palette.textSecondary)
+                .padding(.top, 6)
+                .padding(.bottom, 8)
             ForEach(ResetScope.allCases) { scope in
+                if scope != ResetScope.allCases.first { Rule() }
                 Button {
                     choose(scope)
                 } label: {
@@ -71,10 +67,8 @@ struct ResetScopeSheet: View {
                         Text(scope.detail).font(.footnote).foregroundStyle(palette.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .background(Corner.box.fill(palette.surfaceRaised))
-                    .overlay(Corner.box.strokeBorder(palette.border))
-                    .contentShape(Corner.box)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityElement(children: .combine)
@@ -83,6 +77,7 @@ struct ResetScopeSheet: View {
             Button("إلغاء") { dismiss() }
                 .buttonStyle(DialogButtonStyle(palette: palette))
                 .accessibilityIdentifier("reset.cancel")
+                .padding(.top, 12)
         }
         .padding(20)
         .fittedSheet(background: palette.background)
@@ -101,10 +96,8 @@ struct CompletionSheet: View {
     var body: some View {
         VStack(spacing: 14) {
             Text("✓")
-                .font(.system(size: 26, weight: .black))
+                .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(palette.completed)
-                .frame(width: 51, height: 51)
-                .background(Circle().fill(palette.completedSoft))
                 .accessibilityHidden(true)
             Text(completion.title)
                 .font(.title3.weight(.bold))
@@ -117,7 +110,7 @@ struct CompletionSheet: View {
                 .multilineTextAlignment(.center)
             if let time = completion.time {
                 Text(time)
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(palette.completed)
                     .accessibilityIdentifier("completion.time")
             }
@@ -139,22 +132,23 @@ struct CompletionSheet: View {
     }
 }
 
-/// `.dialog-button` and `.dialog-button.primary`.
+/// `.dialog-button` (outlined) and `.dialog-button.primary` (filled with the accent).
 struct DialogButtonStyle: ButtonStyle {
     let palette: Palette
     var primary = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.body.weight(.heavy))
+            .font(.body.weight(.semibold))
             .multilineTextAlignment(.center)
-            .foregroundStyle(primary ? palette.accentStrong : palette.textPrimary)
+            .foregroundStyle(primary ? palette.onAccent : palette.textPrimary)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 48)
-            .background(Corner.box.fill(primary ? palette.accentSoft : palette.surface))
-            .overlay(Corner.box.strokeBorder(
-                primary ? palette.accent.mixed(0.55, with: palette.border) : palette.border))
+            .background(Corner.box.fill(primary ? palette.accent : .clear))
+            .overlay {
+                if !primary { Corner.box.strokeBorder(palette.border) }
+            }
             .contentShape(Corner.box)
             .opacity(configuration.isPressed ? 0.8 : 1)
     }

@@ -34,7 +34,7 @@ struct PrayerTimesView: View {
                 }
                 Button(action: openToday) {
                     Label("تسجيل صلوات اليوم", systemImage: "checklist")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
@@ -44,7 +44,7 @@ struct PrayerTimesView: View {
                     showsReminders = true
                 } label: {
                     Label("تنبيهات الصلاة", systemImage: "bell")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
@@ -54,7 +54,7 @@ struct PrayerTimesView: View {
                     showsSettings = true
                 } label: {
                     Label("إعدادات الحساب", systemImage: "slider.horizontal.3")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
@@ -85,11 +85,8 @@ struct PrayerTimesView: View {
 
     private var noLocation: some View {
         VStack(spacing: 12) {
-            Image(systemName: "location.circle")
-                .font(.largeTitle)
-                .foregroundStyle(palette.accentStrong)
             Text("حدّد موقعك لعرض مواقيت الصلاة")
-                .font(.headline.weight(.heavy))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(palette.textPrimary)
             Text("يُطلب الموقع مرة واحدة، ويُحفظ على جهازك بدقة تقريبية (نحو كيلومتر) ولا يُرسل إلى أي جهة.")
                 .font(.footnote.weight(.semibold))
@@ -143,7 +140,7 @@ struct PrayerTimesView: View {
             dayButton("اليوم السابق", systemImage: "chevron.backward", offset: model.dayOffset - 1)
             VStack(spacing: 2) {
                 Text(model.dayOffset == 0 ? "اليوم، " + PrayerDates.gregorian(date) : PrayerDates.gregorian(date))
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(palette.textPrimary)
                     .accessibilityIdentifier("prayer.date")
                 Text(PrayerDates.hijri(date, offset: model.settings.hijriOffset))
@@ -152,7 +149,7 @@ struct PrayerTimesView: View {
                     .accessibilityIdentifier("prayer.hijri")
                 if model.dayOffset != 0 {
                     Button("العودة إلى اليوم") { model.showDay(0) }
-                        .font(.caption.weight(.heavy))
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(palette.accentStrong)
                         .accessibilityIdentifier("prayer.today")
                 }
@@ -186,14 +183,14 @@ struct PrayerTimesView: View {
         if let next = model.countdown(now: now) {
             HStack {
                 Text(PrayerNames.counting(to: next))
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(palette.textPrimary)
                 Spacer(minLength: 8)
                 Text("بعد " + PrayerDates.remaining(from: now, to: next.at))
-                    .font(.subheadline.weight(.heavy).monospacedDigit())
+                    .font(.subheadline.weight(.bold).monospacedDigit())
                     .foregroundStyle(palette.accentStrong)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 4)
             .padding(.vertical, 10)
             .card(palette)
             .accessibilityElement(children: .combine)
@@ -209,15 +206,15 @@ struct PrayerTimesView: View {
         let next = model.dayOffset == 0 ? model.countdown() : nil
         return VStack(spacing: 0) {
             ForEach(Array(PrayerTime.allCases.enumerated()), id: \.element) { index, time in
-                if index > 0 { Divider().overlay(palette.border) }
+                if index > 0 { Rule() }
                 let isNext = next?.prayer == time && next?.date == schedule?.localDate
                 HStack {
                     Text(PrayerNames.name(time))
-                        .font(.body.weight(isNext ? .heavy : .semibold))
+                        .font(.body.weight(isNext ? .bold : .semibold))
                     Spacer(minLength: 8)
                     VStack(alignment: .trailing, spacing: 0) {
                         Text(value(time, in: schedule))
-                            .font(.body.weight(isNext ? .heavy : .semibold).monospacedDigit())
+                            .font(.body.weight(isNext ? .bold : .semibold).monospacedDigit())
                         if let schedule, let iqama = model.iqama.iqama(of: time, in: schedule) {
                             Text("الإقامة " + ArabicFormat.time(iqama, in: schedule.zone))
                                 .font(.caption.weight(.semibold).monospacedDigit())
@@ -227,14 +224,12 @@ struct PrayerTimesView: View {
                 }
                 .foregroundStyle(isNext ? palette.accentStrong : (time == .sunrise ? palette.textSecondary
                                                                                    : palette.textPrimary))
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 4)
                 .frame(minHeight: 46)
-                .background(isNext ? palette.accentSoft.opacity(0.6) : .clear)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("prayer.time.\(time.rawValue)")
             }
         }
-        .clipShape(Corner.box)
         .card(palette)
     }
 
@@ -273,7 +268,7 @@ struct PrayerTimesView: View {
             if let location = model.location {
                 if let city = cities.nearestName(location) {
                     Text(city)
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.textPrimary)
                         .accessibilityIdentifier("prayer.city")
                 }
@@ -294,7 +289,7 @@ struct PrayerTimesView: View {
         }
         .font(.caption.weight(.semibold))
         .foregroundStyle(palette.textSecondary)
-        .padding(12)
+        .padding(.vertical, 12).padding(.horizontal, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(palette)
     }
@@ -665,20 +660,23 @@ enum PrayerDates {
     }
 }
 
-/// The prayer screens' card and button styles, shared with the tracker's.
+/// The prayer screens' section and button styles, shared with the tracker's and the qibla's.
 extension View {
+    /// A section of the screen: on the page under a rule, not in a box.
     func card(_ palette: Palette) -> some View {
-        background(Corner.box.fill(palette.surface.opacity(0.94)))
-            .overlay(Corner.box.strokeBorder(palette.border))
+        overlay(alignment: .top) { Rule() }
     }
 
+    /// A button: filled with the accent when `prominent`, outlined otherwise.
     func pill(_ palette: Palette, prominent: Bool) -> some View {
-        font(.subheadline.weight(.heavy))
-            .foregroundStyle(prominent ? palette.accentStrong : palette.textSecondary)
+        font(.subheadline.weight(.semibold))
+            .foregroundStyle(prominent ? palette.onAccent : palette.textPrimary)
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
-            .background(Corner.box.fill(prominent ? palette.accentSoft : palette.surfaceRaised))
-            .overlay(Corner.box.strokeBorder(palette.border))
+            .background(Corner.box.fill(prominent ? palette.accent : .clear))
+            .overlay {
+                if !prominent { Corner.box.strokeBorder(palette.border) }
+            }
             .contentShape(Corner.box)
     }
 }

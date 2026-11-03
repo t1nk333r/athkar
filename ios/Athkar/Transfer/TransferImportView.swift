@@ -252,9 +252,10 @@ struct TransferImportView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Corner.box.fill(row.isReset ? palette.warningSoft : palette.surfaceRaised))
-        .overlay(Corner.box.strokeBorder(row.isReset ? palette.warning : palette.border))
+        .padding(.vertical, 12)
+        .padding(.horizontal, row.isReset ? 12 : 4)
+        .background(row.isReset ? palette.warningSoft : .clear)
+        .overlay(alignment: .top) { Rule() }
         .accessibilityElement(children: .combine)
     }
 

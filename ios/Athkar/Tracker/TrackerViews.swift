@@ -17,12 +17,11 @@ struct TrackerPrayerList: View {
         let records = tracker.records(on: date)
         VStack(spacing: 0) {
             ForEach(Array(ObligatoryPrayer.allCases.enumerated()), id: \.element) { index, prayer in
-                if index > 0 { Divider().overlay(palette.border) }
+                if index > 0 { Rule() }
                 let occurrence = PrayerOccurrence(date: date, prayer: prayer)
                 row(occurrence, entry: records[prayer]?.entry ?? .unrecorded, editable: editable)
             }
         }
-        .clipShape(Corner.box)
         .card(palette)
         .sheet(item: $details) { occurrence in
             PrayerRecordSheet(tracker: tracker, occurrence: occurrence)
@@ -42,7 +41,7 @@ struct TrackerPrayerList: View {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(name)
-                            .font(.body.weight(.heavy))
+                            .font(.body.weight(.bold))
                             .foregroundStyle(palette.textPrimary)
                         Text(TrackerText.summary(entry))
                             .font(.caption.weight(.semibold))
@@ -66,8 +65,8 @@ struct TrackerPrayerList: View {
             .accessibilityIdentifier("tracker.row.\(occurrence.prayer.rawValue)")
             logButton(occurrence, entry: entry, editable: editable)
         }
-        .padding(.leading, 14)
-        .padding(.trailing, 6)
+        .padding(.leading, 4)
+        .padding(.trailing, 0)
     }
 
     /// The circle: empty for unrecorded (tap to record), a tick for prayed, a dash for not applicable (both open the
@@ -223,13 +222,13 @@ struct TrackerUndoBar: View {
         if let change = tracker.lastChange {
             HStack(spacing: 10) {
                 Text(TrackerText.change(change.occurrence, entry: change.entry))
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(palette.textPrimary)
                     .lineLimit(2)
                     .accessibilityIdentifier("tracker.undoMessage")
                 Spacer(minLength: 8)
                 Button("تراجع") { tracker.undo() }
-                    .font(.subheadline.weight(.heavy))
+                    .font(.subheadline.weight(.bold))
                     .foregroundStyle(palette.accentStrong)
                     .frame(minHeight: 44)
                     .accessibilityIdentifier("tracker.undo")

@@ -29,21 +29,6 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var icon: String {
-        switch self {
-        case .ruqyah: "shield"
-        case .suwar: "book"
-        case .tasbih: "circle.dashed"
-        case .sleep: "bed.double"
-        case .afterPrayer: "hands.and.sparkles"
-        case .waking: "sunrise"
-        case .prayerTimes: "clock"
-        case .qibla: "location.north.line"
-        case .today: "checklist"
-        case .calendar: "calendar"
-        }
-    }
-
     /// The deck the section opens, if it is a deck.
     var deck: DeckID? {
         switch self {
@@ -53,43 +38,38 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// The title's colour in the grid, one per section as in the adhkar apps the layout follows.
-    var tint: Color {
-        switch self {
-        case .ruqyah: .teal
-        case .suwar: .brown
-        case .tasbih: .cyan
-        case .sleep: .purple
-        case .afterPrayer: .blue
-        case .waking: .orange
-        case .prayerTimes: .indigo
-        case .qibla: .green
-        case .today: .mint
-        case .calendar: .pink
-        }
-    }
-
     /// Whether the section opens yet; the rest are listed as «قريبًا».
     var isAvailable: Bool {
         deck != nil || [.tasbih, .prayerTimes, .qibla, .today, .calendar].contains(self)
     }
+
+    /// The list's two groups, in list order: what is read and counted, then what follows the prayer times.
+    static let groups = [
+        OtherSectionGroup(title: "أوراد", sections: [.ruqyah, .suwar, .tasbih, .sleep, .afterPrayer, .waking]),
+        OtherSectionGroup(title: "الصلاة", sections: [.prayerTimes, .qibla, .today, .calendar]),
+    ]
 }
 
-/// The أخرى tab: a two-column grid of its sections, each title in its own colour, with its progress today where it
-/// has a deck.
+struct OtherSectionGroup: Identifiable, Sendable {
+    let title: String
+    let sections: [OtherSection]
+
+    var id: String { title }
+}
+
+/// The أخرى tab: its sections as a list in two groups, each row its title and, at the end, its progress today or what it
+/// shows next.
 struct OtherSectionsView: View {
     let app: AppModel
 
     @Environment(\.palette) private var palette
     @State private var transfer: TransferImportModel?
 
-    private let columns = [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)]
-
     var body: some View {
-        // Scrolls only when the cells do not fit (large text): a scroll view holds back quick taps on its cells.
+        // Scrolls only when the rows do not fit (large text): a scroll view holds back quick taps on its rows.
         ViewThatFits(in: .vertical) {
-            grid
-            ScrollView { grid }
+            list
+            ScrollView { list }
         }
         .sheet(item: $transfer) { model in
             TransferImportView(model: model)
@@ -97,16 +77,25 @@ struct OtherSectionsView: View {
         }
     }
 
-    private var grid: some View {
-        VStack(spacing: 8) {
-            LazyVGrid(columns: columns, spacing: 8) {
-                ForEach(OtherSection.allCases) { section in
-                    cell(section)
+    private var list: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(OtherSection.groups) { group in
+                Text(group.title)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(palette.textSecondary)
+                    .padding(.top, 18)
+                    .padding(.bottom, 2)
+                    .accessibilityAddTraits(.isHeader)
+                ForEach(Array(group.sections.enumerated()), id: \.element) { index, section in
+                    row(section)
+                    if index < group.sections.count - 1 { Rule() }
                 }
             }
-            if app.offersWebImport { importOffer }
+            if app.offersWebImport {
+                importOffer.padding(.top, 20)
+            }
         }
-        .padding(.top, 8)
+        .padding(.horizontal, 4)
     }
 
     /// The first-launch offer (spec/routes.md "First launch"): on a fresh install with no user data, below the
@@ -118,7 +107,7 @@ struct OtherSectionsView: View {
             } label: {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("استيراد من تطبيق الويب")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.textPrimary)
                     Text("إن كنت تستخدم «أذكار المسلم» على الويب، انقل تقدّمك إلى هذا الجهاز.")
                         .font(.caption)
@@ -143,13 +132,11 @@ struct OtherSectionsView: View {
             .accessibilityLabel("إخفاء")
             .accessibilityIdentifier("other.importOffer.close")
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(Corner.box.fill(palette.surface.opacity(0.94)))
-        .overlay(Corner.box.strokeBorder(palette.border))
+        .padding(.top, 12)
+        .overlay(alignment: .top) { Rule() }
     }
 
-    private func cell(_ section: OtherSection) -> some View {
+    private func row(_ section: OtherSection) -> some View {
         let deck = section.deck.map(app.deck)
         let available = section.isAvailable
         let complete = deck?.isDayComplete == true
@@ -158,36 +145,27 @@ struct OtherSectionsView: View {
             app.ensureCurrentDay()
             app.otherSection = section
         } label: {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Image(systemName: section.icon)
-                        .font(.footnote.weight(.bold))
-                    Text(section.title)
-                        .font(.subheadline.weight(.heavy))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
-                    Spacer(minLength: 0)
-                    if complete {
-                        Text("✓").font(.subheadline.weight(.heavy)).foregroundStyle(palette.completed)
-                    }
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(section.title)
+                    .font(.body)
+                    .foregroundStyle(available ? palette.textPrimary : palette.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                if complete {
+                    Text("✓").font(.body).foregroundStyle(palette.completed)
                 }
-                .foregroundStyle(available ? section.tint : palette.textSecondary)
+                Spacer(minLength: 8)
                 Text(subtitle(section, deck: deck))
-                    .font(.caption2.weight(.semibold))
+                    .font(.footnote)
                     .foregroundStyle(complete ? palette.completed : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
-            .background(Corner.box.fill(palette.surface.opacity(0.94)))
-            .overlay(Corner.box.strokeBorder(palette.border))
-            .contentShape(Corner.box)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(!available)
-        .opacity(available ? 1 : 0.55)
         .accessibilityLabel(section.title + (!available ? "، قريبًا" : complete ? "، مكتملة اليوم" : ""))
         .accessibilityValue(available ? subtitle(section, deck: deck) : "")
         .accessibilityIdentifier("other.\(section.rawValue)")

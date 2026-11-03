@@ -85,9 +85,9 @@ Layout:
 - The card head shows `surah` at the start and `range` at the end.
 - The body is centred.
 - When `basmala` is true, the body starts with «بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ» at 0.92× the text size, in
-  the accent colour. The pack does not contain this text; the PWA prints it.
+  the text colour. The pack does not contain this text; the PWA prints it.
 - Then come the ayahs, joined by spaces. Each ayah is followed by «﴿n﴾» (Arabic-Indic n) at 0.78× the text size, in
-  the accent colour.
+  the muted text colour.
 
 ### «سور» page fields
 
@@ -98,9 +98,9 @@ Layout (`suraPageMarkup`, a `.dhikr-card.quran.sura-page`):
 
 - The card has no head, and the body is centred.
 - A sura's first page starts with the pack's `basmala` (`.dhikr-prefix`) at the quran prefix size with line height
-  1.7, in the strong accent colour. Later pages have none.
+  1.7, in the text colour. Later pages have none.
 - Then come the ayahs, joined by spaces. Each is followed by «﴿n﴾» (Arabic-Indic n), set in KFGQPC Uthman Taha in the
-  strong accent colour. The text is set as adhkar `quran` items are, in KFGQPC HAFS with the King Fahd Complex's
+  muted text colour. The text is set as adhkar `quran` items are, in KFGQPC HAFS with the King Fahd Complex's
   encoding.
 - The footer shows `range` and the counter, in the adhkar card's style with a compact footer.
 

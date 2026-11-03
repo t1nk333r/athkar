@@ -34,7 +34,7 @@ struct TodayView: View {
                     app.otherSection = .calendar
                 } label: {
                     Label("التقويم", systemImage: "calendar")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
@@ -51,7 +51,7 @@ struct TodayView: View {
     private func dateCard(_ today: String) -> some View {
         VStack(spacing: 2) {
             Text(PrayerDates.gregorian(today))
-                .font(.headline.weight(.heavy))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(palette.textPrimary)
                 .accessibilityIdentifier("today.date")
             Text(PrayerDates.hijri(today, offset: app.prayer.settings.hijriOffset))
@@ -71,7 +71,7 @@ struct TodayView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(PrayerNames.counting(to: next))
-                        .font(.subheadline.weight(.heavy))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(palette.textPrimary)
                     Text(ArabicFormat.time(next.at, in: app.prayer.zone))
                         .font(.caption.weight(.semibold).monospacedDigit())
@@ -79,10 +79,10 @@ struct TodayView: View {
                 }
                 Spacer(minLength: 8)
                 Text("بعد " + PrayerDates.remaining(from: now, to: next.at))
-                    .font(.subheadline.weight(.heavy).monospacedDigit())
+                    .font(.subheadline.weight(.bold).monospacedDigit())
                     .foregroundStyle(palette.accentStrong)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 4)
             .padding(.vertical, 10)
             .card(palette)
             .accessibilityElement(children: .combine)
@@ -92,13 +92,12 @@ struct TodayView: View {
                 app.otherSection = .prayerTimes
             } label: {
                 HStack {
-                    Image(systemName: "location.circle")
                     Text(app.prayer.location == nil ? "حدّد موقعك لعرض مواقيت الصلاة" : "لا مواقيت اليوم")
                     Spacer(minLength: 0)
                 }
-                .font(.subheadline.weight(.heavy))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(palette.accentStrong)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 4)
                 .frame(minHeight: 48)
                 .card(palette)
                 .contentShape(Corner.box)
@@ -110,15 +109,14 @@ struct TodayView: View {
 
     private var adhkar: some View {
         VStack(spacing: 0) {
-            adhkarRow(.morning, icon: "sun.max")
-            Divider().overlay(palette.border)
-            adhkarRow(.evening, icon: "moon")
+            adhkarRow(.morning)
+            Rule()
+            adhkarRow(.evening)
         }
-        .clipShape(Corner.box)
         .card(palette)
     }
 
-    private func adhkarRow(_ deck: DeckID, icon: String) -> some View {
+    private func adhkarRow(_ deck: DeckID) -> some View {
         let model = app.deck(deck)
         let complete = model.isDayComplete
         let title = deck == .morning ? DeckDefinition.morning.title : DeckDefinition.evening.title
@@ -127,12 +125,8 @@ struct TodayView: View {
             app.selection = deck
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.body.weight(.bold))
-                    .foregroundStyle(palette.textSecondary)
-                    .frame(width: 24)
                 Text(title)
-                    .font(.body.weight(.heavy))
+                    .font(.body.weight(.bold))
                     .foregroundStyle(palette.textPrimary)
                 Spacer(minLength: 8)
                 Text(complete ? "✓ مكتملة" : model.listSummary.copy)
@@ -144,7 +138,7 @@ struct TodayView: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(palette.textSecondary)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 4)
             .frame(minHeight: 50)
             .contentShape(Rectangle())
         }
@@ -159,7 +153,7 @@ struct TodayView: View {
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.subheadline.weight(.heavy))
+            .font(.subheadline.weight(.bold))
             .foregroundStyle(palette.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 4)

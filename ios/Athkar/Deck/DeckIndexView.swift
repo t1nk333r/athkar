@@ -21,7 +21,7 @@ struct DeckIndexView<Model: DeckModel>: View {
         NavigationStack {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: 0) {
                         ForEach(rows[..<(firstLocked ?? rows.count)], id: \.element.id) { index, card in
                             row(index, card, current: current, lockHint: nil)
                         }
@@ -84,8 +84,8 @@ struct DeckIndexView<Model: DeckModel>: View {
     }
 }
 
-/// One card in the index, laid out like the reset picker's choices and coloured like the card it opens. VoiceOver
-/// reads the card's counter label, never the encoded Quran text, and the deck position as its value.
+/// One card in the index: a row over a rule, like the reset picker's choices, the current card on an accent tint.
+/// VoiceOver reads the card's counter label, never the encoded Quran text, and the deck position as its value.
 private struct DeckIndexRow: View {
     let card: DeckCard
     let position: String
@@ -120,15 +120,18 @@ private struct DeckIndexRow: View {
                         .accessibilityHidden(true)
                 }
             }
-            .padding(14)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .background(shape.fill(fill))
-            .overlay { border }
-            .overlay(alignment: .leading) {
-                if isCurrent {
-                    Capsule().fill(palette.accent).frame(width: 4.8).padding(.vertical, 12)
+            .background(shape.fill(isCurrent ? palette.accentSoft : .clear))
+            .overlay {
+                if card.isReview {
+                    shape.strokeBorder(palette.warning.mixed(0.6, with: palette.border),
+                                       style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
                 }
             }
+            .padding(.vertical, 2)
+            .overlay(alignment: .bottom) { Rule() }
             .contentShape(shape)
         }
         .buttonStyle(.plain)
@@ -196,37 +199,13 @@ private struct DeckIndexRow: View {
             }
         }
         .environment(\.layoutDirection, card.status == .numeric ? .leftToRight : .rightToLeft)
-        .font(.footnote.weight(.heavy))
-        .foregroundStyle(card.isComplete ? palette.completed : palette.accentStrong)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .background(Corner.box.fill(card.isComplete ? palette.completedSoft : palette.accentSoft))
+        .font(.footnote)
+        .foregroundStyle(card.isComplete ? palette.completed : palette.textSecondary)
     }
 
     private var reviewBadge: some View {
         Text("بحاجة إلى مراجعة")
-            .font(.caption.weight(.heavy))
+            .font(.footnote.weight(.semibold))
             .foregroundStyle(palette.warning)
-            .padding(.horizontal, 10.4)
-            .padding(.vertical, 4)
-            .background(Corner.box.fill(palette.warningSoft))
-    }
-
-    /// As the card: a warning tint for review items, the completed tint once read.
-    private var fill: Color {
-        if card.isReview { return palette.warningSoft.mixed(0.55, with: palette.surface) }
-        return card.isComplete ? palette.completedSoft.mixed(0.42, with: palette.surface) : palette.surfaceRaised
-    }
-
-    @ViewBuilder
-    private var border: some View {
-        if isCurrent {
-            shape.strokeBorder(palette.accent, lineWidth: 2)
-        } else if card.isReview {
-            shape.strokeBorder(palette.warning.mixed(0.6, with: palette.border),
-                               style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-        } else {
-            shape.strokeBorder(card.isComplete ? palette.completed.mixed(0.48, with: palette.border) : palette.border)
-        }
     }
 }
