@@ -32,21 +32,21 @@ struct Palette: Sendable {
 
     private static let light = Palette(
         colorScheme: .light,
-        background: Color(hex: 0xf5f1e8), surface: Color(hex: 0xf9f6ef), surfaceRaised: Color(hex: 0xfdfbf6),
-        textPrimary: Color(hex: 0x1e1c17), textSecondary: Color(hex: 0x6d675b), reference: Color(hex: 0x4f4a40),
-        accent: Color(hex: 0x8f3424), accentStrong: Color(hex: 0x74281b), accentSoft: Color(hex: 0xefe1d6),
-        onAccent: Color(hex: 0xfbf7f0), border: Color(hex: 0xddd6c7), divider: Color(hex: 0xddd6c7),
-        completed: Color(hex: 0x2e6a4e), completedSoft: Color(hex: 0xe2ebdf), warning: Color(hex: 0x87602a),
-        warningSoft: Color(hex: 0xf3e8d2))
+        background: Color(hex: 0xf6f2eb), surface: Color(hex: 0xf9f6f0), surfaceRaised: Color(hex: 0xfcfaf6),
+        textPrimary: Color(hex: 0x38332c), textSecondary: Color(hex: 0x736b60), reference: Color(hex: 0x5a544a),
+        accent: Color(hex: 0xa14f3c), accentStrong: Color(hex: 0x8a4130), accentSoft: Color(hex: 0xf2e6dd),
+        onAccent: Color(hex: 0xfcf8f3), border: Color(hex: 0xe5dfd3), divider: Color(hex: 0xe5dfd3),
+        completed: Color(hex: 0x3f7158), completedSoft: Color(hex: 0xe6ede3), warning: Color(hex: 0x82602f),
+        warningSoft: Color(hex: 0xf4ebda))
 
     private static let dark = Palette(
         colorScheme: .dark,
-        background: Color(hex: 0x161512), surface: Color(hex: 0x1f1d1a), surfaceRaised: Color(hex: 0x26241f),
-        textPrimary: Color(hex: 0xece6d9), textSecondary: Color(hex: 0x9d978b), reference: Color(hex: 0xb9b2a5),
-        accent: Color(hex: 0xdb8f71), accentStrong: Color(hex: 0xf0b59c), accentSoft: Color(hex: 0x3b2a21),
-        onAccent: Color(hex: 0x1b130e), border: Color(hex: 0x3a3731), divider: Color(hex: 0x3a3731),
-        completed: Color(hex: 0x82c49a), completedSoft: Color(hex: 0x1e3227), warning: Color(hex: 0xe0bc70),
-        warningSoft: Color(hex: 0x3a3121))
+        background: Color(hex: 0x1d1c19), surface: Color(hex: 0x24221f), surfaceRaised: Color(hex: 0x2a2824),
+        textPrimary: Color(hex: 0xe0dacd), textSecondary: Color(hex: 0xa29c90), reference: Color(hex: 0xbab3a6),
+        accent: Color(hex: 0xd29a80), accentStrong: Color(hex: 0xe6b8a3), accentSoft: Color(hex: 0x3a2e27),
+        onAccent: Color(hex: 0x211813), border: Color(hex: 0x383530), divider: Color(hex: 0x383530),
+        completed: Color(hex: 0x8bbd9d), completedSoft: Color(hex: 0x24352b), warning: Color(hex: 0xd8bb80),
+        warningSoft: Color(hex: 0x393226))
 }
 
 extension Color {
