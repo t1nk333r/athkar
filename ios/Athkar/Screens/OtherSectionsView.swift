@@ -57,8 +57,29 @@ struct OtherSectionGroup: Identifiable, Sendable {
     var id: String { title }
 }
 
-/// The أخرى tab: its sections as a list in two groups, each row its title and, at the end, its progress today or what it
-/// shows next.
+/// How the أخرى list lays out its sections: one to a row, or two to a row.
+enum OtherLayout: String, CaseIterable, Identifiable, Sendable {
+    case list, grid
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .list: "قائمة"
+        case .grid: "شبكة"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .list: "list.bullet"
+        case .grid: "square.grid.2x2"
+        }
+    }
+}
+
+/// The أخرى tab: its sections in two groups, each section its title and its progress today or what it shows next. The
+/// list puts one section on a row with that line at the end; the grid puts two on a row with the line under the title.
 struct OtherSectionsView: View {
     let app: AppModel
 
@@ -86,9 +107,9 @@ struct OtherSectionsView: View {
                     .padding(.top, 18)
                     .padding(.bottom, 2)
                     .accessibilityAddTraits(.isHeader)
-                ForEach(Array(group.sections.enumerated()), id: \.element) { index, section in
-                    row(section)
-                    if index < group.sections.count - 1 { Rule() }
+                switch app.otherLayout {
+                case .list: rows(group.sections)
+                case .grid: grid(group.sections)
                 }
             }
             if app.offersWebImport {
@@ -96,6 +117,34 @@ struct OtherSectionsView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    @ViewBuilder
+    private func rows(_ sections: [OtherSection]) -> some View {
+        ForEach(Array(sections.enumerated()), id: \.element) { index, section in
+            row(section)
+            if index < sections.count - 1 { Rule() }
+        }
+    }
+
+    /// Two sections to a row, in list order from the leading edge, with a rule between the two and between rows.
+    @ViewBuilder
+    private func grid(_ sections: [OtherSection]) -> some View {
+        let pairs = stride(from: 0, to: sections.count, by: 2).map { Array(sections[$0..<min($0 + 2, sections.count)]) }
+        ForEach(Array(pairs.enumerated()), id: \.offset) { index, pair in
+            HStack(spacing: 0) {
+                tile(pair[0]).padding(.trailing, 12)
+                Rectangle().fill(pair.count > 1 ? palette.border : .clear).frame(width: 1).accessibilityHidden(true)
+                if pair.count > 1 {
+                    tile(pair[1]).padding(.leading, 12)
+                } else {
+                    Color.clear.frame(maxWidth: .infinity)
+                }
+            }
+            // The rule and both tiles take the taller tile's height.
+            .fixedSize(horizontal: false, vertical: true)
+            if index < pairs.count - 1 { Rule() }
+        }
     }
 
     /// The first-launch offer (spec/routes.md "First launch"): on a fresh install with no user data, below the
@@ -137,37 +186,82 @@ struct OtherSectionsView: View {
     }
 
     private func row(_ section: OtherSection) -> some View {
-        let deck = section.deck.map(app.deck)
-        let available = section.isAvailable
-        let complete = deck?.isDayComplete == true
-        return Button {
-            guard available else { return }
-            app.ensureCurrentDay()
-            app.otherSection = section
-        } label: {
+        let shown = shown(section)
+        return sectionButton(section, shown) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text(section.title)
                     .font(.body)
-                    .foregroundStyle(available ? palette.textPrimary : palette.textSecondary)
+                    .foregroundStyle(shown.available ? palette.textPrimary : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
-                if complete {
+                if shown.complete {
                     Text("✓").font(.body).foregroundStyle(palette.completed)
                 }
                 Spacer(minLength: 8)
-                Text(subtitle(section, deck: deck))
+                Text(shown.subtitle)
                     .font(.footnote)
-                    .foregroundStyle(complete ? palette.completed : palette.textSecondary)
+                    .foregroundStyle(shown.complete ? palette.completed : palette.textSecondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
             .contentShape(Rectangle())
         }
+    }
+
+    private func tile(_ section: OtherSection) -> some View {
+        let shown = shown(section)
+        return sectionButton(section, shown) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(section.title)
+                        .font(.body)
+                        .foregroundStyle(shown.available ? palette.textPrimary : palette.textSecondary)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                    if shown.complete {
+                        Text("✓").font(.body).foregroundStyle(palette.completed)
+                    }
+                }
+                Text(shown.subtitle)
+                    .font(.footnote)
+                    .foregroundStyle(shown.complete ? palette.completed : palette.textSecondary)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .contentShape(Rectangle())
+        }
+    }
+
+    /// What a row or tile shows of its section today.
+    private struct Shown {
+        let available: Bool
+        let complete: Bool
+        let subtitle: String
+    }
+
+    private func shown(_ section: OtherSection) -> Shown {
+        let deck = section.deck.map(app.deck)
+        return Shown(available: section.isAvailable, complete: deck?.isDayComplete == true,
+                     subtitle: subtitle(section, deck: deck))
+    }
+
+    /// A row or tile that opens its section, spoken the same in either layout.
+    private func sectionButton<Label: View>(_ section: OtherSection, _ shown: Shown,
+                                            @ViewBuilder label: () -> Label) -> some View {
+        Button {
+            guard shown.available else { return }
+            app.ensureCurrentDay()
+            app.otherSection = section
+        } label: {
+            label()
+        }
         .buttonStyle(.plain)
-        .disabled(!available)
-        .accessibilityLabel(section.title + (!available ? "، قريبًا" : complete ? "، مكتملة اليوم" : ""))
-        .accessibilityValue(available ? subtitle(section, deck: deck) : "")
+        .disabled(!shown.available)
+        .accessibilityLabel(section.title + (!shown.available ? "، قريبًا" : shown.complete ? "، مكتملة اليوم" : ""))
+        .accessibilityValue(shown.available ? shown.subtitle : "")
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
 

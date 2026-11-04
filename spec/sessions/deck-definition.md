@@ -53,6 +53,9 @@ and the tabs are hidden. The back button returns to the list, where the tabs sho
 its reset button is disabled. The أخرى tab never shows «✓»; each row shows completion. Each deck keeps its current
 card while another deck is open. The رقية القرين row shows the whole day's «N من ٣٣ تكرارًا». The سور row shows the
 suras complete today, «N من ٥ سور» (a native addition; the PWA's tab has no such line), and its «✓» needs all five.
+The list's «⋯» menu chooses its layout, «قائمة» or «شبكة» (a native addition). The list puts one section on a row
+with its line at the end. The grid puts two on a row, in list order from the leading edge, with the line under the
+title. The choice is kept on the device in `UserDefaults` (`display.otherLayout`); a backup leaves it out.
 
 ### Adhkar item fields
 
