@@ -15,7 +15,12 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
             throw .invalidLocalDate(localDate)
         }
         let location = Coordinates(latitude: coordinates.latitude, longitude: coordinates.longitude)
-        let parameters = Self.parameters(settings)
+        var parameters = Self.parameters(settings)
+        // The Umm al-Qura calendar puts Isha 120 minutes after Maghrib in Ramadan, not 90. Adhan documents this but
+        // leaves it to the caller (spec/prayer-times/README.md, "Ramadan Isha").
+        if settings.method == .ummAlQura, HijriMonth.isRamadan(localDay: localDay, offset: settings.hijriOffset) {
+            parameters.ishaInterval = Self.ummAlQuraRamadanIshaInterval
+        }
         func times(utcDay: Int64) -> PrayerTimes? {
             // Adhan returns all six times or none (no sunrise or sunset: polar day or night).
             PrayerTimes(coordinates: location, date: Self.utcComponents(utcDay), calculationParameters: parameters)
@@ -47,6 +52,9 @@ public struct AdhanPrayerTimes: PrayerTimesPort {
                               maghrib: result.maghrib, isha: result.isha, asrClamped: !asrInWindow,
                               yellowing: yellowing.flatMap { result.dhuhr < $0 && $0 < result.maghrib ? $0 : nil })
     }
+
+    /// Minutes from Maghrib to Isha with Umm al-Qura in Ramadan.
+    static let ummAlQuraRamadanIshaInterval = 120
 
     /// Adhan computes the solar day around the transit on a UTC calendar date. First guess: the UTC date whose mean
     /// transit, 12:00 − longitude/15 h UTC, falls on `localDay` in `zone`. Where a zone's offset is about a day away

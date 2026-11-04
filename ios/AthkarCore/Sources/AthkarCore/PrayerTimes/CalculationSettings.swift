@@ -83,7 +83,8 @@ public struct CalculationSettings: Codable, Equatable, Sendable {
     public var asrSchool: AsrSchool
     public var highLatitudeRule: HighLatitudeRule
     public var adjustments: PrayerAdjustments
-    /// Days added to the computed Hijri date. Display only; prayer times ignore it.
+    /// Days added to the computed Hijri date. It also decides which days are Ramadan, when Umm al-Qura's Isha is
+    /// 120 minutes after Maghrib.
     public var hijriOffset: Int
 
     /// Defaults are the settings keys' defaults: the PWA's behaviour.

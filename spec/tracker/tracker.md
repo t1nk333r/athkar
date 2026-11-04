@@ -41,7 +41,8 @@ When a command creates a record, the record captures three values from the comma
 - `profileVersion`: the calculation profile the time came from, as text in the form
   `<method>/<asr school>/<high-latitude rule>/<fajr>,<sunrise>,<dhuhr>,<asr>,<maghrib>,<isha>`. It uses the setting
   values of spec/schema.md and the adjustments in whole minutes, for example
-  `umm-al-qura/standard/twilight-angle/0,0,0,0,0,0`. The Hijri offset is not part of it.
+  `umm-al-qura/standard/twilight-angle/0,0,0,0,0,0`. The Hijri offset is not part of it, although with Umm al-Qura
+  it decides which days have Ramadan's later Isha; `scheduledAt` records the time that resulted.
 
 These values are never rewritten. A later command on the same occurrence keeps them, whatever its context. A
 zone change on the same date, a changed method, or a record made from another zone after the date line all reuse
