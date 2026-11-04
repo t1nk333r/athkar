@@ -16,30 +16,32 @@ struct BackupExportView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
+        List {
+            PageSection {
                 Text("تحفظ النسخة الاحتياطية في ملف واحد كل ما سجّلته في التطبيق: الأذكار والرقية والسور والمسبحة وسجل الصلوات والتذكيرات والإعدادات.")
+                    .foregroundStyle(palette.textPrimary)
                 Text("الملف نص مقروء غير مشفّر. لا يغادر جهازك إلا إذا شاركته أنت، فاحفظه في مكان تثق به.")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.textSecondary)
             }
             .font(.subheadline)
 
-            Section {
+            PageSection {
                 Toggle(isOn: $model.includesLocation) {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("تضمين الموقع").font(.body.weight(.semibold))
+                        Text("تضمين الموقع").font(.body.weight(.semibold)).foregroundStyle(palette.textPrimary)
                         Text(hasLocation
                              ? "يُضاف موقعك المحفوظ لحساب مواقيت الصلاة، مقرّبًا إلى منزلتين عشريتين. لا يُضاف ما لم تفعّل هذا."
                              : "لا يوجد موقع محفوظ على هذا الجهاز.")
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(palette.textSecondary)
                     }
                 }
                 .disabled(!hasLocation)
+                .opacity(hasLocation ? 1 : 0.6)
                 .accessibilityIdentifier("export.includeLocation")
             }
 
-            Section {
+            PageSection {
                 Button {
                     model.export()
                 } label: {
@@ -58,6 +60,7 @@ struct BackupExportView: View {
                 Text("لاستعادتها افتح الملف بهذا التطبيق، أو اختر «استعادة نسخة احتياطية» في الإعدادات.")
             }
         }
+        .pageList()
         .navigationTitle("النسخة الاحتياطية")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $model.file, onDismiss: { model.clear() }) { file in

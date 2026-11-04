@@ -1,7 +1,7 @@
 import XCTest
 
-/// Light and dark RTL screenshots of the adhkar deck, a ruqyah page (at the three text sizes) and the completion
-/// dialog, written to /tmp/slice4-shots/ and attached to the test result.
+/// Light and dark RTL screenshots of the adhkar deck, a ruqyah page (at the three text sizes), the completion dialog
+/// and الإعدادات, written to /tmp/slice4-shots/ and attached to the test result.
 final class ScreenshotUITests: DeckTestCase {
     private let directory = URL(fileURLWithPath: "/tmp/slice4-shots", isDirectory: true)
 
@@ -50,6 +50,23 @@ final class ScreenshotUITests: DeckTestCase {
         completeDeck(count: 24)
         XCTAssertTrue(app.staticTexts["completion.title"].waitForExistence(timeout: 4))
         shot("completion-evening-dark")
+    }
+
+    /// الإعدادات in light and dark: the top of the page, its middle and its end.
+    func testCaptureSettings() throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        launch()
+        for (theme, themeName) in [("فاتح", "light"), ("داكن", "dark")] {
+            openSettings()
+            choose(theme, in: "settings.theme")
+            shot("settings-\(themeName)-top")
+            let form = app.collectionViews.firstMatch
+            form.swipeUp()
+            shot("settings-\(themeName)-middle")
+            for _ in 0..<3 { form.swipeUp() }
+            shot("settings-\(themeName)-end")
+            closeSettings()
+        }
     }
 
     /// Reads every card of the current adhkar deck to its target, choosing 1 where the reader may.

@@ -49,6 +49,8 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # «أيقونة التطبيق» in الإعدادات (tools/app-icons.py); Xcode lists it under CFBundleAlternateIcons.
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: AppIconHorizon
     dependencies:
       - package: AthkarCore
       - target: AthkarWidget

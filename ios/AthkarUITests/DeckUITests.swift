@@ -294,8 +294,9 @@ final class DeckUITests: DeckTestCase {
         choose("داكن", in: "settings.theme")
         choose("كبير", in: "settings.textSize")
         choose("واسع", in: "settings.lineSpacing")
-        toggle("settings.manual.evening", to: true)
+        // Down the page: «أثناء القراءة» comes before «إكمال الورد يدويًا».
         toggle("settings.haptics", to: false)
+        toggle("settings.manual.evening", to: true)
         closeSettings()
         selectTab("ruqyah")
         tapCard()
@@ -314,8 +315,8 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(app.segmentedControls["settings.textSize"].buttons["كبير"].isSelected)
         XCTAssertTrue(app.segmentedControls["settings.lineSpacing"].buttons["واسع"].isSelected)
         XCTAssertTrue(isOn(reveal(app.switches["settings.longOrder"])))
-        XCTAssertTrue(isOn(reveal(app.switches["settings.manual.evening"])))
         XCTAssertFalse(isOn(reveal(app.switches["settings.haptics"])))
+        XCTAssertTrue(isOn(reveal(app.switches["settings.manual.evening"])))
         closeSettings()
 
         selectTab("ruqyah")

@@ -4,6 +4,10 @@ import SwiftUI
 /// accent marks the selected tab, the progress line, the counter and a screen's main button; rules (`border`) separate the parts
 /// of a screen instead of boxes.
 struct Palette: Sendable {
+    /// The scheme these colours are for. A sheet takes the palette from the screen that opened it, and the sheet's
+    /// own `colorScheme` can lag behind a theme changed while it is open, so an asset that has light and dark
+    /// versions picks by this.
+    var colorScheme: ColorScheme
     var background: Color
     var surface: Color
     var surfaceRaised: Color
@@ -27,6 +31,7 @@ struct Palette: Sendable {
     }
 
     private static let light = Palette(
+        colorScheme: .light,
         background: Color(hex: 0xf5f1e8), surface: Color(hex: 0xf9f6ef), surfaceRaised: Color(hex: 0xfdfbf6),
         textPrimary: Color(hex: 0x1e1c17), textSecondary: Color(hex: 0x6d675b), reference: Color(hex: 0x4f4a40),
         accent: Color(hex: 0x8f3424), accentStrong: Color(hex: 0x74281b), accentSoft: Color(hex: 0xefe1d6),
@@ -35,6 +40,7 @@ struct Palette: Sendable {
         warningSoft: Color(hex: 0xf3e8d2))
 
     private static let dark = Palette(
+        colorScheme: .dark,
         background: Color(hex: 0x161512), surface: Color(hex: 0x1f1d1a), surfaceRaised: Color(hex: 0x26241f),
         textPrimary: Color(hex: 0xece6d9), textSecondary: Color(hex: 0x9d978b), reference: Color(hex: 0xb9b2a5),
         accent: Color(hex: 0xdb8f71), accentStrong: Color(hex: 0xf0b59c), accentSoft: Color(hex: 0x3b2a21),
