@@ -23,8 +23,8 @@ struct PrayerWidgetTests {
     }
 
     private func state(_ phase: PrayerWidgetState.Phase, _ prayer: PrayerTime, _ adhan: Date,
-                       iqama: Date?) -> PrayerWidgetState {
-        PrayerWidgetState(phase: phase, prayer: prayer, adhan: adhan, iqama: iqama)
+                       iqama: Date?, since start: Date?) -> PrayerWidgetState {
+        PrayerWidgetState(phase: phase, prayer: prayer, adhan: adhan, iqama: iqama, start: start)
     }
 
     @Test func theSnapshotHoldsTheFivePrayersWithTheirIqama() {
@@ -57,13 +57,14 @@ struct PrayerWidgetTests {
         #expect(PrayerWidgetSnapshot.decoded(from: Data("{}".utf8)) == nil)
     }
 
-    /// A prayer shows from its adhan for 30 minutes, then the next one does.
+    /// A prayer shows from its adhan for 30 minutes, then the next one does, from the end of that window.
     @Test func aPrayerIsCurrentForThirtyMinutesThenTheNextShows() {
         let days = snapshot([schedule(day: 1)])
-        let dhuhr = state(.current, .dhuhr, local(day: 1, 12), iqama: local(day: 1, 12, 20))
-        let asr = state(.next, .asr, local(day: 1, 15, 30), iqama: local(day: 1, 15, 50))
+        let dhuhr = state(.current, .dhuhr, local(day: 1, 12), iqama: local(day: 1, 12, 20), since: local(day: 1, 12))
+        let asr = state(.next, .asr, local(day: 1, 15, 30), iqama: local(day: 1, 15, 50), since: local(day: 1, 12, 30))
         #expect(days.state(at: local(day: 1, 11, 59)) == state(.next, .dhuhr, local(day: 1, 12),
-                                                               iqama: local(day: 1, 12, 20)))
+                                                               iqama: local(day: 1, 12, 20),
+                                                               since: local(day: 1, 4, 30)))
         #expect(days.state(at: local(day: 1, 12)) == dhuhr)
         #expect(days.state(at: local(day: 1, 12, 29)) == dhuhr)
         #expect(days.state(at: local(day: 1, 12, 30)) == asr)
@@ -74,9 +75,10 @@ struct PrayerWidgetTests {
     @Test func anIshaAfterMidnightIsCurrentFromYesterday() {
         let days = snapshot([schedule(day: 1, isha: (23, 50)), schedule(day: 2)])
         #expect(days.state(at: local(day: 2, 0, 10))
-                == state(.current, .isha, local(day: 1, 23, 50), iqama: local(day: 2, 0, 10)))
+                == state(.current, .isha, local(day: 1, 23, 50), iqama: local(day: 2, 0, 10),
+                         since: local(day: 1, 23, 50)))
         #expect(days.state(at: local(day: 2, 0, 20))
-                == state(.next, .fajr, local(day: 2, 4), iqama: local(day: 2, 4, 25)))
+                == state(.next, .fajr, local(day: 2, 4), iqama: local(day: 2, 4, 25), since: local(day: 2, 0, 20)))
     }
 
     /// When the next adhan comes within the window, the later prayer replaces the earlier at once.
@@ -86,31 +88,52 @@ struct PrayerWidgetTests {
         #expect(days.state(at: local(day: 1, 18, 20))?.phase == .current)
     }
 
+    /// The ring of the snapshot's first prayer has nowhere to start.
+    @Test func theFirstPrayerHasNoStart() {
+        let days = snapshot([schedule(day: 1)])
+        #expect(days.state(at: local(day: 1, 3))?.prayer == .fajr)
+        #expect(days.state(at: local(day: 1, 3))?.start == nil)
+    }
+
     @Test func pastTheLastAdhanThereIsNoState() {
         let days = snapshot([schedule(day: 1)])
         #expect(days.state(at: local(day: 1, 20)) == nil)
         #expect(snapshot([]).state(at: local(day: 1, 12)) == nil)
     }
 
-    @Test func theTimelineChangesAtEachAdhanAndWindowEnd() {
+    /// The current prayer's iqama gets an entry of its own: the widget stops counting down to it there.
+    @Test func theTimelineChangesAtEachAdhanIqamaAndWindowEnd() {
         let entries = snapshot([schedule(day: 1)]).timeline(from: local(day: 1, 11), limit: 100)
-        #expect(entries.map(\.date) == [local(day: 1, 11), local(day: 1, 12), local(day: 1, 12, 30),
-                                        local(day: 1, 15, 30), local(day: 1, 16), local(day: 1, 18),
-                                        local(day: 1, 18, 30), local(day: 1, 19, 30), local(day: 1, 20)])
+        #expect(entries.map(\.date) == [local(day: 1, 11), local(day: 1, 12), local(day: 1, 12, 20),
+                                        local(day: 1, 12, 30), local(day: 1, 15, 30), local(day: 1, 15, 50),
+                                        local(day: 1, 16), local(day: 1, 18), local(day: 1, 18, 10),
+                                        local(day: 1, 18, 30), local(day: 1, 19, 30), local(day: 1, 19, 50),
+                                        local(day: 1, 20)])
         #expect(entries.map { $0.state.map { "\($0.phase.rawValue) \($0.prayer.rawValue)" } ?? "none" }
-                == ["next dhuhr", "current dhuhr", "next asr", "current asr", "next maghrib", "current maghrib",
-                    "next isha", "current isha", "none"])
+                == ["next dhuhr", "current dhuhr", "current dhuhr", "next asr", "current asr", "current asr",
+                    "next maghrib", "current maghrib", "current maghrib", "next isha", "current isha",
+                    "current isha", "none"])
+    }
+
+    /// An iqama after the window ends falls on the next prayer's countdown, and a zero delay has no iqama: neither
+    /// adds an entry.
+    @Test func anIqamaOutsideTheWindowAddsNoEntry() {
+        let entries = snapshot([schedule(day: 1)], delays: IqamaDelays(dhuhr: 45, asr: 0))
+            .timeline(from: local(day: 1, 11), limit: 6)
+        #expect(entries.map(\.date) == [local(day: 1, 11), local(day: 1, 12), local(day: 1, 12, 30),
+                                        local(day: 1, 15, 30), local(day: 1, 16), local(day: 1, 18)])
     }
 
     @Test func theTimelineStopsAtItsLimit() {
         let entries = snapshot([schedule(day: 1), schedule(day: 2)]).timeline(from: local(day: 1, 11), limit: 3)
-        #expect(entries.map(\.date) == [local(day: 1, 11), local(day: 1, 12), local(day: 1, 12, 30)])
+        #expect(entries.map(\.date) == [local(day: 1, 11), local(day: 1, 12), local(day: 1, 12, 20)])
     }
 
-    /// Starting inside a window: the first entry is the current prayer, the next is the end of its window.
+    /// Starting inside a window after the iqama: the first entry is the current prayer, the next is the end of its
+    /// window.
     @Test func theTimelineStartsWithTheStateAtNow() {
-        let entries = snapshot([schedule(day: 1)]).timeline(from: local(day: 1, 12, 10), limit: 2)
-        #expect(entries.map(\.date) == [local(day: 1, 12, 10), local(day: 1, 12, 30)])
+        let entries = snapshot([schedule(day: 1)]).timeline(from: local(day: 1, 12, 25), limit: 2)
+        #expect(entries.map(\.date) == [local(day: 1, 12, 25), local(day: 1, 12, 30)])
         #expect(entries.first?.state?.phase == .current)
     }
 

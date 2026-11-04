@@ -67,24 +67,30 @@ public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
     /// At `instant`: the prayer whose adhan sounded less than ``currentWindow`` ago, the latest if two did, else the
     /// next adhan. `nil` when the snapshot has no adhan left.
     public func state(at instant: Date) -> PrayerWidgetState? {
-        if let current = prayers.last(where: { $0.adhan <= instant }),
-           instant < current.adhan.addingTimeInterval(Self.currentWindow) {
-            return PrayerWidgetState(phase: .current, prayer: current)
+        let latest = prayers.last { $0.adhan <= instant }
+        if let current = latest, instant < current.adhan.addingTimeInterval(Self.currentWindow) {
+            return PrayerWidgetState(phase: .current, prayer: current, start: current.adhan)
         }
-        return prayers.first { $0.adhan > instant }.map { PrayerWidgetState(phase: .next, prayer: $0) }
+        return prayers.first { $0.adhan > instant }.map {
+            PrayerWidgetState(phase: .next, prayer: $0, start: latest?.adhan.addingTimeInterval(Self.currentWindow))
+        }
     }
 
     /// The widget's timeline from `now`: the state at `now`, then one entry at each instant the state changes, an
-    /// adhan or the end of a window, up to `limit` entries. When the snapshot runs out, its last entry has no state.
+    /// adhan or the end of a window, and one at the current prayer's iqama, where the widget stops counting down to
+    /// it; up to `limit` entries. When the snapshot runs out, its last entry has no state.
     public func timeline(from now: Date, limit: Int) -> [PrayerWidgetEntry] {
         var entries = [PrayerWidgetEntry(date: now, state: state(at: now))]
-        let changes = Set(prayers.flatMap { [$0.adhan, $0.adhan.addingTimeInterval(Self.currentWindow)] })
-            .filter { $0 > now }
-            .sorted()
+        let instants = prayers.flatMap { prayer in
+            [prayer.adhan, prayer.adhan.addingTimeInterval(Self.currentWindow)] + [prayer.iqama].compactMap { $0 }
+        }
+        let changes = Set(instants).filter { $0 > now }.sorted()
         for change in changes {
             guard entries.count < limit, let last = entries.last, last.state != nil else { break }
             let state = state(at: change)
-            if state != last.state { entries.append(PrayerWidgetEntry(date: change, state: state)) }
+            if state != last.state || (state?.phase == .current && state?.iqama == change) {
+                entries.append(PrayerWidgetEntry(date: change, state: state))
+            }
         }
         return entries
     }
@@ -103,16 +109,20 @@ public struct PrayerWidgetState: Equatable, Sendable {
     public let prayer: PrayerTime
     public let adhan: Date
     public let iqama: Date?
+    /// When the widget began showing this: the adhan of a current prayer, and for the next one the end of the window
+    /// before it. `nil` when the snapshot holds no earlier prayer. The widget's ring drains from it.
+    public let start: Date?
 
-    public init(phase: Phase, prayer: PrayerTime, adhan: Date, iqama: Date?) {
+    public init(phase: Phase, prayer: PrayerTime, adhan: Date, iqama: Date?, start: Date? = nil) {
         self.phase = phase
         self.prayer = prayer
         self.adhan = adhan
         self.iqama = iqama
+        self.start = start
     }
 
-    init(phase: Phase, prayer: PrayerWidgetSnapshot.Prayer) {
-        self.init(phase: phase, prayer: prayer.prayer, adhan: prayer.adhan, iqama: prayer.iqama)
+    init(phase: Phase, prayer: PrayerWidgetSnapshot.Prayer, start: Date?) {
+        self.init(phase: phase, prayer: prayer.prayer, adhan: prayer.adhan, iqama: prayer.iqama, start: start)
     }
 }
 
