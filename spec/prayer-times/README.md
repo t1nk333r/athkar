@@ -22,8 +22,8 @@ func schedule(on localDate: String, at coordinates: GeoCoordinates, in zone: Tim
 
 `PrayerSchedule` holds `localDate`, `zone`, six optional UTC instants (`fajr`, `sunrise`, `dhuhr`, `asr`, `maghrib`,
 `isha`), `asrClamped` and `yellowing` (see [The yellowing](#the-yellowing)). `CalculationSettings` is `method`,
-`asrSchool`, `highLatitudeRule`, `adjustments` (whole minutes per time) and `hijriOffset` (days, display only). Each
-field is its own `settings` key; see [`../schema.md`](../schema.md). Reading the profile writes nothing. The app
+`asrSchool`, `highLatitudeRule`, `adjustments` (whole minutes per time) and `hijriOffset` (days added to the shown
+Hijri date, which with Umm al-Qura also moves [Ramadan's Isha](#ramadan-isha)). Each field is its own `settings` key; see [`../schema.md`](../schema.md). Reading the profile writes nothing. The app
 writes a field's key when the user chooses it, even if the choice equals the default, so a later PWA import cannot
 replace an explicit choice.
 
@@ -67,7 +67,7 @@ Adhan adds on top of the computed time.
 | Setting value | Adhan preset | Fajr | Isha | Maghrib | Preset offsets | Rounding |
 | --- | --- | --- | --- | --- | --- | --- |
 | `mwl` | `muslimWorldLeague` | 18° | 17° | sunset | Dhuhr +1 | none |
-| `umm-al-qura` | `ummAlQura` | 18.5° | Maghrib + 90 min (Adhan does not add Ramadan's +30; use the Isha adjustment) | sunset | none | none |
+| `umm-al-qura` | `ummAlQura` | 18.5° | Maghrib + 90 min; + 120 min in Ramadan (the port's rule, see [Ramadan Isha](#ramadan-isha)) | sunset | none | none |
 | `egyptian` | `egyptian` | 19.5° | 17.5° | sunset | Dhuhr +1 | none |
 | `karachi` | `karachi` | 18° | 18° | sunset | Dhuhr +1 | none |
 | `north-america` | `northAmerica` | 15° | 15° | sunset | Dhuhr +1 | none |
@@ -90,7 +90,8 @@ twilight, and above 55° it uses 1/7 of the night.
   Adhan to about 2 s at these places.
 - **Offsets.** Each preset's sunrise, Dhuhr, Asr and Maghrib offsets are checked exactly, to the second, against
   the Umm al-Qura schedule, which has no offsets. That baseline itself matches the reference within 10 s.
-- **Isha interval.** Isha is exactly Maghrib + 90 min for `umm-al-qura` and `qatar`.
+- **Isha interval.** Isha is exactly Maghrib + 90 min for `umm-al-qura` and `qatar` on that date, which is not in
+  Ramadan.
 - **Moonsighting Committee.** Fajr and Isha are checked to within 10 s of an independent computation of Khalid
   Shaukat's seasonal twilight with shafaq `general`, combined with the 18° times (Fajr the later of the two, Isha
   the earlier). At Istanbul the seasonal value decides both. Switching the adapter to `.ahmer` or `.abyad` fails:
@@ -107,6 +108,22 @@ While the user has not chosen a method, the app calculates with Umm al-Qura, and
 the next Fajr (`UnsetMethodDefaultTests`). MWL's angle-based Isha is bounded. The settings key's default, and what a
 backup exports while the method is unset, stay `mwl`, the PWAs' default. A method the user picks, including the one
 the app was already using, is stored and always wins.
+
+## Ramadan Isha
+
+The official Umm al-Qura calendar puts Isha 120 minutes after Maghrib in Ramadan instead of 90. Adhan documents the
+extra 30 minutes in `METHODS.md` ("you should add a +30 minute custom adjustment for Isha during Ramadan") but
+leaves it to the caller, so the port applies it (decided on #10, 2026-11-04). With `umm-al-qura`, whether the
+user chose it or it is the unset default, Isha is Maghrib + 120 min on each civil day whose noon falls in Ramadan in
+the Umm al-Qura calendar, after moving the date by `hijriOffset` days. That is the Hijri date the app shows, so a
+user who corrects the date for a local sighting moves Ramadan with it. The user's Isha adjustment still applies on
+top. No other method changes: `qatar` keeps 90 minutes, because no Qatari source states a Ramadan rule.
+
+In that calendar Ramadan 1448 runs from 2027-02-08 to 2027-03-08. `UmmAlQuraRamadanTests.swift` checks both ends,
+the offset in both directions, that the other five times do not move, the Isha adjustment, and four other methods.
+
+Open: whether the authority also delays Isha on the night of the sighting, the evening before the first day. The
+rule here follows the civil day. #59's Ramadan spot rows decide it.
 
 ## Default high-latitude rule: twilight angle
 
@@ -301,10 +318,14 @@ can misplace the double shadow as it misplaces Asr. The PWA has no yellowing, so
 
 ## P2: authority tables (pending)
 
-This section is blocked until the decision in §11.6 settles launch regions and their published tables. No
-reference tables have been chosen or invented. When §11.6 is decided, add each region's table here with its source
-and edition, compare all six times (2 min; 3 min for Fajr and Isha), and look for systematic offsets. Published
-tables are usually rounded to the minute, and the port returns seconds, so compare after the table's own rounding.
+Decided on #10 (2026-11-04): every region in `research/prayer-authority-tables.md` is a reference. They are Saudi
+Arabia, Egypt, Qatar, Kuwait, the UAE, Bahrain, Oman, Turkey and North America. No authority states a reuse licence
+or publishes a machine-readable table. Each region therefore gets a handful of cited spot rows: a few cities on
+dates across the seasons, typed from the authority's own page with its URL and read date. Where no official page
+is reachable, record the gap and the HTTP outcome, not a substitute source. #59 collects the rows. Add each region's
+rows here with source and read date, compare all six times (2 min; 3 min for Fajr and Isha), and look for
+systematic offsets. Published tables are usually rounded to the minute, and the port returns seconds, so compare
+after the table's own rounding.
 
 ## P3: edge cases
 
