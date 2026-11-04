@@ -145,6 +145,8 @@ UI_BLACK_BOX = {
                     APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", *SETTINGS],
     "HomePrayerRowUITests": [APP + "Screens/HomePrayerRow.swift", *SETTINGS, *PRAYER],
     "LaunchTests": [APP + "Screens/HomePrayerRow.swift", APP + "Prayer/PrayerTimesModel.swift"],
+    # The أخرى list's layouts; it opens «مسبحة» from the grid.
+    "OtherSectionsUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Tasbih/*.swift"],
     "PrayerTimesUITests": [APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "PrayerTrackerUITests": [APP + "Tracker/*.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "QiblaUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Qibla/*.swift", *PRAYER],
