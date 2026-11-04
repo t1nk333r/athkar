@@ -49,8 +49,9 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # «أيقونة التطبيق» in الإعدادات (tools/app-icons.py); Xcode lists it under CFBundleAlternateIcons.
-        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: AppIconHorizon
+        # «أيقونة التطبيق» in الإعدادات (tools/app-icons.py); Xcode lists them under CFBundleAlternateIcons.
+        # AppIconLetter is a copy of AppIcon, so «الباء» never asks iOS to restore the primary icon.
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: AppIconLetter AppIconHorizon
     dependencies:
       - package: AthkarCore
       - target: AthkarWidget

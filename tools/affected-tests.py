@@ -131,6 +131,8 @@ UI_BLACK_BOX = {
     "*": [APP + "AthkarApp.swift", APP + "App/*.swift", APP + "Content/BundledContent.swift", APP + "Design/*.swift",
           APP + "Screens/HomeView.swift", APP + "Deck/DeckView.swift", APP + "Deck/DeckCardView.swift",
           APP + "Deck/DeckModel.swift", APP + "Deck/AdhkarDeckModel.swift", *BUNDLED_PACKS],
+    # الأفق and back to الباء in «أيقونة التطبيق». The icon sets are in Assets.xcassets, which every UI test reaches.
+    "AppIconUITests": [*SETTINGS],
     "AutoFitUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", *SETTINGS, "fonts/*.ttf"],
     "DeckIndexUITests": [APP + "Deck/DeckIndexView.swift", APP + "Deck/RuqyahDeckModel.swift",
                          APP + "Deck/SectionChips.swift", APP + "Screens/DeckDialogs.swift", *SETTINGS],

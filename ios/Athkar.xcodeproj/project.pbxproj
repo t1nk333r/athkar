@@ -66,6 +66,7 @@
 		94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */; };
 		99BA870781EAC9D1CEAE720A /* CityDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3323EC2D7C5109C2B7FFB57A /* CityDirectory.swift */; };
 		9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */; };
+		9BED9F3610BD83F8DC04E597 /* AppIconUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD9567A233D33470F12B70E /* AppIconUITests.swift */; };
 		9C1E61C79829055E1DA38114 /* AboutReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A82188372947D0F57D1F36 /* AboutReport.swift */; };
 		9C5098C24A1CC7340C43A1CF /* ReminderCompletionInputsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0BB3239231B360B479C37A /* ReminderCompletionInputsTests.swift */; };
 		9EDEC259F2ED5D842637F1BE /* TransferImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101F1AACC34A0C56BEE54F38 /* TransferImportView.swift */; };
@@ -184,6 +185,7 @@
 		4CA5829C92066B2E935FB84C /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
 		4EF659CAC977464A8BC800B7 /* AppIconSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconSection.swift; sourceTree = "<group>"; };
+		4FD9567A233D33470F12B70E /* AppIconUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconUITests.swift; sourceTree = "<group>"; };
 		501E35E5E819164510431A3C /* DeviceLocationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocationTests.swift; sourceTree = "<group>"; };
 		51E500B0D3D703EAE93C102C /* ReminderNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderNotifications.swift; sourceTree = "<group>"; };
 		51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRowUITests.swift; sourceTree = "<group>"; };
@@ -521,6 +523,7 @@
 		C3F44EC7B0E83798DB90A34E /* AthkarUITests */ = {
 			isa = PBXGroup;
 			children = (
+				4FD9567A233D33470F12B70E /* AppIconUITests.swift */,
 				B88E3BD6816278BEE77D9409 /* AutoFitUITests.swift */,
 				D80C8721B3117918112288FE /* DeckIndexUITests.swift */,
 				407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */,
@@ -811,6 +814,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9BED9F3610BD83F8DC04E597 /* AppIconUITests.swift in Sources */,
 				AC0CBB171C4E5A5B9BC88071 /* AutoFitUITests.swift in Sources */,
 				A8C219DC192084B6457932D9 /* DeckIndexUITests.swift in Sources */,
 				4E91716F1AF0790792D14443 /* DeckRegressionUITests.swift in Sources */,
@@ -1069,7 +1073,7 @@
 		936E46F5108CE657B8BFC335 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIconHorizon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconLetter AppIconHorizon";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Athkar/Info.plist;
@@ -1115,7 +1119,7 @@
 		CBD0BE639F43C832D44020D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = AppIconHorizon;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIconLetter AppIconHorizon";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = Athkar/Info.plist;
