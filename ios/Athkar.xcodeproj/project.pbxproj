@@ -87,6 +87,7 @@
 		BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2113811648BD4F3F09BDC /* ReadingMetrics.swift */; };
 		C21E8EBF6910E697C635F044 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B714704C81ED5A22715203DD /* DeckView.swift */; };
 		C27845DD0E8A137595283AD0 /* AppIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2C76CA9088A9C99CF035EF0 /* AppIconTests.swift */; };
+		C53EEFBD269E882B740BA497 /* OtherSectionsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A15815093398A341BF28977 /* OtherSectionsUITests.swift */; };
 		C632428828E12FEBA8A48402 /* PrayerWidgetStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FCBB14F3662F48DB821753 /* PrayerWidgetStoreTests.swift */; };
 		C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */; };
 		CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */; };
@@ -178,6 +179,7 @@
 		407BB19D7AB1166FDC9D2461 /* DeckRegressionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRegressionUITests.swift; sourceTree = "<group>"; };
 		43802A54E228E374EADE3ACE /* PrayerTimesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesView.swift; sourceTree = "<group>"; };
 		453EC69D86D4F76A4CD348B0 /* OneShotLocationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OneShotLocationRequest.swift; sourceTree = "<group>"; };
+		4A15815093398A341BF28977 /* OtherSectionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtherSectionsUITests.swift; sourceTree = "<group>"; };
 		4BFE3F2EBE820080C1D234D8 /* PrayerWidgetPublisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerWidgetPublisher.swift; sourceTree = "<group>"; };
 		4CA5829C92066B2E935FB84C /* DiagnosticsReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsReport.swift; sourceTree = "<group>"; };
 		4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthkarApp.swift; sourceTree = "<group>"; };
@@ -527,6 +529,7 @@
 				51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */,
 				CDFAF5DB1A7749351672C27D /* LaunchTests.swift */,
 				8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */,
+				4A15815093398A341BF28977 /* OtherSectionsUITests.swift */,
 				808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */,
 				F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */,
 				D150FDEA907C03DC351639CA /* QiblaUITests.swift */,
@@ -816,6 +819,7 @@
 				94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */,
 				2CE3D21BF31415C78FAFFF22 /* LaunchTests.swift in Sources */,
 				CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */,
+				C53EEFBD269E882B740BA497 /* OtherSectionsUITests.swift in Sources */,
 				A1612B587F6D98670C98278D /* PrayerTimesUITests.swift in Sources */,
 				C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */,
 				393E5863E65F5FB131563FA4 /* QiblaUITests.swift in Sources */,
