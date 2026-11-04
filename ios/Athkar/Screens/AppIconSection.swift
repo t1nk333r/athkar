@@ -68,8 +68,7 @@ struct AppIconSection: View {
     /// The icon in the page's light or dark colours, picked by the palette's scheme: the sheet's own `colorScheme`
     /// stays light when the theme turns dark with الإعدادات open.
     private func preview(_ choice: AppIconChoice) -> Image {
-        let traits = UITraitCollection(userInterfaceStyle: palette.colorScheme == .dark ? .dark : .light)
-        return UIImage(named: choice.preview, in: nil, compatibleWith: traits).map(Image.init(uiImage:))
+        choice.previewImage(dark: palette.colorScheme == .dark).map { Image(decorative: $0, scale: 3) }
             ?? Image(choice.preview)
     }
 }

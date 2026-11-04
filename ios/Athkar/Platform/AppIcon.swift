@@ -33,6 +33,14 @@ enum AppIconChoice: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The preview's bitmap in the app's light or dark colours. A bitmap and not an asset image: SwiftUI resolves an
+    /// asset image again in the sheet's own colour scheme, which stays light when the theme turns dark with الإعدادات
+    /// open.
+    @MainActor func previewImage(dark: Bool) -> CGImage? {
+        UIImage(named: preview, in: nil, compatibleWith: UITraitCollection(userInterfaceStyle: dark ? .dark : .light))?
+            .cgImage
+    }
+
     /// An unknown name, such as one a later version removed, reads as the primary icon.
     init(alternateIconName: String?) {
         self = Self.allCases.first { $0.alternateIconName == alternateIconName } ?? .letter
