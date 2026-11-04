@@ -11,9 +11,10 @@ enum AppIconChoice: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    /// The icon set's name for `setAlternateIconName`. Never nil: on iOS 26.1 `setAlternateIconName(nil)` can leave the
-    /// alternate icon on the home screen (https://developer.apple.com/forums/thread/809474), and naming the primary
-    /// icon instead can stop the call working until the phone restarts, so «الباء» is its own alternate copy.
+    /// The icon set's name for `setAlternateIconName`. Never nil: from iOS 26.1, and still on 26.6,
+    /// `setAlternateIconName(nil)` can leave the alternate icon on the home screen
+    /// (https://developer.apple.com/forums/thread/809474). Naming the primary icon instead can stop the call working
+    /// until the phone restarts, so «الباء» is its own alternate copy.
     var alternateIconName: String {
         switch self {
         case .letter: "AppIconLetter"

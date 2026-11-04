@@ -11,8 +11,8 @@ appearance; iOS 17 shows the light one):
 - AppIconHorizon, the alternate: a half sun in the accent on an ink horizon, for بكرة وأصيلا,
   morning and evening.
 - AppIconLetter, an alternate copy of AppIcon. «الباء» in الإعدادات switches to it instead of back
-  to the primary icon: on iOS 26.1 `setAlternateIconName(nil)` can leave the alternate icon on the
-  home screen (https://developer.apple.com/forums/thread/809474).
+  to the primary icon: from iOS 26.1, and still on 26.6, `setAlternateIconName(nil)` can leave the
+  alternate icon on the home screen (https://developer.apple.com/forums/thread/809474).
 
 The colours are the palette's (ios/Athkar/Design/Palette.swift). The light icon is ink on paper.
 The dark and tinted icons have no background, so iOS draws its own behind them: the dark one in
