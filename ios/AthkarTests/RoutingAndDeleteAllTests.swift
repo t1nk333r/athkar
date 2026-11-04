@@ -28,10 +28,28 @@ final class RoutingAndDeleteAllTests: XCTestCase {
     private func makeApp(_ support: NativeTestSupport, center: RecordingReminderCenter = RecordingReminderCenter(),
                          diagnostics: MemoryDiagnosticsStore = MemoryDiagnosticsStore(),
                          widget: RecordingPrayerWidget = RecordingPrayerWidget(),
-                         clock: @escaping () -> Date = { Date() }) throws -> AppModel {
+                         clock: @escaping () -> Date = { Date() }, flags: UserDefaults? = nil) throws -> AppModel {
         try AppModel(database: support.database, content: support.content, today: support.today,
                      notifications: center, reminderClock: clock, diagnosticsStore: diagnostics, widget: widget,
-                     flags: flags())
+                     flags: flags ?? self.flags())
+    }
+
+    // MARK: The أخرى layout
+
+    /// The أخرى layout starts as the list and is kept for the next launch; a value the app does not know reads as
+    /// the list.
+    @MainActor
+    func testOtherLayoutIsKeptForTheNextLaunch() throws {
+        let support = try NativeTestSupport()
+        let flags = flags()
+        let first = try makeApp(support, flags: flags)
+        XCTAssertEqual(first.otherLayout, .list)
+        first.otherLayout = .grid
+        XCTAssertEqual(flags.string(forKey: AppModel.otherLayoutKey), "grid")
+        XCTAssertEqual(try makeApp(support, flags: flags).otherLayout, .grid)
+        flags.set("tiles", forKey: AppModel.otherLayoutKey)
+        XCTAssertEqual(try makeApp(support, flags: flags).otherLayout, .list)
+        XCTAssertNil(first.failure)
     }
 
     // MARK: Routes
@@ -114,7 +132,7 @@ final class RoutingAndDeleteAllTests: XCTestCase {
 
     /// After a restore, a recorded prayer and a planned week of reminders, «حذف كل البيانات» leaves no user row, no
     /// pending request or banner of the app's, no diagnostics time, no times for the lock-screen widget, every section
-    /// on its defaults, and the import offer back. The installed content versions stay.
+    /// on its defaults, the import offer back and the أخرى list a list again. The installed content versions stay.
     @MainActor
     func testDeleteAllLeavesNoRowsAndNothingPending() async throws {
         let riyadh = TimeZone(identifier: "Asia/Riyadh")!
@@ -132,8 +150,9 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         let center = RecordingReminderCenter()
         let diagnostics = MemoryDiagnosticsStore()
         let widget = RecordingPrayerWidget()
+        let flags = flags()
         let app = try makeApp(support, center: center, diagnostics: diagnostics, widget: widget,
-                              clock: { midnight.addingTimeInterval(30 * 60) })
+                              clock: { midnight.addingTimeInterval(30 * 60) }, flags: flags)
         XCTAssertNotNil(widget.published.last ?? nil, "the widget has the location's times")
         XCTAssertFalse(app.offersWebImport, "a launch with user data closes the offer")
         XCTAssertTrue(app.tracker.quickLog(PrayerOccurrence(date: app.tracker.today, prayer: .fajr)))
@@ -145,6 +164,7 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         center.delivered = [DeliveredReminder(id: "prayer.isha.\(today)", ruleId: "prayer_isha", date: Date())]
         app.tab = .other
         app.otherSection = .calendar
+        app.otherLayout = .grid
 
         let deleted = await app.deleteAllData()
         XCTAssertTrue(deleted)
@@ -167,6 +187,8 @@ final class RoutingAndDeleteAllTests: XCTestCase {
         XCTAssertEqual(app.tab, .morning)
         XCTAssertNil(app.otherSection)
         XCTAssertTrue(app.offersWebImport)
+        XCTAssertEqual(app.otherLayout, .list)
+        XCTAssertNil(flags.string(forKey: AppModel.otherLayoutKey))
         XCTAssertNil(app.failure)
 
         // A replan afterwards still plans nothing.

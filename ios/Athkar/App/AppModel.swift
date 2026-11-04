@@ -50,6 +50,11 @@ final class AppModel {
     }
     /// The أخرى tab is showing its list of sections.
     var showsOtherList: Bool { tab == .other && otherSection == nil }
+    /// How the أخرى list lays out its sections, chosen in its «⋯» menu. Kept in `flags` on this device: a backup
+    /// leaves it out.
+    var otherLayout: OtherLayout {
+        didSet { flags.set(otherLayout.rawValue, forKey: Self.otherLayoutKey) }
+    }
     /// A deck is on screen (not the أخرى list, nor a section without a deck such as أوقات الصلاة).
     var showsDeck: Bool { tab != .other || otherSection?.deck != nil }
     /// «مسبحة» is on screen.
@@ -83,8 +88,8 @@ final class AppModel {
     ///   - reminderClock: the reminders' clock, which a test may fix.
     ///   - diagnosticsStore: where the reminder diagnostics' times are kept; `UserDefaults` unless a test supplies one.
     ///   - widget: where the lock-screen widget's times go; the keychain unless a test supplies a recorder.
-    ///   - flags: where the app's own flags are kept (the import offer); `UserDefaults.standard` unless a test
-    ///     supplies one.
+    ///   - flags: where the app's own flags are kept (the import offer, the أخرى layout); `UserDefaults.standard`
+    ///     unless a test supplies one.
     init(database: AppDatabase, content: BundledContent, today: String,
          notifications: (any ReminderNotificationCenter)? = nil,
          reminderClock: @escaping () -> Date = { Date() },
@@ -127,6 +132,7 @@ final class AppModel {
             flags.set(true, forKey: Self.importOfferClosedKey)
         }
         offersWebImport = !flags.bool(forKey: Self.importOfferClosedKey)
+        otherLayout = flags.string(forKey: Self.otherLayoutKey).flatMap(OtherLayout.init(rawValue:)) ?? .list
         reportFailure = { [weak self] error in
             self?.failure = "تعذّر حفظ التغيير على هذا الجهاز. (\(error.localizedDescription))"
         }
@@ -210,6 +216,7 @@ final class AppModel {
                 try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
             }
             UserDefaults.standard.removeObject(forKey: importOfferClosedKey)
+            UserDefaults.standard.removeObject(forKey: otherLayoutKey)
         }
         #endif
         let database = try AppDatabase.onDisk(at: url)
@@ -297,6 +304,7 @@ final class AppModel {
     }
 
     static let importOfferClosedKey = "onboarding.webImportOfferClosed"
+    static let otherLayoutKey = "display.otherLayout"
 
     /// Reads back everything from the tables, after an import or «حذف كل البيانات»: settings (the long-adhkar order
     /// included), the sessions of the day on screen, the tracker, the location and prayer calculation, and the
@@ -322,8 +330,8 @@ final class AppModel {
 
     /// «حذف كل البيانات» (spec/schema.md "Delete all data"): every user table is emptied in one transaction, then
     /// every model reads the empty tables, the reminders are replanned (nothing is planned) and every pending and
-    /// delivered notification, the diagnostics times and the import offer's flag are cleared. Returns whether the
-    /// data was deleted; a failure is reported and changes nothing.
+    /// delivered notification, the diagnostics times, the import offer's flag and the أخرى layout are cleared.
+    /// Returns whether the data was deleted; a failure is reported and changes nothing.
     @discardableResult
     func deleteAllData() async -> Bool {
         do {
@@ -334,6 +342,8 @@ final class AppModel {
         }
         flags.removeObject(forKey: Self.importOfferClosedKey)
         offersWebImport = true
+        otherLayout = .list
+        flags.removeObject(forKey: Self.otherLayoutKey)
         settings.reload()
         adhkar.reload(longAdhkarLast: settings.longOrder == .last)
         ruqyah.reload()

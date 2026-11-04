@@ -2,7 +2,7 @@
 
     python3 tools/app-icons.py
 
-Two icons, each in light, dark and tinted versions (iOS 18 picks one from the home screen's
+Two drawings, each in light, dark and tinted versions (iOS 18 picks one from the home screen's
 appearance; iOS 17 shows the light one):
 
 - AppIcon, the default: the letter ب from KFGQPC Uthman Taha Naskh, the face the adhkar are set
@@ -10,6 +10,9 @@ appearance; iOS 17 shows the light one):
   beh (U+066E) and the dot, so each takes its own colour.
 - AppIconHorizon, the alternate: a half sun in the accent on an ink horizon, for بكرة وأصيلا,
   morning and evening.
+- AppIconLetter, an alternate copy of AppIcon. «الباء» in الإعدادات switches to it instead of back
+  to the primary icon: from iOS 26.1, and still on 26.6, `setAlternateIconName(nil)` can leave the
+  alternate icon on the home screen (https://developer.apple.com/forums/thread/809474).
 
 The colours are the palette's (ios/Athkar/Design/Palette.swift). The light icon is ink on paper.
 The dark and tinted icons have no background, so iOS draws its own behind them: the dark one in
@@ -134,8 +137,10 @@ def main() -> None:
     dark_preview = (DARK_PREVIEW_BACKGROUND, *DARK[1:])
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
-        icon_set("AppIcon", {"any": letter(LIGHT, body, dot), "dark": letter(DARK, body, dot),
-                             "tinted": letter(TINTED, body, dot)}, work)
+        letters = {"any": letter(LIGHT, body, dot), "dark": letter(DARK, body, dot),
+                   "tinted": letter(TINTED, body, dot)}
+        icon_set("AppIcon", letters, work)
+        icon_set("AppIconLetter", letters, work)
         icon_set("AppIconHorizon", {"any": horizon(LIGHT), "dark": horizon(DARK), "tinted": horizon(TINTED)}, work)
         preview_set("IconChoiceLetter", letter(LIGHT, body, dot), letter(dark_preview, body, dot), work)
         preview_set("IconChoiceHorizon", horizon(LIGHT), horizon(dark_preview), work)

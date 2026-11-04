@@ -2,7 +2,7 @@ import AthkarCore
 import SwiftUI
 
 /// The أذكار screen: header (the prayer row or the title), the الصباح / المساء / أخرى switch, the session summary with
-/// the «⋯» menu (إعادة, الإعدادات) and the
+/// the «⋯» menu (the أخرى layout, إعادة, الإعدادات) and the
 /// deck; the أخرى tab lists its sections first (``OtherSectionsView``). Laid out like the PWAs' phone layout (`max-width: 45rem` portrait), which fits one screen without
 /// scrolling.
 struct HomeView: View {
@@ -191,9 +191,18 @@ struct HomeView: View {
         .padding(.bottom, 8.8)
     }
 
-    /// «⋯»: إعادة (the scope picker for the deck or «مسبحة» on screen) and الإعدادات.
+    /// «⋯»: on the أخرى list, «قائمة» or «شبكة» for its layout; then إعادة (the scope picker for the deck or «مسبحة»
+    /// on screen) and الإعدادات.
     private func moreMenu(palette: Palette) -> some View {
         Menu {
+            if app.showsOtherList {
+                Picker("عرض الأقسام", selection: Binding(get: { app.otherLayout }, set: { app.otherLayout = $0 })) {
+                    ForEach(OtherLayout.allCases) { layout in
+                        Label(layout.title, systemImage: layout.systemImage).tag(layout)
+                    }
+                }
+                .pickerStyle(.inline)
+            }
             Button {
                 app.ensureCurrentDay()
                 if app.resettable?.canReset == true { showsResetScope = true }
@@ -215,7 +224,7 @@ struct HomeView: View {
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
-        .accessibilityLabel("المزيد: إعادة والإعدادات")
+        .accessibilityLabel(app.showsOtherList ? "المزيد: العرض وإعادة والإعدادات" : "المزيد: إعادة والإعدادات")
         .accessibilityIdentifier("header.more")
     }
 

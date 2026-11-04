@@ -589,8 +589,9 @@ Deleting them would only make the next launch write the same rows.
 
 Outside the database, the app then removes every pending and delivered notification it owns and its `UserDefaults`
 keys, and it replans reminders, which finds no rule and schedules nothing. The `UserDefaults` keys are the
-diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`, and
-`onboarding.webImportOfferClosed`. Removing `onboarding.webImportOfferClosed` brings back the first-launch import
-offer of spec/routes.md. Every section reads its defaults back, and the app returns to the الصباح deck. The
-confirmation asks twice: «حذف كل البيانات؟», then «تأكيد الحذف».
+diagnostics times `diagnostics.lastReplanAt` and `diagnostics.lastBackgroundRefreshAt`,
+`onboarding.webImportOfferClosed` and `display.otherLayout`. Removing `onboarding.webImportOfferClosed` brings back
+the first-launch import offer of spec/routes.md, and removing `display.otherLayout` shows the أخرى list as a list.
+Every section reads its defaults back, and the app returns to the الصباح deck. The confirmation asks twice: «حذف كل
+البيانات؟», then «تأكيد الحذف».
 
