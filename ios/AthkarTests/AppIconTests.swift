@@ -11,10 +11,12 @@ final class AppIconTests: XCTestCase {
         let primary = try XCTUnwrap(icons["CFBundlePrimaryIcon"] as? [String: Any])
         XCTAssertEqual(primary["CFBundleIconName"] as? String, "AppIcon")
         let alternates = try XCTUnwrap(icons["CFBundleAlternateIcons"] as? [String: [String: Any]])
-        XCTAssertEqual(Set(alternates.keys), Set(AppIconChoice.allCases.compactMap(\.alternateIconName)))
+        XCTAssertEqual(Set(alternates.keys), Set(AppIconChoice.allCases.map(\.alternateIconName)))
         for (name, entry) in alternates {
             XCTAssertEqual(entry["CFBundleIconName"] as? String, name)
         }
+        // Naming the primary icon can stop `setAlternateIconName` working on iOS 26.1 until the phone restarts.
+        XCTAssertFalse(alternates.keys.contains("AppIcon"))
     }
 
     @MainActor
@@ -24,6 +26,7 @@ final class AppIconTests: XCTestCase {
             XCTAssertEqual(AppIconChoice(alternateIconName: choice.alternateIconName), choice)
             XCTAssertNotNil(UIImage(named: choice.preview), choice.preview)
         }
+        XCTAssertEqual(AppIconChoice(alternateIconName: nil), .letter, "the primary icon is the letter")
         XCTAssertEqual(AppIconChoice(alternateIconName: "AppIconRemoved"), .letter)
     }
 

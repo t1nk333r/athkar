@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// «أيقونة التطبيق» in الإعدادات: the two home-screen icons side by side, the current one ringed in the accent. Tapping
-/// the other one changes the icon at once; iOS then shows its own alert.
+/// the other one changes the icon at once; iOS then shows its own alert. A tap on the ringed letter switches to its
+/// copy unless iOS already shows the copy, which puts the letter back if iOS did not restore the primary icon.
 struct AppIconSection: View {
     @Environment(\.palette) private var palette
     @State private var current = AppIconChoice.letter
@@ -29,7 +30,7 @@ struct AppIconSection: View {
     private func option(_ choice: AppIconChoice) -> some View {
         let selected = choice == current
         return Button {
-            guard !selected, !isChanging else { return }
+            guard !choice.isApplied, !isChanging else { return }
             isChanging = true
             Task {
                 failed = !(await choice.apply())

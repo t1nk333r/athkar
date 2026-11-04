@@ -1,19 +1,22 @@
 import UIKit
 
 /// The home-screen icon, chosen in الإعدادات › «أيقونة التطبيق» (tools/app-icons.py draws both). The letter ب is the
-/// primary icon; the horizon is an alternate icon set (`ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` in
-/// ios/project.yml). iOS keeps the choice, not the settings table, and shows its own alert when the icon changes.
-/// Each icon has light, dark and tinted versions, which iOS 18 picks from the home screen's appearance.
+/// primary icon, and each choice is an alternate icon set (`ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES` in
+/// ios/project.yml): «الباء» is a copy of the primary icon. iOS keeps the choice, not the settings table, and shows
+/// its own alert when the icon changes. Each icon has light, dark and tinted versions, which iOS 18 picks from the
+/// home screen's appearance.
 enum AppIconChoice: String, CaseIterable, Identifiable {
     case letter
     case horizon
 
     var id: Self { self }
 
-    /// The icon set's name for `setAlternateIconName`, nil for the primary icon.
-    var alternateIconName: String? {
+    /// The icon set's name for `setAlternateIconName`. Never nil: on iOS 26.1 `setAlternateIconName(nil)` can leave the
+    /// alternate icon on the home screen (https://developer.apple.com/forums/thread/809474), and naming the primary
+    /// icon instead can stop the call working until the phone restarts, so «الباء» is its own alternate copy.
+    var alternateIconName: String {
         switch self {
-        case .letter: nil
+        case .letter: "AppIconLetter"
         case .horizon: "AppIconHorizon"
         }
     }
@@ -41,7 +44,8 @@ enum AppIconChoice: String, CaseIterable, Identifiable {
             .cgImage
     }
 
-    /// An unknown name, such as one a later version removed, reads as the primary icon.
+    /// No name is the primary icon, the letter. An unknown name, such as one a later version removed, reads as the
+    /// primary icon too.
     init(alternateIconName: String?) {
         self = Self.allCases.first { $0.alternateIconName == alternateIconName } ?? .letter
     }
@@ -51,6 +55,10 @@ enum AppIconChoice: String, CaseIterable, Identifiable {
     }
 
     @MainActor static var isAvailable: Bool { UIApplication.shared.supportsAlternateIcons }
+
+    /// Whether iOS reports this choice's own icon set. The letter can show as current without it: on the primary icon,
+    /// or after `setAlternateIconName(nil)` failed to restore it, so a tap still switches to its copy.
+    @MainActor var isApplied: Bool { UIApplication.shared.alternateIconName == alternateIconName }
 
     /// Returns whether iOS changed the icon.
     @MainActor func apply() async -> Bool {
