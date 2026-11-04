@@ -400,10 +400,10 @@ XcodeGen generates `ios/Athkar/Info.plist` and `ios/AthkarWidget/Info.plist`. De
 version/build bumps in `ios/project.yml` under `targets.Athkar.info.properties`, using
 `CFBundleShortVersionString` and `CFBundleVersion`, and the same values under
 `targets.AthkarWidget.info.properties`; the IPA workflow fails when they differ. Their current values are
-`1.7` and `8`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`), `1.3` (`4`), `1.4` (`5`), `1.5` (`6`) and `1.6` (`7`) were built before. Feather
-lists one entry per `CFBundleShortVersionString` and answers a publish whose short version it
-already lists with "Already present", storing nothing, so every published IPA needs a new
-short version as well as a new build number.
+`1.8` and `9`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`), `1.3` (`4`), `1.4` (`5`), `1.5` (`6`), `1.6` (`7`) and
+`1.7` (`8`) were built before. Feather lists one entry per `CFBundleShortVersionString` and answers a publish
+whose short version it already lists with "Already present", storing nothing, so every published IPA needs a
+new short version as well as a new build number.
 
 Historical evidence from 2026-10-13 predates this infrastructure: Linux Swift
 Testing ran 108 tests in 23 suites, with four session history-fixture failures.
