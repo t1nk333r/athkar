@@ -10,7 +10,7 @@ enum HomeTab: String, CaseIterable, Identifiable, Sendable {
 
 /// The sections of the أخرى tab, in list order. Those not ``isAvailable`` yet are listed as «قريبًا».
 enum OtherSection: String, CaseIterable, Identifiable, Sendable {
-    case ruqyah, suwar, tasbih, sleep, afterPrayer, waking, prayerTimes, qibla, today, calendar
+    case ruqyah, suwar, salawat, tasbih, sleep, afterPrayer, waking, prayerTimes, qibla, today, calendar
 
     var id: String { rawValue }
 
@@ -18,6 +18,7 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: "رقية القرين"
         case .suwar: "سور"
+        case .salawat: "الصلاة على النبي ﷺ"
         case .tasbih: "مسبحة"
         case .sleep: "أذكار النوم"
         case .afterPrayer: "أذكار بعد الصلاة"
@@ -34,18 +35,18 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: .ruqyah
         case .suwar: .suwar
-        case .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla, .today, .calendar: nil
+        case .salawat, .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla, .today, .calendar: nil
         }
     }
 
     /// Whether the section opens yet; the rest are listed as «قريبًا».
     var isAvailable: Bool {
-        deck != nil || [.tasbih, .prayerTimes, .qibla, .today, .calendar].contains(self)
+        deck != nil || [.salawat, .tasbih, .prayerTimes, .qibla, .today, .calendar].contains(self)
     }
 
     /// The list's two groups, in list order: what is read and counted, then what follows the prayer times.
     static let groups = [
-        OtherSectionGroup(title: "أوراد", sections: [.ruqyah, .suwar, .tasbih, .sleep, .afterPrayer, .waking]),
+        OtherSectionGroup(title: "أوراد", sections: [.ruqyah, .suwar, .salawat, .tasbih, .sleep, .afterPrayer, .waking]),
         OtherSectionGroup(title: "الصلاة", sections: [.prayerTimes, .qibla, .today, .calendar]),
     ]
 }
@@ -87,10 +88,13 @@ struct OtherSectionsView: View {
     @State private var transfer: TransferImportModel?
 
     var body: some View {
-        // Scrolls only when the rows do not fit (large text): a scroll view holds back quick taps on its rows.
-        ViewThatFits(in: .vertical) {
-            list
-            ScrollView { list }
+        // Redrawn every minute, so the next prayer and the Friday window follow the clock. Scrolls only when the rows
+        // do not fit (large text): a scroll view holds back quick taps on its rows.
+        TimelineView(.everyMinute) { _ in
+            ViewThatFits(in: .vertical) {
+                list
+                ScrollView { list }
+            }
         }
         .sheet(item: $transfer) { model in
             TransferImportView(model: model)
@@ -265,9 +269,11 @@ struct OtherSectionsView: View {
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
 
-    /// The deck's summary, today's «مسبحة» total, the next prayer, today's recorded prayers, the month, or «قريبًا».
+    /// The deck's summary, «ليلة الجمعة» or «يوم الجمعة», today's «مسبحة» total, the next prayer, today's recorded
+    /// prayers, the month, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
         if let deck { return deck.listSummary.copy }
+        if section == .salawat { return SalawatView.fridayPhase(app: app)?.title ?? "صيغتان" }
         if section == .tasbih { return app.tasbih.totalText }
         if section == .today {
             let today = app.tracker.today

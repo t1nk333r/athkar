@@ -103,6 +103,33 @@ struct SuwarContent: Decodable, Equatable, Sendable {
     var suwar: [SuwarSura]
 }
 
+/// The «الصلاة على النبي ﷺ» page (`content/salawat.v1.json`): al-Ahzab 56, the Friday virtue, then each salawat.
+struct SalawatContent: Decodable, Equatable, Sendable {
+    /// A line under a salawat or the Friday virtue, with the hadith it quotes (`reference/hadith.salawat.json`).
+    struct Note: Decodable, Equatable, Sendable {
+        var text: String
+        var hadith: String?
+    }
+
+    struct Quran: Decodable, Equatable, Sendable {
+        /// Uthmani text closed by its ayah markers ﴿n﴾, set in KFGQPC HAFS like the adhkar's Quran items.
+        var text: String
+        /// «الأحزاب ٥٦».
+        var citation: String
+    }
+
+    struct Item: Decodable, Equatable, Sendable, Identifiable {
+        var id: String
+        var title: String
+        var text: String
+        var note: Note?
+    }
+
+    var quran: Quran
+    var virtue: Note
+    var items: [Item]
+}
+
 /// The packs bundled with the app (NATIVE_APP_PLAN.md §5.4), read from the repository's `content/` at build time.
 struct BundledContent: Sendable {
     /// What the session rules read.
@@ -110,6 +137,7 @@ struct BundledContent: Sendable {
     var adhkar: SessionPeriods<[AdhkarItemContent]>
     var ruqyah: [RuqyahSegmentContent]
     var suwar: SuwarContent
+    var salawat: SalawatContent
     var manifest: ContentManifest
 
     /// The ruqyah's suras in pack order.
@@ -146,6 +174,7 @@ struct BundledContent: Sendable {
         guard let adhkarData = files["adhkar"] else { throw BundledContentError.missingPack(id: "adhkar") }
         guard let ruqyahData = files["ruqyah"] else { throw BundledContentError.missingPack(id: "ruqyah") }
         guard let suwarData = files["suwar"] else { throw BundledContentError.missingPack(id: "suwar") }
+        guard let salawatData = files["salawat"] else { throw BundledContentError.missingPack(id: "salawat") }
         let adhkar = try JSONDecoder().decode(AdhkarPack.self, from: adhkarData)
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
         let content = BundledContent(
@@ -153,6 +182,7 @@ struct BundledContent: Sendable {
             adhkar: SessionPeriods(morning: adhkar.periods.morning, evening: adhkar.periods.evening),
             ruqyah: ruqyah.segments,
             suwar: try JSONDecoder().decode(SuwarContent.self, from: suwarData),
+            salawat: try JSONDecoder().decode(SalawatContent.self, from: salawatData),
             manifest: manifest)
         try content.validate()
         return content
@@ -203,6 +233,7 @@ struct BundledContent: Sendable {
             }
         }
         guard !suwar.suwar.isEmpty else { throw BundledContentError.invalidSuwarSura(id: "") }
+        guard !salawat.items.isEmpty else { throw BundledContentError.missingContent(id: "salawat") }
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack
