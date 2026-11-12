@@ -64,6 +64,7 @@ const constants = [
   "currentIndices", "decks", "reminderTimers", "numberFormatter", "suwarStorageKey", "suwarIndices",
   "tasbihStorageKey", "tasbihPresets", "tasbihDefaultTarget", "suwarHistoryDays", "tasbihPresetById",
   "tasbihMaxTarget", "tasbihMaxCount", "tasbihMaxCustom", "tasbihMaxPhraseLength",
+  "ruqyahSuwar", "ruqyahSuraById", "ruqyahHistoryDays", "ruqyahIndices",
   // reset epochs and the transfer (spec/transfer/transfer-v1.md)
   "suwarById", "hapticsStorageKey", "textSizeStorageKey", "lineSpacingStorageKey", "longOrderStorageKey",
   "longOrderPromptStorageKey", "resetEpochDays", "backupDatePattern", "backupInstantPattern", "transferVersion",
@@ -108,6 +109,9 @@ const functions = [
   "emptySuwarState", "saveSuwarState", "suraPagesRead", "suwarHasResettableState", "resetSuwarProgress",
   "deleteSuwarHistory", "emptyTasbihState", "saveTasbihState", "refreshTasbihState", "tasbihHasResettableState",
   "resetTasbihProgress", "deleteTasbihHistory",
+  // and athkar-ruqyah-v1 (kept empty too; saveRuqyahState is stubbed, so the storage writes under test are unchanged)
+  "groupRuqyahSuwar", "emptyRuqyahState", "trimRuqyahHistory", "rollRuqyahStateToDate", "ruqyahCount",
+  "ruqyahReadings", "ruqyahHasResettableState", "ruqyahRecordedDates", "resetRuqyahProgress", "deleteRuqyahHistory",
   // athkar-tasbih-v1 load: normalisation (phrase-key migration) and rollover
   "trimDailyHistory", "stripTashkeel", "stripTasbihInvisibles", "tasbihMatchKey", "cleanTasbihPhrase", "isRealDateKey",
   "canonicalTasbihKey", "findTasbihPhrase", "normalizeTasbihState", "tasbihDayCounts",
@@ -141,6 +145,7 @@ const stubs = `
     function refreshTasbihPhraseSheet() {}
     function renderTasbih() {}
     function syncHapticArm() {}
+    function saveRuqyahState() {}
     function updateReminderControls() {}
     function applyTheme(value) { root.dataset.theme = value; }
     function applyTextSize(value) { root.dataset.textSize = value; }
@@ -156,6 +161,8 @@ let reminderPreferences = null;
 let longAdhkarLast = false;
 let suwarState = emptySuwarState("2000-01-01");
 let tasbihState = emptyTasbihState("2000-01-01");
+let ruqyahState = emptyRuqyahState("2000-01-01");
+let ruqyahSelected = "qaf";
 let tasbihStorageWorks = true;
 let transferJournal = null;
 let hapticsEnabled = true;

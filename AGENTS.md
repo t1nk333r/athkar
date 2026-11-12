@@ -22,14 +22,14 @@ bundled icons, and the KFGQPC Uthman Taha Naskh font. The app has no build step.
 
 Content packs in `content/` are the source of truth for adhkar, ruqyah, and suwar text. The `suwar.v1.json`
 pack contains al-Kahf, Ya-Sin, as-Saffat, al-Waqi'a, and al-Mulk in pages for the «سور» tab and the iOS app's
-«سور» section. When you change adhkar or suwar data in `index.html` or a pack,
-keep the data in sync. Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`.
+«سور» section. The `ruqyah.v1.json` pack is رقية القرين for the «رقية» tab and the iOS app's رقية القرين section;
+it replaced the standalone ruqyah-al-qareen PWA, whose page now hands its progress to the tab. When you change
+adhkar, ruqyah or suwar data in `index.html` or a pack, keep the data in sync. Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`.
 See `spec/README.md`.
 
 Test with `tools/test.sh`. It runs only the checks the change reaches since the merge base with `origin/main`,
 and says which and why: the content checks (`content-validate`, `content-review-test`, the
-`content-export-pwa --check` against `../ruqyah-al-qareen/content.js` or `$ATHKAR_RUQYAH_CONTENT`, the fixture
-check and backup validation; without the ruqyah PWA the content lane is incomplete), and the AthkarCore, portable
+`content-export-pwa --check`, the fixture check and backup validation), and the AthkarCore, portable
 and iOS-build lanes. Docs-only changes run nothing, and shared build inputs or unknown files run everything. `--plan` shows
 the selection without running it, `--lanes content` limits it to some lanes, and `--all` runs everything.
 `tools/affected-tests.py` holds the rules, and `tools/affected-tests-test.py` tests them. The native lanes need

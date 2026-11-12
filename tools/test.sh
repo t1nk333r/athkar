@@ -17,9 +17,7 @@
 # full. --base REF compares with REF instead of origin/main ($ATHKAR_TEST_BASE also sets it).
 # The changes include uncommitted and untracked files, but the native lanes build the clean
 # committed HEAD, so commit before running them. They take the shared and Athkar build lanes
-# without waiting; see docs/agents/ios-linux.md. ATHKAR_RUQYAH_CONTENT names the ruqyah PWA's
-# content.js for content-export-pwa (default ../ruqyah-al-qareen/content.js); without it the
-# content lane is unavailable. The last line is
+# without waiting; see docs/agents/ios-linux.md. The last line is
 #   RESULT status=pass|fail|incomplete lanes=<lane>:<outcome>,...
 # where an outcome is pass, fail, none (nothing to run), listed (app-unit and ui), busy or
 # unavailable. Exit 0, 1, or 3 when a lane with work couldn't run.
@@ -76,12 +74,6 @@ native() {
 filter_args() {
   if [ "$ATHKAR_TEST_FULL" = 1 ]; then FILTER=(--all); else FILTER=(--filter "$ATHKAR_TEST_FILTER"); fi
 }
-ruqyah_content() {
-  local path
-  for path in ${ATHKAR_RUQYAH_CONTENT:-} ../ruqyah-al-qareen/content.js; do
-    [ -f "$path" ] && { echo "$path"; return; }
-  done
-}
 # fixtures-generate.mjs rewrites spec/; it runs in a copy and must reproduce spec/ exactly.
 fixtures_check() {
   local copy status
@@ -94,22 +86,11 @@ fixtures_check() {
   rm -rf -- "$copy"
   return $status
 }
-# PARTIAL=1 when a check passed but could only partly run.
 content_check() {
   case $1 in
     content-validate) node tools/content-validate.mjs ;;
     content-review-test) node tools/content-review-test.mjs ;;
-    content-export-pwa)
-      local ruqyah
-      ruqyah=$(ruqyah_content)
-      if [ -n "$ruqyah" ]; then
-        node tools/content-export-pwa.mjs --check --ruqyah "$ruqyah"
-      else
-        echo "no ruqyah content.js (set ATHKAR_RUQYAH_CONTENT): checked index.html only, not the ruqyah PWA"
-        PARTIAL=1
-        node tools/content-export-pwa.mjs --check
-      fi
-      ;;
+    content-export-pwa) node tools/content-export-pwa.mjs --check ;;
     fixtures) fixtures_check ;;
     backup-validate) node tools/backup-validate.mjs spec/backup/examples/*.athkarbackup ;;
     *) echo "no command for content check $1"; return 1 ;;
@@ -131,12 +112,9 @@ for lane in ${LANES//,/ }; do
       result=pass
       for check in $ATHKAR_TEST_CHECKS; do
         echo "-- $check"
-        PARTIAL=0
         if ! content_check "$check"; then
           echo "-- $check failed"
           result=fail
-        elif [ $PARTIAL = 1 ] && [ $result = pass ]; then
-          result=unavailable
         fi
       done
       outcome content $result

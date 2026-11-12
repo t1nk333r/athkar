@@ -6,9 +6,9 @@
   <meta name="description" content="أذكار الصباح والمساء بعدّاد لكل ذكر، وتذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f5f1e8" id="theme-color">
-  <link rel="manifest" href="./manifest.webmanifest?v=14">
-  <link rel="icon" href="./icons/icon.svg?v=13" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=13">
+  <link rel="manifest" href="./manifest.webmanifest?v=15">
+  <link rel="icon" href="./icons/icon.svg?v=14" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=14">
   <link rel="preload" href="./fonts/kfgqpc-uthman-taha-naskh.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -96,9 +96,11 @@
       --detail-text-size: clamp(1rem, 4.1vw, 1.27rem);
       --quran-prefix-size: clamp(1.2rem, 5vw, 1.58rem);
       --quran-text-size: clamp(1.3rem, 5.6vw, 1.82rem);
+      --ruqyah-text-size: clamp(1.26rem, 5.4vw, 1.78rem);
       --dhikr-line-height: 1.95;
       --detail-line-height: 1.85;
       --quran-line-height: 2.05;
+      --ruqyah-line-height: 2.05;
     }
 
     :root[data-text-size="small"] {
@@ -106,6 +108,7 @@
       --detail-text-size: clamp(0.9rem, 3.7vw, 1.12rem);
       --quran-prefix-size: clamp(1.05rem, 4.45vw, 1.4rem);
       --quran-text-size: clamp(1.15rem, 5vw, 1.62rem);
+      --ruqyah-text-size: clamp(1.1rem, 4.7vw, 1.55rem);
     }
 
     :root[data-text-size="large"] {
@@ -113,18 +116,21 @@
       --detail-text-size: clamp(1.08rem, 4.5vw, 1.4rem);
       --quran-prefix-size: clamp(1.35rem, 5.75vw, 1.82rem);
       --quran-text-size: clamp(1.45rem, 6.4vw, 2.12rem);
+      --ruqyah-text-size: clamp(1.42rem, 6.2vw, 2.05rem);
     }
 
     :root[data-line-spacing="compact"] {
       --dhikr-line-height: 1.7;
       --detail-line-height: 1.62;
       --quran-line-height: 1.82;
+      --ruqyah-line-height: 1.82;
     }
 
     :root[data-line-spacing="wide"] {
       --dhikr-line-height: 2.16;
       --detail-line-height: 2.05;
       --quran-line-height: 2.3;
+      --ruqyah-line-height: 2.32;
     }
 
     :root[data-resolved-theme="dark"] {
@@ -1501,6 +1507,109 @@
     .dhikr-card.sura-page .counter-status { white-space: nowrap; }
     .dhikr-card.sura-page .counter-cluster { flex-wrap: nowrap; gap: 0.4rem; }
 
+    /* «رقية القرين» tab: each segment a card headed by its sura and range, its text stepped down (fitRuqyahSegment,
+       data-fit 0…5: smaller, with less leading) until it needs no scrolling. Its chips start from their text's width and
+       share the rest of the row, so «الكافرون ✓» is not cut where «ق» needs little. */
+    .ruqyah-picker .sura-chip { flex: 1 1 auto; }
+
+    .ruqyah-today {
+      margin: 0.4rem 0 0;
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .ruqyah-today[hidden] { display: none; }
+    .ruqyah-today.is-complete { color: var(--completed); }
+
+    .dhikr-card.ruqyah-segment {
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      padding-block-start: 0.5rem;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding-block-end: 0.6rem;
+      border-block-end: 1px solid var(--border);
+      pointer-events: none;
+    }
+
+    .card-surah {
+      margin: 0;
+      color: var(--text-primary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: clamp(1.02rem, 4.3vw, 1.3rem);
+      font-weight: 700;
+    }
+
+    .card-range {
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .ruqyah-segment .card-content {
+      display: grid;
+      align-content: center;
+      padding-block: 0.85rem;
+      overflow: hidden auto;
+    }
+
+    .ruqyah-segment { --fit-scale: 1; --fit-lead: 0; }
+    .ruqyah-segment[data-fit="1"] { --fit-scale: 0.94; --fit-lead: 0.12; }
+    .ruqyah-segment[data-fit="2"] { --fit-scale: 0.88; --fit-lead: 0.24; }
+    .ruqyah-segment[data-fit="3"] { --fit-scale: 0.82; --fit-lead: 0.34; }
+    .ruqyah-segment[data-fit="4"] { --fit-scale: 0.76; --fit-lead: 0.44; }
+    .ruqyah-segment[data-fit="5"] { --fit-scale: 0.70; --fit-lead: 0.54; }
+    /* Steps 6 and 7, from the standalone PWA, are for short screens at large text: they cut the leading harder, but
+       never below 1.3, and tighten the space around the text. */
+    .ruqyah-segment[data-fit="6"] { --fit-scale: 0.64; --fit-lead: 0.66; }
+    .ruqyah-segment[data-fit="7"] { --fit-scale: 0.58; --fit-lead: 0.8; }
+
+    .dhikr-card.ruqyah-segment .dhikr-text {
+      font-size: calc(var(--ruqyah-text-size) * var(--fit-scale));
+      line-height: calc(var(--ruqyah-line-height) - var(--fit-lead));
+      text-align: center;
+    }
+
+    .dhikr-card.ruqyah-segment .dhikr-prefix {
+      margin-block-end: 0.7rem;
+      font-size: calc(var(--ruqyah-text-size) * var(--fit-scale) * 0.92);
+      line-height: calc(var(--ruqyah-line-height) - var(--fit-lead));
+    }
+
+    .ruqyah-segment:is([data-fit="6"], [data-fit="7"]) .card-content { padding-block: 0.4rem; }
+
+    .dhikr-card.ruqyah-segment:is([data-fit="6"], [data-fit="7"]) :is(.dhikr-text, .dhikr-prefix) {
+      line-height: max(1.3, calc(var(--ruqyah-line-height) - var(--fit-lead)));
+    }
+
+    .dhikr-card.ruqyah-segment:is([data-fit="6"], [data-fit="7"]) .dhikr-prefix { margin-block-end: 0.2rem; }
+
+    .dhikr-card.ruqyah-segment .ayah-number {
+      color: var(--text-secondary);
+      font-size: 0.78em;
+    }
+
+    .dhikr-card.ruqyah-segment .requirement-row {
+      align-items: center;
+      margin-block-start: 0;
+      padding-block-start: 0.5rem;
+    }
+
+    .dhikr-card.ruqyah-segment .counter-status,
+    .dhikr-card.ruqyah-segment .card-reset { min-height: 2.4rem; }
+
+    .dhikr-card.ruqyah-segment .count-requirement,
+    .dhikr-card.ruqyah-segment .counter-status { white-space: nowrap; }
+    .dhikr-card.ruqyah-segment .counter-cluster { flex-wrap: nowrap; gap: 0.4rem; }
+
     .history-suwar {
       display: flex;
       flex-wrap: wrap;
@@ -1910,7 +2019,7 @@
       #transfer-dialog .sheet-header h2 { font-size: 1.1rem; }
     }
 
-    /* Four tabs on one row: up to 40rem they show the short labels («الصباح», «المساء»), so a label and its ✓ never
+    /* Five tabs on one row: up to 40rem they show the short labels («الصباح», «المساء»), so a label and its ✓ never
        wrap; at 23rem and below the gap between them tightens. */
     @media (max-width: 40rem) {
       .tab-label-full { display: none; }
@@ -2005,6 +2114,10 @@
           <span class="tab-label-full">أذكار المساء</span><span class="tab-label-short">المساء</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
+        <button class="period-tab" id="ruqyah-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="ruqyah" tabindex="-1">
+          <span class="tab-label-full">رقية القرين</span><span class="tab-label-short">رقية</span>
+          <span class="period-status" aria-hidden="true"></span>
+        </button>
         <button class="period-tab" id="suwar-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="suwar" tabindex="-1">
           <span class="tab-label-full">سور</span><span class="tab-label-short">سور</span>
           <span class="period-status" aria-hidden="true"></span>
@@ -2024,6 +2137,13 @@
           <button class="sura-chip" type="button" data-sura="waqiah" aria-pressed="false">الواقعة<span class="sura-chip-status" aria-hidden="true"></span></button>
           <button class="sura-chip" type="button" data-sura="mulk" aria-pressed="false">الملك<span class="sura-chip-status" aria-hidden="true"></span></button>
         </div>
+        <div class="sura-picker ruqyah-picker" id="ruqyah-picker" role="group" aria-label="اختيار السورة" hidden>
+          <button class="sura-chip" type="button" data-ruqyah-sura="qaf" aria-pressed="false">ق<span class="sura-chip-status" aria-hidden="true"></span></button>
+          <button class="sura-chip" type="button" data-ruqyah-sura="jinn" aria-pressed="false">الجن<span class="sura-chip-status" aria-hidden="true"></span></button>
+          <button class="sura-chip" type="button" data-ruqyah-sura="takwir" aria-pressed="false">التكوير<span class="sura-chip-status" aria-hidden="true"></span></button>
+          <button class="sura-chip" type="button" data-ruqyah-sura="kafirun" aria-pressed="false">الكافرون<span class="sura-chip-status" aria-hidden="true"></span></button>
+          <button class="sura-chip" type="button" data-ruqyah-sura="nas" aria-pressed="false">الناس<span class="sura-chip-status" aria-hidden="true"></span></button>
+        </div>
         <div class="tasbih-picker" id="tasbih-picker" hidden>
           <button class="sura-chip" id="tasbih-label-button" type="button" aria-haspopup="dialog">اختيار الذكر <span aria-hidden="true">▾</span></button>
           <button class="sura-chip" id="tasbih-target-button" type="button" aria-haspopup="dialog"><span id="tasbih-target-chip-text">الهدف: ٣٣</span> <span aria-hidden="true">▾</span></button>
@@ -2032,6 +2152,7 @@
           <p class="session-progress-copy" id="session-progress-copy">٠ من ٢٥ ذكرًا</p>
           <progress class="progress-track" id="session-progress" value="0" max="25" aria-label="تقدم أذكار الصباح"></progress>
         </div>
+        <p class="ruqyah-today" id="ruqyah-today" hidden></p>
       </section>
     </header>
 
@@ -2048,7 +2169,7 @@
           </button>
         </nav>
         <footer class="app-footer">
-          <p class="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
+          <p class="deck-hint" id="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
         </footer>
       </section>
       <section id="tasbih-panel" role="tabpanel" aria-labelledby="tasbih-tab" hidden>
@@ -5324,11 +5445,634 @@
       ]
     };
 
+    // رقية القرين: Qaf, al-Jinn, at-Takwir, al-Kafirun and an-Nas in 15 segments, each read `repeat` times: content/ruqyah.v1.json
+    // without its pack fields (tools/content-export-pwa.mjs --check keeps them equal). Uthmani text, set in KFGQPC HAFS.
+    const ruqyahContent = {
+      "segments": [
+        {
+          "id": "qaf-1-8",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ١ – ٨",
+          "repeat": 1,
+          "basmala": true,
+          "ayahs": [
+            {
+              "number": 1,
+              "text": "قٓ ۚ وَٱلْقُرْءَانِ ٱلْمَجِيدِ"
+            },
+            {
+              "number": 2,
+              "text": "بَلْ عَجِبُوٓا۟ أَن جَآءَهُم مُّنذِرٌۭ مِّنْهُمْ فَقَالَ ٱلْكَٰفِرُونَ هَٰذَا شَىْءٌ عَجِيبٌ"
+            },
+            {
+              "number": 3,
+              "text": "أَءِذَا مِتْنَا وَكُنَّا تُرَابًۭا ۖ ذَٰلِكَ رَجْعٌۢ بَعِيدٌۭ"
+            },
+            {
+              "number": 4,
+              "text": "قَدْ عَلِمْنَا مَا تَنقُصُ ٱلْأَرْضُ مِنْهُمْ ۖ وَعِندَنَا كِتَٰبٌ حَفِيظٌۢ"
+            },
+            {
+              "number": 5,
+              "text": "بَلْ كَذَّبُوا۟ بِٱلْحَقِّ لَمَّا جَآءَهُمْ فَهُمْ فِىٓ أَمْرٍۢ مَّرِيجٍ"
+            },
+            {
+              "number": 6,
+              "text": "أَفَلَمْ يَنظُرُوٓا۟ إِلَى ٱلسَّمَآءِ فَوْقَهُمْ كَيْفَ بَنَيْنَٰهَا وَزَيَّنَّٰهَا وَمَا لَهَا مِن فُرُوجٍۢ"
+            },
+            {
+              "number": 7,
+              "text": "وَٱلْأَرْضَ مَدَدْنَٰهَا وَأَلْقَيْنَا فِيهَا رَوَٰسِىَ وَأَنۢبَتْنَا فِيهَا مِن كُلِّ زَوْجٍۭ بَهِيجٍۢ"
+            },
+            {
+              "number": 8,
+              "text": "تَبْصِرَةًۭ وَذِكْرَىٰ لِكُلِّ عَبْدٍۢ مُّنِيبٍۢ"
+            }
+          ]
+        },
+        {
+          "id": "qaf-9-14",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ٩ – ١٤",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 9,
+              "text": "وَنَزَّلْنَا مِنَ ٱلسَّمَآءِ مَآءًۭ مُّبَٰرَكًۭا فَأَنۢبَتْنَا بِهِۦ جَنَّٰتٍۢ وَحَبَّ ٱلْحَصِيدِ"
+            },
+            {
+              "number": 10,
+              "text": "وَٱلنَّخْلَ بَاسِقَٰتٍۢ لَّهَا طَلْعٌۭ نَّضِيدٌۭ"
+            },
+            {
+              "number": 11,
+              "text": "رِّزْقًۭا لِّلْعِبَادِ ۖ وَأَحْيَيْنَا بِهِۦ بَلْدَةًۭ مَّيْتًۭا ۚ كَذَٰلِكَ ٱلْخُرُوجُ"
+            },
+            {
+              "number": 12,
+              "text": "كَذَّبَتْ قَبْلَهُمْ قَوْمُ نُوحٍۢ وَأَصْحَٰبُ ٱلرَّسِّ وَثَمُودُ"
+            },
+            {
+              "number": 13,
+              "text": "وَعَادٌۭ وَفِرْعَوْنُ وَإِخْوَٰنُ لُوطٍۢ"
+            },
+            {
+              "number": 14,
+              "text": "وَأَصْحَٰبُ ٱلْأَيْكَةِ وَقَوْمُ تُبَّعٍۢ ۚ كُلٌّۭ كَذَّبَ ٱلرُّسُلَ فَحَقَّ وَعِيدِ"
+            }
+          ]
+        },
+        {
+          "id": "qaf-15-22",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ١٥ – ٢٢",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 15,
+              "text": "أَفَعَيِينَا بِٱلْخَلْقِ ٱلْأَوَّلِ ۚ بَلْ هُمْ فِى لَبْسٍۢ مِّنْ خَلْقٍۢ جَدِيدٍۢ"
+            },
+            {
+              "number": 16,
+              "text": "وَلَقَدْ خَلَقْنَا ٱلْإِنسَٰنَ وَنَعْلَمُ مَا تُوَسْوِسُ بِهِۦ نَفْسُهُۥ ۖ وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ ٱلْوَرِيدِ"
+            },
+            {
+              "number": 17,
+              "text": "إِذْ يَتَلَقَّى ٱلْمُتَلَقِّيَانِ عَنِ ٱلْيَمِينِ وَعَنِ ٱلشِّمَالِ قَعِيدٌۭ"
+            },
+            {
+              "number": 18,
+              "text": "مَّا يَلْفِظُ مِن قَوْلٍ إِلَّا لَدَيْهِ رَقِيبٌ عَتِيدٌۭ"
+            },
+            {
+              "number": 19,
+              "text": "وَجَآءَتْ سَكْرَةُ ٱلْمَوْتِ بِٱلْحَقِّ ۖ ذَٰلِكَ مَا كُنتَ مِنْهُ تَحِيدُ"
+            },
+            {
+              "number": 20,
+              "text": "وَنُفِخَ فِى ٱلصُّورِ ۚ ذَٰلِكَ يَوْمُ ٱلْوَعِيدِ"
+            },
+            {
+              "number": 21,
+              "text": "وَجَآءَتْ كُلُّ نَفْسٍۢ مَّعَهَا سَآئِقٌۭ وَشَهِيدٌۭ"
+            },
+            {
+              "number": 22,
+              "text": "لَّقَدْ كُنتَ فِى غَفْلَةٍۢ مِّنْ هَٰذَا فَكَشَفْنَا عَنكَ غِطَآءَكَ فَبَصَرُكَ ٱلْيَوْمَ حَدِيدٌۭ"
+            }
+          ]
+        },
+        {
+          "id": "qaf-23-29",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ٢٣ – ٢٩",
+          "repeat": 7,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 23,
+              "text": "وَقَالَ قَرِينُهُۥ هَٰذَا مَا لَدَىَّ عَتِيدٌ"
+            },
+            {
+              "number": 24,
+              "text": "أَلْقِيَا فِى جَهَنَّمَ كُلَّ كَفَّارٍ عَنِيدٍۢ"
+            },
+            {
+              "number": 25,
+              "text": "مَّنَّاعٍۢ لِّلْخَيْرِ مُعْتَدٍۢ مُّرِيبٍ"
+            },
+            {
+              "number": 26,
+              "text": "ٱلَّذِى جَعَلَ مَعَ ٱللَّهِ إِلَٰهًا ءَاخَرَ فَأَلْقِيَاهُ فِى ٱلْعَذَابِ ٱلشَّدِيدِ"
+            },
+            {
+              "number": 27,
+              "text": "۞ قَالَ قَرِينُهُۥ رَبَّنَا مَآ أَطْغَيْتُهُۥ وَلَٰكِن كَانَ فِى ضَلَٰلٍۭ بَعِيدٍۢ"
+            },
+            {
+              "number": 28,
+              "text": "قَالَ لَا تَخْتَصِمُوا۟ لَدَىَّ وَقَدْ قَدَّمْتُ إِلَيْكُم بِٱلْوَعِيدِ"
+            },
+            {
+              "number": 29,
+              "text": "مَا يُبَدَّلُ ٱلْقَوْلُ لَدَىَّ وَمَآ أَنَا۠ بِظَلَّٰمٍۢ لِّلْعَبِيدِ"
+            }
+          ]
+        },
+        {
+          "id": "qaf-30-37",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ٣٠ – ٣٧",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 30,
+              "text": "يَوْمَ نَقُولُ لِجَهَنَّمَ هَلِ ٱمْتَلَأْتِ وَتَقُولُ هَلْ مِن مَّزِيدٍۢ"
+            },
+            {
+              "number": 31,
+              "text": "وَأُزْلِفَتِ ٱلْجَنَّةُ لِلْمُتَّقِينَ غَيْرَ بَعِيدٍ"
+            },
+            {
+              "number": 32,
+              "text": "هَٰذَا مَا تُوعَدُونَ لِكُلِّ أَوَّابٍ حَفِيظٍۢ"
+            },
+            {
+              "number": 33,
+              "text": "مَّنْ خَشِىَ ٱلرَّحْمَٰنَ بِٱلْغَيْبِ وَجَآءَ بِقَلْبٍۢ مُّنِيبٍ"
+            },
+            {
+              "number": 34,
+              "text": "ٱدْخُلُوهَا بِسَلَٰمٍۢ ۖ ذَٰلِكَ يَوْمُ ٱلْخُلُودِ"
+            },
+            {
+              "number": 35,
+              "text": "لَهُم مَّا يَشَآءُونَ فِيهَا وَلَدَيْنَا مَزِيدٌۭ"
+            },
+            {
+              "number": 36,
+              "text": "وَكَمْ أَهْلَكْنَا قَبْلَهُم مِّن قَرْنٍ هُمْ أَشَدُّ مِنْهُم بَطْشًۭا فَنَقَّبُوا۟ فِى ٱلْبِلَٰدِ هَلْ مِن مَّحِيصٍ"
+            },
+            {
+              "number": 37,
+              "text": "إِنَّ فِى ذَٰلِكَ لَذِكْرَىٰ لِمَن كَانَ لَهُۥ قَلْبٌ أَوْ أَلْقَى ٱلسَّمْعَ وَهُوَ شَهِيدٌۭ"
+            }
+          ]
+        },
+        {
+          "id": "qaf-38-45",
+          "surah": "سورة ق",
+          "surahNumber": 50,
+          "range": "الآيات ٣٨ – ٤٥",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 38,
+              "text": "وَلَقَدْ خَلَقْنَا ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ وَمَا بَيْنَهُمَا فِى سِتَّةِ أَيَّامٍۢ وَمَا مَسَّنَا مِن لُّغُوبٍۢ"
+            },
+            {
+              "number": 39,
+              "text": "فَٱصْبِرْ عَلَىٰ مَا يَقُولُونَ وَسَبِّحْ بِحَمْدِ رَبِّكَ قَبْلَ طُلُوعِ ٱلشَّمْسِ وَقَبْلَ ٱلْغُرُوبِ"
+            },
+            {
+              "number": 40,
+              "text": "وَمِنَ ٱلَّيْلِ فَسَبِّحْهُ وَأَدْبَٰرَ ٱلسُّجُودِ"
+            },
+            {
+              "number": 41,
+              "text": "وَٱسْتَمِعْ يَوْمَ يُنَادِ ٱلْمُنَادِ مِن مَّكَانٍۢ قَرِيبٍۢ"
+            },
+            {
+              "number": 42,
+              "text": "يَوْمَ يَسْمَعُونَ ٱلصَّيْحَةَ بِٱلْحَقِّ ۚ ذَٰلِكَ يَوْمُ ٱلْخُرُوجِ"
+            },
+            {
+              "number": 43,
+              "text": "إِنَّا نَحْنُ نُحْىِۦ وَنُمِيتُ وَإِلَيْنَا ٱلْمَصِيرُ"
+            },
+            {
+              "number": 44,
+              "text": "يَوْمَ تَشَقَّقُ ٱلْأَرْضُ عَنْهُمْ سِرَاعًۭا ۚ ذَٰلِكَ حَشْرٌ عَلَيْنَا يَسِيرٌۭ"
+            },
+            {
+              "number": 45,
+              "text": "نَّحْنُ أَعْلَمُ بِمَا يَقُولُونَ ۖ وَمَآ أَنتَ عَلَيْهِم بِجَبَّارٍۢ ۖ فَذَكِّرْ بِٱلْقُرْءَانِ مَن يَخَافُ وَعِيدِ"
+            }
+          ]
+        },
+        {
+          "id": "jinn-1-7",
+          "surah": "سورة الجن",
+          "surahNumber": 72,
+          "range": "الآيات ١ – ٧",
+          "repeat": 1,
+          "basmala": true,
+          "ayahs": [
+            {
+              "number": 1,
+              "text": "قُلْ أُوحِىَ إِلَىَّ أَنَّهُ ٱسْتَمَعَ نَفَرٌۭ مِّنَ ٱلْجِنِّ فَقَالُوٓا۟ إِنَّا سَمِعْنَا قُرْءَانًا عَجَبًۭا"
+            },
+            {
+              "number": 2,
+              "text": "يَهْدِىٓ إِلَى ٱلرُّشْدِ فَـَٔامَنَّا بِهِۦ ۖ وَلَن نُّشْرِكَ بِرَبِّنَآ أَحَدًۭا"
+            },
+            {
+              "number": 3,
+              "text": "وَأَنَّهُۥ تَعَٰلَىٰ جَدُّ رَبِّنَا مَا ٱتَّخَذَ صَٰحِبَةًۭ وَلَا وَلَدًۭا"
+            },
+            {
+              "number": 4,
+              "text": "وَأَنَّهُۥ كَانَ يَقُولُ سَفِيهُنَا عَلَى ٱللَّهِ شَطَطًۭا"
+            },
+            {
+              "number": 5,
+              "text": "وَأَنَّا ظَنَنَّآ أَن لَّن تَقُولَ ٱلْإِنسُ وَٱلْجِنُّ عَلَى ٱللَّهِ كَذِبًۭا"
+            },
+            {
+              "number": 6,
+              "text": "وَأَنَّهُۥ كَانَ رِجَالٌۭ مِّنَ ٱلْإِنسِ يَعُوذُونَ بِرِجَالٍۢ مِّنَ ٱلْجِنِّ فَزَادُوهُمْ رَهَقًۭا"
+            },
+            {
+              "number": 7,
+              "text": "وَأَنَّهُمْ ظَنُّوا۟ كَمَا ظَنَنتُمْ أَن لَّن يَبْعَثَ ٱللَّهُ أَحَدًۭا"
+            }
+          ]
+        },
+        {
+          "id": "jinn-8-13",
+          "surah": "سورة الجن",
+          "surahNumber": 72,
+          "range": "الآيات ٨ – ١٣",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 8,
+              "text": "وَأَنَّا لَمَسْنَا ٱلسَّمَآءَ فَوَجَدْنَٰهَا مُلِئَتْ حَرَسًۭا شَدِيدًۭا وَشُهُبًۭا"
+            },
+            {
+              "number": 9,
+              "text": "وَأَنَّا كُنَّا نَقْعُدُ مِنْهَا مَقَٰعِدَ لِلسَّمْعِ ۖ فَمَن يَسْتَمِعِ ٱلْأٓنَ يَجِدْ لَهُۥ شِهَابًۭا رَّصَدًۭا"
+            },
+            {
+              "number": 10,
+              "text": "وَأَنَّا لَا نَدْرِىٓ أَشَرٌّ أُرِيدَ بِمَن فِى ٱلْأَرْضِ أَمْ أَرَادَ بِهِمْ رَبُّهُمْ رَشَدًۭا"
+            },
+            {
+              "number": 11,
+              "text": "وَأَنَّا مِنَّا ٱلصَّٰلِحُونَ وَمِنَّا دُونَ ذَٰلِكَ ۖ كُنَّا طَرَآئِقَ قِدَدًۭا"
+            },
+            {
+              "number": 12,
+              "text": "وَأَنَّا ظَنَنَّآ أَن لَّن نُّعْجِزَ ٱللَّهَ فِى ٱلْأَرْضِ وَلَن نُّعْجِزَهُۥ هَرَبًۭا"
+            },
+            {
+              "number": 13,
+              "text": "وَأَنَّا لَمَّا سَمِعْنَا ٱلْهُدَىٰٓ ءَامَنَّا بِهِۦ ۖ فَمَن يُؤْمِنۢ بِرَبِّهِۦ فَلَا يَخَافُ بَخْسًۭا وَلَا رَهَقًۭا"
+            }
+          ]
+        },
+        {
+          "id": "jinn-14-21",
+          "surah": "سورة الجن",
+          "surahNumber": 72,
+          "range": "الآيات ١٤ – ٢١",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 14,
+              "text": "وَأَنَّا مِنَّا ٱلْمُسْلِمُونَ وَمِنَّا ٱلْقَٰسِطُونَ ۖ فَمَنْ أَسْلَمَ فَأُو۟لَٰٓئِكَ تَحَرَّوْا۟ رَشَدًۭا"
+            },
+            {
+              "number": 15,
+              "text": "وَأَمَّا ٱلْقَٰسِطُونَ فَكَانُوا۟ لِجَهَنَّمَ حَطَبًۭا"
+            },
+            {
+              "number": 16,
+              "text": "وَأَلَّوِ ٱسْتَقَٰمُوا۟ عَلَى ٱلطَّرِيقَةِ لَأَسْقَيْنَٰهُم مَّآءً غَدَقًۭا"
+            },
+            {
+              "number": 17,
+              "text": "لِّنَفْتِنَهُمْ فِيهِ ۚ وَمَن يُعْرِضْ عَن ذِكْرِ رَبِّهِۦ يَسْلُكْهُ عَذَابًۭا صَعَدًۭا"
+            },
+            {
+              "number": 18,
+              "text": "وَأَنَّ ٱلْمَسَٰجِدَ لِلَّهِ فَلَا تَدْعُوا۟ مَعَ ٱللَّهِ أَحَدًۭا"
+            },
+            {
+              "number": 19,
+              "text": "وَأَنَّهُۥ لَمَّا قَامَ عَبْدُ ٱللَّهِ يَدْعُوهُ كَادُوا۟ يَكُونُونَ عَلَيْهِ لِبَدًۭا"
+            },
+            {
+              "number": 20,
+              "text": "قُلْ إِنَّمَآ أَدْعُوا۟ رَبِّى وَلَآ أُشْرِكُ بِهِۦٓ أَحَدًۭا"
+            },
+            {
+              "number": 21,
+              "text": "قُلْ إِنِّى لَآ أَمْلِكُ لَكُمْ ضَرًّۭا وَلَا رَشَدًۭا"
+            }
+          ]
+        },
+        {
+          "id": "jinn-22-28",
+          "surah": "سورة الجن",
+          "surahNumber": 72,
+          "range": "الآيات ٢٢ – ٢٨",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 22,
+              "text": "قُلْ إِنِّى لَن يُجِيرَنِى مِنَ ٱللَّهِ أَحَدٌۭ وَلَنْ أَجِدَ مِن دُونِهِۦ مُلْتَحَدًا"
+            },
+            {
+              "number": 23,
+              "text": "إِلَّا بَلَٰغًۭا مِّنَ ٱللَّهِ وَرِسَٰلَٰتِهِۦ ۚ وَمَن يَعْصِ ٱللَّهَ وَرَسُولَهُۥ فَإِنَّ لَهُۥ نَارَ جَهَنَّمَ خَٰلِدِينَ فِيهَآ أَبَدًا"
+            },
+            {
+              "number": 24,
+              "text": "حَتَّىٰٓ إِذَا رَأَوْا۟ مَا يُوعَدُونَ فَسَيَعْلَمُونَ مَنْ أَضْعَفُ نَاصِرًۭا وَأَقَلُّ عَدَدًۭا"
+            },
+            {
+              "number": 25,
+              "text": "قُلْ إِنْ أَدْرِىٓ أَقَرِيبٌۭ مَّا تُوعَدُونَ أَمْ يَجْعَلُ لَهُۥ رَبِّىٓ أَمَدًا"
+            },
+            {
+              "number": 26,
+              "text": "عَٰلِمُ ٱلْغَيْبِ فَلَا يُظْهِرُ عَلَىٰ غَيْبِهِۦٓ أَحَدًا"
+            },
+            {
+              "number": 27,
+              "text": "إِلَّا مَنِ ٱرْتَضَىٰ مِن رَّسُولٍۢ فَإِنَّهُۥ يَسْلُكُ مِنۢ بَيْنِ يَدَيْهِ وَمِنْ خَلْفِهِۦ رَصَدًۭا"
+            },
+            {
+              "number": 28,
+              "text": "لِّيَعْلَمَ أَن قَدْ أَبْلَغُوا۟ رِسَٰلَٰتِ رَبِّهِمْ وَأَحَاطَ بِمَا لَدَيْهِمْ وَأَحْصَىٰ كُلَّ شَىْءٍ عَدَدًۢا"
+            }
+          ]
+        },
+        {
+          "id": "takwir-1-10",
+          "surah": "سورة التكوير",
+          "surahNumber": 81,
+          "range": "الآيات ١ – ١٠",
+          "repeat": 1,
+          "basmala": true,
+          "ayahs": [
+            {
+              "number": 1,
+              "text": "إِذَا ٱلشَّمْسُ كُوِّرَتْ"
+            },
+            {
+              "number": 2,
+              "text": "وَإِذَا ٱلنُّجُومُ ٱنكَدَرَتْ"
+            },
+            {
+              "number": 3,
+              "text": "وَإِذَا ٱلْجِبَالُ سُيِّرَتْ"
+            },
+            {
+              "number": 4,
+              "text": "وَإِذَا ٱلْعِشَارُ عُطِّلَتْ"
+            },
+            {
+              "number": 5,
+              "text": "وَإِذَا ٱلْوُحُوشُ حُشِرَتْ"
+            },
+            {
+              "number": 6,
+              "text": "وَإِذَا ٱلْبِحَارُ سُجِّرَتْ"
+            },
+            {
+              "number": 7,
+              "text": "وَإِذَا ٱلنُّفُوسُ زُوِّجَتْ"
+            },
+            {
+              "number": 8,
+              "text": "وَإِذَا ٱلْمَوْءُۥدَةُ سُئِلَتْ"
+            },
+            {
+              "number": 9,
+              "text": "بِأَىِّ ذَنۢبٍۢ قُتِلَتْ"
+            },
+            {
+              "number": 10,
+              "text": "وَإِذَا ٱلصُّحُفُ نُشِرَتْ"
+            }
+          ]
+        },
+        {
+          "id": "takwir-11-21",
+          "surah": "سورة التكوير",
+          "surahNumber": 81,
+          "range": "الآيات ١١ – ٢١",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 11,
+              "text": "وَإِذَا ٱلسَّمَآءُ كُشِطَتْ"
+            },
+            {
+              "number": 12,
+              "text": "وَإِذَا ٱلْجَحِيمُ سُعِّرَتْ"
+            },
+            {
+              "number": 13,
+              "text": "وَإِذَا ٱلْجَنَّةُ أُزْلِفَتْ"
+            },
+            {
+              "number": 14,
+              "text": "عَلِمَتْ نَفْسٌۭ مَّآ أَحْضَرَتْ"
+            },
+            {
+              "number": 15,
+              "text": "فَلَآ أُقْسِمُ بِٱلْخُنَّسِ"
+            },
+            {
+              "number": 16,
+              "text": "ٱلْجَوَارِ ٱلْكُنَّسِ"
+            },
+            {
+              "number": 17,
+              "text": "وَٱلَّيْلِ إِذَا عَسْعَسَ"
+            },
+            {
+              "number": 18,
+              "text": "وَٱلصُّبْحِ إِذَا تَنَفَّسَ"
+            },
+            {
+              "number": 19,
+              "text": "إِنَّهُۥ لَقَوْلُ رَسُولٍۢ كَرِيمٍۢ"
+            },
+            {
+              "number": 20,
+              "text": "ذِى قُوَّةٍ عِندَ ذِى ٱلْعَرْشِ مَكِينٍۢ"
+            },
+            {
+              "number": 21,
+              "text": "مُّطَاعٍۢ ثَمَّ أَمِينٍۢ"
+            }
+          ]
+        },
+        {
+          "id": "takwir-22-29",
+          "surah": "سورة التكوير",
+          "surahNumber": 81,
+          "range": "الآيات ٢٢ – ٢٩",
+          "repeat": 1,
+          "basmala": false,
+          "ayahs": [
+            {
+              "number": 22,
+              "text": "وَمَا صَاحِبُكُم بِمَجْنُونٍۢ"
+            },
+            {
+              "number": 23,
+              "text": "وَلَقَدْ رَءَاهُ بِٱلْأُفُقِ ٱلْمُبِينِ"
+            },
+            {
+              "number": 24,
+              "text": "وَمَا هُوَ عَلَى ٱلْغَيْبِ بِضَنِينٍۢ"
+            },
+            {
+              "number": 25,
+              "text": "وَمَا هُوَ بِقَوْلِ شَيْطَٰنٍۢ رَّجِيمٍۢ"
+            },
+            {
+              "number": 26,
+              "text": "فَأَيْنَ تَذْهَبُونَ"
+            },
+            {
+              "number": 27,
+              "text": "إِنْ هُوَ إِلَّا ذِكْرٌۭ لِّلْعَٰلَمِينَ"
+            },
+            {
+              "number": 28,
+              "text": "لِمَن شَآءَ مِنكُمْ أَن يَسْتَقِيمَ"
+            },
+            {
+              "number": 29,
+              "text": "وَمَا تَشَآءُونَ إِلَّآ أَن يَشَآءَ ٱللَّهُ رَبُّ ٱلْعَٰلَمِينَ"
+            }
+          ]
+        },
+        {
+          "id": "kafirun-1-6",
+          "surah": "سورة الكافرون",
+          "surahNumber": 109,
+          "range": "كاملة",
+          "repeat": 7,
+          "basmala": true,
+          "ayahs": [
+            {
+              "number": 1,
+              "text": "قُلْ يَٰٓأَيُّهَا ٱلْكَٰفِرُونَ"
+            },
+            {
+              "number": 2,
+              "text": "لَآ أَعْبُدُ مَا تَعْبُدُونَ"
+            },
+            {
+              "number": 3,
+              "text": "وَلَآ أَنتُمْ عَٰبِدُونَ مَآ أَعْبُدُ"
+            },
+            {
+              "number": 4,
+              "text": "وَلَآ أَنَا۠ عَابِدٌۭ مَّا عَبَدتُّمْ"
+            },
+            {
+              "number": 5,
+              "text": "وَلَآ أَنتُمْ عَٰبِدُونَ مَآ أَعْبُدُ"
+            },
+            {
+              "number": 6,
+              "text": "لَكُمْ دِينُكُمْ وَلِىَ دِينِ"
+            }
+          ]
+        },
+        {
+          "id": "nas-1-6",
+          "surah": "سورة الناس",
+          "surahNumber": 114,
+          "range": "كاملة",
+          "repeat": 7,
+          "basmala": true,
+          "ayahs": [
+            {
+              "number": 1,
+              "text": "قُلْ أَعُوذُ بِرَبِّ ٱلنَّاسِ"
+            },
+            {
+              "number": 2,
+              "text": "مَلِكِ ٱلنَّاسِ"
+            },
+            {
+              "number": 3,
+              "text": "إِلَٰهِ ٱلنَّاسِ"
+            },
+            {
+              "number": 4,
+              "text": "مِن شَرِّ ٱلْوَسْوَاسِ ٱلْخَنَّاسِ"
+            },
+            {
+              "number": 5,
+              "text": "ٱلَّذِى يُوَسْوِسُ فِى صُدُورِ ٱلنَّاسِ"
+            },
+            {
+              "number": 6,
+              "text": "مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ"
+            }
+          ]
+        }
+      ]
+    };
+
     const collections = { morning: morningAthkar, evening: eveningAthkar };
-    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", suwar: "سور", tasbih: "مسبحة" };
+    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", ruqyah: "رقية القرين", suwar: "سور", tasbih: "مسبحة" };
     const suwarById = Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, sura]));
     const suwarStorageKey = "athkar-suwar-v1";
     const suwarHistoryDays = 7;
+    const ruqyahSuwar = groupRuqyahSuwar(ruqyahContent.segments);
+    const ruqyahSuraById = Object.fromEntries(ruqyahSuwar.map(sura => [sura.id, sura]));
+    const ruqyahStorageKey = "athkar-ruqyah-v1";
+    // The standalone رقية القرين PWA (t1nk333r.github.io/ruqyah-al-qareen, this origin) mirrored its progress to these
+    // keys; athkar-ruqyah-v1 starts from them once (loadRuqyahState).
+    const standaloneRuqyahDailyKey = "ruqyah-daily-v1";
+    const standaloneRuqyahSuwarKey = "ruqyah-suwar-v1";
+    const ruqyahHistoryDays = 365;
+    // Printed above a segment that starts a sura, as the standalone PWA did; the pack does not carry it.
+    const ruqyahBasmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
     const tasbihStorageKey = "athkar-tasbih-v1";
     // «مسبحة» presets, in picker order; the owner reviews this list, so it is the one place to edit it. `id` is stored
     // in athkar-tasbih-v1 (counts and history) and must never change; `label` is shown with tashkeel, `short` is used
@@ -5395,6 +6139,9 @@
     const progressBar = document.getElementById("session-progress");
     const sessionSummary = document.getElementById("session-summary");
     const suraPicker = document.getElementById("sura-picker");
+    const ruqyahPicker = document.getElementById("ruqyah-picker");
+    const ruqyahToday = document.getElementById("ruqyah-today");
+    const deckHint = document.getElementById("deck-hint");
     const sessionReset = document.getElementById("session-reset");
     const settingsButton = document.getElementById("settings-button");
     const settingsDialog = document.getElementById("settings-dialog");
@@ -5483,6 +6230,8 @@
     const standaloneDisplay = matchMedia("(display-mode: standalone)");
     const currentIndices = { morning: null, evening: null };
     const suwarIndices = { kahf: null, yasin: null, saffat: null, waqiah: null, mulk: null };
+    // The card each ruqyah sura shows while the page is open; null opens its first incomplete segment (0 when complete).
+    const ruqyahIndices = Object.fromEntries(ruqyahSuwar.map(sura => [sura.id, null]));
     const decks = { morning: null, evening: null };
     const reminderTimers = { morning: null, evening: null };
     let swipeGesture = null;
@@ -5491,6 +6240,8 @@
     const initialRoute = routeFromHash();
     let activePeriod = initialRoute.period;
     let pendingConfirmation = null;
+    // What the completion dialog's second button does: open the other period, the next ruqyah sura, or restart the ruqyah.
+    let completionSwitchAction = null;
     let advanceTimer = null;
     let dayRolloverTimer = null;
     let installOnboardingTimer = null;
@@ -5506,6 +6257,9 @@
     recoverTransferPending();
     let state = loadState();
     let suwarState = loadSuwarState();
+    let ruqyahState = loadRuqyahState();
+    // The ruqyah sura on screen. Not stored: the tab opens on ق unless a sura link (#jinn …) names another.
+    let ruqyahSelected = ruqyahSuwar[0].id;
     // False once athkar-tasbih-v1 cannot be read or written (at startup too): the session then counts in memory and
     // neither rereads nor writes it, so what is stored is never written over by a state built without it.
     let tasbihStorageWorks = true;
@@ -5538,7 +6292,8 @@
       syncHapticArm();
     });
     let hapticArmRestAt = 0;
-    if (initialRoute.sura) suwarState.selected = initialRoute.sura;
+    if (initialRoute.sura && initialRoute.period === "suwar") suwarState.selected = initialRoute.sura;
+    if (initialRoute.sura && initialRoute.period === "ruqyah") ruqyahSelected = initialRoute.sura;
     let reminderPreferences = loadReminderPreferences();
     let hapticsEnabled = true;
     try { hapticsEnabled = localStorage.getItem(hapticsStorageKey) !== "off"; } catch (_) {}
@@ -5548,6 +6303,7 @@
     longOrderToggle.checked = longAdhkarLast;
     saveState();
     saveSuwarState();
+    saveRuqyahState();
     saveTasbihState();
     saveReminderPreferences();
 
@@ -5827,6 +6583,176 @@
       if (dates === null) suwarState.history = {};
       else for (const date of dates) delete suwarState.history[date];
       for (const date of dates ?? recentDates(resetEpochDays)) markReset(suwarState, date);
+    }
+
+    // The ruqyah's suras in pack order, `{ id, surah, segments }`: a sura is the segments whose IDs share the prefix
+    // before the first "-" (qaf, jinn, takwir, kafirun, nas), which are consecutive in the pack.
+    function groupRuqyahSuwar(segments) {
+      const suwar = [];
+      for (const segment of segments) {
+        const id = segment.id.slice(0, segment.id.indexOf("-"));
+        if (suwar.at(-1)?.id !== id) suwar.push({ id, surah: segment.surah, segments: [] });
+        suwar.at(-1).segments.push(segment);
+      }
+      return suwar;
+    }
+
+    // athkar-ruqyah-v1: the «رقية القرين» tab, apart from the other stores and outside envelope v1. `counts` are today's
+    // readings per segment, clamped to its repeat; `completedAt` is when each sura was completed today; `dayCompletedAt`
+    // is when every segment was first complete today, which a day reset keeps (spec/sessions/deck-definition.md §8).
+    // `history` maps each earlier local date to `{ completedAt, suwar }`: the day's record (null when the day was not
+    // completed) and the suras completed on it ({ suraId: completedAt }), newest 365.
+    function emptyRuqyahState(date = localDateKey()) {
+      return {
+        date,
+        counts: Object.fromEntries(ruqyahContent.segments.map(segment => [segment.id, 0])),
+        completedAt: Object.fromEntries(ruqyahSuwar.map(sura => [sura.id, null])),
+        dayCompletedAt: null,
+        history: {}
+      };
+    }
+
+    function normalizeRuqyahState(parsed) {
+      const date = isRealDateKey(parsed?.date) ? parsed.date : localDateKey();
+      const normalized = emptyRuqyahState(date);
+      for (const segment of ruqyahContent.segments) {
+        const value = parsed?.counts?.[segment.id];
+        // Only real integers count (not true, "3" or [7]), clamped to the segment's repeat.
+        if (Number.isInteger(value)) normalized.counts[segment.id] = Math.max(0, Math.min(value, segment.repeat));
+      }
+      for (const sura of ruqyahSuwar) {
+        const at = backupInstant(parsed?.completedAt?.[sura.id]);
+        if (at && ruqyahSuraIsComplete(sura, normalized)) normalized.completedAt[sura.id] = at;
+      }
+      normalized.dayCompletedAt = backupInstant(parsed?.dayCompletedAt);
+      for (const [day, entry] of Object.entries(parsed?.history && typeof parsed.history === "object" ? parsed.history : {})) {
+        if (!isRealDateKey(day) || day >= date || !entry || typeof entry !== "object") continue;
+        const completedAt = backupInstant(entry.completedAt);
+        const suwar = Object.fromEntries(Object.entries(entry.suwar && typeof entry.suwar === "object" ? entry.suwar : {})
+          .map(([id, at]) => [id, Object.hasOwn(ruqyahSuraById, id) ? backupInstant(at) : null])
+          .filter(([, at]) => at));
+        if (completedAt || Object.keys(suwar).length) normalized.history[day] = { completedAt, suwar };
+      }
+      normalized.history = trimRuqyahHistory(normalized.history);
+      return normalized;
+    }
+
+    function trimRuqyahHistory(history) {
+      const kept = Object.keys(history).sort().reverse().slice(0, ruqyahHistoryDays);
+      return Object.fromEntries(kept.map(day => [day, history[day]]));
+    }
+
+    // Never writes a day later than nextDate: a stored date in the future (a clock set back) adds nothing to history.
+    function rollRuqyahStateToDate(candidate, nextDate) {
+      const history = Object.fromEntries(Object.entries(candidate.history).filter(([day]) => day < nextDate));
+      const suwar = Object.fromEntries(Object.entries(candidate.completedAt).filter(([, at]) => at));
+      if (candidate.date < nextDate && (candidate.dayCompletedAt || Object.keys(suwar).length)) {
+        history[candidate.date] = { completedAt: candidate.dayCompletedAt, suwar };
+      }
+      return { ...emptyRuqyahState(nextDate), history: trimRuqyahHistory(history) };
+    }
+
+    // The standalone PWA's mirror as athkar-ruqyah-v1: ruqyah-daily-v1 is { date, counts, history: { date: { completedAt } } },
+    // today's record among the history; ruqyah-suwar-v1 is { date, completedAt: { suraId: at }, history: { date: { suraId: at } } }.
+    function ruqyahStateFromStandalone(daily, suwar) {
+      const date = isRealDateKey(daily?.date) ? daily.date : localDateKey();
+      const objectOrEmpty = value => (value && typeof value === "object" ? value : {});
+      const history = {};
+      const day = key => (history[key] ??= { completedAt: null, suwar: {} });
+      const days = value => Object.entries(objectOrEmpty(value)).filter(([key]) => isRealDateKey(key));
+      for (const [key, entry] of days(daily?.history)) day(key).completedAt = entry?.completedAt ?? null;
+      for (const [key, entry] of days(suwar?.history)) Object.assign(day(key).suwar, objectOrEmpty(entry));
+      const suwarDate = isRealDateKey(suwar?.date) ? suwar.date : null;
+      const completedAt = objectOrEmpty(suwar?.completedAt);
+      if (suwarDate && suwarDate < date) Object.assign(day(suwarDate).suwar, completedAt);
+      const today = history[date];
+      delete history[date];
+      return normalizeRuqyahState({
+        date,
+        counts: daily?.counts,
+        completedAt: suwarDate === date ? completedAt : {},
+        dayCompletedAt: today?.completedAt ?? null,
+        history
+      });
+    }
+
+    // A stored athkar-ruqyah-v1 value, normalized and rolled to today's date.
+    function parseStoredRuqyahState(raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        const normalized = parsed && typeof parsed === "object" ? normalizeRuqyahState(parsed) : emptyRuqyahState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollRuqyahStateToDate(normalized, today);
+      } catch (_) {
+        return emptyRuqyahState();
+      }
+    }
+
+    // With no athkar-ruqyah-v1 yet, the standalone PWA's progress carries over (its keys are left as they are).
+    function loadRuqyahState() {
+      try {
+        const raw = localStorage.getItem(ruqyahStorageKey);
+        if (raw !== null) return parseStoredRuqyahState(raw);
+        const parse = key => { try { return JSON.parse(localStorage.getItem(key)); } catch (_) { return null; } };
+        const migrated = ruqyahStateFromStandalone(parse(standaloneRuqyahDailyKey), parse(standaloneRuqyahSuwarKey));
+        const today = localDateKey();
+        return migrated.date === today ? migrated : rollRuqyahStateToDate(migrated, today);
+      } catch (_) {
+        return emptyRuqyahState();
+      }
+    }
+
+    function saveRuqyahState() {
+      try { localStorage.setItem(ruqyahStorageKey, JSON.stringify(ruqyahState)); } catch (_) {}
+    }
+
+    function ruqyahCount(segment, candidate = ruqyahState) {
+      return candidate.counts[segment.id] ?? 0;
+    }
+
+    function ruqyahSegmentIsComplete(segment, candidate = ruqyahState) {
+      return ruqyahCount(segment, candidate) >= segment.repeat;
+    }
+
+    function ruqyahSuraIsComplete(sura, candidate = ruqyahState) {
+      return sura.segments.every(segment => ruqyahSegmentIsComplete(segment, candidate));
+    }
+
+    function ruqyahReadings(segments) {
+      return segments.reduce((sum, segment) => sum + ruqyahCount(segment), 0);
+    }
+
+    function ruqyahRepeats(segments) {
+      return segments.reduce((sum, segment) => sum + segment.repeat, 0);
+    }
+
+    function ruqyahHasResettableState() {
+      return ruqyahReadings(ruqyahContent.segments) > 0 || Boolean(ruqyahState.dayCompletedAt) ||
+        Object.keys(ruqyahState.history).length > 0;
+    }
+
+    // The dates the ruqyah has on record: completed days, today included, and earlier days with a completed sura.
+    function ruqyahRecordedDates() {
+      return [...Object.keys(ruqyahState.history), ...(ruqyahState.dayCompletedAt ? [ruqyahState.date] : [])];
+    }
+
+    // Scoped reset: today's readings and sura completions; today's record stays (deleteRuqyahHistory drops it with the
+    // past days it is given, or with all of them when null). The tab reopens ق on its first segment.
+    function resetRuqyahProgress() {
+      for (const segment of ruqyahContent.segments) ruqyahState.counts[segment.id] = 0;
+      for (const sura of ruqyahSuwar) {
+        ruqyahState.completedAt[sura.id] = null;
+        ruqyahIndices[sura.id] = 0;
+      }
+      ruqyahSelected = ruqyahSuwar[0].id;
+      saveRuqyahState();
+    }
+
+    function deleteRuqyahHistory(dates) {
+      if (dates === null) ruqyahState.history = {};
+      else for (const date of dates) delete ruqyahState.history[date];
+      if (dates === null || dates.includes(ruqyahState.date)) ruqyahState.dayCompletedAt = null;
+      saveRuqyahState();
     }
 
     // athkar-tasbih-v1: the «مسبحة» tab, apart from the other stores and, like athkar-suwar-v1, outside envelope v1.
@@ -6137,8 +7063,9 @@
       const today = localDateKey();
       const adhkarRolled = state.date !== today;
       const suwarRolled = suwarState.date !== today;
+      const ruqyahRolled = ruqyahState.date !== today;
       const tasbihRolled = tasbihState.date !== today;
-      if (!adhkarRolled && !suwarRolled && !tasbihRolled) return false;
+      if (!adhkarRolled && !suwarRolled && !ruqyahRolled && !tasbihRolled) return false;
       if (adhkarRolled) {
         state = rollStateToDate(state, today);
         currentIndices.morning = null;
@@ -6150,6 +7077,11 @@
         suwarState = rollSuwarStateToDate(suwarState, today);
         for (const id of Object.keys(suwarIndices)) suwarIndices[id] = null;
         saveSuwarState();
+      }
+      if (ruqyahRolled) {
+        ruqyahState = rollRuqyahStateToDate(ruqyahState, today);
+        for (const id of Object.keys(ruqyahIndices)) ruqyahIndices[id] = null;
+        saveRuqyahState();
       }
       // Rolled from what is stored (loadTasbihState rolls it), not from this tab's copy: another tab may have counted
       // since, or rolled the day already.
@@ -6381,23 +7313,37 @@
       return suwarById[suwarState.selected];
     }
 
-    // The deck on screen: the adhkar of the active period, or the pages of the selected sura.
+    function activeRuqyahSura() {
+      return ruqyahSuraById[ruqyahSelected];
+    }
+
+    // The deck on screen: the adhkar of the active period, the pages of the selected sura, or the segments of the
+    // ruqyah sura shown.
     function activeItems() {
-      return activePeriod === "suwar" ? activeSura().pages : deck(activePeriod);
+      if (activePeriod === "suwar") return activeSura().pages;
+      if (activePeriod === "ruqyah") return activeRuqyahSura().segments;
+      return deck(activePeriod);
     }
 
     function activeIndex() {
-      return (activePeriod === "suwar" ? suwarIndices[suwarState.selected] : currentIndices[activePeriod]) ?? 0;
+      if (activePeriod === "suwar") return suwarIndices[suwarState.selected] ?? 0;
+      if (activePeriod === "ruqyah") return ruqyahIndices[ruqyahSelected] ?? 0;
+      return currentIndices[activePeriod] ?? 0;
     }
 
     function setActiveIndex(index) {
       if (activePeriod === "suwar") suwarIndices[suwarState.selected] = index;
+      else if (activePeriod === "ruqyah") ruqyahIndices[ruqyahSelected] = index;
       else currentIndices[activePeriod] = index;
     }
 
     function fitCardContent(card) {
       if (card?.classList.contains("sura-page")) {
         fitSuraPage(card);
+        return;
+      }
+      if (card?.classList.contains("ruqyah-segment")) {
+        fitRuqyahSegment(card);
         return;
       }
       if (!card || card.matches(".quran, .needs-review")) return;
@@ -6437,6 +7383,15 @@
         list.setAttribute("aria-label", `صفحات ${activeSura().surah}، الصفحة ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
         return;
       }
+      if (activePeriod === "ruqyah") {
+        // The lock holds within the shown sura; the chips switch suras at any time.
+        previousCardButton.disabled = index <= 0;
+        nextCardButton.disabled = index >= items.length - 1 || !(item && ruqyahSegmentIsComplete(item));
+        cardPosition.textContent = `${formatNumber(index + 1)} من ${formatNumber(items.length)}`;
+        cardPosition.setAttribute("aria-label", `المقطع ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
+        list.setAttribute("aria-label", `مقاطع ${activeRuqyahSura().surah}، المقطع ${formatNumber(index + 1)} من ${formatNumber(items.length)}`);
+        return;
+      }
       const completed = item?.review || countFor(item) >= targetFor(item);
 
       previousCardButton.disabled = index <= 0;
@@ -6473,7 +7428,7 @@
 
       updateDeckNavigation();
       if (announce) {
-        const noun = activePeriod === "suwar" ? "الصفحة" : "الذكر";
+        const noun = activePeriod === "suwar" ? "الصفحة" : activePeriod === "ruqyah" ? "المقطع" : "الذكر";
         liveRegion.textContent = `${noun} ${formatNumber(nextIndex + 1)} من ${formatNumber(items.length)}`;
       }
       if (scrollToCard) {
@@ -6777,13 +7732,250 @@
       completionTitle.textContent = `اكتملت قراءة ${sura.surah} بحمد الله`;
       completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
       completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(new Date(suwarState.completedAt[sura.id]))}`;
+      completionClose.textContent = "تم";
       completionSwitch.hidden = true;
       completionDialog.showModal();
+    }
+
+    // «رقية القرين» (spec/sessions/deck-definition.md): one card per segment of the shown sura, tapped after each reading
+    // until its repeat is reached. The chips pick the sura; the today line counts the whole ruqyah.
+    function ruqyahRepeatLabel(segment) {
+      if (segment.repeat === 1) return "مرة واحدة";
+      if (segment.repeat === 2) return "مرتان";
+      return `${formatNumber(segment.repeat)} مرات`;
+    }
+
+    function ruqyahSegmentLabel(segment, index) {
+      const count = ruqyahCount(segment);
+      const status = segment.repeat === 1
+        ? (count >= 1 ? "تمت القراءة" : "لم تُقرأ بعد")
+        : `تم ${formatNumber(count)} من ${formatNumber(segment.repeat)}`;
+      return `المقطع ${formatNumber(index + 1)}: ${segment.surah} ${segment.range}. ${status}`;
+    }
+
+    function ruqyahSegmentMarkup(segment, index) {
+      const text = segment.ayahs.map(ayah => `${ayah.text} ﴿${formatNumber(ayah.number)}﴾`).join(" ");
+      const domId = `segment-${segment.id}`;
+      const status = segment.repeat === 1
+        ? `<output class="counter-status" id="${domId}-status"><span class="single-copy"></span><span class="counter-check" aria-hidden="true">✓</span></output>`
+        : `<output class="counter-status numeric" id="${domId}-status"><span class="counter-current"></span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(segment.repeat)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
+      return `
+        <li data-card-index="${index}">
+          <article class="dhikr-card quran ruqyah-segment" id="${domId}" data-id="${segment.id}">
+            <header class="card-head">
+              <h3 class="card-surah">${escapeHtml(segment.surah)}</h3>
+              <span class="card-range">${escapeHtml(segment.range)}</span>
+            </header>
+            <div class="card-content">
+              ${segment.basmala ? `<p class="dhikr-prefix">${escapeHtml(kfgqpcEncoding(ruqyahBasmala))}</p>` : ""}
+              <p class="dhikr-text">${quranTextMarkup(text)}</p>
+            </div>
+            <div class="requirement-row">
+              <div>
+                <p class="count-requirement">${escapeHtml(ruqyahRepeatLabel(segment))}</p>
+              </div>
+              <div class="counter-cluster">
+                ${status}
+                <button class="card-reset" type="button" aria-label="إعادة عداد المقطع ${formatNumber(index + 1)}">
+                  <span aria-hidden="true">↻</span><span>إعادة</span>
+                </button>
+              </div>
+            </div>
+            <button class="card-tap-target" type="button" aria-describedby="${domId}-status"></button>
+          </article>
+        </li>`;
+    }
+
+    function updateRuqyahSegment(segment, card, index, announce = false) {
+      const count = ruqyahCount(segment);
+      const complete = count >= segment.repeat;
+      const label = ruqyahSegmentLabel(segment, index);
+      card.classList.toggle("is-complete", complete);
+      card.querySelector(".card-reset").disabled = count === 0;
+      const tapTarget = card.querySelector(".card-tap-target");
+      tapTarget.setAttribute("aria-disabled", String(complete));
+      tapTarget.setAttribute("aria-label", complete ? `اكتمل. ${label}` : `تسجيل قراءة المقطع ${formatNumber(index + 1)}. ${label}`);
+      const status = card.querySelector(".counter-status");
+      status.setAttribute("aria-label", label);
+      if (segment.repeat === 1) status.querySelector(".single-copy").textContent = complete ? "تمت" : "اضغط بعد القراءة";
+      else status.querySelector(".counter-current").textContent = formatNumber(count);
+      if (announce) liveRegion.textContent = label;
+    }
+
+    // Steps the text down (data-fit 1…7: smaller and with less leading) until the segment needs no scrolling.
+    function fitRuqyahSegment(card) {
+      const content = card.querySelector(".card-content");
+      for (let step = 0; step <= 7; step += 1) {
+        card.dataset.fit = String(step);
+        if (content.scrollHeight <= content.clientHeight + 1) return;
+      }
+    }
+
+    function scheduleRuqyahAdvance(sura, index) {
+      if (index >= sura.segments.length - 1) return;
+      advanceTimer = setTimeout(() => {
+        if (activePeriod !== "ruqyah" || activeRuqyahSura() !== sura || activeIndex() !== index) return;
+        if (!ruqyahSegmentIsComplete(sura.segments[index])) return;
+        showCard(index + 1, "forward", true, true);
+      }, motionIsReduced.matches ? 20 : 320);
+    }
+
+    // A reading that completes a segment completes its sura and, with every other segment, the day, at one instant;
+    // the first completion of each is kept.
+    function countRuqyahSegment(sura, segment, card, index) {
+      if (ensureCurrentDay()) return;
+      if (ruqyahSegmentIsComplete(segment)) return;
+      const next = ruqyahCount(segment) + 1;
+      const completesSegment = next >= segment.repeat;
+      if (completesSegment) triggerHaptic(hapticDurationMs);
+      const at = new Date().toISOString();
+      ruqyahState.counts[segment.id] = next;
+      const completesSura = completesSegment && ruqyahSuraIsComplete(sura);
+      if (completesSura && !ruqyahState.completedAt[sura.id]) ruqyahState.completedAt[sura.id] = at;
+      const completesDay = completesSura && ruqyahSuwar.every(other => ruqyahSuraIsComplete(other));
+      if (completesDay && !ruqyahState.dayCompletedAt) ruqyahState.dayCompletedAt = at;
+      saveRuqyahState();
+      updateRuqyahSegment(segment, card, index, true);
+      updateSessionProgress();
+      updateDeckNavigation();
+      if (completesDay) openRuqyahDayDialog();
+      else if (completesSura) openRuqyahSuraDialog(sura);
+      else if (completesSegment) scheduleRuqyahAdvance(sura, index);
+    }
+
+    function requestRuqyahSegmentReset(sura, segment, card, index) {
+      if (!ruqyahCount(segment)) return;
+      openConfirmation("إعادة العداد؟", `سيعود عداد ${segment.surah} ${segment.range} إلى الصفر.`, () => {
+        if (ensureCurrentDay()) return;
+        ruqyahState.counts[segment.id] = 0;
+        ruqyahState.completedAt[sura.id] = null;
+        saveRuqyahState();
+        updateRuqyahSegment(segment, card, index, true);
+        updateSessionProgress();
+        updateDeckNavigation();
+      });
+    }
+
+    function renderRuqyahSegments() {
+      const sura = activeRuqyahSura();
+      if (!Number.isInteger(ruqyahIndices[sura.id])) {
+        const firstIncomplete = sura.segments.findIndex(segment => !ruqyahSegmentIsComplete(segment));
+        ruqyahIndices[sura.id] = Math.max(0, firstIncomplete);
+      }
+      ruqyahIndices[sura.id] = Math.min(ruqyahIndices[sura.id], sura.segments.length - 1);
+      list.innerHTML = sura.segments.map((segment, index) => ruqyahSegmentMarkup(segment, index)).join("");
+      list.classList.remove("is-entering");
+      requestAnimationFrame(() => list.classList.add("is-entering"));
+      sura.segments.forEach((segment, index) => {
+        const card = document.getElementById(`segment-${segment.id}`);
+        updateRuqyahSegment(segment, card, index);
+        card.addEventListener("click", event => {
+          if (performance.now() < suppressCardClicksUntil) return;
+          if (event.target.closest(".card-reset")) return;
+          countRuqyahSegment(sura, segment, card, index);
+        });
+        card.querySelector(".card-reset").addEventListener("click", () => requestRuqyahSegmentReset(sura, segment, card, index));
+      });
+      showCard(ruqyahIndices[sura.id], "forward");
+      updateSessionProgress();
+    }
+
+    function updateRuqyahPicker() {
+      ruqyahPicker.querySelectorAll("[data-ruqyah-sura]").forEach(chip => {
+        const sura = ruqyahSuraById[chip.dataset.ruqyahSura];
+        const complete = ruqyahSuraIsComplete(sura);
+        chip.setAttribute("aria-pressed", String(sura.id === ruqyahSelected));
+        chip.classList.toggle("is-complete", complete);
+        chip.querySelector(".sura-chip-status").textContent = complete ? "✓" : "";
+        chip.setAttribute("aria-label", `${sura.surah}${complete ? "، مكتملة اليوم" : ""}`);
+      });
+    }
+
+    function selectRuqyahSura(id, updateHash = true) {
+      if (!Object.hasOwn(ruqyahSuraById, id)) return;
+      ruqyahSelected = id;
+      if (activePeriod !== "ruqyah") {
+        switchPeriod("ruqyah", updateHash);
+        return;
+      }
+      if (updateHash && location.hash !== "#ruqyah") history.replaceState(null, "", "#ruqyah");
+      renderCards();
+    }
+
+    // The summary row is the shown sura's; the today line below it is the whole ruqyah's.
+    function updateRuqyahProgress() {
+      const sura = activeRuqyahSura();
+      const read = ruqyahReadings(sura.segments);
+      const total = ruqyahRepeats(sura.segments);
+      const complete = ruqyahSuraIsComplete(sura);
+      progressCopy.textContent = complete
+        ? `اكتملت ${sura.surah} اليوم`
+        : `${formatNumber(read)} من ${formatNumber(total)} تكرارًا`;
+      progressBar.max = total;
+      progressBar.value = read;
+      progressBar.setAttribute("aria-label", `${sura.surah}: ${formatNumber(read)} من ${formatNumber(total)} تكرارًا`);
+      sessionSummary.classList.toggle("is-complete", complete);
+      const dayAt = ruqyahState.dayCompletedAt;
+      ruqyahToday.textContent = dayAt
+        ? `تمت رقية اليوم في ${timeFormatter.format(new Date(dayAt))}`
+        : `رقية اليوم: ${formatNumber(ruqyahReadings(ruqyahContent.segments))} من ${formatNumber(ruqyahRepeats(ruqyahContent.segments))} تكرارًا`;
+      ruqyahToday.classList.toggle("is-complete", Boolean(dayAt));
+      updateRuqyahPicker();
+    }
+
+    // The next sura in pack order still incomplete today, wrapping round after the last; null when every one is complete.
+    function nextIncompleteRuqyahSura(sura) {
+      const start = ruqyahSuwar.indexOf(sura);
+      for (let step = 1; step < ruqyahSuwar.length; step += 1) {
+        const other = ruqyahSuwar[(start + step) % ruqyahSuwar.length];
+        if (!ruqyahSuraIsComplete(other)) return other;
+      }
+      return null;
+    }
+
+    // A sura complete by its counts but without an instant of its own (carried over from the standalone PWA) shows the
+    // day's record time, or no time.
+    function openRuqyahSuraDialog(sura) {
+      const at = ruqyahState.completedAt[sura.id] ?? ruqyahState.dayCompletedAt;
+      const next = nextIncompleteRuqyahSura(sura);
+      completionTitle.textContent = `اكتملت قراءة ${sura.surah} بحمد الله`;
+      completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
+      completionTime.textContent = at ? `وقت الإكمال: ${timeFormatter.format(new Date(at))}` : "";
+      completionClose.textContent = "تم";
+      completionSwitch.hidden = !next;
+      if (next) {
+        completionSwitch.textContent = `الانتقال إلى ${next.surah}`;
+        completionSwitchAction = () => selectRuqyahSura(next.id);
+      }
+      completionDialog.showModal();
+    }
+
+    function openRuqyahDayDialog() {
+      completionTitle.textContent = "تمت الرقية بحمد الله";
+      completionCopy.textContent = "اكتملت جميع المقاطع بتكراراتها.";
+      completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(new Date(ruqyahState.dayCompletedAt))}`;
+      completionClose.textContent = "إغلاق";
+      completionSwitch.hidden = false;
+      completionSwitch.textContent = "بدء رقية جديدة";
+      completionSwitchAction = restartRuqyah;
+      completionDialog.showModal();
+    }
+
+    // «بدء رقية جديدة»: the ruqyah's own day reset; today stays recorded.
+    function restartRuqyah() {
+      if (ensureCurrentDay()) return;
+      resetRuqyahProgress();
+      renderCards();
+      liveRegion.textContent = "أُعيدت عدادات اليوم";
     }
 
     function renderCards() {
       if (activePeriod === "suwar") {
         renderSuraPages();
+        return;
+      }
+      if (activePeriod === "ruqyah") {
+        renderRuqyahSegments();
         return;
       }
       if (activePeriod === "tasbih") {
@@ -6858,7 +8050,8 @@
     // iOS haptic. WebKit plays its switch haptic only when a trusted tap toggles a real `<input type="checkbox" switch>`
     // inside a user gesture (CheckboxInputType::willDispatchClick); since iOS 26.5 (WebKit bug 309082) a scripted click,
     // even on the switch's label, no longer plays it. So while the NEXT tap on the surface on screen is the one that
-    // completes (tasbih: count + 1 is a multiple of the target; a repeated dhikr: its count is target − 1; a sura page: unread),
+    // completes (tasbih: count + 1 is a multiple of the target; a repeated dhikr: its count is target − 1; a sura page: unread;
+    // a ruqyah segment: its count is repeat − 1),
     // an invisible switch lies over that surface's tap area and the user's own tap lands on it. Its change event runs the
     // surface's normal action once (runHapticArmAction); every redraw calls this again, which re-arms or disarms it.
     // - opacity 0 and appearance none: WebKit needs the switch rendered (it checks for a renderer), not painted; appearance
@@ -6886,11 +8079,13 @@
       }
       const item = activeItems()[activeIndex()];
       if (!item || item.review) return null;
-      const card = document.getElementById(activePeriod === "suwar" ? `page-${item.id}` : item.id);
+      const domId = activePeriod === "suwar" ? `page-${item.id}` : activePeriod === "ruqyah" ? `segment-${item.id}` : item.id;
+      const card = document.getElementById(domId);
       if (!card || card.closest("li")?.hidden) return null;
       observeHapticArmContent(card);
       if (hapticArmCardOverflows) return null;
       if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
+      if (activePeriod === "ruqyah") return ruqyahCount(item) === item.repeat - 1 ? card : null;
       const target = targetFor(item);
       return target > 1 && countFor(item) === target - 1 ? card : null;
     }
@@ -6976,7 +8171,8 @@
       completionSwitch.hidden = false;
       completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
       completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(completedAt)}`;
-      completionSwitch.dataset.period = otherPeriod;
+      completionClose.textContent = "تم";
+      completionSwitchAction = () => switchPeriod(otherPeriod);
       completionSwitch.textContent = `الانتقال إلى ${sectionNames[otherPeriod]}`;
       completionDialog.showModal();
     }
@@ -7033,7 +8229,10 @@
           tab.setAttribute("aria-label", sectionNames.tasbih);
           return;
         }
-        const complete = period === "suwar" ? suwarContent.suwar.every(sura => suraIsComplete(sura)) : periodIsComplete(period);
+        // The ruqyah's ✓ is today's record, which a day reset keeps.
+        const complete = period === "suwar" ? suwarContent.suwar.every(sura => suraIsComplete(sura))
+          : period === "ruqyah" ? Boolean(ruqyahState.dayCompletedAt)
+          : periodIsComplete(period);
         const status = tab.querySelector(".period-status");
         tab.classList.toggle("is-complete", complete);
         status.textContent = complete ? "✓" : "";
@@ -7061,11 +8260,12 @@
     }
 
     // Same entries envelope v1 carries: real calendar days before today, de-duplicated, newest first (backupHistory).
-    // The suras completed on a day (athkar-suwar-v1) and its tasbih counts (athkar-tasbih-v1), neither in envelope v1,
-    // are listed under its row.
+    // The suras completed on a day (athkar-suwar-v1), its ruqyah (athkar-ruqyah-v1) and its tasbih counts
+    // (athkar-tasbih-v1), none in envelope v1, are listed under its row.
     function updateHistoryView() {
       const adhkarDays = new Map(backupHistory(state.history, state.date).map(entry => [entry.date, entry]));
-      const localDays = [...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)].filter(date => date < state.date);
+      const localDays = [...Object.keys(suwarState.history), ...Object.keys(ruqyahState.history), ...Object.keys(tasbihState.history)]
+        .filter(date => date < state.date);
       const pastDates = [...new Set([...adhkarDays.keys(), ...localDays])]
         .sort().reverse().slice(0, suwarHistoryDays);
       const todaySuwar = Object.fromEntries(suwarContent.suwar.filter(sura => suraIsComplete(sura)).map(sura => [sura.id, true]));
@@ -7075,6 +8275,10 @@
           morning: periodIsComplete("morning"),
           evening: periodIsComplete("evening"),
           suwar: todaySuwar,
+          ruqyah: {
+            completedAt: ruqyahState.dayCompletedAt,
+            suwar: Object.fromEntries(ruqyahSuwar.filter(sura => ruqyahSuraIsComplete(sura)).map(sura => [sura.id, true]))
+          },
           tasbih: tasbihDayCounts(),
           isToday: true
         },
@@ -7083,6 +8287,7 @@
           morning: Boolean(adhkarDays.get(date)?.morning),
           evening: Boolean(adhkarDays.get(date)?.evening),
           suwar: suwarState.history[date] || {},
+          ruqyah: ruqyahState.history[date] || { completedAt: null, suwar: {} },
           tasbih: tasbihState.history[date] || {},
           isToday: false
         }))
@@ -7095,10 +8300,19 @@
           ${historyStateMarkup("الصباح", entry.morning)}
           ${historyStateMarkup("المساء", entry.evening)}
           ${suwar.length ? `<span class="history-suwar">${suwar.map(sura => historyStateMarkup(suraShortName(sura), true)).join("")}</span>` : ""}
+          ${ruqyahHistoryMarkup(entry.ruqyah)}
           ${tasbihHistoryMarkup(entry.tasbih)}
         </li>
       `;
       }).join("");
+    }
+
+    // «الرقية ✓» on a completed day; otherwise the ruqyah suras completed on it, if any.
+    function ruqyahHistoryMarkup(day) {
+      if (day.completedAt) return `<span class="history-suwar">${historyStateMarkup("الرقية", true)}</span>`;
+      const suwar = ruqyahSuwar.filter(sura => day.suwar[sura.id]);
+      if (!suwar.length) return "";
+      return `<span class="history-suwar"><span class="history-state">الرقية:</span>${suwar.map(sura => historyStateMarkup(suraShortName(sura), true)).join("")}</span>`;
     }
 
     function tasbihHistoryName(key) {
@@ -7515,6 +8729,7 @@
 
     function updateSessionProgress() {
       if (activePeriod === "suwar") updateSuraProgress();
+      else if (activePeriod === "ruqyah") updateRuqyahProgress();
       else if (activePeriod === "tasbih") sessionSummary.classList.remove("is-complete");
       else updateAdhkarProgress();
       sessionReset.disabled = !hasResettableState();
@@ -7549,11 +8764,16 @@
 
 
     function switchPeriod(period, updateHash = true) {
-      if (!collections[period] && period !== "suwar" && period !== "tasbih") return;
+      if (!collections[period] && !["ruqyah", "suwar", "tasbih"].includes(period)) return;
       const tasbihActive = period === "tasbih";
       activePeriod = period;
       body.dataset.period = period;
       suraPicker.hidden = period !== "suwar";
+      ruqyahPicker.hidden = period !== "ruqyah";
+      ruqyahToday.hidden = period !== "ruqyah";
+      deckHint.textContent = period === "ruqyah"
+        ? "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع."
+        : "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.";
       tasbihPicker.hidden = !tasbihActive;
       panel.hidden = tasbihActive;
       tasbihPanel.hidden = !tasbihActive;
@@ -7587,12 +8807,13 @@
       document.title = `${title}، أذكار المسلم`;
     }
 
-    // `#morning`, `#evening`, `#suwar` and `#tasbih` name a tab. `#suwar` opens on the last sura read; `#kahf`, `#yasin`,
-    // `#saffat`, `#waqiah`, `#mulk` open that sura in it.
-    // Anything else (e.g. #ruqyah from the removed tab) shows morning.
+    // `#morning`, `#evening`, `#ruqyah`, `#suwar` and `#tasbih` name a tab. `#ruqyah` opens on ق; `#qaf`, `#jinn`,
+    // `#takwir`, `#kafirun`, `#nas` open that sura in it. `#suwar` opens on the last sura read; `#kahf`, `#yasin`,
+    // `#saffat`, `#waqiah`, `#mulk` open that sura in it. Anything else shows morning.
     function routeFromHash(hash = location.hash) {
       const name = hash.slice(1);
-      if (["morning", "evening", "suwar", "tasbih"].includes(name)) return { period: name, sura: null };
+      if (["morning", "evening", "ruqyah", "suwar", "tasbih"].includes(name)) return { period: name, sura: null };
+      if (Object.hasOwn(ruqyahSuraById, name)) return { period: "ruqyah", sura: name };
       if (Object.hasOwn(suwarById, name)) return { period: "suwar", sura: name };
       return { period: "morning", sura: null };
     }
@@ -7602,7 +8823,8 @@
         collections[period].some(item => !item.review && countFor(item, period) > 0)
       );
       const anyManual = ["morning", "evening"].some(period => periodIsManuallyComplete(period));
-      return anyProgress || anyManual || state.history.length > 0 || suwarHasResettableState() || tasbihHasResettableState();
+      return anyProgress || anyManual || state.history.length > 0 || suwarHasResettableState() || ruqyahHasResettableState() ||
+        tasbihHasResettableState();
     }
 
     function resetDayProgress(announce = true) {
@@ -7615,6 +8837,7 @@
       markReset(state, state.date);
       saveState();
       resetSuwarProgress();
+      resetRuqyahProgress();
       resetTasbihProgress();
       scheduleReminders();
       renderCards();
@@ -7639,8 +8862,8 @@
 
     function resetWeek() {
       const dates = recentDates(7);
-      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)]
-        .filter(date => dates.includes(date))).size;
+      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...ruqyahRecordedDates(),
+        ...Object.keys(tasbihState.history)].filter(date => dates.includes(date))).size;
       openConfirmation(
         "حذف سجل هذا الأسبوع؟",
         `ستُعاد عدادات اليوم، وسيُحذف ${recorded ? `سجل ${dayCountLabel(recorded)} من آخر أسبوع` : "سجل آخر سبعة أيام"}. لا يمكن التراجع.`,
@@ -7648,6 +8871,7 @@
           state.history = state.history.filter(entry => !dates.includes(entry.date));
           for (const date of dates) markReset(state, date);
           deleteSuwarHistory(dates);
+          deleteRuqyahHistory(dates);
           deleteTasbihHistory(dates);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف سجل آخر سبعة أيام";
@@ -7656,7 +8880,8 @@
     }
 
     function resetEverything() {
-      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...Object.keys(tasbihState.history)]).size;
+      const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...ruqyahRecordedDates(),
+        ...Object.keys(tasbihState.history)]).size;
       openConfirmation(
         "حذف كل شيء؟",
         `ستُعاد العدادات وسيُحذف السجل كاملًا${recorded ? ` (${dayCountLabel(recorded)})` : ""}. لا يمكن التراجع.`,
@@ -7664,6 +8889,7 @@
           state.history = [];
           for (const date of recentDates(resetEpochDays)) markReset(state, date);
           deleteSuwarHistory(null);
+          deleteRuqyahHistory(null);
           deleteTasbihHistory(null);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف السجل كاملًا";
@@ -8045,8 +9271,8 @@
         const prayerName = period === "morning" ? "الفجر" : "العصر";
         await registration.showNotification(sectionNames[period], {
           body: `مرّت ساعة على صلاة ${prayerName}. حان وقت ${sectionNames[period]}.`,
-          icon: "./icons/icon-192.png?v=13",
-          badge: "./icons/icon-192.png?v=13",
+          icon: "./icons/icon-192.png?v=14",
+          badge: "./icons/icon-192.png?v=14",
           tag: `athkar-${period}-${localDateKey()}`,
           renotify: false,
           data: { url: new URL(`./#${period}`, location.href).href }
@@ -8263,7 +9489,7 @@
       // WAI-ARIA tabs: arrows cycle through the tabs in reading order (right to left, so ArrowLeft is the next tab),
       // Home/End go to the first/last.
       tab.addEventListener("keydown", event => {
-        const periods = ["morning", "evening", "suwar", "tasbih"];
+        const periods = ["morning", "evening", "ruqyah", "suwar", "tasbih"];
         const steps = { ArrowLeft: 1, ArrowRight: -1 };
         let nextPeriod;
         if (event.key === "Home") nextPeriod = periods[0];
@@ -8279,6 +9505,12 @@
     suraPicker.querySelectorAll("[data-sura]").forEach(chip => {
       chip.addEventListener("click", () => {
         if (chip.dataset.sura !== suwarState.selected) selectSura(chip.dataset.sura);
+      });
+    });
+
+    ruqyahPicker.querySelectorAll("[data-ruqyah-sura]").forEach(chip => {
+      chip.addEventListener("click", () => {
+        if (chip.dataset.ruqyahSura !== ruqyahSelected) selectRuqyahSura(chip.dataset.ruqyahSura);
       });
     });
 
@@ -9911,6 +11143,12 @@
       updateHistoryView();
     }
 
+    function showStoredRuqyahState() {
+      ruqyahState = loadRuqyahState();
+      if (activePeriod === "ruqyah") renderCards();
+      else updateSessionProgress();
+    }
+
     // «نقل التقدّم» (spec/transfer/transfer-v1.md): #transfer-dialog opens over Settings in send mode (send → qr) or
     // receive mode (receive → scan → preview → result). The QR libraries in vendor/ load only when a QR view opens.
     const transferDialog = document.getElementById("transfer-dialog");
@@ -9980,7 +11218,7 @@
       "not-code": ["ليس رمز نقل", "هذا ليس رمز نقل من «أذكار المسلم». تأكد أنك نسخت الرمز من «إرسال التقدّم»."],
       "too-long": ["ليس رمز نقل", "النص أطول من أي رمز نقل. تأكد أنك لصقت الرمز وحده."],
       "one-frame": ["رمز ناقص", "هذا جزء واحد من رمز QR متعدد الأجزاء. انسخ الرمز كاملًا من «نسخ الرمز»."],
-      "wrong-app": ["رمز تطبيق آخر", "هذا رمز من تطبيق «رقية القرين». افتح «رقية القرين» على هذا الجهاز واستلمه هناك."],
+      "wrong-app": ["رمز تطبيق آخر", "هذا رمز من تطبيق «رقية القرين» المستقل، ولا يُستلم هنا. صارت رقية القرين تبويبًا في هذا التطبيق، وينتقل إليه تقدّمها على هذا الجهاز تلقائيًا."],
       newer: ["إصدار أحدث", "أُنشئ هذا الرمز بإصدار أحدث من التطبيق. لتحديث التطبيق على هذا الجهاز، أغلقه تمامًا وافتحه وأنت متصل بالإنترنت، ثم أعد المحاولة."],
       corrupt: ["رمز تالف", transferCorruptText],
       clock: ["رمز غير صالح", "في الرمز أوقات لاحقة لساعة هذا الجهاز، فإما أن الرمز غير صالح أو أن الساعة غير مضبوطة. تأكد من ضبط التاريخ والوقت على الجهازين، ثم أنشئ رمزًا جديدًا على الجهاز الآخر."],
@@ -11184,9 +12422,9 @@
 
     completionClose.addEventListener("click", () => completionDialog.close());
     completionSwitch.addEventListener("click", () => {
-      const period = completionSwitch.dataset.period;
+      const action = completionSwitchAction;
       completionDialog.close();
-      switchPeriod(period);
+      action?.();
       window.scrollTo({ top: 0, behavior: "auto" });
     });
 
@@ -11298,12 +12536,13 @@
       if (root.dataset.theme === "system") applyTheme("system", false);
     });
 
-    // routeFromHash names the tab; a sura deep link (#kahf …) selects that sura and settles on #suwar.
+    // routeFromHash names the tab; a sura deep link (#kahf …, #jinn …) selects that sura and settles on #suwar or #ruqyah.
     addEventListener("hashchange", () => {
       if (!location.hash) return;
       const { period, sura } = routeFromHash();
       if (location.hash !== `#${period}`) history.replaceState(null, "", `#${period}`);
-      if (sura) selectSura(sura, false);
+      if (sura && period === "ruqyah") selectRuqyahSura(sura, false);
+      else if (sura) selectSura(sura, false);
       else if (period !== activePeriod) switchPeriod(period, false);
     });
     document.addEventListener("visibilitychange", () => {
@@ -11320,6 +12559,7 @@
       if (event.key === tasbihStorageKey || event.key === null) showStoredTasbihState();
       if (event.key === storageKey || event.key === null) showStoredProgressState();
       if (event.key === suwarStorageKey || event.key === null) showStoredSuwarState();
+      if (event.key === ruqyahStorageKey || event.key === null) showStoredRuqyahState();
     });
 
     dialogCancel.addEventListener("click", () => {

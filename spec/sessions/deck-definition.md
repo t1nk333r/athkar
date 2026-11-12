@@ -3,7 +3,8 @@
 This document defines the card-deck screen that the four decks share: أذكار الصباح, أذكار المساء, رقية القرين and سور
 (NATIVE_APP_PLAN.md §3.2, §9.2). It describes behaviour, not code. A platform builds one deck component driven by
 this document. iOS builds `DeckView` and `DeckModel` in `ios/Athkar/Deck/`. Android builds a Compose `DeckScreen`.
-The rules below follow the two PWAs: `index.html` in this repository, and `index.html` in `ruqyah-al-qareen`. PWA
+The rules below follow the PWA, `index.html` in this repository. Its «رقية» tab replaced the standalone
+`ruqyah-al-qareen` PWA, which the ruqyah rules were first taken from; "the ruqyah PWA" below means that app. PWA
 function names are given in backticks.
 
 Session rules that already have fixtures (`spec/sessions/fixtures/`) are the contract: `targetForState`,
