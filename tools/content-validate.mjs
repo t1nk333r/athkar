@@ -4,6 +4,7 @@
 // Quran comparison (rule 2). Every quran item is checked against two independent sources:
 //   alquran-cloud:quran-uthmani  -> alquran-cloud.quran-uthmani (exact but for the seat of a hamza after lam)
 //                                   + quran-com.v4.uthmani (encoding-normalised; the hamza seat compared exactly)
+//                                   with «لأٓ» for a hamza and alef after lam in both, as the King Fahd Complex writes it
 //   simplified-rasm              -> alquran-cloud.quran-simple (exact)     + quran-com.v4.imlaei  (letters and vowels)
 // For simplified-rasm, letters and fatha/damma/kasra/tanween are two-source. Shadda, sukun, pause and annotation
 // marks, superscript alef and tatweel are checked against quran-simple only: imlaei marks idgham differently (no
@@ -207,17 +208,24 @@ const dropBasmala = (key, text) => (key.endsWith(":1") && key !== "1:1" && text.
 // exactly: hamza above on tatweel (U+0640 U+0654) and a bare hamza (U+0621) differ.
 const quranComEncoding = text => text.replace(/\u0640(?=\u0670)/g, "").replace(/([\u064B-\u064D]\u0651?)[\u06E2\u06ED]/g, "$1");
 // Tanzil, and so alquran.cloud, writes a bare hamza after a lam inside a word («لِءَابَآئِهِمْ», «ٱلْءَاخِرِينَ»), which
-// leaves the lam unjoined; quran.com and the King Fahd Complex join the lam to a tatweel carrying the hamza
-// («لِـَٔابَآئِهِمْ»), as the mushaf does. Packs follow quran.com; this maps alquran.cloud's spelling to it (a word-final
-// hamza after lam, «مِّلْءُ», stays bare in every source and is not touched).
+// leaves the lam unjoined; quran.com joins the lam to a tatweel carrying the hamza («لِـَٔابَآئِهِمْ»). This maps
+// alquran.cloud's spelling to quran.com's (a word-final hamza after lam, «مِّلْءُ», stays bare in every source and is
+// not touched).
 const tanzilHamzaSeat = text => text.replace(/\u0644([\u064E\u0650\u0652]?)\u0621([\u064B-\u0650])(?=\p{L})/gu, "\u0644$1\u0640$2\u0654");
+// Where that hamza carries a fatha and an alef follows, the King Fahd Complex's mushaf (text_qpc_hafs on quran.com)
+// writes alef with hamza and madda joined to the lam: «لِأٓبَآئِهِمۡ», «ٱلۡأٓخِرِينَ», «ٱلۡأٓنَ». On a tatweel the hamza
+// shows on a tooth, read «الئاخرين». Across the whole Quran each of quran.com's 277 «لـَٔا» is «لأٓ» in text_qpc_hafs, and
+// every other tatweel hamza («فَـَٔامَنُوا۟», «مُتَّكِـِٔينَ») is spelt the same in both. Packs follow the King Fahd
+// Complex; this maps the reference only, so a pack that keeps «لـَٔا» still fails.
+const lamHamzaMadda = text => text.replace(/\u0644([\u064E\u0650\u0652]?)\u0640\u064E\u0654\u0627/g, "\u0644$1\u0623\u0653");
 // Letters and vowels: drops shadda, sukun, Quranic annotation and pause marks, superscript alef and tatweel; keeps
 // fatha, damma, kasra and tanween. Equal between quran-simple and imlaei on every reference verse.
 const vowelled = text => text.replace(/[\u0651\u0652\u06D6-\u06ED\u0670\u0640]/g, "").replace(/\s+/g, " ").trim();
 
+// [source, transform for both texts, spelling applied to the reference only]
 const comparisons = {
-  "alquran-cloud:quran-uthmani": [["alquran-cloud.quran-uthmani", tanzilHamzaSeat], ["quran-com.v4.uthmani", quranComEncoding]],
-  "simplified-rasm": [["alquran-cloud.quran-simple", t => t], ["quran-com.v4.imlaei", vowelled]]
+  "alquran-cloud:quran-uthmani": [["alquran-cloud.quran-uthmani", tanzilHamzaSeat, lamHamzaMadda], ["quran-com.v4.uthmani", quranComEncoding, lamHamzaMadda]],
+  "simplified-rasm": [["alquran-cloud.quran-simple", t => t, t => t], ["quran-com.v4.imlaei", vowelled, t => t]]
 };
 
 /** Word-level diff (LCS) as ["-ours", "+reference", …]; empty when equal. */
@@ -248,12 +256,12 @@ function wordSlice(text, { wordFrom, wordTo }) {
 }
 
 function compareQuran(where, id, edition, surah, from, to, text, excerpt) {
-  for (const [source, transform] of comparisons[edition]) {
+  for (const [source, transform, spelling] of comparisons[edition]) {
     const keys = Array.from({ length: to - from + 1 }, (_, k) => `${surah}:${from + k}`);
     const missing = keys.filter(k => reference[source][k] === undefined);
     if (missing.length) { fail(`${where}: ${source} lacks ${missing.join(", ")} (run content-reference-refresh)`); continue; }
     const ours = transform(normalise(text));
-    let ref = transform(normalise(keys.map(k => dropBasmala(k, reference[source][k])).join(" ")));
+    let ref = spelling(transform(normalise(keys.map(k => dropBasmala(k, reference[source][k])).join(" "))));
     if (excerpt) {
       ref = wordSlice(ref, excerpt);
       if (ref === null) { fail(`${where}: excerpts.json words ${excerpt.wordFrom}…${excerpt.wordTo} are outside ${source}`); continue; }

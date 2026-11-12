@@ -1,28 +1,3 @@
 {
-  "exceptions": [
-    {
-      "items": [
-        "jinn-8-13"
-      ],
-      "source": "alquran-cloud.quran-uthmani",
-      "diff": [
-        "+ٱلْـَٔانَ",
-        "-ٱلْأٓنَ"
-      ],
-      "reviewRecord": "R4",
-      "note": "Al-Jinn 9 is spelt ٱلْأٓنَ, as in the King Fahd Complex's HAFS text (content/reference/kfgqpc-hafs.ruqyah.json); this source writes a bare hamza before the alef, which the validator reads in quran.com's spelling (hamza above on a tatweel after the lam)."
-    },
-    {
-      "items": [
-        "jinn-8-13"
-      ],
-      "source": "quran-com.v4.uthmani",
-      "diff": [
-        "+ٱلْـَٔانَ",
-        "-ٱلْأٓنَ"
-      ],
-      "reviewRecord": "R4",
-      "note": "Al-Jinn 9 is spelt ٱلْأٓنَ, as in the King Fahd Complex's HAFS text (content/reference/kfgqpc-hafs.ruqyah.json); this source writes the hamza above a tatweel after the lam, before the alef."
-    }
-  ]
+  "exceptions": []
 }
