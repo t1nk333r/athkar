@@ -121,7 +121,9 @@ const functions = [
   // prayer times and reminders
   "emptyReminderPreferences", "normalizePrayerLocation", "toRadians", "toDegrees", "normalizeDegrees",
   "solarTerms", "dateAtLocalMinutes", "solarDay", "prayerTimesForDate", "notificationPermission",
-  "nextReminderTime", "scheduleReminders"
+  "nextReminderTime", "scheduleReminders",
+  // the Friday window and the last third of the night (spec/night/night.md)
+  "nightTimesForDate", "localNoon", "fridayPhase", "lastThirdOfNight", "tonightLastThird"
 ];
 
 // UI-only collaborators of the functions above. None of them affects the state under test.
@@ -1079,6 +1081,83 @@ function scheduleFor(timeZone, location, y, m, d, preferences = reminderPreferen
   setNow(0);
   const result = fn.prayerTimesForDate(new ContextDate(y, m - 1, d, 12), intoContext(preferences));
   return result ? { morning: result.morning.getTime(), evening: result.evening.getTime() } : null;
+}
+
+// The Friday window and the last third of the night run on given times, so a native port tests its rule on the same
+// Maghrib and Fajr, whatever its own calculation gives.
+function nightCases() {
+  const at = (timeZone, y, m, d, h, mi = 0, s = 0, ms = 0) => localMs(timeZone, y, m, d, h, mi, s, ms);
+  const placeTimes = (location, dates) => {
+    const preferences = intoContext(reminderPreferences(location));
+    return Object.fromEntries(dates.map(date => {
+      const [y, m, d] = date.split("-").map(Number);
+      setZone(location.timeZone);
+      const times = fn.nightTimesForDate(new ContextDate(y, m - 1, d, 12), preferences);
+      return [date, times ? { fajr: iso(times.fajr), maghrib: iso(times.maghrib) } : null];
+    }));
+  };
+  const mecca = locations.find(l => l.id === "mecca");
+  const riyadh = mecca.timeZone;
+  // Wednesday 11 to Saturday 14 November 2026.
+  const meccaTimes = placeTimes(mecca, ["2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14", "2026-11-15"]);
+  const ms = (date, key) => Date.parse(meccaTimes[date][key]);
+  // Asia/Jerusalem moves to summer time on Friday 27 March 2026 at 02:00.
+  const jerusalem = { id: "jerusalem", latitude: 31.77, longitude: 35.21, timeZone: "Asia/Jerusalem" };
+  const jerusalemTimes = placeTimes(jerusalem, ["2026-03-25", "2026-03-26", "2026-03-27", "2026-03-28"]);
+  const run = (name, fnName, timeZone, nowMs, times) => {
+    setZone(timeZone);
+    const timesFor = vm.runInContext(`(table => date => {
+      const key = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+      const entry = table[key];
+      return entry ? { fajr: entry.fajr ? new Date(entry.fajr) : null, maghrib: entry.maghrib ? new Date(entry.maghrib) : null } : null;
+    })`, context)(intoContext(times));
+    const result = fn[fnName](new ContextDate(nowMs), timesFor);
+    const expected = fnName === "fridayPhase" ? result : result && { start: iso(result.start), end: iso(result.end) };
+    return { name, input: { function: fnName, timeZone, now: new Date(nowMs).toISOString(), nowLocal: localIso(timeZone, nowMs), times }, expected };
+  };
+  const friday = (name, nowMs, times = meccaTimes, timeZone = riyadh) => run(name, "fridayPhase", timeZone, nowMs, times);
+  const third = (name, nowMs, times = meccaTimes, timeZone = riyadh) => run(name, "tonightLastThird", timeZone, nowMs, times);
+  const without = (date, key) => ({ ...meccaTimes, [date]: { ...meccaTimes[date], [key]: null } });
+  const none = Object.fromEntries(Object.keys(meccaTimes).map(date => [date, null]));
+  return [
+    friday("Wednesday night: nothing", at(riyadh, 2026, 11, 11, 23, 0)),
+    friday("Thursday noon: nothing", at(riyadh, 2026, 11, 12, 12, 0)),
+    friday("1 ms before Thursday's Maghrib: nothing", ms("2026-11-12", "maghrib") - 1),
+    friday("at Thursday's Maghrib: the night", ms("2026-11-12", "maghrib")),
+    friday("Thursday 23:30: the night", at(riyadh, 2026, 11, 12, 23, 30)),
+    friday("Friday 01:45: still the night", at(riyadh, 2026, 11, 13, 1, 45)),
+    friday("1 ms before Friday's Fajr: the night", ms("2026-11-13", "fajr") - 1),
+    friday("at Friday's Fajr: the day", ms("2026-11-13", "fajr")),
+    friday("Friday noon: the day", at(riyadh, 2026, 11, 13, 12, 0)),
+    friday("1 ms before Friday's Maghrib: the day", ms("2026-11-13", "maghrib") - 1),
+    friday("at Friday's Maghrib: over", ms("2026-11-13", "maghrib")),
+    friday("Saturday 01:00: nothing", at(riyadh, 2026, 11, 14, 1, 0)),
+    friday("no location, Thursday 23:00: no night without a Maghrib", at(riyadh, 2026, 11, 12, 23, 0), none),
+    friday("no location, Friday 01:00: all of Friday is the day", at(riyadh, 2026, 11, 13, 1, 0), none),
+    friday("no location, Friday 23:00: still the day", at(riyadh, 2026, 11, 13, 23, 0), none),
+    friday("Friday's Fajr not computable, 01:00: the day", at(riyadh, 2026, 11, 13, 1, 0), without("2026-11-13", "fajr")),
+    friday("Thursday's Maghrib not computable, 23:00: nothing", at(riyadh, 2026, 11, 12, 23, 0), without("2026-11-12", "maghrib")),
+    friday("Jerusalem, Friday 03:30 just after the clocks go forward: the night", at(jerusalem.timeZone, 2026, 3, 27, 3, 30), jerusalemTimes, jerusalem.timeZone),
+    friday("Jerusalem, Friday noon on the DST day: the day", at(jerusalem.timeZone, 2026, 3, 27, 12, 0), jerusalemTimes, jerusalem.timeZone),
+    third("Friday 01:45: the night that began at Thursday's Maghrib", at(riyadh, 2026, 11, 13, 1, 45)),
+    third("1 ms before Friday's Fajr: the same night", ms("2026-11-13", "fajr") - 1),
+    third("at Friday's Fajr: the next night", ms("2026-11-13", "fajr")),
+    third("Thursday 10:00: tonight, from Thursday's Maghrib", at(riyadh, 2026, 11, 12, 10, 0)),
+    third("Thursday 23:00: tonight", at(riyadh, 2026, 11, 12, 23, 0)),
+    third("no location: none", at(riyadh, 2026, 11, 12, 23, 0), none),
+    third("tomorrow's Fajr not computable: none", at(riyadh, 2026, 11, 12, 23, 0), without("2026-11-13", "fajr")),
+    third("today's Fajr not computable, 01:00: tonight from today's Maghrib", at(riyadh, 2026, 11, 13, 1, 0), without("2026-11-13", "fajr")),
+    third("yesterday's Maghrib not computable, 01:00: none", at(riyadh, 2026, 11, 13, 1, 0), without("2026-11-12", "maghrib")),
+    third("rounding: a night of 11 h and 1 ms starts its last third 7 h 20 min and 1 ms in", at(riyadh, 2026, 11, 12, 23, 0), {
+      "2026-11-12": { fajr: "2026-11-12T01:45:00.000Z", maghrib: "2026-11-12T15:00:00.000Z" },
+      "2026-11-13": { fajr: "2026-11-13T02:00:00.001Z", maghrib: "2026-11-13T15:00:00.000Z" }
+    }),
+    third("a Fajr not after Maghrib: none", at(riyadh, 2026, 11, 12, 23, 0), {
+      "2026-11-12": { fajr: "2026-11-12T01:45:00.000Z", maghrib: "2026-11-12T15:00:00.000Z" },
+      "2026-11-13": { fajr: "2026-11-12T15:00:00.000Z", maghrib: "2026-11-13T15:00:00.000Z" }
+    }),
+    third("Jerusalem, the night across the change to summer time", at(jerusalem.timeZone, 2026, 3, 26, 22, 0), jerusalemTimes, jerusalem.timeZone)
+  ];
 }
 
 function reminderCases() {
@@ -2279,6 +2358,13 @@ writeCases("spec/reminders/fixtures/next-reminder-time.json",
   },
   { collections: realCollections }, reminderCases());
 written.push(writeVectors("spec/prayer-times/vectors.json"));
+
+writeCases("spec/night/fixtures/night.json",
+  {
+    about: "fridayPhase: \"night\" (ليلة الجمعة) from Thursday's Maghrib to Friday's Fajr, \"day\" (يوم الجمعة) from Friday's Fajr to its Maghrib, else null. tonightLastThird: the last third of the night `now` is in or of the next one ({start, end} or null); start = Maghrib + round((Fajr − Maghrib) × 2 / 3) ms. `times` maps local dates to that date's Maghrib and Fajr (null: not computable, or no location); the place-based times come from nightTimesForDate.",
+    source: "index.html: fridayPhase, tonightLastThird, lastThirdOfNight, localNoon, nightTimesForDate"
+  },
+  {}, nightCases());
 
 const transferSource = "index.html: base45Encode, base45Decode, transferChecksum, transferFrames, transferTextCode, " +
   "parseTransferFrame, decodeTransfer, decodeTransferFrames, decodeTransferFile, validateTransferContainer, validateTransferEnvelope";
