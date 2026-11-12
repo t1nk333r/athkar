@@ -249,7 +249,7 @@ struct PrayerTimesView: View {
             .padding(.vertical, 14)
             .card(palette)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(PrayerNames.counting(to: next))، \(target)، بعد \(remaining)")
+            .accessibilityLabel("\(PrayerNames.counting(to: next))، \(at)، بعد \(remaining)")
             .accessibilityIdentifier("prayer.countdown")
         }
     }
@@ -264,7 +264,8 @@ struct PrayerTimesView: View {
             ForEach(Array(PrayerTime.allCases.enumerated()), id: \.element) { index, time in
                 if index > 0 { Rule() }
                 let isNext = next?.prayer == time && next?.date == schedule?.localDate
-                let ink = isNext ? palette.accentStrong : (time == .sunrise ? palette.textSecondary : palette.textPrimary)
+                let ink = isNext ? palette.accentStrong
+                    : (time == .sunrise ? palette.textSecondary : palette.textPrimary)
                 HStack(spacing: 12) {
                     Text(PrayerNames.name(time))
                         .font(.title3.weight(isNext ? .bold : .semibold))
