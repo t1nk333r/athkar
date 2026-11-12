@@ -6,9 +6,9 @@ const CACHE_NAME = "athkar-static-v72";
 const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest?v=15",
-  "./icons/icon.svg?v=14",
-  "./icons/icon-192.png?v=14",
-  "./icons/icon-512.png?v=14",
+  "./icons/icon.svg?v=15",
+  "./icons/icon-192.png?v=15",
+  "./icons/icon-512.png?v=15",
   "./fonts/kfgqpc-uthman-taha-naskh.ttf",
   "./fonts/kfgqpc-hafs-v30.ttf",
   // Loaded on demand by the transfer QR views (vendor/README.md).
