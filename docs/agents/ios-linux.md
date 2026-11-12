@@ -83,9 +83,8 @@ the Mac, and the AthkarTests compilation, whose bundle packaging still fails on 
 `tools/test.sh --plan` prints each lane's selection and the reason without running anything.
 `--base REF` compares with another branch or commit, and `--all` runs every lane in full. The
 last line is `RESULT status=pass|fail|incomplete lanes=<lane>:<outcome>,...`. A busy build lane
-is `busy`, and uncommitted changes leave the native lanes `unavailable`. Without the ruqyah PWA's
-`content.js` (`$ATHKAR_RUQYAH_CONTENT`, default `../ruqyah-al-qareen/content.js`), the content
-lane checks `index.html` only and is `unavailable`. Any of these makes the run `incomplete`.
+is `busy`, and uncommitted changes leave the native lanes `unavailable`. Either makes the run
+`incomplete`.
 
 `tools/affected-tests.py` makes the selection. A test runs when it depends on a changed file
 through the Swift code compiled into its target, or reads a changed fixture, pack or data file.

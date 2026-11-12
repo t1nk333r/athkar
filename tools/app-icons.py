@@ -14,13 +14,17 @@ appearance; iOS 17 shows the light one):
   to the primary icon: from iOS 26.1, and still on 26.6, `setAlternateIconName(nil)` can leave the
   alternate icon on the home screen (https://developer.apple.com/forums/thread/809474).
 
+The PWA's icons (icons/icon.svg, icon-192.png, icon-512.png) are the light AppIcon. Its letter sits
+inside the middle 80% circle, so the same files serve as maskable icons.
+
 The colours are the palette's (ios/Athkar/Design/Palette.swift). The light icon is ink on paper.
 The dark and tinted icons have no background, so iOS draws its own behind them: the dark one in
 the dark palette's ink and accent, the tinted one in greys that iOS tints. Each preview is 60 pt
 at 3x, light and dark.
 
 Needs fontTools and resvg (RESVG, or resvg on PATH). It rewrites the PNGs and Contents.json files
-under ios/Athkar/Assets.xcassets.
+under ios/Athkar/Assets.xcassets and the PWA's icons. A new PWA icon also needs the ?v= of its URLs
+raised in index.html, manifest.webmanifest and sw.js, and sw.js's CACHE_NAME bumped.
 """
 
 import json
@@ -37,6 +41,7 @@ from fontTools.ttLib import TTFont
 REPO = Path(__file__).resolve().parent.parent
 FONT = REPO / "fonts" / "kfgqpc-uthman-taha-naskh.ttf"
 CATALOG = REPO / "ios" / "Athkar" / "Assets.xcassets"
+PWA_ICONS = REPO / "icons"
 SIDE = 1024
 PREVIEW = 180
 
@@ -132,6 +137,12 @@ def preview_set(name: str, light: str, dark: str, work: Path) -> None:
     })
 
 
+def pwa_icons(source: str, work: Path) -> None:
+    (PWA_ICONS / "icon.svg").write_text(source + "\n", encoding="utf-8")
+    for width in (192, 512):
+        render(source, PWA_ICONS / f"icon-{width}.png", width, work)
+
+
 def main() -> None:
     body, dot = beh_paths()
     dark_preview = (DARK_PREVIEW_BACKGROUND, *DARK[1:])
@@ -144,6 +155,7 @@ def main() -> None:
         icon_set("AppIconHorizon", {"any": horizon(LIGHT), "dark": horizon(DARK), "tinted": horizon(TINTED)}, work)
         preview_set("IconChoiceLetter", letter(LIGHT, body, dot), letter(dark_preview, body, dot), work)
         preview_set("IconChoiceHorizon", horizon(LIGHT), horizon(dark_preview), work)
+        pwa_icons(letter(LIGHT, body, dot), work)
 
 
 if __name__ == "__main__":

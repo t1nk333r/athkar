@@ -18,7 +18,7 @@ export function loadPwaContent(indexPath = join(repoRoot, "index.html")) {
   const end = html.indexOf("const collections = {");
   if (start < 0 || end < 0) throw new Error("index.html: content data block not found");
   const ctx = {};
-  vm.runInNewContext(`${html.slice(start, end)}\nglobalThis.out = { morning: morningAthkar, evening: eveningAthkar, suwar: suwarContent };`, ctx);
+  vm.runInNewContext(`${html.slice(start, end)}\nglobalThis.out = { morning: morningAthkar, evening: eveningAthkar, suwar: suwarContent, ruqyah: ruqyahContent };`, ctx);
   return ctx.out;
 }
 
@@ -41,28 +41,6 @@ export function jsonEqual(a, b) {
     return jsonEqual(ka, kb) && ka.every(k => jsonEqual(a[k], b[k]));
   }
   return a === b;
-}
-
-/**
- * Serialises the ruqyah pack exactly as ruqyah-al-qareen/content.js is laid out: `RUQYAH_SUWAR`, one entry per sura
- * in pack order, `{ id, surah, segments }`. The sura id is the segment-id prefix up to the first "-" (the validator
- * fixes it to qaf/jinn/takwir/kafirun/nas); a sura's segments must be consecutive in the pack.
- */
-export function ruqyahContentJs(pack) {
-  const suwar = [];
-  for (const { id, surah, range, repeat, basmala, ayahs } of pack.segments) {
-    const suraId = id.slice(0, id.indexOf("-"));
-    if (!suraId) throw new Error(`ruqyah segment ${id}: id has no sura prefix`);
-    let sura = suwar.at(-1);
-    if (sura?.id !== suraId) {
-      if (suwar.some(other => other.id === suraId)) throw new Error(`ruqyah segment ${id}: sura ${suraId} is not consecutive in the pack`);
-      sura = { id: suraId, surah, segments: [] };
-      suwar.push(sura);
-    }
-    if (sura.surah !== surah) throw new Error(`ruqyah segment ${id}: surah "${surah}" differs from "${sura.surah}" in sura ${suraId}`);
-    sura.segments.push({ id, surah, range, repeat, basmala, ayahs });
-  }
-  return `"use strict";\n\nconst RUQYAH_SUWAR = ${JSON.stringify(suwar, null, 2)};\n`;
 }
 
 /**
