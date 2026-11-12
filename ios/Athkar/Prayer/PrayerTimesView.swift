@@ -1,9 +1,9 @@
 import AthkarCore
 import SwiftUI
 
-/// The أوقات الصلاة section of أخرى: the day's six times and the five iqamas, with a countdown to the next adhan or,
-/// after an adhan, to its iqama; the location that produced them, and the calculation settings (NATIVE_APP_PLAN.md
-/// §7.3).
+/// The أوقات الصلاة section of أخرى: the day in large Naskh with the Moon's phase, the prayer counted to with its
+/// time left (the next adhan or, after an adhan, its iqama), the day's six times with their symbols, the iqamas and
+/// the start of «الإشراق»; the location that produced them, and the calculation settings (NATIVE_APP_PLAN.md §7.3).
 struct PrayerTimesView: View {
     let model: PrayerTimesModel
     let reminders: ReminderModel
@@ -134,32 +134,66 @@ struct PrayerTimesView: View {
 
     // MARK: Day
 
+    /// The day on screen: its weekday and Hijri day in large Naskh, the Moon's phase beside the weekday, the
+    /// Gregorian date and the Hijri year under them, and arrows to the days around it.
     private var dayNavigator: some View {
         let date = PrayerTimesModel.localDate(daysFromToday: model.dayOffset, now: Date(), in: model.zone)
-        return HStack(spacing: 8) {
-            dayButton("اليوم السابق", systemImage: "chevron.backward", offset: model.dayOffset - 1)
-            VStack(spacing: 2) {
-                Text(model.dayOffset == 0 ? "اليوم، " + PrayerDates.gregorian(date) : PrayerDates.gregorian(date))
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.textPrimary)
-                    .accessibilityIdentifier("prayer.date")
-                Text(PrayerDates.hijri(date, offset: model.settings.hijriOffset))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(palette.textSecondary)
+        let hijri = PrayerDates.hijriDay(date, offset: model.settings.hijriOffset)
+        let gregorian = PrayerDates.gregorianDate(date)
+        return VStack(spacing: 4) {
+            HStack(spacing: 0) {
+                dayButton("اليوم السابق", systemImage: "chevron.backward", offset: model.dayOffset - 1)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(spacing: 6) {
+                            Image(systemName: PrayerDates.moonPhase(hijriDay: hijri.number))
+                                .font(.title3)
+                                .symbolRenderingMode(.hierarchical)
+                                .foregroundStyle(palette.textSecondary)
+                                // The lit side is the sky's, not the reading direction's.
+                                .environment(\.layoutDirection, .leftToRight)
+                                .accessibilityHidden(true)
+                            Text(PrayerDates.weekday(date))
+                                .font(Self.dayFont)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.6)
+                        }
+                        Text(model.dayOffset == 0 ? "اليوم، " + gregorian : gregorian)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(palette.textSecondary)
+                            .accessibilityIdentifier("prayer.date")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .trailing, spacing: 0) {
+                        Text(hijri.dayMonth)
+                            .font(Self.dayFont)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        Text(hijri.year)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(palette.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .accessibilityElement(children: .combine)
                     .accessibilityIdentifier("prayer.hijri")
-                if model.dayOffset != 0 {
-                    Button("العودة إلى اليوم") { model.showDay(0) }
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(palette.accentStrong)
-                        .accessibilityIdentifier("prayer.today")
                 }
+                .foregroundStyle(palette.textPrimary)
+                dayButton("اليوم التالي", systemImage: "chevron.forward", offset: model.dayOffset + 1)
             }
-            .frame(maxWidth: .infinity)
-            dayButton("اليوم التالي", systemImage: "chevron.forward", offset: model.dayOffset + 1)
+            if model.dayOffset != 0 {
+                Button("العودة إلى اليوم") { model.showDay(0) }
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(palette.accentStrong)
+                    .frame(minHeight: 32)
+                    .accessibilityIdentifier("prayer.today")
+            }
         }
-        .padding(8)
+        .padding(.vertical, 8)
         .card(palette)
     }
+
+    /// The weekday and the Hijri day: Uthman Taha, as the ayah markers, scaled with the text size.
+    private static let dayFont = Font.custom(ReadingFont.quranName, size: 28, relativeTo: .title)
 
     private func dayButton(_ label: String, systemImage: String, offset: Int) -> some View {
         Button {
@@ -178,22 +212,44 @@ struct PrayerTimesView: View {
 
     // MARK: Countdown
 
+    /// The prayer counted to, large: before its adhan «الصلاة القادمة» with the adhan's time, after it «الصلاة
+    /// الحالية» with the iqama's, and the time left under it in the accent.
     @ViewBuilder
     private func countdown(now: Date) -> some View {
         if let next = model.countdown(now: now) {
-            HStack {
-                Text(PrayerNames.counting(to: next))
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(palette.textPrimary)
-                Spacer(minLength: 8)
-                Text("بعد " + PrayerDates.remaining(from: now, to: next.at))
-                    .font(.subheadline.weight(.bold).monospacedDigit())
-                    .foregroundStyle(palette.accentStrong)
+            let at = ArabicFormat.time(next.at, in: model.zone)
+            let target = next.event == .adhan ? at : "الإقامة " + at
+            let remaining = PrayerDates.remaining(from: now, to: next.at)
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(next.event == .adhan ? "الصلاة القادمة" : "الصلاة الحالية")
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(palette.accentStrong)
+                    Text(PrayerNames.name(next.prayer))
+                        .font(.largeTitle.weight(.bold))
+                        .foregroundStyle(palette.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                PrayerSymbol(time: next.prayer, size: 60, tint: palette.accentStrong)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(target)
+                        .font(.title3.weight(.bold).monospacedDigit())
+                        .foregroundStyle(palette.textPrimary)
+                    Text(remaining)
+                        .font(.largeTitle.weight(.bold).monospacedDigit())
+                        .foregroundStyle(palette.accentStrong)
+                }
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(.horizontal, 4)
-            .padding(.vertical, 10)
+            .padding(.vertical, 14)
             .card(palette)
-            .accessibilityElement(children: .combine)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(PrayerNames.counting(to: next))، \(target)، بعد \(remaining)")
             .accessibilityIdentifier("prayer.countdown")
         }
     }
@@ -208,24 +264,27 @@ struct PrayerTimesView: View {
             ForEach(Array(PrayerTime.allCases.enumerated()), id: \.element) { index, time in
                 if index > 0 { Rule() }
                 let isNext = next?.prayer == time && next?.date == schedule?.localDate
-                HStack {
+                let ink = isNext ? palette.accentStrong : (time == .sunrise ? palette.textSecondary : palette.textPrimary)
+                HStack(spacing: 12) {
                     Text(PrayerNames.name(time))
-                        .font(.body.weight(isNext ? .bold : .semibold))
-                    Spacer(minLength: 8)
-                    VStack(alignment: .trailing, spacing: 0) {
+                        .font(.title3.weight(isNext ? .bold : .semibold))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    PrayerSymbol(time: time, size: 40, tint: isNext ? palette.accentStrong : palette.textSecondary)
+                    VStack(alignment: .trailing, spacing: 2) {
                         Text(value(time, in: schedule))
-                            .font(.body.weight(isNext ? .bold : .semibold).monospacedDigit())
-                        if let schedule, let iqama = model.iqama.iqama(of: time, in: schedule) {
-                            Text("الإقامة " + ArabicFormat.time(iqama, in: schedule.zone))
+                            .font(.title3.weight(isNext ? .bold : .semibold).monospacedDigit())
+                        if let schedule, let detail = detail(time, in: schedule) {
+                            Text(detail)
                                 .font(.caption.weight(.semibold).monospacedDigit())
                                 .foregroundStyle(isNext ? palette.accentStrong : palette.textSecondary)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                .foregroundStyle(isNext ? palette.accentStrong : (time == .sunrise ? palette.textSecondary
-                                                                                   : palette.textPrimary))
+                .foregroundStyle(ink)
                 .padding(.horizontal, 4)
-                .frame(minHeight: 46)
+                .padding(.vertical, 8)
+                .frame(minHeight: 60)
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("prayer.time.\(time.rawValue)")
             }
@@ -261,6 +320,20 @@ struct PrayerTimesView: View {
         return ArabicFormat.time(instant, in: schedule.zone)
     }
 
+    /// The line under a time: when the sun has risen enough for «صلاة الإشراق» (the end of the sunrise
+    /// ``ProhibitedTime``), each prayer's iqama, and on a Friday that Dhuhr's follows the khutbah.
+    private func detail(_ time: PrayerTime, in schedule: PrayerSchedule) -> String? {
+        if time == .sunrise {
+            return schedule.sunrise.map { "بداية الإشراق " + ArabicFormat.time($0 + ProhibitedTime.afterSunrise,
+                                                                              in: schedule.zone) }
+        }
+        if let prayer = ObligatoryPrayer(rawValue: time.rawValue), model.iqama[prayer] > 0,
+           IqamaDelays.followsKhutbah(time, in: schedule) {
+            return "الإقامة بعد الخطبة"
+        }
+        return model.iqama.iqama(of: time, in: schedule).map { "الإقامة " + ArabicFormat.time($0, in: schedule.zone) }
+    }
+
     // MARK: Location
 
     private var locationCard: some View {
@@ -292,6 +365,36 @@ struct PrayerTimesView: View {
         .padding(.vertical, 12).padding(.horizontal, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(palette)
+    }
+}
+
+/// A prayer's symbol in a ring: the sun rising, risen, high, lower, setting, then the night.
+private struct PrayerSymbol: View {
+    let time: PrayerTime
+    let size: CGFloat
+    let tint: Color
+
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        Image(systemName: Self.name(time))
+            .font(.system(size: size * 0.42, weight: .medium))
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(tint)
+            .frame(width: size, height: size)
+            .overlay { Circle().strokeBorder(palette.border) }
+            .accessibilityHidden(true)
+    }
+
+    static func name(_ time: PrayerTime) -> String {
+        switch time {
+        case .fajr: "sunrise"
+        case .sunrise: "sun.horizon"
+        case .dhuhr: "sun.max"
+        case .asr: "sun.min"
+        case .maghrib: "sunset"
+        case .isha: "moon.stars"
+        }
     }
 }
 
@@ -618,6 +721,50 @@ enum PrayerDates {
         let parts = localDate.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return calendar.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2], hour: 12))
+    }
+
+    /// «الجمعة».
+    static func weekday(_ localDate: String) -> String {
+        guard let date = noon(localDate) else { return "" }
+        var style = Date.FormatStyle(locale: Locale(identifier: "ar-EG")).weekday(.wide)
+        style.timeZone = TimeZone(identifier: "UTC")!
+        return date.formatted(style)
+    }
+
+    /// «١٣ نوفمبر ٢٠٢٦».
+    static func gregorianDate(_ localDate: String) -> String {
+        guard let date = noon(localDate) else { return localDate }
+        var style = Date.FormatStyle(locale: Locale(identifier: "ar-EG")).day().month(.wide).year()
+        style.timeZone = TimeZone(identifier: "UTC")!
+        return date.formatted(style)
+    }
+
+    /// The Hijri day of `localDate` (Umm al-Qura), shifted by the user's offset: its number, «٣ جمادى الآخرة» and
+    /// «١٤٤٨ هـ».
+    static func hijriDay(_ localDate: String, offset: Int) -> (number: Int, dayMonth: String, year: String) {
+        guard let date = noon(localDate) else { return (1, "", "") }
+        var calendar = Calendar(identifier: .islamicUmmAlQura)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let shifted = calendar.date(byAdding: .day, value: offset, to: date) ?? date
+        var style = Date.FormatStyle(locale: Locale(identifier: "ar-EG"), calendar: calendar).day().month(.wide)
+        style.timeZone = TimeZone(identifier: "UTC")!
+        return (calendar.component(.day, from: shifted), shifted.formatted(style),
+                ArabicFormat.number(calendar.component(.year, from: shifted)) + " هـ")
+    }
+
+    /// The SF Symbol of the Moon on Hijri day `day`: a crescent after the month is sighted, full in its middle,
+    /// gone at its end.
+    static func moonPhase(hijriDay day: Int) -> String {
+        switch day {
+        case ...6: "moonphase.waxing.crescent"
+        case 7...8: "moonphase.first.quarter"
+        case 9...13: "moonphase.waxing.gibbous"
+        case 14...16: "moonphase.full.moon"
+        case 17...21: "moonphase.waning.gibbous"
+        case 22...23: "moonphase.last.quarter"
+        case 24...28: "moonphase.waning.crescent"
+        default: "moonphase.new.moon"
+        }
     }
 
     /// «السبت ٢٦ سبتمبر».
