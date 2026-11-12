@@ -19,9 +19,11 @@ const fakeSha = "0".repeat(64);
 // The suwar rows in order, and an ID no committed row uses, so the cases hold as rows are appended.
 const suwarRows = review.split("\n").filter(line => /^\| R\d+ \| suwar \|/.test(line)).map(line => cells(line)[0]);
 const freshId = `R${Math.max(...review.split("\n").flatMap(line => (/^\| R(\d+) \|/.exec(line) ?? []).slice(1).map(Number))) + 1}`;
-// Case (e) blanks the reviewer on the row the manifest ships for each pack, whichever row that currently is.
+// Case (e) blanks the reviewer on the row the manifest ships for each pack, whichever row that currently is. A pack
+// still at 1.0.0 may ship with a blank reviewer (its first row awaits review), so it has no case (e).
 const shipped = Object.entries(readJSON(join(contentDir, "manifest.json")).packs)
-  .map(([pack, { reviewRecord, version }]) => ({ pack, id: reviewRecord, version }));
+  .map(([pack, { reviewRecord, version }]) => ({ pack, id: reviewRecord, version }))
+  .filter(({ version }) => version !== "1.0.0");
 
 const cases = [
   {
