@@ -20,14 +20,16 @@ https://t1nk333r.github.io/athkar/. The app consists of a single `index.html`, `
 bundled icons, and the KFGQPC Uthman Taha Naskh font. The app has no build step. To ship a change, edit
 `index.html` and bump `CACHE_NAME` in `sw.js`.
 
-Content packs in `content/` are the source of truth for adhkar, ruqyah, suwar, and salawat text. The `suwar.v1.json`
+Content packs in `content/` are the source of truth for adhkar, ruqyah, suwar, salawat, and sleep text. The `suwar.v1.json`
 pack contains al-Kahf, Ya-Sin, as-Saffat, al-Waqi'a, and al-Mulk in pages for the «سور» tab and the iOS app's
 «سور» section. The `ruqyah.v1.json` pack is رقية القرين for the «رقية» tab and the iOS app's رقية القرين section;
 it replaced the standalone ruqyah-al-qareen PWA, whose page now hands its progress to the tab. The `salawat.v1.json`
 pack is the «الصلاة على النبي ﷺ» page (al-Ahzab 56 and two salawat, each quotation bound to
 `reference/hadith.salawat.json`) for the PWA tab and the iOS app's أخرى section; `spec/night/night.md` says when it
-names «ليلة الجمعة» and when the last third of the night begins. When you change adhkar, ruqyah, suwar or salawat
-data in `index.html` or a pack, keep the data in sync. Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`.
+names «ليلة الجمعة» and when the last third of the night begins. The `sleep.v1.json` pack is the «أذكار النوم» page
+(each dhikr in its hadith's wording and each quotation bound to `reference/hadith.sleep.json`; al-Mulk is read from
+the suwar pack) for the PWA's «النوم» tab and the iOS app's أخرى section. When you change adhkar, ruqyah, suwar,
+salawat or sleep data in `index.html` or a pack, keep the data in sync. Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`.
 See `spec/README.md`.
 
 Test with `tools/test.sh`. It runs only the checks the change reaches since the merge base with `origin/main`,

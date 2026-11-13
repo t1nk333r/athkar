@@ -1,3 +1,4 @@
+import AthkarCore
 import SwiftUI
 
 /// «أذكار النوم» in أخرى, the PWA's sleep tab (`renderSleepPanel`): each item of the sleep pack under its title, in

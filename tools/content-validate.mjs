@@ -108,7 +108,7 @@ for (const [i, line] of reviewLines.entries()) {
   else if (latestReviewed.has(pack) && !newer(version, latestReviewed.get(pack))) fail(`REVIEW.md ${id}: ${pack} ${version} does not bump ${latestReviewed.get(pack)}`);
   else latestReviewed.set(pack, version);
 }
-for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah], ["suwar", suwar], ["salawat", salawat]]) {
+for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah], ["suwar", suwar], ["salawat", salawat], ["sleep", sleep]]) {
   const ref = manifest.packs[name];
   if (!ref) continue;
   if (ref.version !== pack.version) fail(`manifest.${name}.version ${ref.version} != pack ${pack.version}`);
