@@ -130,6 +130,60 @@ struct SalawatContent: Decodable, Equatable, Sendable {
     var items: [Item]
 }
 
+/// The «أذكار النوم» page (`content/sleep.v1.json`): what is read and said at bedtime and at night, each with its source.
+struct SleepContent: Decodable, Equatable, Sendable {
+    /// A line under an item, with the hadith it quotes (`reference/hadith.sleep.json`).
+    struct Note: Decodable, Equatable, Sendable {
+        var text: String
+        var hadith: String?
+    }
+
+    struct Passage: Decodable, Equatable, Sendable {
+        /// Whether the passage opens with the basmala, as a whole sura does.
+        var basmala: Bool
+        /// Uthmani text closed by its ayah markers ﴿n﴾, set in KFGQPC HAFS like the adhkar's Quran items.
+        var text: String
+        /// «البقرة ٢٥٥».
+        var citation: String
+    }
+
+    struct Item: Decodable, Equatable, Sendable, Identifiable {
+        var id: String
+        var title: String?
+        var prefix: String?
+        /// Quran passages read in turn. A `sura` item gets its sura from the suwar pack here (``resolvingSuwar(_:)``).
+        var quran: [Passage]?
+        /// A whole sura of the suwar pack, by its id.
+        var sura: String?
+        var text: String?
+        var steps: [String]?
+        var countLabel: String?
+        var note: Note?
+    }
+
+    var items: [Item]
+    /// Printed above a passage that opens a sura: the suwar pack's basmala.
+    var basmala = ""
+
+    private enum CodingKeys: String, CodingKey { case items }
+
+    /// Each `sura` item as one passage of the suwar pack's sura, its pages' ayat joined with their markers ﴿n﴾.
+    func resolvingSuwar(_ suwar: SuwarContent) throws -> SleepContent {
+        var resolved = self
+        resolved.basmala = suwar.basmala
+        for index in resolved.items.indices {
+            guard let id = resolved.items[index].sura else { continue }
+            guard let sura = suwar.suwar.first(where: { $0.id == id }) else {
+                throw BundledContentError.missingContent(id: "sleep sura \(id)")
+            }
+            let text = sura.pages.flatMap(\.ayahs).map { "\($0.text) ﴿\(ArabicFormat.number($0.number))﴾" }
+                .joined(separator: " ")
+            resolved.items[index].quran = [Passage(basmala: true, text: text, citation: sura.shortName)]
+        }
+        return resolved
+    }
+}
+
 /// The packs bundled with the app (NATIVE_APP_PLAN.md §5.4), read from the repository's `content/` at build time.
 struct BundledContent: Sendable {
     /// What the session rules read.
@@ -138,6 +192,7 @@ struct BundledContent: Sendable {
     var ruqyah: [RuqyahSegmentContent]
     var suwar: SuwarContent
     var salawat: SalawatContent
+    var sleep: SleepContent
     var manifest: ContentManifest
 
     /// The ruqyah's suras in pack order.
@@ -175,14 +230,17 @@ struct BundledContent: Sendable {
         guard let ruqyahData = files["ruqyah"] else { throw BundledContentError.missingPack(id: "ruqyah") }
         guard let suwarData = files["suwar"] else { throw BundledContentError.missingPack(id: "suwar") }
         guard let salawatData = files["salawat"] else { throw BundledContentError.missingPack(id: "salawat") }
+        guard let sleepData = files["sleep"] else { throw BundledContentError.missingPack(id: "sleep") }
         let adhkar = try JSONDecoder().decode(AdhkarPack.self, from: adhkarData)
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
+        let suwar = try JSONDecoder().decode(SuwarContent.self, from: suwarData)
         let content = BundledContent(
             packs: try ContentPacks(adhkarPack: adhkarData, ruqyahPack: ruqyahData),
             adhkar: SessionPeriods(morning: adhkar.periods.morning, evening: adhkar.periods.evening),
             ruqyah: ruqyah.segments,
-            suwar: try JSONDecoder().decode(SuwarContent.self, from: suwarData),
+            suwar: suwar,
             salawat: try JSONDecoder().decode(SalawatContent.self, from: salawatData),
+            sleep: try JSONDecoder().decode(SleepContent.self, from: sleepData).resolvingSuwar(suwar),
             manifest: manifest)
         try content.validate()
         return content
@@ -234,6 +292,7 @@ struct BundledContent: Sendable {
         }
         guard !suwar.suwar.isEmpty else { throw BundledContentError.invalidSuwarSura(id: "") }
         guard !salawat.items.isEmpty else { throw BundledContentError.missingContent(id: "salawat") }
+        guard !sleep.items.isEmpty else { throw BundledContentError.missingContent(id: "sleep") }
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack

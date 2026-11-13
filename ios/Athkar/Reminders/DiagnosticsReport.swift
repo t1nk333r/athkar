@@ -62,6 +62,7 @@ struct DiagnosticsReport: Equatable {
         case "ruqyah": "محتوى رقية القرين"
         case "suwar": "محتوى السور"
         case "salawat": "محتوى الصلاة على النبي ﷺ"
+        case "sleep": "محتوى أذكار النوم"
         default: "محتوى \(pack)"
         }
     }

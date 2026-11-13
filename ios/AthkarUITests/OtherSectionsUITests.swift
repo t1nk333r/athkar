@@ -31,7 +31,7 @@ final class OtherSectionsUITests: DeckTestCase {
                              "the first section is at the leading edge, on the right")
         XCTAssertEqual(section("ruqyah").frame.height, section("suwar").frame.height, accuracy: 1,
                        "both sections of a row take its height")
-        XCTAssertFalse(section("sleep").isEnabled, "a section listed as «قريبًا» does not open")
+        XCTAssertFalse(section("afterPrayer").isEnabled, "a section listed as «قريبًا» does not open")
 
         // A section opens from the grid, and its title leads back to the grid.
         section("tasbih").tap()

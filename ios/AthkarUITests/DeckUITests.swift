@@ -266,7 +266,7 @@ final class DeckUITests: DeckTestCase {
         XCTAssertTrue(app.buttons["other.ruqyah"].waitForExistence(timeout: 3))
         XCTAssertEqual(app.buttons["other.ruqyah"].label, "رقية القرين، مكتملة اليوم")
         XCTAssertEqual(app.buttons["other.ruqyah"].value as? String, "٠ من ٣٣ تكرارًا")
-        XCTAssertFalse(app.buttons["other.sleep"].isEnabled, "not built yet")
+        XCTAssertFalse(app.buttons["other.afterPrayer"].isEnabled, "not built yet")
         XCTAssertFalse(resetEnabled(), "nothing to reset on the list")
         app.buttons["other.ruqyah"].tap()
         expectPosition(1, of: 6, noun: "المقطع")

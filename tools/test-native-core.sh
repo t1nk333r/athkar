@@ -167,7 +167,7 @@ if [[ $suite == sdk ]]; then
   resources="$snapshot/ios/Athkar/Resources"
   mkdir "$resources"
   for path in content/manifest.json content/adhkar.v1.json content/ruqyah.v1.json content/suwar.v1.json \
-              content/salawat.v1.json \
+              content/salawat.v1.json content/sleep.v1.json \
               fonts/kfgqpc-uthman-taha-naskh.ttf fonts/kfgqpc-hafs-v30.ttf data/cities.tsv; do
     cp "$snapshot/$path" "$resources/"
   done

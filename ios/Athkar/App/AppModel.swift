@@ -20,6 +20,8 @@ final class AppModel {
     let contentVersions: [(pack: String, version: String)]
     /// The «الصلاة على النبي ﷺ» page.
     let salawat: SalawatContent
+    /// The «أذكار النوم» page.
+    let sleep: SleepContent
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -124,6 +126,7 @@ final class AppModel {
                                       center: notifications ?? UserNotificationCenterAdapter(), clock: reminderClock,
                                       diagnosticsStore: diagnosticsStore ?? UserDefaultsDiagnosticsStore())
         salawat = content.salawat
+        sleep = content.sleep
         contentVersions = content.manifest.packs.map { (pack: $0.key, version: $0.value.version) }
             .sorted { $0.pack < $1.pack }
         transferImporter = TransferImporter(

@@ -54,6 +54,9 @@ struct HomeView: View {
             } else if app.tab == .other, app.otherSection == .salawat {
                 SalawatView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .sleep {
+                SleepView(content: app.sleep)
+                    .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .today {
                 TodayView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)

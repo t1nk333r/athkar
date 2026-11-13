@@ -266,7 +266,7 @@ final class MigrationPrivacyTests: XCTestCase {
         let report = AboutReport(installs: try support.database.contentInstalls.installs(),
                                  info: ["CFBundleShortVersionString": "1.3", "CFBundleVersion": "4"])
         XCTAssertEqual(report.versions.map(\.id),
-                       ["appVersion", "content.adhkar", "content.ruqyah", "content.salawat", "content.suwar"])
+                       ["appVersion", "content.adhkar", "content.ruqyah", "content.salawat", "content.sleep", "content.suwar"])
         XCTAssertEqual(report.versions.first?.value, "1.3 (4)")
         XCTAssertEqual(report.versions.dropFirst().map(\.value),
                        support.content.manifest.packs.keys.sorted().map { support.content.manifest.packs[$0]!.version })
