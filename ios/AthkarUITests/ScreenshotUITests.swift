@@ -1,7 +1,7 @@
 import XCTest
 
-/// Light and dark RTL screenshots of the adhkar deck, a ruqyah page (at the three text sizes), the completion dialog
-/// and الإعدادات, written to /tmp/slice4-shots/ and attached to the test result.
+/// Light and dark RTL screenshots of the adhkar deck, a ruqyah page (at the three text sizes), the completion dialog,
+/// الإعدادات and أوقات الصلاة, written to /tmp/slice4-shots/ and attached to the test result.
 final class ScreenshotUITests: DeckTestCase {
     private let directory = URL(fileURLWithPath: "/tmp/slice4-shots", isDirectory: true)
 
@@ -66,6 +66,36 @@ final class ScreenshotUITests: DeckTestCase {
             for _ in 0..<3 { form.swipeUp() }
             shot("settings-\(themeName)-end")
             closeSettings()
+        }
+    }
+
+    /// أوقات الصلاة in light and dark, for Riyadh entered by hand: the day, the prayer counted to and the times.
+    func testCapturePrayerTimes() throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        launch()
+        for (index, (theme, themeName)) in [("فاتح", "light"), ("داكن", "dark")].enumerated() {
+            openSettings()
+            choose(theme, in: "settings.theme")
+            closeSettings()
+            app.buttons["tab.other"].tap()
+            let row = app.buttons["other.prayerTimes"]
+            XCTAssertTrue(row.waitForExistence(timeout: 3))
+            row.tap()
+            if index == 0 {
+                app.buttons["prayer.manual"].tap()
+                let latitude = app.textFields["prayer.manual.latitude"]
+                XCTAssertTrue(latitude.waitForExistence(timeout: 3))
+                latitude.tap()
+                latitude.typeText("24.71")
+                let longitude = app.textFields["prayer.manual.longitude"]
+                longitude.tap()
+                longitude.typeText("46.68")
+                app.buttons["prayer.manual.save"].tap()
+            }
+            XCTAssertTrue(app.descendants(matching: .any)["prayer.time.fajr"].waitForExistence(timeout: 4))
+            shot("prayer-times-\(themeName)")
+            app.buttons["header.back"].tap()
+            XCTAssertTrue(row.waitForExistence(timeout: 3))
         }
     }
 

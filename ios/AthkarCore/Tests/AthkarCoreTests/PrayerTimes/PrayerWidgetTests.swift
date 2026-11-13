@@ -5,14 +5,15 @@ import Testing
 struct PrayerWidgetTests {
     private let zone = TimeZone(identifier: "Asia/Riyadh")!
 
-    /// Local `hour`:`minute` on 1970-01-0(`day` + 1) in Riyadh, which is UTC+3 all year.
+    /// Local `hour`:`minute` on 1970-01-0(`day` + 4) in Riyadh, which is UTC+3 all year: day 0 is a Sunday, so no
+    /// day before 5 is a Friday, when Dhuhr has no iqama.
     private func local(day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
-        Date(timeIntervalSince1970: TimeInterval(((day * 24 + hour - 3) * 60 + minute) * 60))
+        Date(timeIntervalSince1970: TimeInterval((((day + 3) * 24 + hour - 3) * 60 + minute) * 60))
     }
 
     private func schedule(day: Int, asrClamped: Bool = false, isha: (Int, Int) = (19, 30),
                           dhuhr: Date?? = nil) -> PrayerSchedule {
-        PrayerSchedule(localDate: "1970-01-0\(day + 1)", zone: zone, fajr: local(day: day, 4),
+        PrayerSchedule(localDate: "1970-01-0\(day + 4)", zone: zone, fajr: local(day: day, 4),
                        sunrise: local(day: day, 5, 30), dhuhr: dhuhr ?? local(day: day, 12),
                        asr: asrClamped ? local(day: day, 18) : local(day: day, 15, 30), maghrib: local(day: day, 18),
                        isha: local(day: day, isha.0, isha.1), asrClamped: asrClamped)

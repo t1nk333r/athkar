@@ -43,11 +43,18 @@ public struct IqamaDelays: Codable, Equatable, Sendable {
     }
 
     /// The iqama of `time` in `schedule`: its adhan plus the delay. `nil` for sunrise, a zero delay, a time the
-    /// schedule could not compute, and a clamped Asr, which is undetermined.
+    /// schedule could not compute, a clamped Asr, which is undetermined, and Dhuhr on a Friday, when the iqama of
+    /// Jumu'ah follows the khutbah instead of a set wait.
     public func iqama(of time: PrayerTime, in schedule: PrayerSchedule) -> Date? {
         guard let prayer = ObligatoryPrayer(rawValue: time.rawValue), self[prayer] > 0,
-              !(time == .asr && schedule.asrClamped), let adhan = schedule[time] else { return nil }
+              !(time == .asr && schedule.asrClamped), !Self.followsKhutbah(time, in: schedule),
+              let adhan = schedule[time] else { return nil }
         return adhan.addingTimeInterval(TimeInterval(self[prayer] * 60))
+    }
+
+    /// Whether `time` is a Friday's Dhuhr, whose iqama comes after the Jumu'ah khutbah.
+    public static func followsKhutbah(_ time: PrayerTime, in schedule: PrayerSchedule) -> Bool {
+        time == .dhuhr && LocalDate.isFriday(schedule.localDate)
     }
 }
 
