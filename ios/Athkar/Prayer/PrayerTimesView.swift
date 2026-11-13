@@ -2,8 +2,8 @@ import AthkarCore
 import SwiftUI
 
 /// The أوقات الصلاة section of أخرى: the day in large Naskh with the Moon's phase, the prayer counted to with its
-/// time left (the next adhan or, after an adhan, its iqama), the day's six times with their symbols, the iqamas and
-/// the start of «الإشراق»; the location that produced them, and the calculation settings (NATIVE_APP_PLAN.md §7.3).
+/// time left (the next adhan or, after an adhan, its iqama), the day's six times with their symbols, the iqamas,
+/// the start of «الإشراق» and the night's last third; the location that produced them, and the calculation settings (NATIVE_APP_PLAN.md §7.3).
 struct PrayerTimesView: View {
     let model: PrayerTimesModel
     let reminders: ReminderModel
@@ -304,22 +304,26 @@ struct PrayerTimesView: View {
             ? LastThird.tonight(at: now, in: model.zone) { model.nightTimes(on: $0) }
             : model.shownSchedule.flatMap { LastThird.night(after: $0.localDate) { model.nightTimes(on: $0) } }
         let isNow = third?.contains(now) == true
-        return HStack {
+        return HStack(spacing: 12) {
             Text("الثلث الأخير")
-                .font(.body.weight(isNow ? .bold : .semibold))
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 0) {
+                .font(.title3.weight(isNow ? .bold : .semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            PrayerSymbol(name: PrayerSymbol.lastThird, size: 40,
+                         tint: isNow ? palette.accentStrong : palette.textSecondary)
+            VStack(alignment: .trailing, spacing: 2) {
                 Text(third.map { ArabicFormat.time($0.start, in: model.zone) } ?? "—")
-                    .font(.body.weight(isNow ? .bold : .semibold).monospacedDigit())
+                    .font(.title3.weight(isNow ? .bold : .semibold).monospacedDigit())
                 if isNow {
                     Text("الآن")
                         .font(.caption.weight(.semibold))
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .foregroundStyle(isNow ? palette.accentStrong : palette.textSecondary)
         .padding(.horizontal, 4)
-        .frame(minHeight: 46)
+        .padding(.vertical, 8)
+        .frame(minHeight: 60)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("prayer.time.lastThird")
     }
@@ -400,16 +404,29 @@ struct PrayerTimesView: View {
     }
 }
 
-/// A prayer's symbol in a ring: the sun rising, risen, high, lower, setting, then the night.
+/// A time's symbol in a ring: the sun rising, risen, high, lower, setting, then the night and its last third.
 private struct PrayerSymbol: View {
-    let time: PrayerTime
+    let name: String
     let size: CGFloat
     let tint: Color
 
     @Environment(\.palette) private var palette
 
+    init(time: PrayerTime, size: CGFloat, tint: Color) {
+        self.init(name: Self.name(time), size: size, tint: tint)
+    }
+
+    init(name: String, size: CGFloat, tint: Color) {
+        self.name = name
+        self.size = size
+        self.tint = tint
+    }
+
+    /// «الثلث الأخير».
+    static let lastThird = "moon.haze"
+
     var body: some View {
-        Image(systemName: Self.name(time))
+        Image(systemName: name)
             .font(.system(size: size * 0.42, weight: .medium))
             .symbolRenderingMode(.hierarchical)
             .foregroundStyle(tint)
