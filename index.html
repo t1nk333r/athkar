@@ -6,9 +6,9 @@
   <meta name="description" content="أذكار الصباح والمساء بعدّاد لكل ذكر، وتذكيرات بعد الفجر والعصر، وقراءة دون اتصال.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f5f1e8" id="theme-color">
-  <link rel="manifest" href="./manifest.webmanifest?v=15">
-  <link rel="icon" href="./icons/icon.svg?v=14" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=14">
+  <link rel="manifest" href="./manifest.webmanifest?v=16">
+  <link rel="icon" href="./icons/icon.svg?v=15" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png?v=15">
   <link rel="preload" href="./fonts/kfgqpc-uthman-taha-naskh.ttf" as="font" type="font/ttf" crossorigin>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -9487,8 +9487,8 @@
         const prayerName = period === "morning" ? "الفجر" : "العصر";
         await registration.showNotification(sectionNames[period], {
           body: `مرّت ساعة على صلاة ${prayerName}. حان وقت ${sectionNames[period]}.`,
-          icon: "./icons/icon-192.png?v=14",
-          badge: "./icons/icon-192.png?v=14",
+          icon: "./icons/icon-192.png?v=15",
+          badge: "./icons/icon-192.png?v=15",
           tag: `athkar-${period}-${localDateKey()}`,
           renotify: false,
           data: { url: new URL(`./#${period}`, location.href).href }

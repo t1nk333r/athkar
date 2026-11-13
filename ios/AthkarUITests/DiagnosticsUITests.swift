@@ -100,8 +100,9 @@ final class DiagnosticsUITests: DeckTestCase {
         XCTAssertEqual(value("budget"), "٦٤")
         XCTAssertEqual(value("authorization"), "مسموح")
         XCTAssertNotEqual(value("lastReplan"), "لم تحدث بعد")
-        for pack in ["adhkar", "ruqyah", "suwar"] {
-            XCTAssertFalse(value("content.\(pack)").isEmpty, pack)
+        // The packs are listed by name; the later ones are below the fold until revealed.
+        for pack in ["adhkar", "ruqyah", "salawat", "suwar"] {
+            XCTAssertFalse((reveal(row("content.\(pack)")).value as? String ?? "").isEmpty, pack)
         }
         expectNoWorshipData()
         // The app section is last, below the fold: the Form builds its rows only once they scroll into view.
