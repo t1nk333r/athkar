@@ -19,6 +19,11 @@
 // content/reference/<source>.json; the text between the detail's first « and last » must occur in the snapshot's
 // transcript after NFC, with the spaces just inside parentheses dropped on both sides.
 //
+// Quoted hadith (content/reference/hadith.salawat.json). A salawat item whose `hadith` names a snapshot entry must be
+// that hadith's wording, and a note's «…» quotation must come from the hadith it names: each part between « and »,
+// split at «…», must occur in the entry's text. Both sides are compared as bare letters (no harakat, tatweel or
+// punctuation; alef maqsura read as ya), since the snapshot's harakat order and spelling of «عَلَيَّ» differ from ours.
+//
 // Review (rules 3, 4). Each REVIEW.md row records the SHA-256 of the pack bytes it approved. The manifest's
 // reviewRecord must name a row for the pack's current version whose SHA-256 equals the pack's, and each pack's
 // rows must have strictly increasing versions, so any text or order change needs a new row and a version bump.
@@ -41,6 +46,10 @@ check(readJSON(join(contentDir, "schema/ruqyah.schema.json")), ruqyah, "ruqyah")
 const suwarFile = manifest.packs?.suwar?.file ?? "suwar.v1.json";
 const suwar = readJSON(join(contentDir, suwarFile));
 check(readJSON(join(contentDir, "schema/suwar.schema.json")), suwar, "suwar");
+// The salawat pack: the «الصلاة على النبي ﷺ» page in the PWA and the iOS app's «أخرى».
+const salawat = readJSON(join(contentDir, manifest.packs?.salawat?.file ?? "salawat.v1.json"));
+check(readJSON(join(contentDir, "schema/salawat.schema.json")), salawat, "salawat");
+const hadithSnapshot = readJSON(join(contentDir, "reference/hadith.salawat.json")).hadiths;
 const reference = Object.fromEntries(
   ["alquran-cloud.quran-uthmani", "alquran-cloud.quran-simple", "quran-com.v4.uthmani", "quran-com.v4.imlaei"]
     .map(name => [name, readJSON(join(contentDir, "reference", `${name}.json`)).verses])
@@ -93,7 +102,7 @@ for (const [i, line] of reviewLines.entries()) {
   else if (latestReviewed.has(pack) && !newer(version, latestReviewed.get(pack))) fail(`REVIEW.md ${id}: ${pack} ${version} does not bump ${latestReviewed.get(pack)}`);
   else latestReviewed.set(pack, version);
 }
-for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah], ["suwar", suwar]]) {
+for (const [name, pack] of [["adhkar", adhkar], ["ruqyah", ruqyah], ["suwar", suwar], ["salawat", salawat]]) {
   const ref = manifest.packs[name];
   if (!ref) continue;
   if (ref.version !== pack.version) fail(`manifest.${name}.version ${ref.version} != pack ${pack.version}`);
@@ -198,6 +207,9 @@ for (const [id, name, number, count] of suwarTable) {
   }
   if (next !== count + 1) fail(`suwar ${id}: pages cover ayahs 1…${next - 1}, surah ${number} has ${count}`);
 }
+
+for (const [i, item] of salawat.items.entries()) unique(item.id, `salawat.items[${i}] ${item.id}`);
+if (!(salawat.quran.ayahTo >= salawat.quran.ayahFrom)) fail("salawat.quran: ayahTo < ayahFrom");
 
 // ---- Quran comparison (rule 2) ----
 const normalise = text => text.normalize("NFC").replace(/\s*﴿[\u0660-\u0669]+﴾/g, "").replace(/\s+/g, " ").trim();
@@ -317,9 +329,42 @@ for (const sura of suwar.suwar) {
     }
   }
 }
+if (salawat.quran.ayahTo >= salawat.quran.ayahFrom) {
+  const { quran } = salawat;
+  ayahTexts("salawat quran", quran)?.forEach((text, k) => {
+    const ayah = quran.ayahFrom + k;
+    compareQuran(`salawat quran ${quran.surah}:${ayah}`, "salawat-quran", quran.edition, quran.surah, ayah, ayah, text, null);
+  });
+}
 for (const exception of exceptions) {
   if (!usedExceptions.has(exception)) fail(`exceptions.json: stale exception for ${exception.items.join(",")} vs ${exception.source}`);
   if (!reviewEntries.has(exception.reviewRecord)) fail(`exceptions.json: ${exception.reviewRecord} has no row in REVIEW.md`);
+}
+
+// ---- Quoted hadith ----
+const bareLetters = text => text.normalize("NFC").replace(/[\u064B-\u065F\u0670\u0640\u06D6-\u06ED]/g, "").replace(/ى/g, "ي")
+  .replace(/[^\p{L}\s]/gu, " ").replace(/\s+/g, " ").trim();
+const hadithText = (where, key) => {
+  const entry = hadithSnapshot[key];
+  if (!entry) fail(`${where}: hadith ${key} is not in reference/hadith.salawat.json`);
+  return entry ? bareLetters(entry.text) : null;
+};
+const checkNote = (where, note) => {
+  const quoted = note.text.includes("«") ? note.text.slice(note.text.indexOf("«") + 1, note.text.lastIndexOf("»")) : null;
+  if (!note.hadith) { if (quoted !== null) fail(`${where}: a «…» quotation needs the hadith it comes from`); return; }
+  if (!quoted) { fail(`${where}: names hadith ${note.hadith} but quotes nothing in «…»`); return; }
+  const source = hadithText(where, note.hadith);
+  for (const part of quoted.split("…")) {
+    if (source !== null && !source.includes(bareLetters(part))) fail(`${where}: «${part.trim()}» is not in hadith ${note.hadith}`);
+  }
+};
+checkNote("salawat.virtue", salawat.virtue);
+for (const item of salawat.items) {
+  if (item.hadith) {
+    const source = hadithText(`salawat ${item.id}`, item.hadith);
+    if (source !== null && !source.includes(bareLetters(item.text))) fail(`salawat ${item.id}: text is not the wording of hadith ${item.hadith}`);
+  }
+  if (item.note) checkNote(`salawat ${item.id} note`, item.note);
 }
 
 // ---- Quoted scholars ----
@@ -347,4 +392,4 @@ const quranItems = [...adhkar.periods.morning, ...adhkar.periods.evening].filter
 const ayahs = ruqyah.segments.reduce((n, s) => n + s.ayahs.length, 0);
 const suwarAyahs = suwar.suwar.reduce((n, s) => n + s.pages.reduce((m, p) => m + p.ayahs.length, 0), 0);
 const suwarPages = suwar.suwar.map(s => `${s.id} ${s.pages.length}`).join(", ");
-console.log(`✓ content valid: adhkar ${adhkar.version} (${quranItems} quran items), ruqyah ${ruqyah.version} (${ayahs} ayahs), suwar ${suwar.version} (${suwarAyahs} ayahs; pages ${suwarPages}), ${usedExceptions.size} reviewed exception(s)`);
+console.log(`✓ content valid: adhkar ${adhkar.version} (${quranItems} quran items), ruqyah ${ruqyah.version} (${ayahs} ayahs), suwar ${suwar.version} (${suwarAyahs} ayahs; pages ${suwarPages}), salawat ${salawat.version} (${salawat.items.length} items), ${usedExceptions.size} reviewed exception(s)`);

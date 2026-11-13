@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "salawat.schema.json",
+  "title": "Salawat content pack",
+  "description": "The «الصلاة على النبي ﷺ» page: al-Ahzab 56, the Friday virtue, then each salawat with its source.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack",
+    "version",
+    "quran",
+    "virtue",
+    "items"
+  ],
+  "properties": {
+    "pack": {
+      "const": "salawat"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "quran": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edition",
+        "surah",
+        "ayahFrom",
+        "ayahTo",
+        "text",
+        "citation"
+      ],
+      "properties": {
+        "edition": {
+          "const": "alquran-cloud:quran-uthmani"
+        },
+        "surah": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 114
+        },
+        "ayahFrom": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ayahTo": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Uthmani text closed by ayah markers ﴿n﴾, as in the adhkar pack."
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "virtue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hadith": {
+          "type": "string",
+          "pattern": "^[a-z]+:[0-9]+$",
+          "description": "The hadith the «…» quotation in the text comes from, in reference/hadith.salawat.json."
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "text"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^salawat-[0-9]{2}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hadith": {
+            "type": "string",
+            "pattern": "^[a-z]+:[0-9]+$",
+            "description": "The hadith whose wording the text is, in reference/hadith.salawat.json."
+          },
+          "note": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hadith": {
+                "type": "string",
+                "pattern": "^[a-z]+:[0-9]+$",
+                "description": "The hadith the «…» quotation in the text comes from, in reference/hadith.salawat.json."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

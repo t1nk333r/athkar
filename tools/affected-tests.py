@@ -86,9 +86,10 @@ MAC_RUNNER = ["tools/ios-mac-run.sh", ".github/workflows/ios-ipa.yml"]
 # Copied into the app bundle. tools/test-native-core.sh stages these for the SDK build, and
 # ios/project.yml bundles them; `check` compares all three.
 APP_RESOURCES = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json",
-                 "fonts/kfgqpc-uthman-taha-naskh.ttf", "fonts/kfgqpc-hafs-v30.ttf", "data/cities.tsv"]
+                 "content/salawat.v1.json", "fonts/kfgqpc-uthman-taha-naskh.ttf", "fonts/kfgqpc-hafs-v30.ttf", "data/cities.tsv"]
 # The manifest and the packs it lists, which the app bundles and the bundle tests read.
-BUNDLED_PACKS = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json"]
+BUNDLED_PACKS = ["content/manifest.json", "content/adhkar.v1.json", "content/ruqyah.v1.json", "content/suwar.v1.json",
+                 "content/salawat.v1.json"]
 # What the iOS build compiles or bundles. No test links the widget extension.
 APP_INPUTS = [APP + "**", WIDGET + "**", CORE_SOURCES + "**", *APP_RESOURCES]
 
@@ -105,14 +106,15 @@ READS = {
 # Written by tools/fixtures-generate.mjs from index.html.
 # spec/reminders/fixtures/tracker-aware.json is written by hand (the PWAs have no tracker), so it is not one of them.
 GENERATED_FIXTURES = ["spec/sessions/fixtures/*.json", "spec/reminders/fixtures/next-reminder-time.json",
-                      "spec/prayer-times/vectors.json", "spec/transfer/fixtures/*.json"]
+                      "spec/prayer-times/vectors.json", "spec/transfer/fixtures/*.json", "spec/night/fixtures/*.json"]
 # Node checks: the script and what it reads. The local modules a script imports count as inputs.
 NODE_CHECKS = {
     "content-validate": ("tools/content-validate.mjs", ["content/**"]),
     # Runs the validator over copies of content/ and tools/.
     "content-review-test": ("tools/content-review-test.mjs", ["content/**", "tools/content-validate.mjs"]),
     "content-export-pwa": ("tools/content-export-pwa.mjs",
-                           ["index.html", "content/adhkar.v1.json", "content/suwar.v1.json", "content/ruqyah.v1.json"]),
+                           ["index.html", "content/adhkar.v1.json", "content/suwar.v1.json", "content/ruqyah.v1.json",
+                            "content/salawat.v1.json"]),
     "fixtures": ("tools/fixtures-generate.mjs",
                  ["index.html", "content/suwar.v1.json", "spec/backup/examples/*", *GENERATED_FIXTURES]),
     "backup-validate": ("tools/backup-validate.mjs", ["spec/backup/examples/*", "spec/backup/envelope-v1.schema.json",
@@ -151,6 +153,8 @@ UI_BLACK_BOX = {
     "OtherSectionsUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Tasbih/*.swift"],
     "PrayerTimesUITests": [APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "PrayerTrackerUITests": [APP + "Tracker/*.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
+    # «الصلاة على النبي ﷺ»: its row and its page.
+    "SalawatUITests": [APP + "Screens/SalawatView.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "QiblaUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Qibla/*.swift", *PRAYER],
     "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *SETTINGS, *PRAYER],
     "ScreenshotUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", APP + "Screens/*.swift",

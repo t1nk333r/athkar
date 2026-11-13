@@ -229,8 +229,39 @@ struct PrayerTimesView: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityIdentifier("prayer.time.\(time.rawValue)")
             }
+            Rule()
+            TimelineView(.everyMinute) { context in
+                lastThird(now: context.date)
+            }
         }
         .card(palette)
+    }
+
+    /// «الثلث الأخير» of the night after the shown day's Maghrib; today, of the night under way until Fajr, marked
+    /// «الآن» while it lasts (spec/night/night.md).
+    private func lastThird(now: Date) -> some View {
+        let third = model.dayOffset == 0
+            ? LastThird.tonight(at: now, in: model.zone) { model.nightTimes(on: $0) }
+            : model.shownSchedule.flatMap { LastThird.night(after: $0.localDate) { model.nightTimes(on: $0) } }
+        let isNow = third?.contains(now) == true
+        return HStack {
+            Text("الثلث الأخير")
+                .font(.body.weight(isNow ? .bold : .semibold))
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 0) {
+                Text(third.map { ArabicFormat.time($0.start, in: model.zone) } ?? "—")
+                    .font(.body.weight(isNow ? .bold : .semibold).monospacedDigit())
+                if isNow {
+                    Text("الآن")
+                        .font(.caption.weight(.semibold))
+                }
+            }
+        }
+        .foregroundStyle(isNow ? palette.accentStrong : palette.textSecondary)
+        .padding(.horizontal, 4)
+        .frame(minHeight: 46)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("prayer.time.lastThird")
     }
 
     /// The five times behind the home row's «وقت نهي» notice (``ProhibitedTime``), as Ibn Baz's fatwa lists

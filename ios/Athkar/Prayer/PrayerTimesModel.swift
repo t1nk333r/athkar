@@ -59,6 +59,11 @@ final class PrayerTimesModel {
 
     var shownSchedule: PrayerSchedule? { schedule(dayOffset: dayOffset) }
 
+    /// A civil date's Maghrib and Fajr, for the Friday window and the last third of the night.
+    func nightTimes(on localDate: String) -> NightTimes? {
+        schedule(on: localDate).map(NightTimes.init)
+    }
+
     /// The countdown's target: today's next prayer, or tomorrow's Fajr.
     func nextPrayer(now: Date = Date()) -> NextPrayer? {
         upcoming(now: now)?.next

@@ -1617,6 +1617,64 @@
       gap: 0.25rem 0.75rem;
     }
 
+    /* «الصلاة على النبي ﷺ» tab: one reading page from the salawat pack, with no counter; it scrolls when it is longer
+       than the screen. From Thursday's Maghrib to Friday's Maghrib its tab shows a dot and the page names the time. */
+    body[data-period="salawat"] .summary-row { display: none; }
+    .period-tab.is-due .period-status {
+      display: inline;
+      color: var(--accent);
+    }
+    .salawat-page {
+      display: grid;
+      align-content: start;
+      gap: 1.3rem;
+      padding: 0.6rem 0.25rem 1.5rem;
+    }
+    .salawat-friday {
+      justify-self: center;
+      margin: 0;
+      padding: 0.15rem 0.8rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .salawat-friday[hidden] { display: none; }
+    .salawat-ayah {
+      margin: 0;
+      color: var(--text-primary);
+      font-family: "KFGQPC HAFS", "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      font-size: var(--quran-text-size);
+      line-height: var(--quran-line-height);
+      text-align: center;
+    }
+    .salawat-ayah .ayah-number {
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      white-space: nowrap;
+    }
+    .salawat-citation,
+    .salawat-virtue {
+      margin: 0;
+      color: var(--reference);
+      font-size: var(--detail-text-size);
+      line-height: var(--detail-line-height);
+      text-align: center;
+    }
+    .salawat-citation { margin-block-start: 0.2rem; }
+    .salawat-item {
+      display: grid;
+      gap: 0.75rem;
+      padding-block-start: 1.2rem;
+      border-block-start: 1px solid var(--border);
+    }
+    .salawat-item h3 {
+      margin: 0;
+      color: var(--accent-strong);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
     /* «مسبحة» tab: one tap surface (the whole card) with the phrase, a lap ring and the count. */
     body[data-period="tasbih"] .summary-row { display: none; }
 
@@ -1960,6 +2018,13 @@
         min-block-size: 0;
       }
 
+      #salawat-panel:not([hidden]) {
+        block-size: 100%;
+        min-block-size: 0;
+        overflow: hidden auto;
+        overscroll-behavior: contain;
+      }
+
       #tasbih-panel:not([hidden]) {
         display: grid;
         grid-template-rows: minmax(0, 1fr) auto auto;
@@ -2019,15 +2084,21 @@
       #transfer-dialog .sheet-header h2 { font-size: 1.1rem; }
     }
 
-    /* Five tabs on one row: up to 40rem they show the short labels («الصباح», «المساء»), so a label and its ✓ never
-       wrap; at 23rem and below the gap between them tightens. */
+    /* Six tabs on one row: up to 40rem they show the short labels («الصباح», «المساء»), so a label and its ✓ never
+       wrap; up to 26rem «الصلاة ﷺ» keeps only a larger «ﷺ» (the tab's aria-label names it in full), and at 23rem and
+       below the gap between them tightens. */
     @media (max-width: 40rem) {
       .tab-label-full { display: none; }
       .tab-label-short { display: inline; }
     }
 
+    @media (max-width: 26rem) {
+      .tab-label-word { display: none; }
+      .tab-label-mark { font-size: 1.25em; }
+    }
+
     @media (max-width: 23rem) {
-      .period-tabs { gap: 1rem; }
+      .period-tabs { gap: 0.8rem; }
     }
 
     @media (max-width: 20rem) {
@@ -2122,6 +2193,10 @@
           <span class="tab-label-full">سور</span><span class="tab-label-short">سور</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
+        <button class="period-tab" id="salawat-tab" type="button" role="tab" aria-controls="salawat-panel" aria-selected="false" data-period="salawat" tabindex="-1">
+          <span class="tab-label-full">الصلاة على النبي ﷺ</span><span class="tab-label-short"><span class="tab-label-word">الصلاة </span><span class="tab-label-mark">ﷺ</span></span>
+          <span class="period-status" aria-hidden="true"></span>
+        </button>
         <button class="period-tab" id="tasbih-tab" type="button" role="tab" aria-controls="tasbih-panel" aria-selected="false" data-period="tasbih" tabindex="-1">
           <span class="tab-label-full">مسبحة</span><span class="tab-label-short">مسبحة</span>
           <span class="period-status" aria-hidden="true"></span>
@@ -2171,6 +2246,9 @@
         <footer class="app-footer">
           <p class="deck-hint" id="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
         </footer>
+      </section>
+      <section id="salawat-panel" role="tabpanel" aria-labelledby="salawat-tab" tabindex="-1" hidden>
+        <article class="salawat-page" id="salawat-page"></article>
       </section>
       <section id="tasbih-panel" role="tabpanel" aria-labelledby="tasbih-tab" hidden>
         <button class="dhikr-card tasbih-card" id="tasbih-surface" type="button" aria-label="أضف واحدًا" aria-describedby="tasbih-sr-summary tasbih-status">
@@ -2412,6 +2490,13 @@
           <div class="reminder-schedule">
             <span>بعد العصر بساعة</span>
             <time class="prayer-time" id="evening-reminder-time">—</time>
+          </div>
+        </div>
+        <div class="reminder-row">
+          <span class="night-third-label">الثلث الأخير من الليل</span>
+          <div class="reminder-schedule">
+            <span id="last-third-copy">يبدأ</span>
+            <time class="prayer-time" id="last-third-time">—</time>
           </div>
         </div>
         <p class="settings-note" id="reminder-status">حدّد الموقع لحساب الموعدين محليًا دون إرسال موقعك.</p>
@@ -6058,8 +6143,43 @@
       ]
     };
 
+    const salawatContent = {
+      "quran": {
+        "edition": "alquran-cloud:quran-uthmani",
+        "surah": 33,
+        "ayahFrom": 56,
+        "ayahTo": 56,
+        "text": "إِنَّ ٱللَّهَ وَمَلَٰٓئِكَتَهُۥ يُصَلُّونَ عَلَى ٱلنَّبِىِّ ۚ يَٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُوا۟ صَلُّوا۟ عَلَيْهِ وَسَلِّمُوا۟ تَسْلِيمًا ﴿٥٦﴾",
+        "citation": "الأحزاب ٥٦"
+      },
+      "virtue": {
+        "text": "قال ﷺ: «إِنَّ مِنْ أَفْضَلِ أَيَّامِكُمْ يَوْمَ الْجُمُعَةِ … فَأَكْثِرُوا عَلَيَّ مِنَ الصَّلَاةِ فِيهِ فَإِنَّ صَلَاتَكُمْ مَعْرُوضَةٌ عَلَيَّ» (رواه أبو داود، وصححه الألباني).",
+        "hadith": "abudawud:1047"
+      },
+      "items": [
+        {
+          "id": "salawat-01",
+          "title": "الصلاة على النبي ﷺ",
+          "text": "اللَّهُمَّ صَلِّ وَسَلِّمْ عَلَى نَبِيِّنَا مُحَمَّدٍ.",
+          "note": {
+            "text": "قال ﷺ: «مَنْ صَلَّى عَلَيَّ وَاحِدَةً صَلَّى اللَّهُ عَلَيْهِ عَشْرًا» (رواه مسلم).",
+            "hadith": "muslim:408"
+          }
+        },
+        {
+          "id": "salawat-02",
+          "title": "الصلاة الإبراهيمية",
+          "text": "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ، وَعَلَى آلِ مُحَمَّدٍ، كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ، إِنَّكَ حَمِيدٌ مَجِيدٌ، اللَّهُمَّ بَارِكْ عَلَى مُحَمَّدٍ، وَعَلَى آلِ مُحَمَّدٍ، كَمَا بَارَكْتَ عَلَى إِبْرَاهِيمَ، وَعَلَى آلِ إِبْرَاهِيمَ، إِنَّكَ حَمِيدٌ مَجِيدٌ.",
+          "hadith": "bukhari:3370",
+          "note": {
+            "text": "علّمها النبي ﷺ أصحابه حين سألوه كيف يصلّون عليه. (رواه البخاري)"
+          }
+        }
+      ]
+    };
+
     const collections = { morning: morningAthkar, evening: eveningAthkar };
-    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", ruqyah: "رقية القرين", suwar: "سور", tasbih: "مسبحة" };
+    const sectionNames = { morning: "أذكار الصباح", evening: "أذكار المساء", ruqyah: "رقية القرين", suwar: "سور", salawat: "الصلاة على النبي ﷺ", tasbih: "مسبحة" };
     const suwarById = Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, sura]));
     const suwarStorageKey = "athkar-suwar-v1";
     const suwarHistoryDays = 7;
@@ -6163,6 +6283,8 @@
     const morningReminderTime = document.getElementById("morning-reminder-time");
     const eveningReminderEnabled = document.getElementById("evening-reminder-enabled");
     const eveningReminderTime = document.getElementById("evening-reminder-time");
+    const lastThirdCopy = document.getElementById("last-third-copy");
+    const lastThirdTime = document.getElementById("last-third-time");
     const prayerMethodSelect = document.getElementById("prayer-method-select");
     const asrSchoolSelect = document.getElementById("asr-school-select");
     const prayerLocationButton = document.getElementById("prayer-location-button");
@@ -6188,6 +6310,8 @@
     const liveRegion = document.getElementById("live-region");
     const skipLink = document.getElementById("skip-link");
     const tasbihPanel = document.getElementById("tasbih-panel");
+    const salawatPanel = document.getElementById("salawat-panel");
+    const salawatPage = document.getElementById("salawat-page");
     const tasbihPicker = document.getElementById("tasbih-picker");
     const tasbihLabelButton = document.getElementById("tasbih-label-button");
     const tasbihTargetButton = document.getElementById("tasbih-target-button");
@@ -7320,6 +7444,7 @@
     // The deck on screen: the adhkar of the active period, the pages of the selected sura, or the segments of the
     // ruqyah sura shown.
     function activeItems() {
+      if (activePeriod === "salawat") return [];
       if (activePeriod === "suwar") return activeSura().pages;
       if (activePeriod === "ruqyah") return activeRuqyahSura().segments;
       return deck(activePeriod);
@@ -7369,8 +7494,8 @@
     function updateDeckNavigation() {
       // Every change to the card on screen or its count ends here, so the armed haptic switch follows it.
       syncHapticArm();
-      // The tasbih has no deck; its own controls are drawn by renderTasbih.
-      if (activePeriod === "tasbih") return;
+      // The tasbih and the salawat page have no deck; the tasbih's own controls are drawn by renderTasbih.
+      if (activePeriod === "tasbih" || activePeriod === "salawat") return;
       const items = activeItems();
       const index = activeIndex();
       const item = items[index];
@@ -7969,7 +8094,40 @@
       liveRegion.textContent = "أُعيدت عدادات اليوم";
     }
 
+    const fridayPhaseNames = { night: "ليلة الجمعة", day: "يوم الجمعة" };
+
+    // The salawat page: al-Ahzab 56, the Friday virtue and each salawat with its note; in the Friday window, its name.
+    function renderSalawatPanel() {
+      const { quran, virtue, items } = salawatContent;
+      const phase = fridayPhase(new Date());
+      salawatPage.innerHTML = `
+        <p class="salawat-friday"${phase ? "" : " hidden"}>${phase ? fridayPhaseNames[phase] : ""}</p>
+        <div>
+          <p class="salawat-ayah">${quranTextMarkup(quran.text)}</p>
+          <p class="salawat-citation">${escapeHtml(quran.citation)}</p>
+        </div>
+        <p class="salawat-virtue">${escapeHtml(virtue.text)}</p>
+        ${items.map(item => `
+          <section class="salawat-item" aria-labelledby="${item.id}-title">
+            <h3 id="${item.id}-title">${escapeHtml(item.title)}</h3>
+            <p class="dhikr-text">${escapeHtml(item.text)}</p>
+            ${item.note ? `<p class="dhikr-detail">${escapeHtml(item.note.text)}</p>` : ""}
+          </section>`).join("")}`;
+    }
+
+    // Every minute: the salawat tab's Friday dot, its page and the last third in the settings follow the clock.
+    function refreshNightTimes() {
+      updatePeriodTabs();
+      if (activePeriod === "salawat") renderSalawatPanel();
+      updateReminderControls();
+    }
+
     function renderCards() {
+      if (activePeriod === "salawat") {
+        renderSalawatPanel();
+        updateSessionProgress();
+        return;
+      }
       if (activePeriod === "suwar") {
         renderSuraPages();
         return;
@@ -8224,6 +8382,14 @@
       document.querySelectorAll(".period-tab").forEach(tab => {
         const period = tab.dataset.period;
         if (!period) return;
+        // The salawat page has no progress; from Thursday's Maghrib to Friday's its tab shows a dot.
+        if (period === "salawat") {
+          const phase = fridayPhase(new Date());
+          tab.classList.toggle("is-due", Boolean(phase));
+          tab.querySelector(".period-status").textContent = phase ? "•" : "";
+          tab.setAttribute("aria-label", phase ? `${sectionNames.salawat}، ${fridayPhaseNames[phase]}` : sectionNames.salawat);
+          return;
+        }
         // The tasbih is open-ended: its tab never shows a ✓.
         if (period === "tasbih") {
           tab.setAttribute("aria-label", sectionNames.tasbih);
@@ -8730,7 +8896,7 @@
     function updateSessionProgress() {
       if (activePeriod === "suwar") updateSuraProgress();
       else if (activePeriod === "ruqyah") updateRuqyahProgress();
-      else if (activePeriod === "tasbih") sessionSummary.classList.remove("is-complete");
+      else if (activePeriod === "tasbih" || activePeriod === "salawat") sessionSummary.classList.remove("is-complete");
       else updateAdhkarProgress();
       sessionReset.disabled = !hasResettableState();
       updatePeriodTabs();
@@ -8764,8 +8930,9 @@
 
 
     function switchPeriod(period, updateHash = true) {
-      if (!collections[period] && !["ruqyah", "suwar", "tasbih"].includes(period)) return;
+      if (!collections[period] && !["ruqyah", "suwar", "salawat", "tasbih"].includes(period)) return;
       const tasbihActive = period === "tasbih";
+      const salawatActive = period === "salawat";
       activePeriod = period;
       body.dataset.period = period;
       suraPicker.hidden = period !== "suwar";
@@ -8775,9 +8942,10 @@
         ? "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع."
         : "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.";
       tasbihPicker.hidden = !tasbihActive;
-      panel.hidden = tasbihActive;
+      panel.hidden = tasbihActive || salawatActive;
       tasbihPanel.hidden = !tasbihActive;
-      skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : "تخطَّ إلى الأذكار";
+      salawatPanel.hidden = !salawatActive;
+      skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : salawatActive ? "تخطَّ إلى الصلاة على النبي ﷺ" : "تخطَّ إلى الأذكار";
       // Only "open in new tab" follows it (a click moves focus instead), and that should open this same tab.
       skipLink.setAttribute("href", `#${period}`);
       if (!tasbihActive) {
@@ -8785,7 +8953,7 @@
         tasbihAnnounceTimer = null;
       }
       sessionReset.setAttribute("aria-label", "خيارات الإعادة");
-      if (!tasbihActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
+      if (!tasbihActive && !salawatActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
       updateSessionTitle();
 
       document.querySelectorAll(".period-tab").forEach(tab => {
@@ -8807,12 +8975,12 @@
       document.title = `${title}، أذكار المسلم`;
     }
 
-    // `#morning`, `#evening`, `#ruqyah`, `#suwar` and `#tasbih` name a tab. `#ruqyah` opens on ق; `#qaf`, `#jinn`,
+    // `#morning`, `#evening`, `#ruqyah`, `#suwar`, `#salawat` and `#tasbih` name a tab. `#ruqyah` opens on ق; `#qaf`, `#jinn`,
     // `#takwir`, `#kafirun`, `#nas` open that sura in it. `#suwar` opens on the last sura read; `#kahf`, `#yasin`,
     // `#saffat`, `#waqiah`, `#mulk` open that sura in it. Anything else shows morning.
     function routeFromHash(hash = location.hash) {
       const name = hash.slice(1);
-      if (["morning", "evening", "ruqyah", "suwar", "tasbih"].includes(name)) return { period: name, sura: null };
+      if (["morning", "evening", "ruqyah", "suwar", "salawat", "tasbih"].includes(name)) return { period: name, sura: null };
       if (Object.hasOwn(ruqyahSuraById, name)) return { period: "ruqyah", sura: name };
       if (Object.hasOwn(suwarById, name)) return { period: "suwar", sura: name };
       return { period: "morning", sura: null };
@@ -9130,6 +9298,48 @@
       };
     }
 
+    // Maghrib (solarDay's sunset) and Fajr (prayerTimesForDate's, with its clamp) of a date, for the Friday window and
+    // the last third of the night (spec/night/night.md). null without a location; either time may be null.
+    function nightTimesForDate(date, preferences = reminderPreferences) {
+      const location = normalizePrayerLocation(preferences.location);
+      const method = prayerCalculationMethods[preferences.calculationMethod];
+      const asrShadowFactor = asrShadowFactors[preferences.asrSchool];
+      if (!location || !method || !asrShadowFactor) return null;
+      return {
+        fajr: prayerTimesForDate(date, preferences)?.fajr ?? null,
+        maghrib: solarDay(date, location, method.fajrAngle, asrShadowFactor).sunset
+      };
+    }
+
+    function localNoon(date, days = 0) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days, 12);
+    }
+
+    // "night" (ليلة الجمعة) from Thursday's Maghrib to Friday's Fajr, "day" (يوم الجمعة) from Friday's Fajr to its
+    // Maghrib, else null. Without a Maghrib there is no night; without a Fajr, Friday before Maghrib is all day.
+    function fridayPhase(now, timesFor = nightTimesForDate) {
+      const weekday = now.getDay();
+      if (weekday !== 4 && weekday !== 5) return null;
+      const times = timesFor(localNoon(now));
+      if (weekday === 4) return times?.maghrib && now >= times.maghrib ? "night" : null;
+      if (times?.maghrib && now >= times.maghrib) return null;
+      return times?.fajr && now < times.fajr ? "night" : "day";
+    }
+
+    // The night from Maghrib to the next Fajr in thirds: the last starts two thirds of the way, to the millisecond.
+    function lastThirdOfNight(maghrib, fajr) {
+      if (!maghrib || !fajr || fajr <= maghrib) return null;
+      return { start: new Date(maghrib.getTime() + Math.round((fajr.getTime() - maghrib.getTime()) * 2 / 3)), end: fajr };
+    }
+
+    // The last third of the night `now` is in or of the next one: before today's Fajr, the night that began at
+    // yesterday's Maghrib; from it on, the night that begins at today's.
+    function tonightLastThird(now, timesFor = nightTimesForDate) {
+      const today = timesFor(localNoon(now));
+      if (today?.fajr && now < today.fajr) return lastThirdOfNight(timesFor(localNoon(now, -1))?.maghrib ?? null, today.fajr);
+      return lastThirdOfNight(today?.maghrib ?? null, timesFor(localNoon(now, 1))?.fajr ?? null);
+    }
+
     function notificationPermission() {
       return "Notification" in window && "serviceWorker" in navigator
         ? Notification.permission
@@ -9154,6 +9364,12 @@
         element.textContent = time ? timeFormatter.format(time) : "—";
         element.dateTime = time ? time.toISOString() : "";
       }
+
+      const now = new Date();
+      const lastThird = tonightLastThird(now);
+      lastThirdCopy.textContent = lastThird && now >= lastThird.start ? "بدأ" : "يبدأ";
+      lastThirdTime.textContent = lastThird ? timeFormatter.format(lastThird.start) : "—";
+      lastThirdTime.dateTime = lastThird ? lastThird.start.toISOString() : "";
 
       prayerLocationStatus.textContent = reminderPreferences.location
         ? "حُدّد الموقع وحُفظ على هذا الجهاز."
@@ -9489,7 +9705,7 @@
       // WAI-ARIA tabs: arrows cycle through the tabs in reading order (right to left, so ArrowLeft is the next tab),
       // Home/End go to the first/last.
       tab.addEventListener("keydown", event => {
-        const periods = ["morning", "evening", "ruqyah", "suwar", "tasbih"];
+        const periods = ["morning", "evening", "ruqyah", "suwar", "salawat", "tasbih"];
         const steps = { ArrowLeft: 1, ArrowRight: -1 };
         let nextPeriod;
         if (event.key === "Home") nextPeriod = periods[0];
@@ -9519,6 +9735,10 @@
       event.preventDefault();
       if (activePeriod === "tasbih") {
         tasbihSurface.focus();
+        return;
+      }
+      if (activePeriod === "salawat") {
+        salawatPanel.focus();
         return;
       }
       list.tabIndex = -1;
@@ -12550,7 +12770,7 @@
       if (document.visibilityState !== "visible") return;
       ensureCurrentDay();
       showStoredTasbihState();
-      updateReminderControls();
+      refreshNightTimes();
       scheduleReminders();
       scheduleDayRollover();
     });
@@ -12606,6 +12826,7 @@
     if (location.hash && location.hash !== `#${activePeriod}`) history.replaceState(null, "", `#${activePeriod}`);
     scheduleReminders();
     scheduleDayRollover();
+    setInterval(refreshNightTimes, 60 * 1000);
     document.fonts?.ready.then(() => fitVisibleCard());
   </script>
 </body>

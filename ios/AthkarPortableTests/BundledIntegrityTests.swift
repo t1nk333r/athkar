@@ -77,7 +77,7 @@ final class BundledIntegrityTests: XCTestCase {
     }
 
     func testManifestWithoutARequiredPackIsRefused() throws {
-        for packId in ["ruqyah", "suwar"] {
+        for packId in ["ruqyah", "suwar", "salawat"] {
             let fixture = try ContentFixture()
             try fixture.editManifestPacks { $0[packId] = nil }
             try assertRefused(fixture, .missingPack(id: packId))
@@ -205,13 +205,13 @@ final class BundledIntegrityTests: XCTestCase {
     /// Rows from an older install of every pack the app reads, which an accepted bundle replaces.
     private func olderInstalls() throws -> (AppDatabase, [ContentInstall]) {
         let database = try AppDatabase.inMemory()
-        for packId in ["adhkar", "ruqyah", "suwar"] {
+        for packId in ["adhkar", "ruqyah", "salawat", "suwar"] {
             try database.contentInstalls.record(ContentInstall(packId: packId, version: "0.9.0",
                                                                checksum: String(repeating: "0", count: 64),
                                                                installedAt: earlier))
         }
         let installs = try database.contentInstalls.installs()
-        XCTAssertEqual(installs.count, 3)
+        XCTAssertEqual(installs.count, 4)
         return (database, installs)
     }
 }

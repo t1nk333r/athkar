@@ -18,6 +18,8 @@ final class AppModel {
     let tracker: PrayerTrackerModel
     /// The bundled packs and their versions (`manifest.json`), for the diagnostics screen.
     let contentVersions: [(pack: String, version: String)]
+    /// The «الصلاة على النبي ﷺ» page.
+    let salawat: SalawatContent
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -121,6 +123,7 @@ final class AppModel {
         reminders = try ReminderModel(repository: database.reminders, report: report,
                                       center: notifications ?? UserNotificationCenterAdapter(), clock: reminderClock,
                                       diagnosticsStore: diagnosticsStore ?? UserDefaultsDiagnosticsStore())
+        salawat = content.salawat
         contentVersions = content.manifest.packs.map { (pack: $0.key, version: $0.value.version) }
             .sorted { $0.pack < $1.pack }
         transferImporter = TransferImporter(

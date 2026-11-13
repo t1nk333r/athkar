@@ -8,6 +8,7 @@ import { contentDir, readJSON } from "./content-lib.mjs";
 const adhkar = readJSON(join(contentDir, "adhkar.v1.json"));
 const ruqyah = readJSON(join(contentDir, "ruqyah.v1.json"));
 const suwar = readJSON(join(contentDir, "suwar.v1.json"));
+const salawat = readJSON(join(contentDir, "salawat.v1.json"));
 
 const wanted = new Map(); // surah -> Set(ayah)
 const want = (surah, ayah) => (wanted.get(surah) ?? wanted.set(surah, new Set()).get(surah)).add(ayah);
@@ -17,6 +18,7 @@ for (const item of [...adhkar.periods.morning, ...adhkar.periods.evening]) {
 }
 for (const segment of ruqyah.segments) for (const ayah of segment.ayahs) want(segment.surahNumber, ayah.number);
 for (const sura of suwar.suwar) for (const page of sura.pages) for (const ayah of page.ayahs) want(sura.surahNumber, ayah.number);
+for (let a = salawat.quran.ayahFrom; a <= salawat.quran.ayahTo; a++) want(salawat.quran.surah, a);
 
 async function getJSON(url) {
   const response = await fetch(url);
