@@ -101,7 +101,7 @@ final class DiagnosticsUITests: DeckTestCase {
         XCTAssertEqual(value("authorization"), "مسموح")
         XCTAssertNotEqual(value("lastReplan"), "لم تحدث بعد")
         // The packs are listed by name; the later ones are below the fold until revealed.
-        for pack in ["adhkar", "ruqyah", "salawat", "suwar"] {
+        for pack in ["adhkar", "ruqyah", "salawat", "sleep", "suwar"] {
             XCTAssertFalse((reveal(row("content.\(pack)")).value as? String ?? "").isEmpty, pack)
         }
         expectNoWorshipData()
