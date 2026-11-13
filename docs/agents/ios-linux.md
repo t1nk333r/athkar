@@ -399,8 +399,8 @@ XcodeGen generates `ios/Athkar/Info.plist` and `ios/AthkarWidget/Info.plist`. De
 version/build bumps in `ios/project.yml` under `targets.Athkar.info.properties`, using
 `CFBundleShortVersionString` and `CFBundleVersion`, and the same values under
 `targets.AthkarWidget.info.properties`; the IPA workflow fails when they differ. Their current values are
-`1.10` and `11`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`), `1.3` (`4`), `1.4` (`5`), `1.5` (`6`), `1.6` (`7`),
-`1.7` (`8`), `1.8` (`9`) and `1.9` (`10`) were built before. Feather lists one entry per `CFBundleShortVersionString` and answers a publish
+`1.11` and `12`. `1.0` (`1`), `1.1` (`2`), `1.2` (`3`), `1.3` (`4`), `1.4` (`5`), `1.5` (`6`), `1.6` (`7`),
+`1.7` (`8`), `1.8` (`9`), `1.9` (`10`) and `1.10` (`11`) were built before. Feather lists one entry per `CFBundleShortVersionString` and answers a publish
 whose short version it already lists with "Already present", storing nothing, so every published IPA needs a
 new short version as well as a new build number.
 
