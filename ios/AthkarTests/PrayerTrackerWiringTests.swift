@@ -96,7 +96,7 @@ final class PrayerTrackerWiringTests: XCTestCase {
     }
 
     /// The lock-screen widget gets the five times of yesterday and the coming days with their iqama, again when an
-    /// iqama delay changes, and none without a location.
+    /// iqama delay changes, and none without a location. A Friday's Dhuhr has no iqama: Jumu'ah's follows the khutbah.
     @MainActor
     func testTheWidgetGetsTheTimesOfTheComingDays() throws {
         let support = try NativeTestSupport()
@@ -111,9 +111,15 @@ final class PrayerTrackerWiringTests: XCTestCase {
         let snapshot = try XCTUnwrap(widget.published.last ?? nil)
         XCTAssertEqual(snapshot.zone, "Asia/Riyadh")
         XCTAssertEqual(snapshot.prayers.count, (PrayerWidgetSnapshot.days + 1) * 5)
-        let dhuhr = try XCTUnwrap(app.prayer.schedule(dayOffset: 0)?.dhuhr)
+        let now = Date()
+        let days = (0..<7).compactMap { app.prayer.schedule(dayOffset: $0, now: now) }
+        let weekday = try XCTUnwrap(days.first { !LocalDate.isFriday($0.localDate) })
+        let friday = try XCTUnwrap(days.first { LocalDate.isFriday($0.localDate) })
+        let dhuhr = try XCTUnwrap(weekday.dhuhr)
         XCTAssertTrue(snapshot.prayers.contains(.init(prayer: .dhuhr, adhan: dhuhr,
                                                       iqama: dhuhr.addingTimeInterval(20 * 60))))
+        let jumuah = try XCTUnwrap(friday.dhuhr)
+        XCTAssertTrue(snapshot.prayers.contains(.init(prayer: .dhuhr, adhan: jumuah, iqama: nil)))
 
         app.prayer.setIqama(5, for: .dhuhr)
         let changed = try XCTUnwrap(widget.published.last ?? nil)
