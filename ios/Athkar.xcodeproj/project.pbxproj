@@ -65,6 +65,7 @@
 		90AB3DA847704DAD8569BBA9 /* TasbihSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE5744EDB5CB8589D6B2E4D /* TasbihSheets.swift */; };
 		932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */; };
 		94E1B85837003946C1035262 /* HomePrayerRowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FABB68FD621EF955EA7C95 /* HomePrayerRowUITests.swift */; };
+		98DF2C311C63A5FA1AA08B07 /* sleep.v1.json in Resources */ = {isa = PBXBuildFile; fileRef = 1156A62963581177782F7585 /* sleep.v1.json */; };
 		99BA870781EAC9D1CEAE720A /* CityDirectory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3323EC2D7C5109C2B7FFB57A /* CityDirectory.swift */; };
 		9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */; };
 		9BED9F3610BD83F8DC04E597 /* AppIconUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD9567A233D33470F12B70E /* AppIconUITests.swift */; };
@@ -105,8 +106,10 @@
 		DFDF1111CCFA43A6D30C55BF /* kfgqpc-hafs-v30.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */; };
 		E07DC50005FE72F2D25F8DA2 /* BackupExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FAD2307E294785D686E6D07 /* BackupExportView.swift */; };
 		E12B2A8215DBA945ABE328AC /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6C80B8DF9E7A2E7322014F /* AppIcon.swift */; };
+		E62AA09CC4D02053DD2FABC2 /* SleepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8708AF57E08B6273E378F4 /* SleepView.swift */; };
 		E86F1D7AF6E9F041D330B258 /* DayRollover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134B2928ABCD0502572ED37 /* DayRollover.swift */; };
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
+		ECAD6B22BD2633158010079B /* SleepUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBF35CBD2F8A607F3FE1A93 /* SleepUITests.swift */; };
 		EF1A2C21DB412EC5324BDC55 /* PrayerTimesModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB093C7B73DF50B939CB0E4C /* PrayerTimesModel.swift */; };
 		EF7F3B0BA2B89E02051BBD04 /* TrackerViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F40DFA5D331C844BC793D0A /* TrackerViews.swift */; };
 		F0AAB812DA5C4B29A62124C2 /* AppIconSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF659CAC977464A8BC800B7 /* AppIconSection.swift */; };
@@ -162,10 +165,12 @@
 		06750E28AA29F8F17A5D8A5E /* DeviceHeadingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeadingTests.swift; sourceTree = "<group>"; };
 		06EB5A3E5D6C97EC5C9CF437 /* SettingsPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPersistenceTests.swift; sourceTree = "<group>"; };
 		0904A0D43180A3E3A708F0DA /* TransferImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportUITests.swift; sourceTree = "<group>"; };
+		0D8708AF57E08B6273E378F4 /* SleepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepView.swift; sourceTree = "<group>"; };
 		0DB69EC63F1C8D655A307108 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
 		0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArabicFormat.swift; sourceTree = "<group>"; };
 		101F1AACC34A0C56BEE54F38 /* TransferImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportView.swift; sourceTree = "<group>"; };
 		11171CCC784D1B7FD1830ACE /* BundledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledContent.swift; sourceTree = "<group>"; };
+		1156A62963581177782F7585 /* sleep.v1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = sleep.v1.json; path = ../content/sleep.v1.json; sourceTree = "<group>"; };
 		12427B8BADEDCAF23C15E22C /* DeckUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckUITests.swift; sourceTree = "<group>"; };
 		163466F44FCE8FF9E95437AD /* SuwarUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuwarUITests.swift; sourceTree = "<group>"; };
 		17D57862FC1A5212C719415B /* HeadingReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadingReading.swift; sourceTree = "<group>"; };
@@ -211,6 +216,7 @@
 		778CF9A6DFB10EB7642EBDB2 /* DeviceLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceLocation.swift; sourceTree = "<group>"; };
 		77C985807D77FFF05AB9C1F4 /* PrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyView.swift; sourceTree = "<group>"; };
 		7E635BAF5C6A1B0F1FE998DE /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
+		7FBF35CBD2F8A607F3FE1A93 /* SleepUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepUITests.swift; sourceTree = "<group>"; };
 		808020311BB51AFFC13866BF /* PrayerTimesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimesUITests.swift; sourceTree = "<group>"; };
 		8191873837858F429947CAAC /* TasbihText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasbihText.swift; sourceTree = "<group>"; };
 		862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckIndexView.swift; sourceTree = "<group>"; };
@@ -386,6 +392,7 @@
 				6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */,
 				E370A2F41ECB455ABAE9147E /* SalawatView.swift */,
 				FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */,
+				0D8708AF57E08B6273E378F4 /* SleepView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -413,6 +420,7 @@
 				3CADA9419CAC70B90CD19CFD /* manifest.json */,
 				CE857DADF37638C3F15FE817 /* ruqyah.v1.json */,
 				1DD72ADD1F451B78814AA637 /* salawat.v1.json */,
+				1156A62963581177782F7585 /* sleep.v1.json */,
 				B2BFE9125316118DF1977A08 /* suwar.v1.json */,
 			);
 			name = Resources;
@@ -547,6 +555,7 @@
 				E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */,
 				BFDF6FD1681C287E3D1B40CA /* SalawatUITests.swift */,
 				B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */,
+				7FBF35CBD2F8A607F3FE1A93 /* SleepUITests.swift */,
 				163466F44FCE8FF9E95437AD /* SuwarUITests.swift */,
 				B986808159F0763FD4792458 /* TasbihUITests.swift */,
 				0904A0D43180A3E3A708F0DA /* TransferImportUITests.swift */,
@@ -737,6 +746,7 @@
 				F96134CFA1F9A4AF648287CC /* manifest.json in Resources */,
 				83DD627C7721197F32CE0AA2 /* ruqyah.v1.json in Resources */,
 				B7817DFC7EEFC62B0AF66C1A /* salawat.v1.json in Resources */,
+				98DF2C311C63A5FA1AA08B07 /* sleep.v1.json in Resources */,
 				000C2537D108015666A15547 /* suwar.v1.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -806,6 +816,7 @@
 				BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */,
 				A07159CDBE18B815AED58E9F /* SettingsModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
+				E62AA09CC4D02053DD2FABC2 /* SleepView.swift in Sources */,
 				D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */,
 				1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */,
 				90AB3DA847704DAD8569BBA9 /* TasbihSheets.swift in Sources */,
@@ -841,6 +852,7 @@
 				9B61BD3E9A9145FBE03EAA3E /* ReminderUITests.swift in Sources */,
 				6CE7B5D9E16F1AE3ECC5CAFC /* SalawatUITests.swift in Sources */,
 				D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */,
+				ECAD6B22BD2633158010079B /* SleepUITests.swift in Sources */,
 				6B168BA3F2BD04284522302C /* SuwarUITests.swift in Sources */,
 				3CC0339AE09659567C8A73F8 /* TasbihUITests.swift in Sources */,
 				072E72FB38349278BD7C07BB /* TransferImportUITests.swift in Sources */,

@@ -90,11 +90,13 @@ final class MigrationPrivacyUITests: DeckTestCase {
 
         scrolledTo(app.buttons["settings.about"]).tap()
         XCTAssertTrue(app.navigationBars["حول التطبيق"].waitForExistence(timeout: 3))
-        for id in ["appVersion", "content.adhkar", "content.ruqyah", "content.suwar", "adhkar", "quran", "fonts",
-                   "prayerTimes", "prohibitedTimes"] {
-            XCTAssertTrue(element("about.\(id)").waitForExistence(timeout: 3), id)
-        }
+        XCTAssertTrue(element("about.content.adhkar").waitForExistence(timeout: 3))
         XCTAssertFalse((element("about.content.adhkar").value as? String ?? "").isEmpty)
+        // In order down the page: each pack has a row, so the sources below them can start past the screen.
+        for id in ["appVersion", "content.adhkar", "content.ruqyah", "content.salawat", "content.sleep", "content.suwar",
+                   "adhkar", "quran", "fonts", "prayerTimes", "prohibitedTimes"] {
+            XCTAssertTrue(scrolledTo(element("about.\(id)")).exists, id)
+        }
     }
 
     /// `athkar://ruqyah` opens the ruqyah deck over the settings sheet.
