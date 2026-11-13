@@ -15,7 +15,8 @@
         "adhkar",
         "ruqyah",
         "suwar",
-        "salawat"
+        "salawat",
+        "sleep"
       ],
       "properties": {
         "adhkar": {
@@ -103,6 +104,34 @@
           }
         },
         "salawat": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file",
+            "version",
+            "sha256",
+            "reviewRecord"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "reviewRecord": {
+              "type": "string",
+              "pattern": "^R[0-9]+$"
+            }
+          }
+        },
+        "sleep": {
           "type": "object",
           "additionalProperties": false,
           "required": [

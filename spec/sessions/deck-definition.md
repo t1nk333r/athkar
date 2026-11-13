@@ -45,8 +45,10 @@ is treated as the first (`normalizeSuwarState`). Each sura keeps the page it sho
 «سور» is reset (`suwarIndices`).
 
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a list
-of sections (رقية القرين, سور, مسبحة, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة, القبلة). The app
-opens رقية القرين, سور, مسبحة, أوقات الصلاة and القبلة, and lists the others as «قريبًا». A deck row shows the deck's
+of sections (رقية القرين, سور, الصلاة على النبي ﷺ, مسبحة, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة,
+القبلة). The app opens all but أذكار بعد الصلاة and أذكار الاستيقاظ, which it lists as «قريبًا». «أذكار النوم» is a reading
+page, not a deck: the items of `content/sleep.v1.json` in pack order, with no counter, and a repeated item names its
+count. Its row reads «قبل النوم وفي الليل»; the PWA shows the same page as its «النوم» tab. A deck row shows the deck's
 summary copy and «✓» once today is complete. «مسبحة» is a counter, not a deck ([`tasbih.md`](tasbih.md)); its row
 shows today's total, «اليوم: N». The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض
 المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title,

@@ -1,6 +1,6 @@
 // Keeps the PWA in sync with the content packs (packs are the source of truth).
 //   node tools/content-export-pwa.mjs --check   # fail if index.html drifted from a pack
-// The PWA keeps its adhkar, ruqyah, suwar and salawat data inline in index.html; it is only checked (semantic equality), never
+// The PWA keeps its adhkar, ruqyah, suwar, salawat and sleep data inline in index.html; it is only checked (semantic equality), never
 // rewritten. --check is the only mode and may be left out.
 import { join } from "node:path";
 import { contentDir, jsonEqual, loadPwaContent, packItemToPwa, readJSON } from "./content-lib.mjs";
@@ -57,6 +57,17 @@ if (jsonEqual(salawatFromPack, pwa.salawat)) console.log("✓ index.html salawat
 else {
   failed = true;
   console.error("✗ index.html salawatContent differs from salawat pack");
+}
+
+// sleepContent is the sleep pack without its pack and version fields.
+const { pack: _sleepPack, version: _sleepVersion, ...sleepFromPack } = readJSON(join(contentDir, "sleep.v1.json"));
+if (jsonEqual(sleepFromPack, pwa.sleep)) console.log("✓ index.html sleepContent matches sleep pack");
+else {
+  failed = true;
+  const ids = new Set([...sleepFromPack.items, ...pwa.sleep.items].map(item => item.id));
+  const find = (content, id) => content.items.find(item => item.id === id);
+  const differing = [...ids].filter(id => !jsonEqual(find(sleepFromPack, id), find(pwa.sleep, id)));
+  console.error(`✗ index.html sleepContent differs from sleep pack${differing.length ? `: ${differing.join(", ")}` : " (item order)"}`);
 }
 
 process.exit(failed ? 1 : 0);

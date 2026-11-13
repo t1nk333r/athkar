@@ -23,6 +23,12 @@
       "version": "1.0.0",
       "sha256": "8da3ef8d9cba8722fa623aeaf67b716959b6271cd34d418d4dfaa66d2af395d1",
       "reviewRecord": "R14"
+    },
+    "sleep": {
+      "file": "sleep.v1.json",
+      "version": "1.0.0",
+      "sha256": "f5b60008edaebae14517d6ee3ce54dd99cda094cc58cd45c4cab1350f967aca8",
+      "reviewRecord": "R15"
     }
   }
 }
