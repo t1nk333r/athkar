@@ -54,8 +54,8 @@ DARK_PREVIEW_BACKGROUND = "#26241f"
 
 
 def beh_paths() -> tuple[str, str]:
-    """The isolated beh's body and dot as SVG path data in icon pixels, the glyph's bounding box
-    centred and 600 px wide."""
+    """The isolated beh's body and dot as SVG path data in icon pixels, the glyph 600 px wide and
+    centred across, and the body centred down with the dot hanging below it."""
     font = TTFont(FONT)
     glyphs = font.getGlyphSet()
     glyf = font["glyf"]
@@ -65,8 +65,10 @@ def beh_paths() -> tuple[str, str]:
     beh.recalcBounds(glyf)
     scale = 600 / (beh.xMax - beh.xMin)
     dx = SIDE / 2 - scale * (beh.xMin + beh.xMax) / 2
-    # The dot hangs below a heavy body; sitting 12 px above centre balances them.
-    dy = SIDE / 2 - 12 + scale * (beh.yMin + beh.yMax) / 2
+    # Centring the whole glyph left the body high, so the body alone sits on the centre line.
+    body_glyph = glyf[body.glyphName]
+    body_glyph.recalcBounds(glyf)
+    dy = SIDE / 2 + scale * (body.y + (body_glyph.yMin + body_glyph.yMax) / 2)
 
     def path(component) -> str:
         pen = SVGPathPen(glyphs)
