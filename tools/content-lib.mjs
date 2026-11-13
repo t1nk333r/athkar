@@ -11,14 +11,14 @@ export const contentDir = join(repoRoot, "content");
 export const readJSON = path => JSON.parse(readFileSync(path, "utf8"));
 export const sha256 = path => createHash("sha256").update(readFileSync(path)).digest("hex");
 
-/** Evaluates the PWA's inline data and returns { morning, evening, suwar } exactly as the PWA builds them. */
+/** Evaluates the PWA's inline data and returns { morning, evening, suwar, ruqyah, salawat } exactly as the PWA builds them. */
 export function loadPwaContent(indexPath = join(repoRoot, "index.html")) {
   const html = readFileSync(indexPath, "utf8");
   const start = html.indexOf("const ayatAlKursi = {");
   const end = html.indexOf("const collections = {");
   if (start < 0 || end < 0) throw new Error("index.html: content data block not found");
   const ctx = {};
-  vm.runInNewContext(`${html.slice(start, end)}\nglobalThis.out = { morning: morningAthkar, evening: eveningAthkar, suwar: suwarContent, ruqyah: ruqyahContent };`, ctx);
+  vm.runInNewContext(`${html.slice(start, end)}\nglobalThis.out = { morning: morningAthkar, evening: eveningAthkar, suwar: suwarContent, ruqyah: ruqyahContent, salawat: salawatContent };`, ctx);
   return ctx.out;
 }
 

@@ -51,6 +51,9 @@ struct HomeView: View {
             } else if app.tab == .other, app.otherSection == .prayerTimes {
                 PrayerTimesView(model: app.prayer, reminders: app.reminders) { app.otherSection = .today }
                     .frame(maxHeight: .infinity, alignment: .top)
+            } else if app.tab == .other, app.otherSection == .salawat {
+                SalawatView(app: app)
+                    .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .today {
                 TodayView(app: app)
                     .frame(maxHeight: .infinity, alignment: .top)

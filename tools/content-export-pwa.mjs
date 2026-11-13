@@ -1,6 +1,6 @@
 // Keeps the PWA in sync with the content packs (packs are the source of truth).
 //   node tools/content-export-pwa.mjs --check   # fail if index.html drifted from a pack
-// The PWA keeps its adhkar, ruqyah and suwar data inline in index.html; it is only checked (semantic equality), never
+// The PWA keeps its adhkar, ruqyah, suwar and salawat data inline in index.html; it is only checked (semantic equality), never
 // rewritten. --check is the only mode and may be left out.
 import { join } from "node:path";
 import { contentDir, jsonEqual, loadPwaContent, packItemToPwa, readJSON } from "./content-lib.mjs";
@@ -49,6 +49,14 @@ else {
   const find = (content, id) => content.segments.find(segment => segment.id === id);
   const differing = [...ids].filter(id => !jsonEqual(find(ruqyahFromPack, id), find(pwa.ruqyah, id)));
   console.error(`✗ index.html ruqyahContent differs from ruqyah pack${differing.length ? `: ${differing.join(", ")}` : " (segment order)"}`);
+}
+
+// salawatContent is the salawat pack without its pack and version fields.
+const { pack: _salawatPack, version: _salawatVersion, ...salawatFromPack } = readJSON(join(contentDir, "salawat.v1.json"));
+if (jsonEqual(salawatFromPack, pwa.salawat)) console.log("✓ index.html salawatContent matches salawat pack");
+else {
+  failed = true;
+  console.error("✗ index.html salawatContent differs from salawat pack");
 }
 
 process.exit(failed ? 1 : 0);

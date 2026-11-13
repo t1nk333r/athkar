@@ -146,6 +146,17 @@ have no tracker, so its fixtures are written by hand, not generated. Their next-
 | `tracker/fixtures/calendar.json` | Calendar month (`PrayerCalendar.month`) | records, adhkar and ruqyah days → per-day counts and the month's totals, with no missed value |
 | `tracker/fixtures/next-prayer.json` | Next prayer (`NextPrayer.upcoming`) | a place and an instant on a DST transition day → today, the next prayer, its date and time |
 
+## Friday window and last third of the night
+
+`night/night.md` specifies when the «الصلاة على النبي ﷺ» page names «ليلة الجمعة» or «يوم الجمعة», and when the
+last third of the night begins. `night/fixtures/night.json` records the PWA's `fridayPhase` and `tonightLastThird`
+on given Maghrib and Fajr times: real ones for Mecca (11–15 November 2026) and Jerusalem (around its change to summer
+time on Friday 27 March 2026), and synthetic ones for missing times and rounding.
+
+| File | Function(s) | Case input | Expected |
+| --- | --- | --- | --- |
+| `night/fixtures/night.json` | `fridayPhase`, `tonightLastThird` (`lastThirdOfNight`, `localNoon`) | `function`, `now`, `timeZone`, `times` (local date → `{fajr, maghrib}`, either `null`, or `null`) | `"night"`, `"day"` or `null`; `{start, end}` or `null` |
+
 ## Deck definition
 
 `sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2). `sessions/tasbih.md` describes the «مسبحة» counter (counting, phrases, target, day and reset) and where the native app differs from the PWA.

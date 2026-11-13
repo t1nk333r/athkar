@@ -61,6 +61,7 @@ struct DiagnosticsReport: Equatable {
         case "adhkar": "محتوى الأذكار"
         case "ruqyah": "محتوى رقية القرين"
         case "suwar": "محتوى السور"
+        case "salawat": "محتوى الصلاة على النبي ﷺ"
         default: "محتوى \(pack)"
         }
     }

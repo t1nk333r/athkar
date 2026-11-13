@@ -47,6 +47,9 @@ final class PrayerTimesUITests: DeckTestCase {
             XCTAssertTrue(time(key).label.contains("الإقامة"), time(key).label)
         }
         XCTAssertFalse(time("sunrise").label.contains("الإقامة"), time("sunrise").label)
+        // Under Isha, when the last third of the night begins.
+        XCTAssertTrue(time("lastThird").label.hasPrefix("الثلث الأخير"), time("lastThird").label)
+        XCTAssertFalse(time("lastThird").label.contains("—"), time("lastThird").label)
         XCTAssertTrue(app.descendants(matching: .any)["prayer.countdown"].exists)
         XCTAssertTrue(app.staticTexts["prayer.location"].label.contains("٢١٫٤٢، ٣٩٫٨٢"),
                       app.staticTexts["prayer.location"].label)
