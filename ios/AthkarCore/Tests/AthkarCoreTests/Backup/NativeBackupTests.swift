@@ -174,6 +174,24 @@ struct NativeBackupImportTests {
         #expect(try importer(database).importNative(file).isEmpty, "importing again writes nothing")
     }
 
+    /// A card reset leaves a count-0 row, which is no count: the backup's unit for that date still comes in.
+    @Test func aResetCardDoesNotKeepAReadingUnitOut() throws {
+        let database = try AppDatabase.inMemory()
+        let native = Instant.at("2026-10-30T19:00:00.000Z")
+        try database.reading.setCount(1, for: "salawat-01", in: .salawat, on: "2026-10-30", at: native)
+        try database.reading.resetItem("salawat-01", in: .salawat, on: "2026-10-30")
+        let stamp = Instant.at("2026-10-31T18:20:05.512Z")
+        let file = NativeBackup(meta: .init(exportedAt: stamp, timeZone: "Asia/Riyadh"), readings: .init(
+            days: [.init(deck: .salawat, date: "2026-10-30", completedAt: Instant.at("2026-10-30T09:00:00.000Z"))],
+            items: [
+                .init(deck: .salawat, date: "2026-10-30", itemId: "salawat-01", count: 1),
+                .init(deck: .salawat, date: "2026-10-30", itemId: "salawat-02", count: 1),
+            ]))
+        #expect(try importer(database).importNative(file).salawat == 1)
+        #expect(try database.reading.counts(.salawat, on: "2026-10-30") == ["salawat-01": 1, "salawat-02": 1])
+        #expect(try database.reading.day(.salawat, on: "2026-10-30") != nil)
+    }
+
     @Test func formatOneFilesStillImport() throws {
         for path in [athkarFile, ruqyahFile] {
             guard case let .pwa(envelope) = try BackupFile.decode(RepoFile.data(path)) else {

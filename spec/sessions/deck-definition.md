@@ -488,6 +488,12 @@ Line heights (multiples of the font size), by the `line_spacing` setting:
   (0.88, 0.94), (0.82, 0.91), (0.76, 0.88), (0.70, 0.85), (0.64, 0.82). The text is the quran text size × scale, with
   line height `max(1.6, quran × factor)`; the basmala is the quran prefix size × scale, with line height 1.7. A page
   that does not fit at the last step scrolls, as in the PWA.
+- Reading decks (§12; PWA `.reading-card[data-fit]` 0…6, iOS `ReadingCardBody`) use the «سور» steps for the whole
+  card, Quran passages included (the adhkar rule that Quran cards never shrink does not apply). Dhikr text and steps
+  are the dhikr size × scale, with line height `max(1.5, dhikr × factor)`; prefix, note and citation the detail size
+  × scale; a Quran passage the quran text size × scale, with line height `max(1.6, quran × factor)`; the basmala as on
+  a «سور» page. A card that does not fit at the last step scrolls inside the card. While it does, the PWA makes the
+  card text a focusable region («نص البطاقة»), since Safari does not let the keyboard reach a scroller otherwise.
 
 **Overflow hint** (native addition; the PWAs show nothing because iOS Safari hides scroll bars). A card that
 scrolls flashes its scroll indicator when it appears. While more than 1 pt of its content lies below the visible
@@ -560,7 +566,7 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `manual.title` / `manual.note` | إكمال الورد يدويًا / فعّله إذا أكملت الورد خارج التطبيق. يُسجَّل الورد مكتملًا ويتوقف تذكيره اليوم، ثم يعود الخيار إلى الإيقاف غدًا. لا تتغير العدادات، وتُفتح كل بطاقات الورد للتصفح. |
 | `manual.status.counters` / `.manual` / `.none` | اكتملت داخل التطبيق / اكتملت خارج التطبيق / لم تُسجل كمكتملة |
 | `manual.done.on` / `.off` / `.locked` | سُجلت {section} مكتملة خارج التطبيق / أُلغي الإكمال اليدوي لـ{section} / {section} مكتملة داخل التطبيق |
-| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
+| `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند إكمال كل بطاقة من أذكار النوم والصلاة على النبي ﷺ، وعند بلوغ هدف المسبحة وكل دورة بعده. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |
 

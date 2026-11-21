@@ -148,7 +148,7 @@ have no tracker, so its fixtures are written by hand, not generated. Their next-
 
 ## Friday window and last third of the night
 
-`night/night.md` specifies when the «الصلاة على النبي ﷺ» page names «ليلة الجمعة» or «يوم الجمعة», and when the
+`night/night.md` specifies when the opening card of the «الصلاة على النبي ﷺ» deck names «ليلة الجمعة» or «يوم الجمعة», and when the
 last third of the night begins. `night/fixtures/night.json` records the PWA's `fridayPhase` and `tonightLastThird`
 on given Maghrib and Fajr times: real ones for Mecca (11–15 November 2026) and Jerusalem (around its change to summer
 time on Friday 27 March 2026), and synthetic ones for missing times and rounding.
@@ -159,4 +159,4 @@ time on Friday 27 March 2026), and synthetic ones for missing times and rounding
 
 ## Deck definition
 
-`sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2). `sessions/tasbih.md` describes the «مسبحة» counter (counting, phrases, target, day and reset) and where the native app differs from the PWA.
+`sessions/deck-definition.md` describes the adhkar, ruqyah and «سور» decks and the «أذكار النوم» and «الصلاة على النبي ﷺ» reading decks (§12) (items, counters, long-order, lock/advance, swipe, completion, reset, copy keys) so the Android `DeckScreen` can be built from the same description (NATIVE_APP_PLAN.md §9.2). `sessions/tasbih.md` describes the «مسبحة» counter (counting, phrases, target, day and reset) and where the native app differs from the PWA.

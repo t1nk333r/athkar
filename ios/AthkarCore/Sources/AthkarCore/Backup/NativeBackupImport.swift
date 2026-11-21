@@ -210,10 +210,13 @@ extension BackupImporter {
         let items = Dictionary(grouping: readings.items) { Unit(deck: $0.deck, date: $0.date) }
         var merged: [ReadingDeck: Int] = [:]
         for unit in Set(days.keys).union(items.keys).sorted(by: { ($0.deck.rawValue, $0.date) < ($1.deck.rawValue, $1.date) }) {
+            // A card reset leaves a count-0 row, which is no count: only a positive count or a completion keeps the
+            // device's unit. The zero rows go before the insert, as the adhkar merge clears its unit.
             let rows = Column("deck") == unit.deck && Column("local_date") == unit.date
-            guard try ReadingItemProgress.filter(rows).fetchCount(db) == 0,
+            guard try ReadingItemProgress.filter(rows && Column("count") > 0).fetchCount(db) == 0,
                   try ReadingDay.filter(rows).fetchCount(db) == 0
             else { continue }
+            try ReadingItemProgress.filter(rows).deleteAll(db)
             var wrote = false
             for item in items[unit] ?? [] {
                 guard let target = targets[unit.deck]?[item.itemId] else { continue }

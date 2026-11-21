@@ -381,13 +381,14 @@ extension EnvironmentValues {
 extension DhikrCardBody {
     /// A Quran item's text (`quranTextMarkup`): the ayat, stored in the Uthmani references' encoding, converted for
     /// KFGQPC HAFS; each ﴿n﴾ number stays in Uthman Taha.
-    static func quranText(_ text: String, size: CGFloat) -> AttributedString {
+    static func quranText(_ text: String, size: CGFloat, markerColor: Color? = nil) -> AttributedString {
         var result = AttributedString()
         var rest = Substring(text)
         while let marker = rest.firstMatch(of: /﴿[٠-٩]+﴾/) {
             result += AttributedString(MushafEncoding.kfgqpc(String(rest[..<marker.range.lowerBound])))
             var number = AttributedString(String(marker.output))
             number.font = ReadingFont.quran(size)
+            if let markerColor { number.foregroundColor = markerColor }
             result += number
             rest = rest[marker.range.upperBound...]
         }
@@ -761,7 +762,7 @@ private struct ReadingCardBody: View {
                     .foregroundStyle(palette.textPrimary)
                     .multilineTextAlignment(.center)
             }
-            Text(DhikrCardBody.quranText(passage.text, size: size))
+            Text(DhikrCardBody.quranText(passage.text, size: size, markerColor: palette.textSecondary))
                 .font(ReadingFont.mushaf(size))
                 .cssLineHeight(max(1.6, metrics.quranLineHeight * step.lead), size: size, face: .mushaf)
                 .foregroundStyle(palette.textPrimary)

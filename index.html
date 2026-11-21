@@ -2578,7 +2578,7 @@
               </svg>
               <span>الاهتزاز عند إكمال العداد</span>
             </strong>
-            <small id="haptics-note">يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند بلوغ هدف المسبحة، وعند قراءة صفحة من السور.</small>
+            <small id="haptics-note">يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال كل بطاقة من أذكار النوم والصلاة على النبي ﷺ، وعند بلوغ هدف المسبحة، وعند قراءة صفحة من السور.</small>
           </span>
           <span class="toggle-switch">
             <input class="toggle-input" id="haptics-toggle" type="checkbox" switch role="switch" checked aria-describedby="haptics-note">
@@ -7885,7 +7885,9 @@
     }
 
     function fitVisibleCard() {
-      fitCardContent(list.querySelector("li:not([hidden]) .dhikr-card"));
+      const card = list.querySelector("li:not([hidden]) .dhikr-card");
+      fitCardContent(card);
+      makeCardScrollerFocusable(card);
       if (hapticArmObservedCard) hapticArmCardOverflows = cardContentOverflows(hapticArmObservedCard);
       syncHapticArm();
     }
@@ -7953,6 +7955,7 @@
 
       const activeItem = list.children[nextIndex];
       fitCardContent(activeItem?.querySelector(".dhikr-card"));
+      makeCardScrollerFocusable(activeItem?.querySelector(".dhikr-card"));
 
       if (direction && activeItem) {
         requestAnimationFrame(() => {
@@ -8837,6 +8840,22 @@
       if (isReadingDeck()) return readingCount(activePeriod, item) === readingTarget(item) - 1 ? card : null;
       const target = targetFor(item);
       return target > 1 && countFor(item) === target - 1 ? card : null;
+    }
+
+    // A card text that still overflows after its fit scrolls inside the card. Safari does not make such a scroller
+    // keyboard-focusable, so it takes focus itself while it overflows and Arrow, Space and PageDown reach its end.
+    function makeCardScrollerFocusable(card) {
+      const content = card?.querySelector(".card-content");
+      if (!content) return;
+      if (cardContentOverflows(card)) {
+        content.tabIndex = 0;
+        content.setAttribute("role", "region");
+        content.setAttribute("aria-label", "نص البطاقة");
+      } else {
+        content.removeAttribute("tabindex");
+        content.removeAttribute("role");
+        content.removeAttribute("aria-label");
+      }
     }
 
     function cardContentOverflows(card) {
@@ -11968,8 +11987,11 @@
       else updateSessionProgress();
     }
 
+    // Another tab saved this deck. When it rolled the deck to a new day, the last card is forgotten (§12).
     function showStoredReadingState(id) {
+      const previousDate = readingStates[id].date;
       readingStates[id] = loadReadingState(id);
+      if (readingStates[id].date !== previousDate) readingIndices[id] = null;
       if (activePeriod === id) renderCards();
       else updateSessionProgress();
     }
@@ -13436,6 +13458,8 @@
     scheduleDayRollover();
     setInterval(refreshNightTimes, 60 * 1000);
     document.fonts?.ready.then(() => fitVisibleCard());
+    // A face first used after startup (KFGQPC HAFS on a later Quran card) swaps in after the card was fitted.
+    document.fonts?.addEventListener?.("loadingdone", () => requestAnimationFrame(fitVisibleCard));
   </script>
 </body>
 </html>

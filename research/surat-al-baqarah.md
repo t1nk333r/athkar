@@ -7,6 +7,12 @@ Written 2026-11-21 against commit `3107295` (branch `fix/sleep-salawat-cards`, c
 numbers refer to that commit. Upstream sources were read on 2026-11-21. Numbers marked "measured" come from the
 downloaded upstream texts, processed with the validator's own transforms copied from `tools/content-validate.mjs`.
 
+**Later on the same branch (PR #76):** «أذكار النوم» and «الصلاة على النبي ﷺ» became counted card decks.
+`renderSleepPanel`, `#sleep-panel`, `.sleep-basmala`, `SleepView` and `SalawatView` are gone after it merges, and
+migration `v6` is taken by `reading_item_progress`/`reading_days`. Read the sleep-page references below (D5, §2.1,
+§2.2, §3.1, §4) as the `3107295` baseline, and take the page styles and the view pattern from that commit
+(`git show 3107295:index.html`, `git show 3107295:ios/Athkar/Screens/SleepView.swift`).
+
 ---
 
 ## Decisions (recommended)
@@ -143,7 +149,7 @@ alquran.cloud text, then `tanzilHamzaSeat`, then `lamHamzaMadda`. Results:
 | `index.html` raw | 638,788 B (not the ~550 KB assumed) | about 777 KB (+22%) | the inline literal with 6-space indent measured at 133 KB, like `suwarContent` (131 KB at `index.html:3011-5572`) |
 | `index.html` gzip -9 | 135 KB | about 159 KB (+24 KB) | measured |
 | iOS bundle | packs total 198 KB | +130 KB JSON (about +23 KB compressed in the IPA). Launch also SHA-256-checks and decodes it (`BundledContent.swift:219-245`), which is negligible | measured |
-| Reference snapshots (repo only, not shipped) | 4 files × ~92 KB | about +100 KB each for the 283 new verses (2:255 and 2:285–286 are already there) | measured |
+| Reference snapshots (repo only, not shipped) | 4 files × ~92 KB | about +100 KB each for the 282 new verses (2:201, 2:255 and 2:285–286 are already there) | measured |
 
 Keep the data inline in `index.html`, as every other pack is. `tools/content-lib.mjs:15-23` (`loadPwaContent`) and
 `content-export-pwa --check` depend on that. A separately fetched JSON file would save 24 KB gzip but add a second
@@ -423,10 +429,12 @@ Each step lands with its own checks. The scope comes from `tools/test.sh` and th
      `node tools/fixtures-generate.mjs`, so iOS can prove it parses the same values. Add it to `GENERATED_FIXTURES`.
 4. **Persistence spec**
    - `spec/schema.md`: a new settings key `tilawah_position` (JSON `{ "baqarah": { "page", "ayah", "at" } }`, default
-     absent). As a setting it needs **no DB migration**. If Q3 adds completion records, that needs migration `v6`
-     with its own survival test (`spec/schema.md:30-35`).
-   - State that transfer v1 and backup envelopes do not carry it. Transfer shapes are closed (`transfer-v1.md:105`),
-     and suwar is not in backups either (`spec/schema.md:521-522`).
+     absent). As a setting it needs **no DB migration**. If Q3 adds completion records, that needs migration `v7`
+     (`v6` is the reading decks') with its own survival test (`spec/schema.md:30-35`).
+   - State that transfer v1 and backup envelope v1 do not carry it. Transfer shapes are closed (`transfer-v1.md:105`),
+     and envelope v1 leaves out suwar (`spec/schema.md:521-522`). Backup format 2 does carry suwar and the reading
+     decks (`spec/backup/envelope-v2.md`), so decide whether it adds an optional `tilawah` section or carries the key
+     under `preferences`.
 5. **iOS**
    - `ios/project.yml` resource plus pbxproj.
    - `BundledContent`: decode and validate the pack.
