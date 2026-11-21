@@ -24,11 +24,12 @@ Content packs in `content/` are the source of truth for adhkar, ruqyah, suwar, s
 pack contains al-Kahf, Ya-Sin, as-Saffat, al-Waqi'a, and al-Mulk in pages for the «سور» tab and the iOS app's
 «سور» section. The `ruqyah.v1.json` pack is رقية القرين for the «رقية» tab and the iOS app's رقية القرين section;
 it replaced the standalone ruqyah-al-qareen PWA, whose page now hands its progress to the tab. The `salawat.v1.json`
-pack is the «الصلاة على النبي ﷺ» page (al-Ahzab 56 and two salawat, each quotation bound to
+pack is the «الصلاة على النبي ﷺ» card deck (al-Ahzab 56 and two salawat, each quotation bound to
 `reference/hadith.salawat.json`) for the PWA tab and the iOS app's أخرى section; `spec/night/night.md` says when it
-names «ليلة الجمعة» and when the last third of the night begins. The `sleep.v1.json` pack is the «أذكار النوم» page
+names «ليلة الجمعة» and when the last third of the night begins. The `sleep.v1.json` pack is the «أذكار النوم» card deck
 (each dhikr in its hadith's wording and each quotation bound to `reference/hadith.sleep.json`; al-Mulk is read from
-the suwar pack) for the PWA's «النوم» tab and the iOS app's أخرى section. When you change adhkar, ruqyah, suwar,
+the suwar pack) for the PWA's «النوم» tab and the iOS app's أخرى section. Both decks are counted and saved per day
+(`spec/sessions/deck-definition.md` §12). When you change adhkar, ruqyah, suwar,
 salawat or sleep data in `index.html` or a pack, keep the data in sync. Regenerate the behaviour fixtures in `spec/` with `node tools/fixtures-generate.mjs`.
 See `spec/README.md`.
 
