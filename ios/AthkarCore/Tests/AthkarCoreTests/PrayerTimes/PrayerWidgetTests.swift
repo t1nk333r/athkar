@@ -28,12 +28,13 @@ struct PrayerWidgetTests {
         PrayerWidgetState(phase: phase, prayer: prayer, adhan: adhan, iqama: iqama, start: start)
     }
 
-    @Test func theSnapshotHoldsTheFivePrayersWithTheirIqama() {
+    @Test func theSnapshotHoldsTheFivePrayersWithTheirIqamaAndSunrise() {
         let day = snapshot([schedule(day: 1)])
         #expect(day.zone == "Asia/Riyadh")
         #expect(day.format == PrayerWidgetSnapshot.currentFormat)
         #expect(day.prayers == [
             .init(prayer: .fajr, adhan: local(day: 1, 4), iqama: local(day: 1, 4, 25)),
+            .init(prayer: .sunrise, adhan: local(day: 1, 5, 30), iqama: nil),
             .init(prayer: .dhuhr, adhan: local(day: 1, 12), iqama: local(day: 1, 12, 20)),
             .init(prayer: .asr, adhan: local(day: 1, 15, 30), iqama: local(day: 1, 15, 50)),
             .init(prayer: .maghrib, adhan: local(day: 1, 18), iqama: local(day: 1, 18, 10)),
@@ -41,12 +42,31 @@ struct PrayerWidgetTests {
         ])
     }
 
-    /// Sunrise is not a prayer; a clamped Asr and a time the schedule could not compute are left out, and a zero
-    /// delay has no iqama.
+    /// A clamped Asr and a time the schedule could not compute are left out, and a zero delay has no iqama.
     @Test func theSnapshotLeavesOutWhatTheCountersSkip() {
         let day = snapshot([schedule(day: 1, asrClamped: true, dhuhr: .some(nil))], delays: IqamaDelays(maghrib: 0))
-        #expect(day.prayers.map(\.prayer) == [.fajr, .maghrib, .isha])
-        #expect(day.prayers[1].iqama == nil)
+        #expect(day.prayers.map(\.prayer) == [.fajr, .sunrise, .maghrib, .isha])
+        #expect(day.prayers[2].iqama == nil)
+    }
+
+    /// Sunrise shows as the next time once Fajr's window ends, counting down to it; it is never current, so at sunrise
+    /// Dhuhr shows, its ring starting there.
+    @Test func sunriseIsNextAfterFajrButNeverCurrent() {
+        let days = snapshot([schedule(day: 1)])
+        #expect(days.state(at: local(day: 1, 4, 10)) == state(.current, .fajr, local(day: 1, 4),
+                                                               iqama: local(day: 1, 4, 25), since: local(day: 1, 4)))
+        let sunrise = state(.next, .sunrise, local(day: 1, 5, 30), iqama: nil, since: local(day: 1, 4, 30))
+        #expect(days.state(at: local(day: 1, 4, 30)) == sunrise)
+        #expect(days.state(at: local(day: 1, 5, 29)) == sunrise)
+        let dhuhr = state(.next, .dhuhr, local(day: 1, 12), iqama: local(day: 1, 12, 20), since: local(day: 1, 5, 30))
+        #expect(days.state(at: local(day: 1, 5, 30)) == dhuhr)
+        #expect(days.state(at: local(day: 1, 6)) == dhuhr)
+
+        let entries = days.timeline(from: local(day: 1, 4), limit: 6)
+        #expect(entries.map(\.date) == [local(day: 1, 4), local(day: 1, 4, 25), local(day: 1, 4, 30),
+                                        local(day: 1, 5, 30), local(day: 1, 12), local(day: 1, 12, 20)])
+        #expect(entries.map { $0.state.map { "\($0.phase.rawValue) \($0.prayer.rawValue)" } ?? "none" }
+                == ["current fajr", "current fajr", "next sunrise", "next dhuhr", "current dhuhr", "current dhuhr"])
     }
 
     @Test func theSnapshotRoundTripsAndRejectsAnotherFormat() throws {
@@ -65,7 +85,7 @@ struct PrayerWidgetTests {
         let asr = state(.next, .asr, local(day: 1, 15, 30), iqama: local(day: 1, 15, 50), since: local(day: 1, 12, 30))
         #expect(days.state(at: local(day: 1, 11, 59)) == state(.next, .dhuhr, local(day: 1, 12),
                                                                iqama: local(day: 1, 12, 20),
-                                                               since: local(day: 1, 4, 30)))
+                                                               since: local(day: 1, 5, 30)))
         #expect(days.state(at: local(day: 1, 12)) == dhuhr)
         #expect(days.state(at: local(day: 1, 12, 29)) == dhuhr)
         #expect(days.state(at: local(day: 1, 12, 30)) == asr)

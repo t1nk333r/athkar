@@ -1,8 +1,8 @@
 import Foundation
 
 /// What the lock-screen widget reads (MOBILE_APP_PLAN.md §14, "1.1 widgets"): the five adhan and iqama times of the
-/// coming days, as the app computed them. It holds no location, history or settings, so the widget needs neither the
-/// database nor the calculation.
+/// coming days and each day's sunrise, as the app computed them. It holds no location, history or settings, so the
+/// widget needs neither the database nor the calculation.
 public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
     public struct Prayer: Codable, Equatable, Sendable {
         public let prayer: PrayerTime
@@ -27,7 +27,7 @@ public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
     public let format: Int
     /// The time zone the times are shown in.
     public let zone: String
-    /// The five prayers of each day, by adhan.
+    /// The five prayers and sunrise of each day, by time. Sunrise has no iqama.
     public let prayers: [Prayer]
 
     public init(zone: String, prayers: [Prayer]) {
@@ -36,11 +36,11 @@ public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
         self.prayers = prayers.sorted { $0.adhan < $1.adhan }
     }
 
-    /// The prayers of `schedules` with their iqama under `delays`. A time a schedule could not compute is left out,
-    /// and so is a clamped Asr, as in ``NextPrayer``.
+    /// The prayers of `schedules` with their iqama under `delays`, and each day's sunrise, which ends Fajr's time. A
+    /// time a schedule could not compute is left out, and so is a clamped Asr, as in ``NextPrayer``.
     public init(zone: TimeZone, schedules: [PrayerSchedule], delays: IqamaDelays) {
         self.init(zone: zone.identifier, prayers: schedules.flatMap { schedule in
-            NextPrayer.prayers.compactMap { prayer in
+            PrayerTime.allCases.compactMap { prayer in
                 guard !(prayer == .asr && schedule.asrClamped), let adhan = schedule[prayer] else { return nil }
                 return Prayer(prayer: prayer, adhan: adhan, iqama: delays.iqama(of: prayer, in: schedule))
             }
@@ -65,15 +65,16 @@ public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
     }
 
     /// At `instant`: the prayer whose adhan sounded less than ``currentWindow`` ago, the latest if two did, else the
-    /// next adhan. `nil` when the snapshot has no adhan left.
+    /// next adhan or sunrise. Sunrise is never current: once the sun has risen the next prayer shows, from sunrise.
+    /// `nil` when the snapshot has no time left.
     public func state(at instant: Date) -> PrayerWidgetState? {
         let latest = prayers.last { $0.adhan <= instant }
-        if let current = latest, instant < current.adhan.addingTimeInterval(Self.currentWindow) {
+        if let current = latest, current.prayer != .sunrise,
+           instant < current.adhan.addingTimeInterval(Self.currentWindow) {
             return PrayerWidgetState(phase: .current, prayer: current, start: current.adhan)
         }
-        return prayers.first { $0.adhan > instant }.map {
-            PrayerWidgetState(phase: .next, prayer: $0, start: latest?.adhan.addingTimeInterval(Self.currentWindow))
-        }
+        let start = latest.map { $0.prayer == .sunrise ? $0.adhan : $0.adhan.addingTimeInterval(Self.currentWindow) }
+        return prayers.first { $0.adhan > instant }.map { PrayerWidgetState(phase: .next, prayer: $0, start: start) }
     }
 
     /// The widget's timeline from `now`: the state at `now`, then one entry at each instant the state changes, an
@@ -96,7 +97,7 @@ public struct PrayerWidgetSnapshot: Codable, Equatable, Sendable {
     }
 }
 
-/// One prayer as the widget shows it.
+/// One prayer, or sunrise, as the widget shows it.
 public struct PrayerWidgetState: Equatable, Sendable {
     public enum Phase: String, Equatable, Sendable {
         /// Its adhan sounded less than ``PrayerWidgetSnapshot/currentWindow`` ago.

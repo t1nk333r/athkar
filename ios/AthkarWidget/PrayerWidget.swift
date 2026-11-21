@@ -115,7 +115,9 @@ struct PrayerWidgetView: View {
     private var rectangular: some View {
         VStack(alignment: .leading, spacing: 0) {
             if let state = entry.state {
-                Text(state.phase == .current ? "الصلاة الحالية" : "الصلاة القادمة")
+                // Sunrise is not a prayer: «الوقت القادم» over «الشروق ٥:٣٠ ص».
+                Text(state.phase == .current ? "الصلاة الحالية"
+                     : state.prayer == .sunrise ? "الوقت القادم" : "الصلاة القادمة")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text("\(Self.name(state.prayer)) \(time(state.adhan))")
