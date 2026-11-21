@@ -103,7 +103,8 @@ struct SuwarContent: Decodable, Equatable, Sendable {
     var suwar: [SuwarSura]
 }
 
-/// The «الصلاة على النبي ﷺ» page (`content/salawat.v1.json`): al-Ahzab 56, the Friday virtue, then each salawat.
+/// The «الصلاة على النبي ﷺ» deck (`content/salawat.v1.json`): al-Ahzab 56 and the Friday virtue on its opening card,
+/// then each salawat.
 struct SalawatContent: Decodable, Equatable, Sendable {
     /// A line under a salawat or the Friday virtue, with the hadith it quotes (`reference/hadith.salawat.json`).
     struct Note: Decodable, Equatable, Sendable {
@@ -130,7 +131,7 @@ struct SalawatContent: Decodable, Equatable, Sendable {
     var items: [Item]
 }
 
-/// The «أذكار النوم» page (`content/sleep.v1.json`): what is read and said at bedtime and at night, each with its source.
+/// The «أذكار النوم» deck (`content/sleep.v1.json`): what is read and said at bedtime and at night, each with its source.
 struct SleepContent: Decodable, Equatable, Sendable {
     /// A line under an item, with the hadith it quotes (`reference/hadith.sleep.json`).
     struct Note: Decodable, Equatable, Sendable {
@@ -157,6 +158,8 @@ struct SleepContent: Decodable, Equatable, Sendable {
         var sura: String?
         var text: String?
         var steps: [String]?
+        /// How many times the item is said (sleep-04 and sleep-06: 3): its card's target. Absent means once.
+        var count: Int?
         var countLabel: String?
         var note: Note?
     }
@@ -294,6 +297,11 @@ struct BundledContent: Sendable {
         guard !suwar.suwar.isEmpty else { throw BundledContentError.invalidSuwarSura(id: "") }
         guard !salawat.items.isEmpty else { throw BundledContentError.missingContent(id: "salawat") }
         guard !sleep.items.isEmpty else { throw BundledContentError.missingContent(id: "sleep") }
+        // The reading decks key counts by item ID, and the salawat opening card's ID is the deck's own.
+        var readingIDs: Set<String> = [ReadingDeckModel.salawatOpeningID]
+        for id in salawat.items.map(\.id) + sleep.items.map(\.id) {
+            guard readingIDs.insert(id).inserted else { throw BundledContentError.duplicateID(id: id) }
+        }
     }
 
     /// Records each bundled pack's version in `content_installs` when it differs from the installed one. Every pack

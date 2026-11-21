@@ -70,7 +70,7 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(picked(sel)["models"], {
             "AdhkarPersistenceTests", "BundledIntegrityTests", "DayRolloverTests", "DeckIndexReachabilityTests",
             "DiagnosticsReportTests", "MigrationPrivacyTests", "PortableModelTests", "PrayerTrackerModelTests",
-            "ReminderReplanTests", "RuqyahPersistenceTests",
+            "ReadingDeckModelTests", "ReadingPersistenceTests", "ReminderReplanTests", "RuqyahPersistenceTests",
             "SettingsPersistenceTests", "SuwarDeckModelTests", "SuwarPersistenceTests", "TasbihModelTests", "TasbihPersistenceTests",
             "TasbihTextTests", "TransferImportModelTests",
         })

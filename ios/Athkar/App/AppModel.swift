@@ -12,16 +12,16 @@ final class AppModel {
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
     let suwar: SuwarDeckModel
+    /// «أذكار النوم».
+    let sleep: ReadingDeckModel
+    /// «الصلاة على النبي ﷺ».
+    let salawat: ReadingDeckModel
     let tasbih: TasbihModel
     let prayer: PrayerTimesModel
     let reminders: ReminderModel
     let tracker: PrayerTrackerModel
     /// The bundled packs and their versions (`manifest.json`), for the diagnostics screen.
     let contentVersions: [(pack: String, version: String)]
-    /// The «الصلاة على النبي ﷺ» page.
-    let salawat: SalawatContent
-    /// The «أذكار النوم» page.
-    let sleep: SleepContent
     /// The tab on screen: الصباح, المساء or أخرى.
     var tab: HomeTab = .morning
     /// The section open in the أخرى tab, or `nil` for its list.
@@ -49,6 +49,12 @@ final class AppModel {
             case .suwar:
                 tab = .other
                 otherSection = .suwar
+            case .sleep:
+                tab = .other
+                otherSection = .sleep
+            case .salawat:
+                tab = .other
+                otherSection = .salawat
             }
         }
     }
@@ -111,6 +117,8 @@ final class AppModel {
         evening = AdhkarDeckModel(period: .evening, session: adhkar)
         ruqyah = try RuqyahDeckModel(database: database, content: content, today: today, report: report)
         suwar = try SuwarDeckModel(database: database, content: content, today: today, report: report)
+        sleep = try ReadingDeckModel(.sleep, database: database, content: content, today: today, report: report)
+        salawat = try ReadingDeckModel(.salawat, database: database, content: content, today: today, report: report)
         tasbih = try TasbihModel(database: database, today: today, report: report)
         let prayer = try PrayerTimesModel(database: database, widget: widget ?? KeychainPrayerWidget(), report: report)
         self.prayer = prayer
@@ -125,8 +133,6 @@ final class AppModel {
         reminders = try ReminderModel(repository: database.reminders, report: report,
                                       center: notifications ?? UserNotificationCenterAdapter(), clock: reminderClock,
                                       diagnosticsStore: diagnosticsStore ?? UserDefaultsDiagnosticsStore())
-        salawat = content.salawat
-        sleep = content.sleep
         contentVersions = content.manifest.packs.map { (pack: $0.key, version: $0.value.version) }
             .sorted { $0.pack < $1.pack }
         transferImporter = TransferImporter(
@@ -244,7 +250,15 @@ final class AppModel {
         case .evening: evening
         case .ruqyah: ruqyah
         case .suwar: suwar
+        case .sleep: sleep
+        case .salawat: salawat
         }
+    }
+
+    /// «ليلة الجمعة» or «يوم الجمعة» at `now`, on the prayer times' Maghrib and Fajr (spec/night/night.md): the salawat
+    /// opening card's pill and its أخرى line.
+    func fridayPhase(at now: Date = Date()) -> FridayPhase? {
+        FridayPhase.at(now, in: prayer.zone) { prayer.nightTimes(on: $0) }
     }
 
     /// The day rollover (`ensureCurrentDay`): run on `NSCalendarDayChanged`, on returning to the foreground, and
@@ -276,7 +290,9 @@ final class AppModel {
         return tasbih.date == today
     }
 
-    private var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, tasbih: tasbih) }
+    private var rollover: DayRollover {
+        DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, sleep: sleep, salawat: salawat, tasbih: tasbih)
+    }
 
     /// The settings toggle «تأخير الأذكار الطويلة». The decks are reordered only once the choice is saved.
     func setLongOrder(_ enabled: Bool) {
@@ -320,6 +336,8 @@ final class AppModel {
         adhkar.reload(longAdhkarLast: settings.longOrder == .last)
         ruqyah.reload()
         suwar.reload()
+        sleep.reload()
+        salawat.reload()
         tasbih.reload()
         prayer.reload()
         tracker.reload()
@@ -354,6 +372,8 @@ final class AppModel {
         adhkar.reload(longAdhkarLast: settings.longOrder == .last)
         ruqyah.reload()
         suwar.reload()
+        sleep.reload()
+        salawat.reload()
         tasbih.reload()
         prayer.reload()
         tracker.reload()

@@ -153,10 +153,12 @@ UI_BLACK_BOX = {
     "OtherSectionsUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Tasbih/*.swift"],
     "PrayerTimesUITests": [APP + "Screens/OtherSectionsView.swift", *PRAYER],
     "PrayerTrackerUITests": [APP + "Tracker/*.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
-    # «الصلاة على النبي ﷺ»: its row and its page.
-    "SalawatUITests": [APP + "Screens/SalawatView.swift", APP + "Screens/OtherSectionsView.swift", *PRAYER],
-    # «أذكار النوم»: its row and its page.
-    "SleepUITests": [APP + "Screens/SleepView.swift", APP + "Screens/OtherSectionsView.swift", "content/sleep.v1.json"],
+    # «الصلاة على النبي ﷺ»: its row (the Friday line follows the prayer times), its reading deck and dialog.
+    "SalawatUITests": [APP + "Deck/ReadingDeckModel.swift", APP + "Screens/OtherSectionsView.swift",
+                       APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", *PRAYER],
+    # «أذكار النوم»: its row, its reading deck (al-Mulk from the suwar pack, scrolling inside its card) and dialog.
+    "SleepUITests": [APP + "Deck/ReadingDeckModel.swift", APP + "Screens/OtherSectionsView.swift",
+                     APP + "Screens/DeckDialogs.swift", APP + "Platform/Haptics.swift", "fonts/*.ttf"],
     "QiblaUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Qibla/*.swift", *PRAYER],
     "ReminderUITests": [APP + "Screens/OtherSectionsView.swift", APP + "Reminders/*.swift", *SETTINGS, *PRAYER],
     "ScreenshotUITests": [APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SectionChips.swift", APP + "Screens/*.swift",
@@ -173,9 +175,11 @@ UI_BLACK_BOX = {
                                 APP + "Tracker/TrackerText.swift", APP + "Tracker/PrayerTrackerModel.swift",
                                 APP + "Transfer/*.swift", APP + "Reminders/ReminderModel.swift",
                                 APP + "Prayer/PrayerTimesModel.swift", APP + "Tasbih/TasbihModel.swift",
-                                APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SuwarDeckModel.swift"],
+                                APP + "Deck/RuqyahDeckModel.swift", APP + "Deck/SuwarDeckModel.swift",
+                                APP + "Deck/ReadingDeckModel.swift"],
     "TransferImportUITests": [APP + "Transfer/*.swift", *SETTINGS,
                               APP + "Screens/DeckDialogs.swift", APP + "Deck/SuwarDeckModel.swift",
+                              APP + "Deck/ReadingDeckModel.swift",
                               APP + "Tasbih/TasbihModel.swift", APP + "Prayer/PrayerTimesModel.swift"],
 }
 

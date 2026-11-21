@@ -127,6 +127,36 @@ final class DayRolloverTests: XCTestCase {
         XCTAssertEqual(try decks.database.suwar.readPages(on: Day.today), [])
     }
 
+    /// The reading decks have their own day: one they cannot read keeps them on the day before, where their taps are
+    /// dropped, and the other decks carry on. A reading after midnight belongs to the new date.
+    @MainActor
+    func testUnreadableReadingDayLeavesTheOtherDecksWorking() throws {
+        let decks = try Decks()
+        XCTAssertEqual(decks.tap(.sleep, at: 0), DeckChange(completedCard: true, advance: true, haptic: true))
+        try decks.hide("reading_item_progress")
+        decks.today = Day.tomorrow
+        XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
+        XCTAssertEqual(decks.suwar.date, Day.tomorrow)
+        XCTAssertEqual(decks.sleep.date, Day.today)
+        XCTAssertEqual(decks.salawat.date, Day.today)
+        XCTAssertEqual(decks.reports.messages.count, 2, "each reading deck")
+
+        XCTAssertEqual(decks.tap(.suwar, at: 0), DeckChange(completedCard: true, advance: true, haptic: true))
+        let sleepCards = decks.sleep.cards
+        XCTAssertNil(decks.tap(.sleep, at: 1))
+        XCTAssertNil(decks.tap(.salawat, at: 1))
+        XCTAssertEqual(decks.sleep.cards, sleepCards)
+
+        try decks.restore("reading_item_progress")
+        XCTAssertNil(decks.tap(.sleep, at: 0), "the gesture that loads the new day is dropped")
+        XCTAssertEqual(decks.sleep.date, Day.tomorrow)
+        XCTAssertEqual(decks.salawat.date, Day.tomorrow)
+        XCTAssertEqual(decks.sleep.cards[0].count, 0, "a new date starts with no counts")
+        XCTAssertNotNil(decks.tap(.sleep, at: 0))
+        XCTAssertEqual(try decks.database.reading.counts(.sleep, on: Day.tomorrow), ["sleep-01": 1])
+        XCTAssertEqual(try decks.database.reading.counts(.sleep, on: Day.today), ["sleep-01": 1])
+    }
+
     /// «مسبحة» is no deck: a day it cannot read leaves every deck working, and drops a count until the day can be
     /// read. Then the count that reads the day applies to it, as `addTasbihCount` counts after `ensureCurrentDay`.
     @MainActor
@@ -230,6 +260,8 @@ private final class Decks {
     let evening: AdhkarDeckModel
     let ruqyah: RuqyahDeckModel
     let suwar: SuwarDeckModel
+    let sleep: ReadingDeckModel
+    let salawat: ReadingDeckModel
     let tasbih: TasbihModel
     /// The local date the clock shows.
     var today: String
@@ -249,12 +281,18 @@ private final class Decks {
                                      report: reports.record)
         suwar = try SuwarDeckModel(database: support.database, content: support.content, today: support.today,
                                    report: reports.record)
+        sleep = try ReadingDeckModel(.sleep, database: support.database, content: support.content,
+                                     today: support.today, report: reports.record)
+        salawat = try ReadingDeckModel(.salawat, database: support.database, content: support.content,
+                                       today: support.today, report: reports.record)
         tasbih = try TasbihModel(database: support.database, today: support.today, report: reports.record)
         today = support.today
     }
 
     var database: AppDatabase { support.database }
-    var rollover: DayRollover { DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, tasbih: tasbih) }
+    var rollover: DayRollover {
+        DayRollover(adhkar: adhkar, ruqyah: ruqyah, suwar: suwar, sleep: sleep, salawat: salawat, tasbih: tasbih)
+    }
 
     func deck(_ id: DeckID) -> any DeckModel {
         switch id {
@@ -262,6 +300,8 @@ private final class Decks {
         case .evening: evening
         case .ruqyah: ruqyah
         case .suwar: suwar
+        case .sleep: sleep
+        case .salawat: salawat
         }
     }
 
