@@ -97,7 +97,7 @@ final class ReadingDeckModelTests: XCTestCase {
             title: "الصلاة على النبي ﷺ", text: salawat.items[0].text, note: salawat.items[0].note?.text)))
         XCTAssertEqual(deck.cards[1].requirement, "مرة واحدة")
         XCTAssertEqual(deck.cards.map(\.target), [1, 1, 1])
-        XCTAssertEqual(deck.currentIndex, 1, "the first incomplete counted card")
+        XCTAssertEqual(deck.currentIndex, 0, "card 1 while nothing is counted today")
         XCTAssertTrue(deck.canMoveForward(from: 0))
         XCTAssertFalse(deck.canMoveForward(from: 1))
         XCTAssertNil(deck.tap(cardAt: 0))
@@ -222,7 +222,7 @@ final class ReadingDeckModelTests: XCTestCase {
         XCTAssertNil(deck.tap(cardAt: 3), "already at its target")
     }
 
-    /// `ensureCurrentDay`: a new date starts with no counts and opens on its first incomplete card; the previous date
+    /// `ensureCurrentDay`: a new date starts with no counts and opens on its first card; the previous date
     /// stays in history. The last card shown is kept until then.
     @MainActor
     func testDayRolloverStartsANewDateAndKeepsTheLastOneAsHistory() throws {
@@ -237,7 +237,7 @@ final class ReadingDeckModelTests: XCTestCase {
 
         deck.roll(to: "2026-10-15")
         XCTAssertEqual(deck.date, "2026-10-15")
-        XCTAssertEqual(deck.currentIndex, 1)
+        XCTAssertEqual(deck.currentIndex, 0, "the opening card on a day with no counts")
         XCTAssertFalse(deck.isComplete)
         XCTAssertEqual(deck.cards.map(\.count), [0, 0, 0])
         XCTAssertEqual(deck.listSummary.copy, "صيغتان")

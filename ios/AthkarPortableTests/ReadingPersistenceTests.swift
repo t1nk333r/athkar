@@ -121,7 +121,7 @@ final class ReadingPersistenceTests: XCTestCase {
             try store.allow(["DELETE"], on: table)
             XCTAssertTrue(deck.reset(scope), label)
             XCTAssertEqual(store.reported.count, 1, label)
-            XCTAssertEqual(deck.currentIndex, 1, label)
+            XCTAssertEqual(deck.currentIndex, 0, label)
             XCTAssertFalse(deck.isComplete, label)
             XCTAssertTrue(try store.repository.counts(.salawat, on: store.today).isEmpty, label)
             switch scope {

@@ -86,7 +86,7 @@ final class ReadingDeckModel: DeckModel {
         refresh()
     }
 
-    /// `ensureCurrentDay`: a new day starts with that day's counts and opens on its first incomplete card. A day that
+    /// `ensureCurrentDay`: a new day starts with that day's counts and opens on its opening card. A day that
     /// cannot be read is not shown: the deck keeps its day, so the next `ensureCurrentDay` tries again.
     func roll(to today: String) {
         guard today != date else { return }
@@ -270,9 +270,11 @@ final class ReadingDeckModel: DeckModel {
         return count(of: item) >= target
     }
 
-    /// The first incomplete counted card, or the last card when every counted card is complete.
+    /// Card 1 while no card has a count today (salawat's opening card), otherwise the first incomplete counted card, or
+    /// the last card when every counted card is complete.
     private func openingIndex() -> Int {
-        items.firstIndex { !isComplete($0) } ?? max(0, items.count - 1)
+        guard items.contains(where: { count(of: $0) > 0 }) else { return 0 }
+        return items.firstIndex { !isComplete($0) } ?? max(0, items.count - 1)
     }
 
     /// Each card's counter and spoken labels.

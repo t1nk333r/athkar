@@ -7,8 +7,7 @@ final class SalawatUITests: DeckTestCase {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
     }
 
-    /// The deck opens on its first salawat; the opening card before it says «اقرأ ثم اسحب» and names the Friday
-    /// window. Reading both salawat completes the day, and «تقدم اليوم» clears it.
+    /// The deck opens on its opening card, which says «اقرأ ثم اسحب» and names the Friday window. Reading both salawat completes the day, and «تقدم اليوم» clears it.
     func testTheTwoSalawatCompleteTheDay() {
         launch()
         app.buttons["tab.other"].tap()
@@ -19,10 +18,8 @@ final class SalawatUITests: DeckTestCase {
         XCTAssertTrue(["ليلة الجمعة", "يوم الجمعة", "صيغتان"].contains(value), value)
         row.tap()
 
-        expectPosition(2, of: 3, noun: "البطاقة")
-        expectLabel(summary, "٠ من ٢")
-        previousButton.tap()
         expectPosition(1, of: 3, noun: "البطاقة")
+        expectLabel(summary, "٠ من ٢")
         XCTAssertTrue(card("salawat-quran").exists)
         expectLabel(counter, "البطاقة ١، الآية والفضل")
         XCTAssertTrue(element("deck.card.quran").exists)
@@ -48,7 +45,7 @@ final class SalawatUITests: DeckTestCase {
         headerReset.tap()
         app.buttons["reset.day"].tap()
         expectLabel(summary, "٠ من ٢")
-        expectPosition(2, of: 3, noun: "البطاقة")
+        expectPosition(1, of: 3, noun: "البطاقة")
 
         app.buttons["header.back"].tap()
         XCTAssertTrue(row.waitForExistence(timeout: 3))
