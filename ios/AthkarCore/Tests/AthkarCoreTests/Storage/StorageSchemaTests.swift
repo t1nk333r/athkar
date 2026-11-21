@@ -67,14 +67,16 @@ struct StorageSchemaTests {
 
     @Test func migrationsCreateExactlyTheDocumentedSchema() throws {
         let documented = try Self.documentedTables()
-        #expect(documented.count == 14)
-        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(documented.count == 16)
+        #expect(try Self.documentedMigrations() == ["v1", "v2", "v3", "v4", "v5", "v6"])
         #expect(Set(documented.values.map(\.migration)) == Set(try Self.documentedMigrations()))
         #expect(documented["ruqyah_sura_days"]?.migration == "v2")
         #expect(documented["suwar_page_reads"]?.migration == "v3")
         #expect(documented["suwar_sura_days"]?.migration == "v3")
         #expect(documented["tasbih_counts"]?.migration == "v4")
         #expect(documented["prayer_records"]?.migration == "v5")
+        #expect(documented["reading_item_progress"]?.migration == "v6")
+        #expect(documented["reading_days"]?.migration == "v6")
 
         let database = try AppDatabase.inMemory()
         let actual = try database.reader.read { db in
@@ -109,7 +111,7 @@ struct StorageSchemaTests {
              try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations"))
         }
         #expect(journalMode == "wal")
-        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
         #expect(migrations == (try Self.documentedMigrations()))
         #expect(try reopened.settings.value(for: .theme) == .dark)
     }
@@ -147,6 +149,21 @@ struct StorageSchemaTests {
             ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', NULL, 1, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, 0, '2026-09-23T10:00:00.000Z')", []),
             ("INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 1, NULL, '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO reading_item_progress VALUES ('night', '2026-09-23', 'sleep-01', 1, ?)",
+             ["2026-09-23T10:00:00.000Z"]),
+            ("INSERT INTO reading_item_progress VALUES ('sleep', ?, 'sleep-01', 1, '2026-09-23T10:00:00.000Z')",
+             ["2026-09-23T10"]),
+            ("INSERT INTO reading_item_progress VALUES ('sleep', '2026-09-23', 'sleep-01', -1, ?)",
+             ["2026-09-23T10:00:00.000Z"]),
+            ("INSERT INTO reading_item_progress VALUES ('sleep', '2026-09-23', 'sleep-01', NULL, ?)",
+             ["2026-09-23T10:00:00.000Z"]),
+            ("INSERT INTO reading_item_progress VALUES ('sleep', '2026-09-23', NULL, 1, ?)",
+             ["2026-09-23T10:00:00.000Z"]),
+            ("INSERT INTO reading_item_progress VALUES ('sleep', '2026-09-23', 'sleep-01', 1, ?)", ["2026-09-23"]),
+            ("INSERT INTO reading_days VALUES (NULL, '2026-09-23', '2026-09-23T10:00:00.000Z')", []),
+            ("INSERT INTO reading_days VALUES ('salawat', ?, '2026-09-23T10:00:00.000Z')", ["2026-09-3"]),
+            ("INSERT INTO reading_days VALUES ('salawat', '2026-09-23', ?)", ["2026-09-23T10:00Z"]),
+            ("INSERT INTO reading_days VALUES ('salawat', '2026-09-23', NULL)", []),
             ("INSERT INTO location_profiles VALUES (2, NULL, 21.42, 39.83, NULL, 'device', NULL)", []),
         ] + Self.prayerRecordRows.map { (Self.prayerRecordInsert, $0) }
         for (sql, arguments) in rows {

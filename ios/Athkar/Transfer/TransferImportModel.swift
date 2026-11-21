@@ -292,6 +292,8 @@ final class TransferImportModel: Identifiable {
         add("رقية القرين", summary.ruqyah, days)
         add("قراءة السور", summary.suwar, days)
         add("المسبحة", summary.tasbih, days)
+        add("أذكار النوم", summary.sleep, days)
+        add("الصلاة على النبي ﷺ", summary.salawat, days)
         add("سجل الصلوات", summary.prayers, prayers)
         add("التذكيرات", summary.reminders, reminders)
         add("الإعدادات", summary.settings, settings)

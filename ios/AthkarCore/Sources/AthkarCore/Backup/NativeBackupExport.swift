@@ -16,7 +16,8 @@ extension BackupExporter {
                 suwar: try Tables.suwar(in: db),
                 tasbih: try Tables.tasbih(in: db),
                 prayers: try Tables.prayers(in: db),
-                reminders: try Tables.reminders(in: db, includeLocation: includeLocation))
+                reminders: try Tables.reminders(in: db, includeLocation: includeLocation),
+                readings: try Tables.readings(in: db))
         }
         try backup.validate()
         return backup
@@ -95,6 +96,18 @@ private enum Tables {
             counts: try TasbihCount.order(Column("local_date"), Column("first_use")).fetchAll(db).map {
                 .init(date: $0.localDate, phrase: $0.phraseKey, count: $0.count, firstUse: $0.firstUse)
             })
+    }
+
+    /// Both reading decks, or `nil` when neither has a row: the section is then left out, so the file stays readable
+    /// by an app that predates it.
+    static func readings(in db: Database) throws -> NativeBackup.Readings? {
+        let readings = NativeBackup.Readings(
+            days: try ReadingDay.order(Column("deck"), Column("local_date")).fetchAll(db).map {
+                .init(deck: $0.deck, date: $0.localDate, completedAt: $0.completedAt)
+            },
+            items: try ReadingItemProgress.order(Column("deck"), Column("local_date"), Column("item_id")).fetchAll(db)
+                .map { .init(deck: $0.deck, date: $0.localDate, itemId: $0.itemId, count: $0.count) })
+        return readings.isEmpty ? nil : readings
     }
 
     static func prayers(in db: Database) throws -> NativeBackup.Prayers {

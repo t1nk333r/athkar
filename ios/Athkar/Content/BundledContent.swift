@@ -235,7 +235,8 @@ struct BundledContent: Sendable {
         let ruqyah = try JSONDecoder().decode(RuqyahPack.self, from: ruqyahData)
         let suwar = try JSONDecoder().decode(SuwarContent.self, from: suwarData)
         let content = BundledContent(
-            packs: try ContentPacks(adhkarPack: adhkarData, ruqyahPack: ruqyahData),
+            packs: try ContentPacks(adhkarPack: adhkarData, ruqyahPack: ruqyahData, sleepPack: sleepData,
+                                    salawatPack: salawatData),
             adhkar: SessionPeriods(morning: adhkar.periods.morning, evening: adhkar.periods.evening),
             ruqyah: ruqyah.segments,
             suwar: suwar,

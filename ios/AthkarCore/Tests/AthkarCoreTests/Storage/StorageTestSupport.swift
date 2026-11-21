@@ -19,7 +19,8 @@ enum RepoFile {
     /// The shipped content packs, read from `content/`.
     static var content: ContentPacks {
         get throws {
-            try ContentPacks(adhkarPack: data("content/adhkar.v1.json"), ruqyahPack: data("content/ruqyah.v1.json"))
+            try ContentPacks(adhkarPack: data("content/adhkar.v1.json"), ruqyahPack: data("content/ruqyah.v1.json"),
+                             sleepPack: data("content/sleep.v1.json"), salawatPack: data("content/salawat.v1.json"))
         }
     }
 }
