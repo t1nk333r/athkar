@@ -5,7 +5,8 @@ import Foundation
 /// Format 1 carries only what the PWAs hold. Format 2 carries every table the user writes (spec/schema.md), so a
 /// restore on another device loses no worship data: adhkar, ruqyah with its suras, «سور», «مسبحة», the prayer
 /// tracker, the reminder rules, the settings with the calculation profile (`prayerSettings`, NATIVE_APP_PLAN.md
-/// §6.4), and the location only when the user includes it. Rows are listed as the tables hold them, sorted by their
+/// §6.4), the reading decks (`readings`, written only when they have a row, so a file without them stays readable by
+/// an app that predates them), and the location only when the user includes it. Rows are listed as the tables hold them, sorted by their
 /// keys. A setting is written only when the user set it; an absent one reads as its default.
 ///
 /// Keys whose value may be `null` are always written, as `null` when empty (``Nullable``); optional keys are omitted
@@ -24,10 +25,12 @@ public struct NativeBackup: Codable, Equatable, Sendable {
     public var tasbih: Tasbih
     public var prayers: Prayers
     public var reminders: Reminders
+    /// The reading decks' rows; `nil` (the key omitted) when there are none.
+    public var readings: Readings?
 
     public init(meta: Meta, preferences: Preferences = .init(), prayerSettings: PrayerSettings = .init(),
                 adhkar: Adhkar = .init(), ruqyah: Ruqyah = .init(), suwar: Suwar = .init(), tasbih: Tasbih = .init(),
-                prayers: Prayers = .init(), reminders: Reminders = .init()) {
+                prayers: Prayers = .init(), reminders: Reminders = .init(), readings: Readings? = nil) {
         self.meta = meta
         self.preferences = preferences
         self.prayerSettings = prayerSettings
@@ -37,6 +40,7 @@ public struct NativeBackup: Codable, Equatable, Sendable {
         self.tasbih = tasbih
         self.prayers = prayers
         self.reminders = reminders
+        self.readings = readings
     }
 
     public struct Meta: Codable, Equatable, Sendable {
@@ -242,6 +246,46 @@ public struct NativeBackup: Codable, Equatable, Sendable {
                 self.phrase = phrase
                 self.count = count
                 self.firstUse = firstUse
+            }
+        }
+    }
+
+    /// `reading_days` and `reading_item_progress`, every date of both reading decks (spec/sessions/deck-definition.md
+    /// §12).
+    public struct Readings: Codable, Equatable, Sendable {
+        public var days: [Day]
+        public var items: [Item]
+
+        public init(days: [Day] = [], items: [Item] = []) {
+            self.days = days
+            self.items = items
+        }
+
+        public var isEmpty: Bool { days.isEmpty && items.isEmpty }
+
+        public struct Day: Codable, Equatable, Sendable {
+            public var deck: ReadingDeck
+            public var date: String
+            public var completedAt: Date
+
+            public init(deck: ReadingDeck, date: String, completedAt: Date) {
+                self.deck = deck
+                self.date = date
+                self.completedAt = completedAt
+            }
+        }
+
+        public struct Item: Codable, Equatable, Sendable {
+            public var deck: ReadingDeck
+            public var date: String
+            public var itemId: String
+            public var count: Int
+
+            public init(deck: ReadingDeck, date: String, itemId: String, count: Int) {
+                self.deck = deck
+                self.date = date
+                self.itemId = itemId
+                self.count = count
             }
         }
     }
@@ -461,6 +505,19 @@ extension NativeBackup {
         }
         try checkUnique(suwar.pages.map { [$0.date, $0.pageId] }, "suwar.pages")
 
+        if let readings {
+            for (index, day) in readings.days.enumerated() {
+                try checkDate(day.date, "readings.days[\(index)].date")
+            }
+            try checkUnique(readings.days.map { [$0.deck.rawValue, $0.date] }, "readings.days")
+            for (index, item) in readings.items.enumerated() {
+                try checkDate(item.date, "readings.items[\(index)].date")
+                try checkID(item.itemId, "readings.items[\(index)].itemId")
+                try checkRange(item.count, 0...maxSafe, "readings.items[\(index)].count")
+            }
+            try checkUnique(readings.items.map { [$0.deck.rawValue, $0.date, $0.itemId] }, "readings.items")
+        }
+
         if let selected = tasbih.selected { try checkID(selected, "tasbih.selected") }
         if let target = tasbih.target { try checkRange(target, 0...9999, "tasbih.target") }
         if let phrases = tasbih.phrases {
@@ -578,6 +635,10 @@ extension KeyShape {
             "tasbih": .object([
                 "selected": .value, "target": .value, "phrases": .list(.value),
                 "counts": .list(object(["date", "phrase", "count", "firstUse"])),
+            ]),
+            "readings": .object([
+                "days": .list(object(["deck", "date", "completedAt"])),
+                "items": .list(object(["deck", "date", "itemId", "count"])),
             ]),
             "prayers": .object([
                 "records": .list(object(["date", "prayer", "zone", "profile", "state"],

@@ -11,6 +11,10 @@ public struct BackupImportSummary: Equatable, Sendable {
     public var suwar = 0
     /// Dates of «مسبحة» counts.
     public var tasbih = 0
+    /// Dates of «أذكار النوم» counts or completion.
+    public var sleep = 0
+    /// Dates of «الصلاة على النبي ﷺ» counts or completion.
+    public var salawat = 0
     /// Prayer records.
     public var prayers = 0
     /// Reminder rules.
@@ -24,7 +28,7 @@ public struct BackupImportSummary: Equatable, Sendable {
 
     /// Nothing in the file is missing here.
     public var isEmpty: Bool {
-        adhkar + ruqyah + suwar + tasbih + prayers + reminders + settings == 0 && !location
+        adhkar + ruqyah + suwar + tasbih + sleep + salawat + prayers + reminders + settings == 0 && !location
     }
 }
 
@@ -35,7 +39,8 @@ public struct BackupImportSummary: Equatable, Sendable {
 /// Units: adhkar `(date, period)` (completion and item rows together, as format 1); ruqyah completion `(date)`,
 /// counts `(date, segment)` (clamped to the segment's repeat, unknown segments dropped, as format 1), sura `(date,
 /// sura)`; «سور» `(date, sura)` (its pages and completion together); «مسبحة» `(date)` (the day's counts together,
-/// so the first-use order stays whole); a prayer record `(date, prayer)`, imported over a device record only when
+/// so the first-use order stays whole); a reading deck `(deck, date)` (its counts and completion together, counts
+/// clamped to the item's target and items the installed pack does not count dropped); a prayer record `(date, prayer)`, imported over a device record only when
 /// that is still unrecorded; a reminder rule `(id)` with its last shown date; the location (only into an empty
 /// profile, as `import`). Settings are written with origin `native`, so they replace a PWA's rows but never a
 /// native one.
@@ -51,6 +56,11 @@ extension BackupImporter {
                                              stamp: stamp)
             summary.suwar += try Self.merge(backup.suwar, into: db)
             summary.tasbih += try Self.merge(backup.tasbih, into: db, stamp: stamp)
+            if let readings = backup.readings {
+                let merged = try Self.merge(readings, targets: content.readingTargets, into: db, stamp: stamp)
+                summary.sleep += merged[.sleep] ?? 0
+                summary.salawat += merged[.salawat] ?? 0
+            }
             summary.prayers += try Self.merge(backup.prayers, into: db, stamp: stamp)
             try Self.merge(backup.reminders, into: db, stamp: stamp, summary: &summary)
         }
@@ -183,6 +193,43 @@ extension BackupImporter {
                                 firstUse: count.firstUse, updatedAt: stamp).insert(db)
             }
             merged += 1
+        }
+        return merged
+    }
+
+    /// A `(deck, date)` unit, its counts and its completion together, only when the device has neither (spec/schema.md
+    /// "Import"). Counts are clamped to the item's target in the installed pack, and an item the pack does not count
+    /// is dropped. Returns, per deck, the number of dates something was written for.
+    private static func merge(_ readings: NativeBackup.Readings, targets: [ReadingDeck: [String: Int]],
+                              into db: Database, stamp: Date) throws -> [ReadingDeck: Int] {
+        struct Unit: Hashable {
+            var deck: ReadingDeck
+            var date: String
+        }
+        let days = Dictionary(grouping: readings.days) { Unit(deck: $0.deck, date: $0.date) }
+        let items = Dictionary(grouping: readings.items) { Unit(deck: $0.deck, date: $0.date) }
+        var merged: [ReadingDeck: Int] = [:]
+        for unit in Set(days.keys).union(items.keys).sorted(by: { ($0.deck.rawValue, $0.date) < ($1.deck.rawValue, $1.date) }) {
+            // A card reset leaves a count-0 row, which is no count: only a positive count or a completion keeps the
+            // device's unit. The zero rows go before the insert, as the adhkar merge clears its unit.
+            let rows = Column("deck") == unit.deck && Column("local_date") == unit.date
+            guard try ReadingItemProgress.filter(rows && Column("count") > 0).fetchCount(db) == 0,
+                  try ReadingDay.filter(rows).fetchCount(db) == 0
+            else { continue }
+            try ReadingItemProgress.filter(rows).deleteAll(db)
+            var wrote = false
+            for item in items[unit] ?? [] {
+                guard let target = targets[unit.deck]?[item.itemId] else { continue }
+                let count = min(item.count, target)
+                try ReadingItemProgress(deck: unit.deck, localDate: unit.date, itemId: item.itemId, count: count,
+                                        updatedAt: stamp).insert(db)
+                if count > 0 { wrote = true }
+            }
+            for day in days[unit] ?? [] {
+                try ReadingDay(deck: day.deck, localDate: day.date, completedAt: day.completedAt).insert(db)
+                wrote = true
+            }
+            if wrote { merged[unit.deck, default: 0] += 1 }
         }
         return merged
     }

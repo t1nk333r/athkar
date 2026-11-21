@@ -1,9 +1,10 @@
 import AthkarCore
 import SwiftUI
 
-/// One card: the PWAs' `.dhikr-card` (an adhkar item, or a «سور» `.sura-page`) / `.surah-card`. The text sits on the
-/// page with no box around it; a rule sets off the footer. The whole card is the tap target (a button under the
-/// content, as `.card-tap-target` is); the reset button, the target picker and «المصدر والتفاصيل» sit above it.
+/// One card: the PWAs' `.dhikr-card` (an adhkar item, a «سور» `.sura-page` or a reading deck's card) / `.surah-card`.
+/// The text sits on the page with no box around it; a rule sets off the footer. The whole card is the tap target (a
+/// button under the content, as `.card-tap-target` is); the reset button, the target picker and «المصدر والتفاصيل»
+/// sit above it.
 /// Text steps down through the PWA's fit steps until it fits the card, and scrolls only if none fits.
 struct DeckCardView: View {
     let card: DeckCard
@@ -27,15 +28,25 @@ struct DeckCardView: View {
         return false
     }
 
-    /// Drawn as a `.dhikr-card`: an adhkar item or a «سور» page.
-    private var isDhikrCard: Bool { isDhikr || isPage }
+    /// A card of «أذكار النوم» or «الصلاة على النبي ﷺ» (§12), footed as an adhkar card.
+    private var isReading: Bool {
+        if case .reading = card.content { return true }
+        return false
+    }
+
+    /// The adhkar card's footer: an adhkar item or a reading card.
+    private var hasDhikrFooter: Bool { isDhikr || isReading }
+
+    /// Drawn as a `.dhikr-card`: an adhkar item, a «سور» page or a reading card.
+    private var isDhikrCard: Bool { isDhikr || isPage || isReading }
 
     private var shape: RoundedRectangle { Corner.box }
 
     var body: some View {
         ZStack {
-            // A review card has no tap target and no footer (`cardMarkup` for `item.review`).
-            if !card.isReview {
+            // A review card has no tap target and no footer (`cardMarkup` for `item.review`); an uncounted reading card
+            // has no tap target, and a footer with its phrase in place of a counter.
+            if !card.isReview, !card.isUncounted {
                 Button(action: onTap) {
                     Color.clear.contentShape(Rectangle())
                 }
@@ -60,6 +71,8 @@ struct DeckCardView: View {
                     RuqyahCardBody(segment: segment, onTap: onTap)
                 case let .page(page, _, basmala):
                     SuwarPageBody(page: page, basmala: basmala, onTap: onTap)
+                case let .reading(content):
+                    ReadingCardBody(content: content, onTap: onTap)
                 }
                 if !card.isReview {
                     footer
@@ -106,25 +119,50 @@ struct DeckCardView: View {
     private var footer: some View {
         VStack(spacing: 0) {
             Rule()
-            HStack(alignment: isDhikr ? .bottom : .center, spacing: 12) {
+            HStack(alignment: hasDhikrFooter ? .bottom : .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(card.requirement)
-                        .font((isDhikrCard ? Font.footnote : .caption).weight(.semibold))
-                        .foregroundStyle(palette.textSecondary)
-                        .allowsHitTesting(false)
+                    if !card.requirement.isEmpty {
+                        Text(card.requirement)
+                            .font((isDhikrCard ? Font.footnote : .caption).weight(.semibold))
+                            .foregroundStyle(palette.textSecondary)
+                            .allowsHitTesting(false)
+                    }
                     if let options = card.targetOptions {
                         targetPicker(options)
                     }
                 }
                 Spacer(minLength: 0)
-                HStack(spacing: 8) {
-                    counterStatus
-                    resetButton
+                if card.isUncounted {
+                    uncountedStatus
+                } else {
+                    HStack(spacing: 8) {
+                        counterStatus
+                        resetButton
+                    }
                 }
             }
-            .padding(.top, isDhikr ? 16 : isPage ? 8 : 11)
+            .padding(.top, hasDhikrFooter ? 16 : isPage ? 8 : 11)
         }
-        .padding(.top, isDhikr ? 19 : isPage ? 8.8 : 0)
+        .padding(.top, hasDhikrFooter ? 19 : isPage ? 8.8 : 0)
+    }
+
+    /// The status's phrase; empty for a numeric status.
+    private var statusPhrase: String {
+        if case let .text(copy) = card.status { return copy }
+        return ""
+    }
+
+    /// An uncounted reading card's footer: «عند الحاجة» or «اقرأ ثم اسحب» in place of the counter, with no reset.
+    private var uncountedStatus: some View {
+        Text(statusPhrase)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(palette.textSecondary)
+            .lineLimit(1)
+            .fixedSize()
+            .frame(minHeight: 44)
+            .accessibilityLabel(card.progressLabel)
+            .accessibilityIdentifier("deck.card.counter")
+            .allowsHitTesting(false)
     }
 
     private var counterStatus: some View {
@@ -146,7 +184,7 @@ struct DeckCardView: View {
         .lineLimit(1)
         .fixedSize()
         .padding(.horizontal, isDhikrCard ? 18 : 14)
-        .frame(minWidth: isDhikrCard ? 85 : 64, minHeight: isDhikr ? 44 : isPage ? 38.4 : 42)
+        .frame(minWidth: isDhikrCard ? 85 : 64, minHeight: hasDhikrFooter ? 44 : isPage ? 38.4 : 42)
         .background(Corner.box.fill(complete ? palette.completed : palette.accent))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(card.progressLabel)
@@ -325,18 +363,32 @@ private extension EnvironmentValues {
     @Entry var cardFill: Color = .clear
 }
 
+private struct FridayPhaseKey: EnvironmentKey {
+    static let defaultValue: @MainActor @Sendable (Date) -> FridayPhase? = { _ in nil }
+}
+
+extension EnvironmentValues {
+    /// «ليلة الجمعة» or «يوم الجمعة» at an instant, on the prayer times (``AppModel/fridayPhase(at:)``): the salawat
+    /// opening card's pill. None unless the home screen supplies it.
+    var fridayPhase: @MainActor @Sendable (Date) -> FridayPhase? {
+        get { self[FridayPhaseKey.self] }
+        set { self[FridayPhaseKey.self] = newValue }
+    }
+}
+
 // MARK: - Adhkar card body (`.card-content`)
 
 extension DhikrCardBody {
     /// A Quran item's text (`quranTextMarkup`): the ayat, stored in the Uthmani references' encoding, converted for
     /// KFGQPC HAFS; each ﴿n﴾ number stays in Uthman Taha.
-    static func quranText(_ text: String, size: CGFloat) -> AttributedString {
+    static func quranText(_ text: String, size: CGFloat, markerColor: Color? = nil) -> AttributedString {
         var result = AttributedString()
         var rest = Substring(text)
         while let marker = rest.firstMatch(of: /﴿[٠-٩]+﴾/) {
             result += AttributedString(MushafEncoding.kfgqpc(String(rest[..<marker.range.lowerBound])))
             var number = AttributedString(String(marker.output))
             number.font = ReadingFont.quran(size)
+            if let markerColor { number.foregroundColor = markerColor }
             result += number
             rest = rest[marker.range.upperBound...]
         }
@@ -630,5 +682,139 @@ private struct SuwarPageBody: View {
             result += marker
         }
         return result
+    }
+}
+
+// MARK: - Reading card (§12)
+
+/// A card of «أذكار النوم» or «الصلاة على النبي ﷺ», in the order spec/sessions/deck-definition.md §12 gives and each
+/// only when the item has it: the Friday pill (salawat's opening card), the title as the heading, the prefix in the
+/// detail style, each Quran passage in the mushaf face as a «سور» page sets ayahs (under the basmala when it opens a
+/// sura) with its citation below, the text in the dhikr style, the numbered steps, then the note in the detail style.
+/// It steps down through the «سور» page steps (`fitSuraPage`), every text by the same scale, and scrolls inside the
+/// card once the smallest step does not fit (al-Mulk), where a vertical drag scrolls and a tap still counts.
+private struct ReadingCardBody: View {
+    let content: ReadingCardContent
+    let onTap: () -> Void
+
+    @Environment(\.palette) private var palette
+    @Environment(\.readingMetrics) private var metrics
+
+    var body: some View {
+        let steps = ReadingMetrics.suraPageSteps
+        FittedBody(steps: steps.count, alignment: .top, onTap: onTap) { index in
+            layout(steps[index], step: index)
+        }
+    }
+
+    private func layout(_ step: ReadingMetrics.SuraPageStep, step index: Int) -> some View {
+        let dhikr = metrics.dhikrText * step.scale
+        let dhikrLineHeight = max(1.5, metrics.dhikrLineHeight * step.lead)
+        let detail = metrics.detailText * step.scale
+        let detailLineHeight = max(1.4, metrics.detailLineHeight * step.lead)
+        return VStack(alignment: .leading, spacing: 12 * step.scale) {
+            if content.showsFridayPill {
+                FridayPill()
+            }
+            if let title = content.title {
+                Text(title)
+                    .font(.system(size: 15 * metrics.typeScale * step.scale, weight: .bold))
+                    .foregroundStyle(palette.accentStrong)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityIdentifier("deck.card.title")
+            }
+            if let prefix = content.prefix {
+                detailText(prefix, size: detail, lineHeight: detailLineHeight)
+            }
+            ForEach(Array(content.passages.enumerated()), id: \.offset) { _, passage in
+                passageView(passage, step: step)
+            }
+            if let text = content.text {
+                dhikrText(text, size: dhikr, lineHeight: dhikrLineHeight)
+                    .accessibilityIdentifier("deck.card.text.fit-\(index)")
+            }
+            if !content.steps.isEmpty {
+                VStack(alignment: .leading, spacing: 8 * step.scale) {
+                    ForEach(Array(content.steps.enumerated()), id: \.offset) { number, line in
+                        dhikrText("\(ArabicFormat.number(number + 1)). \(line)", size: dhikr, lineHeight: dhikrLineHeight)
+                    }
+                }
+            }
+            if let note = content.note {
+                detailText(note, size: detail, lineHeight: detailLineHeight)
+                    .accessibilityIdentifier("deck.card.note")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .allowsHitTesting(false)
+    }
+
+    /// `quranTextMarkup` under the basmala, centred, with the citation below in the reference colour.
+    private func passageView(_ passage: ReadingCardContent.Passage, step: ReadingMetrics.SuraPageStep) -> some View {
+        let size = metrics.quranText * step.scale
+        let prefixSize = metrics.quranPrefix * step.scale
+        return VStack(spacing: 4 * step.scale) {
+            if let basmala = passage.basmala {
+                Text(MushafEncoding.kfgqpc(basmala))
+                    .font(ReadingFont.mushaf(prefixSize))
+                    .cssLineHeight(1.7, size: prefixSize, face: .mushaf)
+                    .foregroundStyle(palette.textPrimary)
+                    .multilineTextAlignment(.center)
+            }
+            Text(DhikrCardBody.quranText(passage.text, size: size, markerColor: palette.textSecondary))
+                .font(ReadingFont.mushaf(size))
+                .cssLineHeight(max(1.6, metrics.quranLineHeight * step.lead), size: size, face: .mushaf)
+                .foregroundStyle(palette.textPrimary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("deck.card.quran")
+            Text(passage.citation)
+                .font(ReadingFont.detail(metrics.detailText * step.scale))
+                .foregroundStyle(palette.reference)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func dhikrText(_ text: String, size: CGFloat, lineHeight: CGFloat) -> some View {
+        Text(text)
+            .font(ReadingFont.dhikr(size))
+            .cssLineHeight(lineHeight, size: size, face: .system)
+            .foregroundStyle(palette.textPrimary)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func detailText(_ text: String, size: CGFloat, lineHeight: CGFloat) -> some View {
+        Text(text)
+            .font(ReadingFont.detail(size))
+            .cssLineHeight(lineHeight, size: size, face: .system)
+            .foregroundStyle(palette.reference)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// «ليلة الجمعة» or «يوم الجمعة» from Thursday's Maghrib to Friday's Maghrib (spec/night/night.md), checked against the
+/// clock every minute; nothing outside that window.
+private struct FridayPill: View {
+    @Environment(\.palette) private var palette
+    @Environment(\.fridayPhase) private var fridayPhase
+
+    var body: some View {
+        TimelineView(.everyMinute) { context in
+            if let phase = fridayPhase(context.date) {
+                Text(phase.title)
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(palette.accentStrong)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 3)
+                    .background(palette.accentSoft, in: Capsule())
+                    .frame(maxWidth: .infinity)
+                    .accessibilityIdentifier("deck.card.friday")
+            }
+        }
     }
 }

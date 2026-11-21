@@ -99,9 +99,12 @@ private struct DeckIndexRow: View {
 
     private var shape: RoundedRectangle { Corner.box }
 
+    /// An adhkar item or a reading card: a completed one shows ✓.
     private var isDhikr: Bool {
-        if case .dhikr = card.content { return true }
-        return false
+        switch card.content {
+        case .dhikr, .reading: true
+        case .ruqyah, .page: false
+        }
     }
 
     var body: some View {
@@ -171,6 +174,13 @@ private struct DeckIndexRow: View {
             surahAndRange(segment.surah, segment.range, size: size)
         case let .page(page, surah, _):
             surahAndRange(surah, page.range, size: size)
+        case let .reading(content):
+            Text(content.indexOpening)
+                .font(ReadingFont.dhikr(size))
+                .cssLineHeight(metrics.dhikrLineHeight, size: size, face: .system)
+                .foregroundStyle(palette.textPrimary)
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
         }
     }
 
@@ -185,7 +195,8 @@ private struct DeckIndexRow: View {
         }
     }
 
-    /// The card's counter status: `count/target` left to right, or its phrase, with ✓ on a completed dhikr.
+    /// The card's counter status: `count/target` left to right, or its phrase, with ✓ on a completed dhikr or reading
+    /// card; an uncounted reading card's phrase alone, in the muted colour.
     private var status: some View {
         HStack(spacing: 5) {
             switch card.status {
@@ -194,13 +205,13 @@ private struct DeckIndexRow: View {
             case let .text(copy):
                 Text(copy)
             }
-            if card.isComplete, isDhikr {
+            if card.isComplete, isDhikr, !card.isUncounted {
                 Text("✓").foregroundStyle(palette.completed)
             }
         }
         .environment(\.layoutDirection, card.status == .numeric ? .leftToRight : .rightToLeft)
         .font(.footnote)
-        .foregroundStyle(card.isComplete ? palette.completed : palette.textSecondary)
+        .foregroundStyle(card.isComplete && !card.isUncounted ? palette.completed : palette.textSecondary)
     }
 
     private var reviewBadge: some View {

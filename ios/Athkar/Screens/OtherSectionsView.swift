@@ -35,13 +35,15 @@ enum OtherSection: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .ruqyah: .ruqyah
         case .suwar: .suwar
-        case .salawat, .tasbih, .sleep, .afterPrayer, .waking, .prayerTimes, .qibla, .today, .calendar: nil
+        case .sleep: .sleep
+        case .salawat: .salawat
+        case .tasbih, .afterPrayer, .waking, .prayerTimes, .qibla, .today, .calendar: nil
         }
     }
 
     /// Whether the section opens yet; the rest are listed as «قريبًا».
     var isAvailable: Bool {
-        deck != nil || [.salawat, .tasbih, .sleep, .prayerTimes, .qibla, .today, .calendar].contains(self)
+        deck != nil || [.tasbih, .prayerTimes, .qibla, .today, .calendar].contains(self)
     }
 
     /// The list's two groups, in list order: what is read and counted, then what follows the prayer times.
@@ -269,12 +271,12 @@ struct OtherSectionsView: View {
         .accessibilityIdentifier("other.\(section.rawValue)")
     }
 
-    /// The deck's summary, «ليلة الجمعة» or «يوم الجمعة», «قبل النوم وفي الليل», today's «مسبحة» total, the next
-    /// prayer, today's recorded prayers, the month, or «قريبًا».
+    /// «ليلة الجمعة» or «يوم الجمعة» for the salawat deck in the Friday window, otherwise the deck's line (its idle
+    /// line until today has a count, then its summary), today's «مسبحة» total, the next prayer, today's recorded
+    /// prayers, the month, or «قريبًا».
     private func subtitle(_ section: OtherSection, deck: (any DeckModel)?) -> String {
+        if section == .salawat, let phase = app.fridayPhase() { return phase.title }
         if let deck { return deck.listSummary.copy }
-        if section == .salawat { return SalawatView.fridayPhase(app: app)?.title ?? "صيغتان" }
-        if section == .sleep { return "قبل النوم وفي الليل" }
         if section == .tasbih { return app.tasbih.totalText }
         if section == .today {
             let today = app.tracker.today

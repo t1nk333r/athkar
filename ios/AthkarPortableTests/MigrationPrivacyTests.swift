@@ -120,6 +120,9 @@ final class MigrationPrivacyTests: XCTestCase {
         let ruqyah: RuqyahDeckModel
         let suwar: SuwarDeckModel
         let tasbih: TasbihModel
+        /// On the example backup's dates: its sleep counts are 2026-10-31's, its salawat day 2026-10-30.
+        let sleep: ReadingDeckModel
+        let salawat: ReadingDeckModel
         let model: TransferImportModel
 
         init(_ support: PortableTestSupport) throws {
@@ -129,19 +132,23 @@ final class MigrationPrivacyTests: XCTestCase {
             ruqyah = try support.makeRuqyah()
             suwar = try support.makeSuwar()
             tasbih = try support.makeTasbih()
+            sleep = try support.makeReading(.sleep, on: "2026-10-31")
+            salawat = try support.makeReading(.salawat, on: "2026-10-30")
             let outline = support.content.suwar.suwar.map {
                 SuwarOutline(id: $0.id, name: $0.surah, pageIDs: $0.pages.map(\.id))
             }
             let importer = TransferImporter(database: support.database, collections: support.content.packs.adhkar,
                                             suwar: outline)
             let backups = BackupImporter(database: support.database, content: support.content.packs)
-            let (settings, ruqyah, suwar, tasbih) = (settings, ruqyah, suwar, tasbih)
+            let (settings, ruqyah, suwar, tasbih, sleep, salawat) = (settings, ruqyah, suwar, tasbih, sleep, salawat)
             model = TransferImportModel(importer: importer, backupImporter: backups, today: { support.today },
                                         applied: {
                                             settings.reload()
                                             ruqyah.reload()
                                             suwar.reload()
                                             tasbih.reload()
+                                            sleep.reload()
+                                            salawat.reload()
                                         })
         }
     }
@@ -161,9 +168,10 @@ final class MigrationPrivacyTests: XCTestCase {
         XCTAssertFalse(preview.isEmpty)
         XCTAssertEqual(preview.confirmTitle, "استعادة النسخة")
         XCTAssertEqual(preview.rows.map(\.title), ["أذكار الصباح والمساء", "رقية القرين", "قراءة السور", "المسبحة",
-                                                   "سجل الصلوات", "التذكيرات", "الإعدادات"])
-        XCTAssertEqual(preview.rows.map(\.detail), ["٥ أوراد", "يومان", "يومان", "يومان", "٦ صلوات", "تذكيران",
-                                                    "١٤ إعدادًا"])
+                                                   "أذكار النوم", "الصلاة على النبي ﷺ", "سجل الصلوات", "التذكيرات",
+                                                   "الإعدادات"])
+        XCTAssertEqual(preview.rows.map(\.detail), ["٥ أوراد", "يومان", "يومان", "يومان", "يومان", "يوم واحد",
+                                                    "٦ صلوات", "تذكيران", "١٤ إعدادًا"])
         XCTAssertFalse(try support.database.hasUserData(), "the review wrote nothing")
 
         model.confirm()
@@ -176,6 +184,8 @@ final class MigrationPrivacyTests: XCTestCase {
         XCTAssertEqual(restored, try NativeBackup.decode(file))
         let example = try NativeBackup.decode(file)
         XCTAssertEqual(sections.tasbih.target, example.tasbih.target ?? 33)
+        XCTAssertTrue(sections.salawat.isComplete, "the restored salawat day")
+        XCTAssertEqual(sections.sleep.cards.first { $0.id == "sleep-04" }?.count, 2, "the restored sleep counts")
 
         model.open(fileData: file)
         XCTAssertEqual(model.screen, .review)
@@ -251,6 +261,10 @@ final class MigrationPrivacyTests: XCTestCase {
         sections.ruqyah.reload()
         sections.suwar.reload()
         sections.tasbih.reload()
+        sections.sleep.reload()
+        sections.salawat.reload()
+        XCTAssertFalse(sections.salawat.isComplete)
+        XCTAssertTrue(sections.sleep.cards.allSatisfy { $0.count == 0 })
         XCTAssertEqual(sections.tasbih.target, 33)
         XCTAssertEqual(sections.tasbih.selected, TasbihText.presets[0].id)
         XCTAssertTrue(sections.tasbih.custom.isEmpty)

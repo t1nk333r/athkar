@@ -41,6 +41,7 @@ listed below. Update this file in the same commit as any migration.
 | `v3` | `suwar_page_reads` and `suwar_sura_days`: the athkar PWA's «سور» (`athkar-suwar-v1`). |
 | `v4` | `tasbih_counts`: the athkar PWA's «مسبحة» (`athkar-tasbih-v1`). |
 | `v5` | `prayer_records`: the native prayer tracker ([`tracker/tracker.md`](tracker/tracker.md)). |
+| `v6` | `reading_item_progress` and `reading_days`: the reading decks «أذكار النوم» and «الصلاة على النبي ﷺ» (`athkar-sleep-v1`, `athkar-salawat-v1`). |
 
 ## Tables (migration v1)
 
@@ -277,7 +278,33 @@ transition and writes the result in one transaction, so "record as prayed" sent 
 Prayer records are not in backup envelope v1 or the transfer code. A format 1 export leaves them out, and a format 1
 import never touches them. Envelope format 2 carries them with their metadata ("Backup envelope format 2" below).
 
-## Future tables (not in v5)
+## Tables (migration v6)
+
+### `reading_item_progress`
+
+This table stores one row per reading deck, local date and item counted on it (`athkar-sleep-v1.counts`,
+`athkar-salawat-v1.counts` for today). The rules are in [`sessions/deck-definition.md`](sessions/deck-definition.md) §12.
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `deck` | TEXT | no | PK 1 | `sleep`, `salawat`. |
+| `local_date` | TEXT | no | PK 2 | Local date. |
+| `item_id` | TEXT | no | PK 3 | The pack's item ID (`sleep-01`, `salawat-02`). |
+| `count` | INTEGER | no | | ≥ 0. Readers clamp it to the item's target in the installed pack. |
+| `updated_at` | TEXT | no | | Instant. |
+
+### `reading_days`
+
+This table stores one row per reading deck and local date recorded complete (`completedAt` for today, `history` for
+earlier days).
+
+| Column | Type | Null | Key | Notes |
+| --- | --- | --- | --- | --- |
+| `deck` | TEXT | no | PK 1 | `sleep`, `salawat`. |
+| `local_date` | TEXT | no | PK 2 | Local date. |
+| `completed_at` | TEXT | no | | Instant. When every counted card of the deck first reached its target that day. |
+
+## Future tables (not in v6)
 
 - 1.0, added by later slices' migrations: `notification_audit` (redacted).
 - 1.1: `not_applicable_ranges`, `favorites`, `optional_practices`, and the 1.1 tracker fields (`prayer_records`
@@ -308,6 +335,10 @@ import never touches them. Envelope format 2 carries them with their metadata ("
   `unrecord`, an undo and clearing a day set it back to `unrecorded` and keep its metadata (`zone_id`,
   `scheduled_at`, `profile_version`), which no write ever changes. Only `PrayerRecordRepository.delete(_:)` with a
   `HistoryRemoval` deletes rows, and no section's scoped reset calls it.
+- A reading deck is complete on a date if and only if a `reading_days` row exists. The app writes the row with the
+  count that completes the deck (keeping a row already there) and deletes it with any card reset of that date, so
+  completion follows the counters. A count for an item the installed pack does not have, or for an uncounted card, is
+  ignored on read.
 - A «مسبحة» phrase is counted on a date if and only if a `tasbih_counts` row exists, with a count of at least 1.
   A date holds at most one key per phrase as `tasbihIdentity` reads it. A saved phrase that matches an earlier
   spelling's counts takes them over (`canonicalTasbihDays`). The stored keys are already the cleaned spelling, so
@@ -418,6 +449,22 @@ The «سور» section reads today's `suwar_page_reads` (`readPages(on:)`) and `
 - **Confirmation copy.** `recordedDayCount(removal, before: today)` counts the distinct earlier dates in scope with
   a `suwar_sura_days` row, as the PWA counts `suwarState.history`. Today's completed suras are today's progress.
 - `suwar_selected_sura` is a preference. No reset changes it.
+
+### Reading decks
+
+The reading decks read today's `reading_item_progress` (`counts(deck, on:)`) and `reading_days` row
+(`day(deck, on:)`).
+
+- **Counting.** `setCount(_:for:in:on:completingDayAt:at:)` upserts the item's row and, when the count completes the
+  deck, inserts today's `reading_days` row in the same transaction. It never replaces the day row.
+- **Card reset.** `resetItem(_:in:on:)` sets the item's `count = 0` and deletes the date's `reading_days` row, in one
+  transaction.
+- **Scoped reset.** `reset(deck, on:removing:)` runs in one transaction:
+  - It deletes that date's `reading_item_progress` rows and `reading_days` row for the deck.
+  - With `.week(...)` or `.all`, it also deletes both tables' rows of the deck in scope.
+  - With no removal (تقدم اليوم), earlier days keep their rows.
+- **Confirmation copy.** `recordedDayCount(deck, removal, before: today)` counts the earlier dates in scope with a
+  `reading_days` row for the deck.
 
 ### Tasbih counts and reset
 
@@ -553,7 +600,8 @@ The example files in `spec/backup/examples/` contain none of 2, 3 and 4, and rou
 Format 2 is the native app's own backup ([`backup/envelope-v2.md`](backup/envelope-v2.md)). It contains every row
 of every user table below (`settings`, `adhkar_days`, `adhkar_item_progress`, `ruqyah_days`,
 `ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`, `tasbih_counts`,
-`prayer_records`, `reminder_rules`, `reminder_state`), and `location_profiles` only when the user includes it.
+`reading_item_progress`, `reading_days`, `prayer_records`, `reminder_rules`, `reminder_state`), and `location_profiles`
+only when the user includes it.
 `BackupExporter.exportNative` writes it. `BackupImporter` reads either format (`BackupFile.decode`, `importFile`) and
 rejects a format above 2 as `unsupportedFormat`.
 
@@ -566,6 +614,8 @@ rejects a format above 2 as `unsupportedFormat`.
   - a segment count when absent or 0, clamped to `repeat`, unknown segments dropped (as format 1);
   - a «سور» `(local_date, sura_id)` unit (its pages and completion) only when the device has neither;
   - a «مسبحة» date (all its counts, keeping `first_use`) only when the device has no count that date;
+  - a reading `(deck, local_date)` unit (its counts and completion) only when the device has neither, counts
+    clamped to the item's target and unknown items dropped;
   - a prayer record when absent, or over an `unrecorded` one when the imported record is not;
   - a reminder rule or its `reminder_state` when absent;
   - the location into an empty profile.
@@ -579,7 +629,7 @@ rejects a format above 2 as `unsupportedFormat`.
 «حذف كل البيانات» (الإعدادات) returns the app to a fresh install's state. `AppDatabase.deleteAllUserData()` deletes every
 row of `AppDatabase.userTables` in one transaction: `settings`, `adhkar_days`, `adhkar_item_progress`,
 `ruqyah_days`, `ruqyah_segment_progress`, `ruqyah_sura_days`, `suwar_page_reads`, `suwar_sura_days`,
-`tasbih_counts`, `prayer_records`, `reminder_state`, `reminder_rules` and `location_profiles`. Every table a later
+`tasbih_counts`, `reading_item_progress`, `reading_days`, `prayer_records`, `reminder_state`, `reminder_rules` and `location_profiles`. Every table a later
 migration adds is a user table unless this section says otherwise. `AthkarCoreTests` fails when a table is in
 neither list.
 

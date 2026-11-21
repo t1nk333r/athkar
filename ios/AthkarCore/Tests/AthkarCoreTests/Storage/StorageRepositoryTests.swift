@@ -289,6 +289,83 @@ struct StorageRepositoryTests {
         #expect(try suwar.recordedDayCount(week, before: "2026-09-23") == 1)
     }
 
+    /// A reading deck's count and the day it completes are one write; the day keeps its first completion time, and
+    /// each deck and date keeps its own rows (spec/schema.md "Reading decks").
+    @Test func readingCountsAndTheCompletingDayAreRecordedOnce() throws {
+        let reading = database.reading
+        try reading.setCount(1, for: "sleep-01", in: .sleep, on: "2026-09-23", at: t0)
+        try reading.setCount(2, for: "sleep-04", in: .sleep, on: "2026-09-23", at: t0)
+        try reading.setCount(3, for: "sleep-04", in: .sleep, on: "2026-09-23", completingDayAt: t0, at: t0)
+        try reading.setCount(1, for: "sleep-05", in: .sleep, on: "2026-09-23", completingDayAt: t1, at: t1)
+        try reading.setCount(1, for: "salawat-01", in: .salawat, on: "2026-09-23", at: t1)
+        #expect(try reading.counts(.sleep, on: "2026-09-23") == ["sleep-01": 1, "sleep-04": 3, "sleep-05": 1])
+        #expect(try reading.counts(.salawat, on: "2026-09-23") == ["salawat-01": 1])
+        #expect(try reading.day(.sleep, on: "2026-09-23") == ReadingDay(deck: .sleep, localDate: "2026-09-23",
+                                                                         completedAt: t0))
+        #expect(try reading.day(.salawat, on: "2026-09-23") == nil)
+        #expect(try reading.counts(.sleep, on: "2026-09-22") == [:])
+        #expect(try reading.day(.sleep, on: "2026-09-22") == nil)
+        let stored = try database.reader.read { db in
+            try ReadingItemProgress.filter(GRDB.Column("item_id") == "sleep-04").fetchOne(db)
+        }
+        #expect(stored == ReadingItemProgress(deck: .sleep, localDate: "2026-09-23", itemId: "sleep-04", count: 3,
+                                              updatedAt: t0))
+    }
+
+    /// A card reset sets the item's count to 0 and deletes that date's record, so completion follows the counters;
+    /// other dates and the other deck keep theirs.
+    @Test func readingItemResetClearsTheDaysRecord() throws {
+        let reading = database.reading
+        for day in ["2026-09-22", "2026-09-23"] {
+            try reading.setCount(1, for: "salawat-01", in: .salawat, on: day, at: t0)
+            try reading.setCount(1, for: "salawat-02", in: .salawat, on: day, completingDayAt: t0, at: t0)
+            try reading.setCount(1, for: "sleep-01", in: .sleep, on: day, completingDayAt: t0, at: t0)
+        }
+        try reading.resetItem("salawat-02", in: .salawat, on: "2026-09-23", at: t1)
+        #expect(try reading.counts(.salawat, on: "2026-09-23") == ["salawat-01": 1, "salawat-02": 0])
+        #expect(try reading.day(.salawat, on: "2026-09-23") == nil)
+        #expect(try reading.day(.salawat, on: "2026-09-22")?.completedAt == t0)
+        #expect(try reading.day(.sleep, on: "2026-09-23")?.completedAt == t0)
+
+        try reading.setCount(1, for: "salawat-02", in: .salawat, on: "2026-09-23", completingDayAt: t1, at: t1)
+        #expect(try reading.day(.salawat, on: "2026-09-23")?.completedAt == t1, "a new completion")
+    }
+
+    /// تقدم اليوم deletes the date's counts and record; هذا الأسبوع and كل شيء also the deck's rows in scope. The other
+    /// deck is untouched, and the confirmations count earlier dates with a record.
+    @Test func readingScopedResetsAndRecordedDayCount() throws {
+        let reading = database.reading
+        for day in ["2026-09-10", "2026-09-17", "2026-09-22", "2026-09-23"] {
+            try reading.setCount(1, for: "sleep-01", in: .sleep, on: day, completingDayAt: t0, at: t0)
+            try reading.setCount(1, for: "salawat-01", in: .salawat, on: day, completingDayAt: t0, at: t0)
+        }
+        try reading.setCount(1, for: "sleep-02", in: .sleep, on: "2026-09-21", at: t0)
+        let week = HistoryRemoval.week(endingAt: Instant.at("2026-09-23T12:00:00.000Z"), in: .gmt)
+        #expect(try reading.recordedDayCount(.sleep, .all, before: "2026-09-23") == 3)
+        #expect(try reading.recordedDayCount(.sleep, .all, before: "2026-09-24") == 4)
+        #expect(try reading.recordedDayCount(.sleep, week, before: "2026-09-23") == 2)
+
+        try reading.reset(.sleep, on: "2026-09-23")
+        #expect(try reading.counts(.sleep, on: "2026-09-23") == [:])
+        #expect(try reading.day(.sleep, on: "2026-09-23") == nil)
+        #expect(try reading.day(.sleep, on: "2026-09-22") != nil, "earlier days stay")
+        #expect(try reading.counts(.sleep, on: "2026-09-21") == ["sleep-02": 1])
+
+        try reading.reset(.sleep, on: "2026-09-23", removing: week)
+        for day in ["2026-09-17", "2026-09-21", "2026-09-22"] {
+            #expect(try reading.counts(.sleep, on: day) == [:], "\(day)")
+            #expect(try reading.day(.sleep, on: day) == nil, "\(day)")
+        }
+        #expect(try reading.day(.sleep, on: "2026-09-10") != nil)
+        #expect(try reading.recordedDayCount(.sleep, .all, before: "2026-09-23") == 1)
+
+        try reading.reset(.sleep, on: "2026-09-23", removing: .all)
+        #expect(try reading.recordedDayCount(.sleep, .all, before: "9999-12-31") == 0)
+        #expect(try reading.counts(.sleep, on: "2026-09-10") == [:])
+        #expect(try reading.recordedDayCount(.salawat, .all, before: "9999-12-31") == 4, "the other deck stays")
+        #expect(try reading.counts(.salawat, on: "2026-09-23") == ["salawat-01": 1])
+    }
+
     /// `setTasbihCount`: a phrase's first count of the day goes last in the day's order, a later count keeps its place,
     /// and zero deletes the row, so the phrase's next count goes last again.
     @Test func tasbihCountsKeepTheDaysFirstUseOrder() throws {

@@ -1,7 +1,7 @@
 # The Friday window and the last third of the night
 
-Both apps show the «الصلاة على النبي ﷺ» page from the salawat pack (`content/salawat.v1.json`). From Thursday's
-Maghrib to Friday's they name the time: «ليلة الجمعة» or «يوم الجمعة». Both also show when the last third of the
+Both apps show the «الصلاة على النبي ﷺ» deck from the salawat pack (`content/salawat.v1.json`). From Thursday's
+Maghrib to Friday's its opening card names the time: «ليلة الجمعة» or «يوم الجمعة». Both also show when the last third of the
 night begins. The PWA functions are `fridayPhase` and `tonightLastThird` in `index.html`, and
 `fixtures/night.json` records them. The fixtures pass each case its Maghrib and Fajr, so a port tests these rules on
 the same times, whatever its own calculation gives.
