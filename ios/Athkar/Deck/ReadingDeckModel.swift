@@ -41,7 +41,7 @@ struct ReadingCardContent: Equatable, Sendable {
 @Observable
 final class ReadingDeckModel: DeckModel {
     /// The salawat opening card's ID: al-Ahzab 56 and the Friday virtue.
-    static let salawatOpeningID = "salawat-quran"
+    nonisolated static let salawatOpeningID = "salawat-quran"
 
     let definition: DeckDefinition
     let deck: ReadingDeck
