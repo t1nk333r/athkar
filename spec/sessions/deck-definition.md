@@ -1,6 +1,7 @@
 # Deck definition
 
-This document defines the card-deck screen that the four decks share: أذكار الصباح, أذكار المساء, رقية القرين and سور
+This document defines the card-deck screen that the six decks share: أذكار الصباح, أذكار المساء, رقية القرين, سور,
+أذكار النوم and الصلاة على النبي ﷺ
 (NATIVE_APP_PLAN.md §3.2, §9.2). It describes behaviour, not code. A platform builds one deck component driven by
 this document. iOS builds `DeckView` and `DeckModel` in `ios/Athkar/Deck/`. Android builds a Compose `DeckScreen`.
 The rules below follow the PWA, `index.html` in this repository. Its «رقية» tab replaced the standalone
@@ -20,6 +21,8 @@ Session rules that already have fixtures (`spec/sessions/fixtures/`) are the con
 | `evening` | `content/adhkar.v1.json` → `periods.evening` (24 items) | Content order, or long-order (§3) | Shared adhkar session |
 | `ruqyah` | `content/ruqyah.v1.json` → `segments` (15 segments, 33 readings) in five sections, one per sura | Pack order, never reordered | Own session |
 | `suwar` | `content/suwar.v1.json` → `suwar` (5 suras, 86 pages) in five sections, one per sura | Pack order, never reordered | Own session |
+| `sleep` | `content/sleep.v1.json` → `items` (17 cards, 13 counted) | Pack order, never reordered | Own reading session (§12) |
+| `salawat` | `content/salawat.v1.json`: an opening card, then `items` (3 cards, 2 counted) | Pack order, never reordered | Own reading session (§12) |
 
 A **card's number** is its 1-based position in content order, in Arabic-Indic digits; a ruqyah segment's or a
 «سور» page's is its position in its sura. Long-order never changes it. **Positions** («٢ من ٢٦») are 1-based
@@ -47,8 +50,8 @@ is treated as the first (`normalizeSuwarState`). Each sura keeps the page it sho
 The screen has three tabs in this order: الصباح, المساء, أخرى. The first two open their adhkar deck. أخرى opens a list
 of sections (رقية القرين, سور, الصلاة على النبي ﷺ, مسبحة, أذكار النوم, أذكار بعد الصلاة, أذكار الاستيقاظ, أوقات الصلاة,
 القبلة). The app opens all but أذكار بعد الصلاة and أذكار الاستيقاظ, which it lists as «قريبًا». «أذكار النوم» is a reading
-page, not a deck: the items of `content/sleep.v1.json` in pack order, with no counter, and a repeated item names its
-count. Its row reads «قبل النوم وفي الليل»; the PWA shows the same page as its «النوم» tab. A deck row shows the deck's
+deck of `content/sleep.v1.json`, and «الصلاة على النبي ﷺ» a deck of `content/salawat.v1.json` (§12); the PWA shows
+them as its «النوم» and «ﷺ» tabs. A deck row shows the deck's
 summary copy and «✓» once today is complete. «مسبحة» is a counter, not a deck ([`tasbih.md`](tasbih.md)); its row
 shows today's total, «اليوم: N». The أوقات الصلاة row shows the next prayer and its time, or «حدّد موقعك لعرض
 المواقيت». When a section is open, the header replaces its title with a back button labeled with the section's title,
@@ -560,3 +563,95 @@ PWAs' wording; index keys and the repeated-counter haptic note include the nativ
 | `haptics.setting` / `.note` | الاهتزاز عند إكمال العداد / يهتز الجهاز ٤٥ مللي ثانية عند إكمال ذكر يُكرَّر أكثر من مرة، وعند إكمال تكرارات كل مقطع من الرقية، وعند قراءة كل صفحة من السور، وعند بلوغ هدف المسبحة وكل دورة بعده. |
 | `tab.completeSuffix` | ، مكتملة اليوم |
 | `header.reset.label` / `header.settings.label` | خيارات الإعادة / فتح الإعدادات |
+
+## 12. Reading decks (أذكار النوم, الصلاة على النبي ﷺ)
+
+«أذكار النوم» and «الصلاة على النبي ﷺ» are **reading decks**: one card per item in pack order, without sections,
+counted and saved per local date like the ruqyah, with their own history. Both follow one set of rules, which this
+section gives; the rest of this document applies where it says "every deck" or where a rule here names the adhkar,
+ruqyah or «سور» rule it follows. Storage is `athkar-sleep-v1` and `athkar-salawat-v1` in the PWA, and the
+`reading_item_progress` and `reading_days` tables natively (`spec/schema.md`, migration v6), keyed by deck ID
+(`sleep`, `salawat`).
+
+### Cards
+
+- **Sleep.** One card per item of `content/sleep.v1.json`. The card shows, in this order and each only when the item
+  has it: `title` as the card's heading; `prefix` in the detail style; each `quran` passage in the mushaf face as the
+  «سور» page sets ayahs, under the pack's basmala when `basmala` is true, with its `citation` below; for `sura`, the
+  whole sura from the suwar pack, its pages' ayahs joined as one passage under the basmala, cited by the sura's
+  short name; `text` in the dhikr style; `steps` as a numbered list in the dhikr style; and `note.text` in the detail
+  style. The requirement line is `countLabel`, or «مرة واحدة».
+- **Situational sleep items.** `sleep-14` (إذا تقلّب من الليل), `sleep-15` (إذا فزع في النوم), `sleep-16` (إذا رأى ما
+  يكره في منامه) and `sleep-17` (إذا استيقظ من الليل) are said when their occasion comes during the night, not at
+  bedtime. They are shown as review cards are: never counted, no counter, no reset, never locking, and outside
+  progress and completion. Their footer reads «عند الحاجة» in place of a counter. Both platforms list these four IDs
+  in code; the pack has no field for them yet (a pack field needs a reviewed content version).
+- **Salawat.** The first card (`salawat-quran`) holds al-Ahzab 56 (`quran.text` in the mushaf face, `quran.citation`
+  below) and the Friday virtue (`virtue.text`, detail style). From Thursday's Maghrib to Friday's Maghrib it starts
+  with the Friday pill («ليلة الجمعة» or «يوم الجمعة», spec/night/night.md), which follows the clock every minute. It
+  is an uncounted card like a situational one, with the footer «اقرأ ثم اسحب». Then one card per item: `title` as
+  the heading, `text` in the dhikr style, and `note.text` in the detail style. The requirement line is «مرة واحدة».
+- A long card (al-Mulk, al-Ahzab with its virtue at large text) scrolls inside the card once the fit (§10) reaches
+  its smallest step. A vertical drag inside it scrolls; a horizontal swipe still navigates; a tap still counts.
+
+### Counters
+
+- **Target.** The item's `count` (sleep-04 and sleep-06: 3), otherwise 1. There is no target picker.
+- **Count.** The stored count, clamped to `0…target`, as the ruqyah's.
+- **Complete card.** `count >= target`, or the card is uncounted.
+- **Display.** Target 1: «اضغط بعد القراءة», which becomes «تمت القراءة» with «✓». Otherwise «count/target», left
+  to right, with «✓» when complete (the adhkar numeric display).
+- **Progress.** Counted cards complete, out of the counted cards: «N من M» (sleep: M = 13, salawat: M = 2).
+- **Complete day.** Every counted card is complete.
+
+### Navigation, tap, completion
+
+- **Opening card.** The last card shown since the deck opened, otherwise the first incomplete counted card, or the
+  last card when the day is complete. A day rollover and a reset forget the last card.
+- **Forward lock.** As the adhkar lock: forward is enabled when the current card is complete (uncounted cards are).
+- **Tap.** `count += 1`, saved. The completion haptic plays when a card reaches its target, whatever the target (the
+  ruqyah rule). When the tap completes the day, today is recorded complete in the same write (once; the first time
+  is kept) and the completion dialog opens; otherwise, when the card completed, auto-advance. A tap on a complete or
+  uncounted card does nothing.
+- **Completion dialog.** Title `completion.sleep.title` («تمت أذكار النوم بحمد الله») or `completion.salawat.title`
+  («تمت الصلاة على النبي ﷺ بحمد الله»), message «حُفظ إكمال اليوم على هذا الجهاز.», «وقت الإكمال: h:mm», and the
+  one button «تم».
+- **Card reset.** Enabled when `count > 0`; never asks («سور»'s rule). It sets the count to 0 and deletes today's
+  completion record, in one write, so completion follows the counters.
+- **Labels.** Counter: «البطاقة N، كُرّر X من أصل Y مرات» (with «، اكتمل»), or «البطاقة N، لم تُعلَّم كمقروءة» /
+  «البطاقة N، قُرئت» for target 1; an uncounted card: «البطاقة N، عند الحاجة» (salawat's first card: «البطاقة ١،
+  الآية والفضل»). Tap target: «زيادة عداد البطاقة N. <label>» or «تحديد كمقروءة، البطاقة N. <label>», and
+  «اكتمل، البطاقة N. <label>» once complete. Reset: «إعادة عداد البطاقة N». Position: «البطاقة N من M»; the card list
+  is «بطاقات أذكار النوم» or «بطاقات الصلاة على النبي ﷺ». The hint is `deck.hint.adhkar`. The native quick index
+  is titled «فهرس الأذكار» («يعرض فهرس الأذكار للانتقال إلى بطاقة»); a row's opening text is the card's `title`, or
+  the first words of its text.
+
+### Summary, reset, list row
+
+- **Summary** (`updateSessionProgress`): «N من M» while incomplete, «اكتملت أذكار النوم اليوم» or «اكتملت الصلاة على
+  النبي ﷺ اليوم» once complete, with the progress bar spoken «<section>: N من M».
+- **Scoped reset** (§8), resettable when any count today > 0, or today or an earlier day is recorded complete:
+
+| Choice | Reading deck | Asks first |
+| --- | --- | --- |
+| «تقدم اليوم» | Today's counts and today's completion record deleted. | No |
+| «هذا الأسبوع» | Day reset, plus the counts and completion records in the last 7 local dates (today included) deleted. | Yes |
+| «كل شيء» | Day reset, plus every count and completion record of the deck deleted. | Yes |
+
+  The confirmation counts the earlier days in scope with a completion record. Each deck resets alone.
+- **PWA tab.** «✓» once today is complete; the salawat tab's Friday dot shows only while it is not.
+- **أخرى row** (native). Sleep: «قبل النوم وفي الليل» until today has a count, then the summary copy; «✓» once
+  today is complete. Salawat: «ليلة الجمعة» or «يوم الجمعة» in the Friday window, otherwise the summary copy, or
+  «صيغتان» before any count; «✓» once complete.
+- **Day rollover** (§9) applies: a new local date starts with no counts; the previous date stays in history. A
+  reading after midnight belongs to the new date.
+- **Transfer.** The web-to-app transfer code (spec/transfer/transfer-v1.md) does not carry the reading decks yet.
+
+| Key | Text |
+| --- | --- |
+| `deck.section.sleep` / `deck.section.salawat` | أذكار النوم / الصلاة على النبي ﷺ |
+| `deck.index.reading.title` / `.hint` | فهرس الأذكار / يعرض فهرس الأذكار للانتقال إلى بطاقة |
+| `card.reading.situational` / `card.reading.opening` | عند الحاجة / اقرأ ثم اسحب |
+| `summary.reading.progress` / `.done` / `.label` | {x} من {y} / اكتملت {section} اليوم / {section}: {x} من {y} |
+| `completion.sleep.title` / `completion.salawat.title` | تمت أذكار النوم بحمد الله / تمت الصلاة على النبي ﷺ بحمد الله |
+| `completion.reading.message` / `.done` | حُفظ إكمال اليوم على هذا الجهاز. / تم |
