@@ -1,9 +1,10 @@
 import AthkarCore
 import Foundation
 
-/// The decks of the أذكار screen: the PWA's `tabOrder`, the ruqyah, and «سور».
+/// The decks of the أذكار screen: the PWA's `tabOrder`, the ruqyah, «سور», and the reading decks «أذكار النوم» and
+/// «الصلاة على النبي ﷺ».
 enum DeckID: String, CaseIterable, Identifiable, Sendable {
-    case morning, evening, ruqyah, suwar
+    case morning, evening, ruqyah, suwar, sleep, salawat
 
     var id: String { rawValue }
 }
@@ -26,6 +27,8 @@ struct DeckDefinition: Sendable {
     /// Section chips start from their content's width and share the rest of the row (the ruqyah PWA's `.sura-chip`,
     /// `flex: 1 1 auto`, since «ق» and «الكافرون ✓» differ so much); otherwise they take equal shares (`flex: 1 1 0`).
     var chipsGrowFromContent = false
+    /// A reading deck's أخرى line until today has a count (spec/sessions/deck-definition.md §12 "أخرى row").
+    var listIdle: String?
 
     static let morning = adhkar(.morning, "أذكار الصباح")
     static let evening = adhkar(.evening, "أذكار المساء")
@@ -39,6 +42,18 @@ struct DeckDefinition: Sendable {
         id: .suwar, title: "سور", cardNoun: "الصفحة", cardsLabel: "صفحات السور",
         navigationLabel: "التنقل بين بطاقات الأذكار", hint: "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.",
         indexTitle: "فهرس السورة", indexHint: "يعرض فهرس السورة للانتقال إلى صفحة")
+
+    /// The reading decks (§12) keep the adhkar decks' navigation label and hint.
+    static let sleep = reading(.sleep, "أذكار النوم", listIdle: "قبل النوم وفي الليل")
+    static let salawat = reading(.salawat, "الصلاة على النبي ﷺ", listIdle: "صيغتان")
+
+    private static func reading(_ id: DeckID, _ title: String, listIdle: String) -> DeckDefinition {
+        DeckDefinition(id: id, title: title, cardNoun: "البطاقة", cardsLabel: "بطاقات \(title)",
+                       navigationLabel: "التنقل بين بطاقات الأذكار",
+                       hint: "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.",
+                       indexTitle: "فهرس الأذكار", indexHint: "يعرض فهرس الأذكار للانتقال إلى بطاقة",
+                       listIdle: listIdle)
+    }
 
     private static func adhkar(_ period: Period, _ title: String) -> DeckDefinition {
         DeckDefinition(id: period == .morning ? .morning : .evening, title: title, cardNoun: "الذكر",
@@ -66,6 +81,8 @@ struct DeckCard: Identifiable, Equatable {
         case ruqyah(RuqyahSegmentContent)
         /// A «سور» page of `surah`, with the basmala above a sura's first page only.
         case page(SuwarPageContent, surah: String, basmala: String?)
+        /// A card of a reading deck (§12).
+        case reading(ReadingCardContent)
     }
 
     enum Status: Equatable {
@@ -94,8 +111,11 @@ struct DeckCard: Identifiable, Equatable {
     var tapLabel: String
     var resetLabel: String
     var targetLabel: String
+    /// A reading deck's situational or opening card (§12): shown with ``status``'s phrase in place of a counter, never
+    /// counted, never locking, and outside progress, as a review item is.
+    var isUncounted = false
 
-    var isComplete: Bool { isReview || count >= target }
+    var isComplete: Bool { isReview || isUncounted || count >= target }
 }
 
 /// The session summary above a deck.

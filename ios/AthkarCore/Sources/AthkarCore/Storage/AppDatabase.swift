@@ -27,6 +27,7 @@ public struct AppDatabase: Sendable {
     public var ruqyah: RuqyahRepository { RuqyahRepository(writer: writer) }
     public var suwar: SuwarRepository { SuwarRepository(writer: writer) }
     public var tasbih: TasbihRepository { TasbihRepository(writer: writer) }
+    public var reading: ReadingRepository { ReadingRepository(writer: writer) }
     public var prayerRecords: PrayerRecordRepository { PrayerRecordRepository(writer: writer) }
     public var reminders: ReminderRepository { ReminderRepository(writer: writer) }
     public var settings: SettingsRepository { SettingsRepository(writer: writer) }
@@ -47,6 +48,7 @@ public struct AppDatabase: Sendable {
         migrator.registerMigration("v3") { db in try db.execute(sql: Schema.v3) }
         migrator.registerMigration("v4") { db in try db.execute(sql: Schema.v4) }
         migrator.registerMigration("v5") { db in try db.execute(sql: Schema.v5) }
+        migrator.registerMigration("v6") { db in try db.execute(sql: Schema.v6) }
         return migrator
     }
 }
@@ -55,6 +57,7 @@ private enum Schema {
     static let localDate = "GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'"
     static let instant = "GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]Z'"
     static let period = "IN ('morning', 'evening')"
+    static let readingDeck = "IN ('sleep', 'salawat')"
 
     static let v1 = """
         CREATE TABLE settings (
@@ -195,6 +198,26 @@ private enum Schema {
             CHECK (noon_prayer IS NULL
                    OR (state = 'prayed' AND prayer_key = 'dhuhr' AND strftime('%w', calculation_date) = '5')),
             CHECK ((logged_at IS NULL) = (state = 'unrecorded'))
+        );
+        """
+
+    /// The reading decks «أذكار النوم» and «الصلاة على النبي ﷺ» (`athkar-sleep-v1`, `athkar-salawat-v1`): each counted
+    /// item's count on each day, and the days each deck was recorded complete (spec/sessions/deck-definition.md §12).
+    static let v6 = """
+        CREATE TABLE reading_item_progress (
+            deck TEXT NOT NULL CHECK (deck \(readingDeck)),
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            item_id TEXT NOT NULL,
+            count INTEGER NOT NULL CHECK (count >= 0),
+            updated_at TEXT NOT NULL CHECK (updated_at \(instant)),
+            PRIMARY KEY (deck, local_date, item_id)
+        );
+
+        CREATE TABLE reading_days (
+            deck TEXT NOT NULL CHECK (deck \(readingDeck)),
+            local_date TEXT NOT NULL CHECK (local_date \(localDate)),
+            completed_at TEXT NOT NULL CHECK (completed_at \(instant)),
+            PRIMARY KEY (deck, local_date)
         );
         """
 }

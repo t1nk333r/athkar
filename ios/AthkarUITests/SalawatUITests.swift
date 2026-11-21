@@ -1,13 +1,14 @@
 import XCTest
 
-/// «الصلاة على النبي ﷺ» in أخرى: al-Ahzab 56, the Friday virtue and the two salawat, read with no counter.
+/// «الصلاة على النبي ﷺ» in أخرى: a reading deck (spec/sessions/deck-definition.md §12). Its opening card holds al-Ahzab
+/// 56 and the Friday virtue and is never counted; each of the two salawat is read once.
 final class SalawatUITests: DeckTestCase {
     private func element(_ id: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: id).firstMatch
     }
 
-    /// The section opens from the list and shows its text; its title leads back to the list.
-    func testOpensThePageFromTheList() {
+    /// The deck opens on its opening card, which says «اقرأ ثم اسحب» and names the Friday window. Reading both salawat completes the day, and «تقدم اليوم» clears it.
+    func testTheTwoSalawatCompleteTheDay() {
         launch()
         app.buttons["tab.other"].tap()
         let row = app.buttons["other.salawat"]
@@ -17,14 +18,37 @@ final class SalawatUITests: DeckTestCase {
         XCTAssertTrue(["ليلة الجمعة", "يوم الجمعة", "صيغتان"].contains(value), value)
         row.tap()
 
-        XCTAssertTrue(element("salawat.quran").waitForExistence(timeout: 3))
-        XCTAssertTrue(element("salawat.virtue").exists)
-        XCTAssertTrue(element("salawat.salawat-01").label.contains("الصلاة على النبي"), element("salawat.salawat-01").label)
-        XCTAssertTrue(element("salawat.salawat-02").label.contains("الصلاة الإبراهيمية"),
-                      element("salawat.salawat-02").label)
-        XCTAssertEqual(element("salawat.friday").exists, value != "صيغتان", "the page names the Friday window")
+        expectPosition(1, of: 3, noun: "البطاقة")
+        expectLabel(summary, "٠ من ٢")
+        XCTAssertTrue(card("salawat-quran").exists)
+        expectLabel(counter, "البطاقة ١، الآية والفضل")
+        XCTAssertTrue(element("deck.card.quran").exists)
+        XCTAssertTrue(element("deck.card.note").exists, "the Friday virtue")
+        XCTAssertEqual(element("deck.card.friday").exists, value != "صيغتان", "the card names the Friday window")
+        XCTAssertFalse(tapTarget.exists, "never counted")
+        XCTAssertTrue(nextButton.isEnabled)
+
+        nextButton.tap()
+        expectPosition(2, of: 3, noun: "البطاقة")
+        XCTAssertEqual(app.staticTexts["deck.card.title"].label, "الصلاة على النبي ﷺ")
+        tapCard()
+        expectPosition(3, of: 3, noun: "البطاقة")
+        expectLabel(summary, "١ من ٢")
+        tapCard()
+        let title = app.staticTexts["completion.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 4), "the day's dialog")
+        XCTAssertEqual(title.label, "تمت الصلاة على النبي ﷺ بحمد الله")
+        app.buttons["completion.dismiss"].tap()
+        XCTAssertTrue(wait { !title.exists })
+        expectLabel(summary, "اكتملت الصلاة على النبي ﷺ اليوم")
+
+        headerReset.tap()
+        app.buttons["reset.day"].tap()
+        expectLabel(summary, "٠ من ٢")
+        expectPosition(1, of: 3, noun: "البطاقة")
 
         app.buttons["header.back"].tap()
         XCTAssertTrue(row.waitForExistence(timeout: 3))
+        XCTAssertEqual(row.value as? String, value, "no count today again")
     }
 }

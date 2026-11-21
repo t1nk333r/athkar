@@ -65,7 +65,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
     }
 
     @Test func v3KeepsEveryV2RowAndAddsEmptySuwarTables() throws {
@@ -99,7 +99,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
     }
 
     @Test func v4KeepsEveryV3RowAndAddsAnEmptyTasbihTable() throws {
@@ -139,7 +139,7 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
     }
 
     @Test func v5KeepsEveryV4RowAndAddsAnEmptyPrayerRecordsTable() throws {
@@ -176,7 +176,54 @@ struct StorageMigrationTests {
         let migrations = try queue.read { db in
             try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
         }
-        #expect(migrations == ["v1", "v2", "v3", "v4", "v5"])
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
+    }
+
+    @Test func v6KeepsEveryV5RowAndAddsEmptyReadingTables() throws {
+        var configuration = Configuration()
+        configuration.foreignKeysEnabled = true
+        let queue = try DatabaseQueue(configuration: configuration)
+        try AppDatabase.migrator.migrate(queue, upTo: "v5")
+        let v5Tables = try queue.read { db in
+            try String.fetchAll(db, sql: """
+                SELECT name FROM sqlite_master
+                WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'grdb_%' ORDER BY name
+                """)
+        }
+        #expect(v5Tables.count == Self.v1Rows.count + 5)
+        #expect(!v5Tables.contains("reading_item_progress"))
+        #expect(!v5Tables.contains("reading_days"))
+        try queue.write { db in
+            for sql in Self.v1Rows { try db.execute(sql: sql) }
+            try db.execute(sql: "INSERT INTO ruqyah_sura_days VALUES ('2026-09-21', 'qaf', '2026-09-21T05:00:00.000Z')")
+            try db.execute(sql: """
+                INSERT INTO suwar_page_reads VALUES ('2026-09-21', 'mulk', 'mulk-1-4', '2026-09-21T05:00:00.000Z')
+                """)
+            try db.execute(sql: "INSERT INTO suwar_sura_days VALUES ('2026-09-20', 'mulk', '2026-09-20T05:00:00.000Z')")
+            try db.execute(sql: "INSERT INTO tasbih_counts VALUES ('2026-09-23', 'subhan', 3, 1, '2026-09-23T10:00:00.000Z')")
+            try db.execute(sql: """
+                INSERT INTO prayer_records VALUES ('2026-09-23', 'fajr', 'Asia/Riyadh', NULL, 'p', 'prayed', NULL, NULL,
+                    '2026-09-23T03:00:00.000Z', '2026-09-23T03:00:00.000Z')
+                """)
+        }
+        let before = try Self.rows(of: v5Tables, in: queue)
+        #expect(before.values.allSatisfy { $0.count == 1 })
+
+        let database = try AppDatabase(queue)
+        #expect(try Self.rows(of: v5Tables, in: queue) == before)
+        #expect(try database.prayerRecords.records(on: "2026-09-23").count == 1)
+        for deck in ReadingDeck.allCases {
+            #expect(try database.reading.counts(deck, on: "2026-09-23") == [:])
+            #expect(try database.reading.day(deck, on: "2026-09-23") == nil)
+            #expect(try database.reading.recordedDayCount(deck, .all, before: "9999-12-31") == 0)
+        }
+        try database.reading.setCount(1, for: "sleep-01", in: .sleep, on: "2026-09-23",
+                                      completingDayAt: Instant.at("2026-09-23T21:00:00.000Z"))
+        #expect(try database.reading.day(.sleep, on: "2026-09-23") != nil)
+        let migrations = try queue.read { db in
+            try String.fetchAll(db, sql: "SELECT identifier FROM grdb_migrations ORDER BY identifier")
+        }
+        #expect(migrations == ["v1", "v2", "v3", "v4", "v5", "v6"])
     }
 
     /// Every row of each table, in rowid order.

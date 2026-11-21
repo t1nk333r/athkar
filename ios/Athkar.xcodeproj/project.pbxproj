@@ -96,17 +96,16 @@
 		C6826A280A21377C308B4EBA /* PrayerTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17C0E06F617F1DC7A24F1BB /* PrayerTrackerUITests.swift */; };
 		CF195DACA18A57ACB32F6639 /* MigrationPrivacyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B138053084A92E9AE9C6BE9 /* MigrationPrivacyUITests.swift */; };
 		D02A8778E2AA064DFEE962CB /* ScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36120CD1E9397C75C966E81 /* ScreenshotUITests.swift */; };
+		D2787CBE847ACECB5F4757D1 /* ReadingDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3BA74E80D7194844BA8587 /* ReadingDeckModel.swift */; };
 		D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */; };
 		D51BA409C1752A4CDD7535A5 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042329F8B233CEB3D355A537 /* UITestSupport.swift */; };
 		D64A8F7FDF8F3B54A0C66871 /* ReminderNotificationsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894967E326786673B5F4981D /* ReminderNotificationsTests.swift */; };
 		D7296863146C5D31B3B8B732 /* HeadingReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D57862FC1A5212C719415B /* HeadingReading.swift */; };
 		D88DA1DDA19B43B372D77AAE /* PrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77C985807D77FFF05AB9C1F4 /* PrivacyView.swift */; };
 		D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */; };
-		DC32DABD1BA196FE11B4193C /* SalawatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E370A2F41ECB455ABAE9147E /* SalawatView.swift */; };
 		DFDF1111CCFA43A6D30C55BF /* kfgqpc-hafs-v30.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A82F0F70D83610DEBB048A9D /* kfgqpc-hafs-v30.ttf */; };
 		E07DC50005FE72F2D25F8DA2 /* BackupExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FAD2307E294785D686E6D07 /* BackupExportView.swift */; };
 		E12B2A8215DBA945ABE328AC /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6C80B8DF9E7A2E7322014F /* AppIcon.swift */; };
-		E62AA09CC4D02053DD2FABC2 /* SleepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8708AF57E08B6273E378F4 /* SleepView.swift */; };
 		E86F1D7AF6E9F041D330B258 /* DayRollover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6134B2928ABCD0502572ED37 /* DayRollover.swift */; };
 		E911B7C835AB424C6EA284BE /* AthkarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD65FDE62EB6D317DBC1DED /* AthkarApp.swift */; };
 		ECAD6B22BD2633158010079B /* SleepUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FBF35CBD2F8A607F3FE1A93 /* SleepUITests.swift */; };
@@ -165,8 +164,8 @@
 		06750E28AA29F8F17A5D8A5E /* DeviceHeadingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceHeadingTests.swift; sourceTree = "<group>"; };
 		06EB5A3E5D6C97EC5C9CF437 /* SettingsPersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPersistenceTests.swift; sourceTree = "<group>"; };
 		0904A0D43180A3E3A708F0DA /* TransferImportUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportUITests.swift; sourceTree = "<group>"; };
-		0D8708AF57E08B6273E378F4 /* SleepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepView.swift; sourceTree = "<group>"; };
 		0DB69EC63F1C8D655A307108 /* QRScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScanner.swift; sourceTree = "<group>"; };
+		0E3BA74E80D7194844BA8587 /* ReadingDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingDeckModel.swift; sourceTree = "<group>"; };
 		0E4AD34E1322C50C5A27E4EE /* ArabicFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArabicFormat.swift; sourceTree = "<group>"; };
 		101F1AACC34A0C56BEE54F38 /* TransferImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferImportView.swift; sourceTree = "<group>"; };
 		11171CCC784D1B7FD1830ACE /* BundledContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BundledContent.swift; sourceTree = "<group>"; };
@@ -264,7 +263,6 @@
 		E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuqyahDeckModel.swift; sourceTree = "<group>"; };
 		E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePrayerRow.swift; sourceTree = "<group>"; };
 		E2C76CA9088A9C99CF035EF0 /* AppIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIconTests.swift; sourceTree = "<group>"; };
-		E370A2F41ECB455ABAE9147E /* SalawatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SalawatView.swift; sourceTree = "<group>"; };
 		E6F9DC84406C078E0310E0A3 /* DiagnosticsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsUITests.swift; sourceTree = "<group>"; };
 		E879FC03DED7391E3DBA9D07 /* ReminderUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderUITests.swift; sourceTree = "<group>"; };
 		EBC80EB016E62A55F7388473 /* DeckCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckCardView.swift; sourceTree = "<group>"; };
@@ -390,9 +388,7 @@
 				E2879A8E6BEE339FF322C140 /* HomePrayerRow.swift */,
 				F4280DECA9C457370A36B4B3 /* HomeView.swift */,
 				6D50C29033C92AD1ECF9B325 /* OtherSectionsView.swift */,
-				E370A2F41ECB455ABAE9147E /* SalawatView.swift */,
 				FB2F99B6FBD6922278D08ED4 /* SettingsView.swift */,
-				0D8708AF57E08B6273E378F4 /* SleepView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -434,6 +430,7 @@
 				862931C4AB08AB8FEB15BD4C /* DeckIndexView.swift */,
 				CC4723AB110276E031039F64 /* DeckModel.swift */,
 				B714704C81ED5A22715203DD /* DeckView.swift */,
+				0E3BA74E80D7194844BA8587 /* ReadingDeckModel.swift */,
 				E05A1241DE107B7859BD4291 /* RuqyahDeckModel.swift */,
 				6D4122DE1C89CDB311B8848C /* SectionChips.swift */,
 				90328F15D54AA3025C6C0943 /* SuwarDeckModel.swift */,
@@ -807,16 +804,15 @@
 				5339EA1A8C7962FB46FAE974 /* QRScanner.swift in Sources */,
 				B26E3BE20AD797B4E3BF059A /* QiblaView.swift in Sources */,
 				7C6DAF0B20A5F24D673E0571 /* QuickActions.swift in Sources */,
+				D2787CBE847ACECB5F4757D1 /* ReadingDeckModel.swift in Sources */,
 				BCF19B9430753C5AAA71527B /* ReadingMetrics.swift in Sources */,
 				A5F55D9A0351E6537E474C4E /* ReminderModel.swift in Sources */,
 				3B0D6C5A279DA3F7D9D178A6 /* ReminderNotifications.swift in Sources */,
 				37B7CFF6BEA627BDF70F5534 /* ReminderViews.swift in Sources */,
 				D8AC9EC9C4C162E757610DB8 /* RuqyahDeckModel.swift in Sources */,
-				DC32DABD1BA196FE11B4193C /* SalawatView.swift in Sources */,
 				BC46D91F512E1B87FAD23DB3 /* SectionChips.swift in Sources */,
 				A07159CDBE18B815AED58E9F /* SettingsModel.swift in Sources */,
 				932D3B146B29CF85FC33DCC2 /* SettingsView.swift in Sources */,
-				E62AA09CC4D02053DD2FABC2 /* SleepView.swift in Sources */,
 				D2E55DF6C21E6A93AA3D6E0E /* SuwarDeckModel.swift in Sources */,
 				1C5C7671EBF59B23F845CE69 /* TasbihModel.swift in Sources */,
 				90AB3DA847704DAD8569BBA9 /* TasbihSheets.swift in Sources */,

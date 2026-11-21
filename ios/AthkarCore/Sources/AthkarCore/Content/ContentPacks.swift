@@ -11,22 +11,44 @@ public struct RuqyahSegment: Sendable, Hashable {
     }
 }
 
-/// The parts of the bundled content packs (`content/adhkar.v1.json`, `content/ruqyah.v1.json`) that the
-/// domain rules read. Text, sources and review metadata are the UI's business.
+/// The parts of the bundled content packs (`content/adhkar.v1.json`, `content/ruqyah.v1.json`, and the reading decks'
+/// `content/sleep.v1.json` and `content/salawat.v1.json`) that the domain rules read. Text, sources and review
+/// metadata are the UI's business.
 public struct ContentPacks: Sendable {
     /// Adhkar items per period, in content order.
     public var adhkar: SessionCollections
     /// Ruqyah segments in reading order.
     public var ruqyahSegments: [RuqyahSegment]
+    /// Each reading deck's counted items: item ID → target (spec/sessions/deck-definition.md §12 "Counters"). An item
+    /// that is not here is not counted: the pack does not have it, or it is a situational item.
+    public var readingTargets: [ReadingDeck: [String: Int]]
 
-    public init(adhkar: SessionCollections, ruqyahSegments: [RuqyahSegment]) {
+    public init(adhkar: SessionCollections, ruqyahSegments: [RuqyahSegment],
+                readingTargets: [ReadingDeck: [String: Int]] = [:]) {
         self.adhkar = adhkar
         self.ruqyahSegments = ruqyahSegments
+        self.readingTargets = readingTargets
     }
 
-    /// Decodes both packs from their JSON files.
-    public init(adhkarPack: Data, ruqyahPack: Data) throws {
-        self.init(adhkar: try Self.adhkar(from: adhkarPack), ruqyahSegments: try Self.ruqyahSegments(from: ruqyahPack))
+    /// Decodes the packs from their JSON files; without the reading packs, no reading item is counted.
+    public init(adhkarPack: Data, ruqyahPack: Data, sleepPack: Data? = nil, salawatPack: Data? = nil) throws {
+        var readingTargets: [ReadingDeck: [String: Int]] = [:]
+        if let sleepPack { readingTargets[.sleep] = try Self.readingTargets(of: .sleep, from: sleepPack) }
+        if let salawatPack { readingTargets[.salawat] = try Self.readingTargets(of: .salawat, from: salawatPack) }
+        self.init(adhkar: try Self.adhkar(from: adhkarPack), ruqyahSegments: try Self.ruqyahSegments(from: ruqyahPack),
+                  readingTargets: readingTargets)
+    }
+
+    /// `content/sleep.v1.json` or `content/salawat.v1.json` → each counted item's target: its `count`, otherwise 1
+    /// (§12 "Counters"). The deck's uncounted items are left out.
+    public static func readingTargets(of deck: ReadingDeck, from data: Data) throws -> [String: Int] {
+        try checkPack(data, is: deck.rawValue)
+        let pack = try JSONDecoder().decode(ReadingPack.self, from: data)
+        var targets: [String: Int] = [:]
+        for item in pack.items where !deck.uncountedItemIDs.contains(item.id) {
+            targets[item.id] = max(1, item.count ?? 1)
+        }
+        return targets
     }
 
     /// `content/adhkar.v1.json` → items with `id`, `count`, `targetOptions`, `defaultTarget`, and
@@ -72,6 +94,15 @@ public struct ContentPacks: Sendable {
         }
 
         var periods: Periods
+    }
+
+    private struct ReadingPack: Decodable {
+        struct Item: Decodable {
+            var id: String
+            var count: Int?
+        }
+
+        var items: [Item]
     }
 
     private struct RuqyahPack: Decodable {

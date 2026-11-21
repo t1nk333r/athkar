@@ -21,11 +21,14 @@ read format 2, because format 2 carries tables the PWAs never had.
 - **Location excluded by default.** `reminders.location` is written only when the user switches on «تضمين الموقع» for
   that export; the switch starts off every time the screen opens. The coordinates are the stored ones, rounded to 2
   decimals (§7.4).
-- Every section is required; a section's array may be empty. A preference or prayer setting appears only when the
-  user set it (its `settings` row exists). An absent one reads as its default on import, and stays absent.
+- Every section is required except `readings`; a section's array may be empty. `readings` is written only when a
+  reading deck has a row, so a file without reading-deck data stays readable by an app version that predates them
+  (an older importer rejects any key it does not know). A preference or prayer setting appears only when the user
+  set it (its `settings` row exists). An absent one reads as its default on import, and stays absent.
 - Rows are the tables' rows (spec/schema.md), sorted by their keys as text (adhkar days by date then period, so
-  `evening` before `morning`), «مسبحة» counts by date then first use, prayer records by date then Fajr … Isha. The
-  whole history is exported. The native tables keep no window, and nothing is trimmed.
+  `evening` before `morning`), reading days and items by deck then date (so `salawat` before `sleep`), «مسبحة»
+  counts by date then first use, prayer records by date then Fajr … Isha. The whole history is exported. The native
+  tables keep no window, and nothing is trimmed.
 - `updated_at` is not exported. Each imported row is stamped with `meta.exportedAt`, as format 1's are. A
   location's `source` is not exported either, and an imported location has source `import`.
 - Keys whose value may be `null` (`completedAt` of an adhkar day, `count`/`target` of an item, a prayer record's
@@ -53,15 +56,17 @@ read format 2, because format 2 carries tables the PWAs never had.
 | `suwar.suras[]` | `{date, suraId, completedAt}` | `suwar_sura_days` |
 | `tasbih.selected`, `.target`, `.phrases` | optional | `tasbih_selected`, `tasbih_target` (0 … 9999), `tasbih_custom_phrases` (≤ 8, each 1 … 60 UTF-16 code units) |
 | `tasbih.counts[]` | `{date, phrase, count, firstUse}` | `tasbih_counts`: `phrase` is `phrase_key` (a preset ID or `c:` and a saved phrase, 1 … 62 code points), `count` 1 … 99999, `firstUse` ≥ 1 and unique within a date |
+| `readings.days[]` | `{deck, date, completedAt}` | `reading_days`; `deck` is `sleep` or `salawat`. The whole section is optional (above) |
+| `readings.items[]` | `{deck, date, itemId, count}` | `reading_item_progress`; `count` is an integer 0 … 2^53 − 1 |
 | `prayers.records[]` | `{date, prayer, zone, scheduledAt, profile, state, timing, noonPrayer, loggedAt}` | `prayer_records` with its metadata (spec/tracker/tracker.md): `date` is `calculation_date`, `zone` `zone_id`, `profile` `profile_version` |
 | `reminders.rules[]` | `{id, kind, prayer, offsetMinutes, localTime, weekdays, enabled}` | `reminder_rules`; `prayer` is `prayer_key`, `weekdays` `weekday_mask` (0 … 127) |
 | `reminders.lastShown` | `{ruleId: date}` | `reminder_state`; every key is the `id` of a rule in `rules` |
 | `reminders.location` | object, optional | `location_profiles`: `latitude`, `longitude`, `label`, `zoneId`, `updatedAt`. Only with «تضمين الموقع» |
 
 What format 2 carries that format 1 does not: the whole adhkar and ruqyah history (format 1 keeps 7 and 365 days
-and only completion for past days), the ruqyah per-sura completions, «سور», «مسبحة», the prayer tracker's records,
-every reminder rule with its weekdays, the full calculation profile and Hijri offset, `home_prayer_row`, and the
-location's label and zone.
+and only completion for past days), the ruqyah per-sura completions, «سور», «مسبحة», the reading decks «أذكار النوم»
+and «الصلاة على النبي ﷺ», the prayer tracker's records, every reminder rule with its weekdays, the full calculation
+profile and Hijri offset, `home_prayer_row`, and the location's label and zone.
 
 Not exported: `content_installs` (the installed pack versions are the app's, not the user's), diagnostics times, and
 the app's `UserDefaults` flags.
@@ -74,9 +79,9 @@ checks:
 - the schema, and the calendar checks of format 1: every date a real proleptic-Gregorian day, every instant a real
   time, applied to the schema's date and instant fields only;
 - each table's key unique: adhkar days `(date, period)`, items `(date, period, itemId)`, ruqyah days `(date)`,
-  segments `(date, segmentId)`, suras `(date, suraId)`, «سور» pages `(date, pageId)`, «مسبحة» counts
-  `(date, phrase)` and `(date, firstUse)`, prayer records `(date, prayer)`, rules `(id)`. Keys compare as code
-  points, as SQLite compares text;
+  segments `(date, segmentId)`, suras `(date, suraId)`, «سور» pages `(date, pageId)`, reading days `(deck, date)`,
+  reading items `(deck, date, itemId)`, «مسبحة» counts `(date, phrase)` and `(date, firstUse)`, prayer records
+  `(date, prayer)`, rules `(id)`. Keys compare as code points, as SQLite compares text;
 - no ID contains U+0000 (SQLite would store it truncated);
 - the tables' checks: an item has a `count` or a `target`; only a `prayed` record has a `timing`; only a prayed Dhuhr
   on a Friday has a `noonPrayer`; `loggedAt` is set exactly when the state is not `unrecorded`; an adhkar rule's
@@ -97,6 +102,7 @@ missing on a device in use, and importing it again writes nothing.
 | ruqyah sura `(date, sura)` | the device has no row |
 | «سور» `(date, sura)`: its pages and completion together | the device has no page and no completion of that sura on that date |
 | «مسبحة» `(date)`: the day's counts together, so the first-use order stays whole | the device has no count on that date |
+| reading deck `(deck, date)`: its counts and completion together | the device has no count and no completion of that deck on that date; counts clamped to the item's target in the installed pack, and an item the pack does not count (unknown, or a situational sleep item) dropped |
 | prayer record `(date, prayer)`, metadata as written | the device has no record, or its record is still `unrecorded` and the file's is not |
 | reminder rule `(id)`; its last shown date | the device has no rule with that `id`; no last shown date for it |
 | location | the device has none (source `import`) |

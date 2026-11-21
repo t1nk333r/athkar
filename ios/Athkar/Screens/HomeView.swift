@@ -34,6 +34,7 @@ struct HomeView: View {
                 .environment(\.readingMetrics, ReadingMetrics(
                     viewportWidth: width, textSize: app.settings.textSize, lineSpacing: app.settings.lineSpacing,
                     typeScale: ReadingMetrics.typeScale(for: dynamicTypeSize)))
+                .environment(\.fridayPhase, { [app] in app.fridayPhase(at: $0) })
         }
     }
 
@@ -50,12 +51,6 @@ struct HomeView: View {
                     .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .prayerTimes {
                 PrayerTimesView(model: app.prayer, reminders: app.reminders) { app.otherSection = .today }
-                    .frame(maxHeight: .infinity, alignment: .top)
-            } else if app.tab == .other, app.otherSection == .salawat {
-                SalawatView(app: app)
-                    .frame(maxHeight: .infinity, alignment: .top)
-            } else if app.tab == .other, app.otherSection == .sleep {
-                SleepView(content: app.sleep)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else if app.tab == .other, app.otherSection == .today {
                 TodayView(app: app)
@@ -363,6 +358,14 @@ struct HomeView: View {
             DeckView(model: app.suwar, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .suwar) },
                      onDeckCompleted: { completedDeck = .suwar })
             .id("\(DeckID.suwar.rawValue).\(app.suwar.selectedSuraID)")
+        case .sleep:
+            DeckView(model: app.sleep, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .sleep) },
+                     onDeckCompleted: { completedDeck = .sleep })
+            .id(DeckID.sleep)
+        case .salawat:
+            DeckView(model: app.salawat, haptics: haptics, ensureCurrentDay: { app.ensureCurrentDay(for: .salawat) },
+                     onDeckCompleted: { completedDeck = .salawat })
+            .id(DeckID.salawat)
         }
     }
 

@@ -130,6 +130,11 @@ function nativeErrors(backup, errors) {
     noNul(row.pageId, `suwar.pages[${i}].pageId`);
   });
   unique(list(suwar.pages), "suwar.pages", row => [row.date, row.pageId]);
+  // Optional: written only when a reading deck has a row.
+  const readings = backup.readings ?? {};
+  unique(list(readings.days), "readings.days", row => [row.deck, row.date]);
+  list(readings.items).forEach((row, i) => noNul(row.itemId, `readings.items[${i}].itemId`));
+  unique(list(readings.items), "readings.items", row => [row.deck, row.date, row.itemId]);
   const tasbih = backup.tasbih ?? {};
   noNul(tasbih.selected, "tasbih.selected");
   (Array.isArray(tasbih.phrases) ? tasbih.phrases : []).forEach((phrase, i) => {

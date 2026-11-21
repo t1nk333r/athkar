@@ -523,6 +523,78 @@
         }
       }
     },
+    "readings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "days",
+        "items"
+      ],
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deck",
+              "date",
+              "completedAt"
+            ],
+            "properties": {
+              "deck": {
+                "enum": [
+                  "sleep",
+                  "salawat"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "completedAt": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+              }
+            }
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deck",
+              "date",
+              "itemId",
+              "count"
+            ],
+            "properties": {
+              "deck": {
+                "enum": [
+                  "sleep",
+                  "salawat"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+              },
+              "itemId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    },
     "prayers": {
       "type": "object",
       "additionalProperties": false,

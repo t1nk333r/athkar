@@ -80,6 +80,26 @@ struct NativeBackupRoundTripTests {
         #expect(backup == NativeBackup(meta: .init(exportedAt: Instant.at("2026-10-31T00:00:00.000Z"),
                                                    timeZone: "UTC")))
         #expect(try JSONValue(data: backup.encoded())["preferences"] == .object([:]))
+        #expect(try JSONValue(data: backup.encoded())["readings"] == nil, "no reading row, no section")
+    }
+
+    /// Without a reading-deck row the export leaves `readings` out, so an app that predates the section still reads
+    /// the file; a file without it imports and exports as it is.
+    @Test func readingsAreWrittenOnlyWhenADeckHasARow() throws {
+        var file = try NativeBackup.decode(RepoFile.data(nativeFile))
+        let readings = try #require(file.readings)
+        #expect(readings.days.map(\.deck) == [.salawat, .sleep])
+        file.readings = nil
+        let text = String(decoding: try file.encoded(), as: UTF8.self)
+        #expect(!text.contains("readings"))
+        let database = try AppDatabase.inMemory()
+        try importer(database).importFile(try BackupFile.decode(Data(text.utf8)))
+        #expect(try exportNative(database, like: file) == file)
+
+        try database.reading.setCount(1, for: "salawat-01", in: .salawat, on: "2026-11-01",
+                                      at: Instant.at("2026-11-01T09:00:00.000Z"))
+        #expect(try exportNative(database, like: file).readings == NativeBackup.Readings(
+            items: [.init(deck: .salawat, date: "2026-11-01", itemId: "salawat-01", count: 1)]))
     }
 }
 
@@ -111,11 +131,47 @@ struct NativeBackupImportTests {
         expected.ruqyah = 2
         expected.suwar = 2
         expected.tasbih = 2
+        expected.sleep = 2
+        expected.salawat = 1
         expected.prayers = 6
         expected.reminders = 2
         expected.settings = 14
         #expect(planned == expected)
         #expect(try importer(database).importFile(file) == planned)
+    }
+
+    /// A reading `(deck, date)` comes in only when the device has neither a count nor a completion of that deck on that
+    /// date; counts are clamped to the installed pack's target, and items the pack does not count are dropped.
+    @Test func readingUnitsMergeWhenTheDeviceHasNone() throws {
+        let database = try AppDatabase.inMemory()
+        let native = Instant.at("2026-10-31T19:00:00.000Z")
+        try database.reading.setCount(1, for: "sleep-05", in: .sleep, on: "2026-10-31", at: native)
+        let stamp = Instant.at("2026-10-31T18:20:05.512Z")
+        let file = NativeBackup(meta: .init(exportedAt: stamp, timeZone: "Asia/Riyadh"), readings: .init(
+            days: [.init(deck: .salawat, date: "2026-10-30", completedAt: Instant.at("2026-10-30T09:00:00.000Z"))],
+            items: [
+                .init(deck: .salawat, date: "2026-10-30", itemId: "salawat-01", count: 4),
+                .init(deck: .salawat, date: "2026-10-30", itemId: "salawat-02", count: 1),
+                .init(deck: .salawat, date: "2026-10-30", itemId: "salawat-99", count: 1),
+                .init(deck: .sleep, date: "2026-10-30", itemId: "sleep-04", count: 7),
+                .init(deck: .sleep, date: "2026-10-30", itemId: "sleep-14", count: 1),
+                .init(deck: .sleep, date: "2026-10-31", itemId: "sleep-01", count: 1),
+            ]))
+        let summary = try importer(database).importNative(file)
+        #expect(summary.salawat == 1)
+        #expect(summary.sleep == 1, "the device's 10-31 wins")
+        #expect(try database.reading.counts(.salawat, on: "2026-10-30") == ["salawat-01": 1, "salawat-02": 1])
+        #expect(try database.reading.day(.salawat, on: "2026-10-30")?.completedAt
+                == Instant.at("2026-10-30T09:00:00.000Z"))
+        #expect(try database.reading.counts(.sleep, on: "2026-10-30") == ["sleep-04": 3],
+                "clamped to its target; a situational item is not counted")
+        #expect(try database.reading.counts(.sleep, on: "2026-10-31") == ["sleep-05": 1])
+        let stamped = try database.reader.read { db in
+            try ReadingItemProgress.filter(GRDB.Column("item_id") == "sleep-04").fetchOne(db)?.updatedAt
+        }
+        #expect(stamped == stamp)
+
+        #expect(try importer(database).importNative(file).isEmpty, "importing again writes nothing")
     }
 
     @Test func formatOneFilesStillImport() throws {
@@ -139,6 +195,7 @@ struct NativeBackupImportTests {
         try database.adhkar.setCount(9, for: "morning-01", on: "2026-10-31", period: .morning, at: native)
         try database.suwar.markRead("kahf-9-12", of: "kahf", on: "2026-10-31", at: native)
         try database.tasbih.setCount(5, for: "hamd", on: "2026-10-31", at: native)
+        try database.reading.setCount(1, for: "sleep-02", in: .sleep, on: "2026-10-31", at: native)
         try database.settings.set(.light, for: .theme, at: native)
         try database.reminders.save(ReminderRule.adhkar(.morning, enabled: false, updatedAt: native))
         let context = PrayerCommandContext(now: native, zone: TimeZone(identifier: "Asia/Riyadh")!,
@@ -158,6 +215,9 @@ struct NativeBackupImportTests {
         #expect(try database.suwar.readPages(on: "2026-10-30") == ["mulk-1-4", "mulk-5-8"])
         #expect(try database.tasbih.counts(on: "2026-10-31").map(\.phraseKey) == ["hamd"])
         #expect(try database.tasbih.counts(on: "2026-10-30").count == 3)
+        #expect(try database.reading.counts(.sleep, on: "2026-10-31") == ["sleep-02": 1])
+        #expect(try database.reading.day(.sleep, on: "2026-10-29") != nil)
+        #expect(try database.reading.counts(.salawat, on: "2026-10-30") == ["salawat-01": 1, "salawat-02": 1])
         #expect(try database.settings.value(for: .theme) == .light)
         #expect(try database.settings.value(for: .textSize) == .large)
         #expect(try database.reminders.rule(id: "adhkar_morning")?.enabled == false)
@@ -213,6 +273,11 @@ struct NativeBackupImportTests {
          "reminders.lastShown.adhkar_noon"),
         ("U+0000 in an ID", [(#""pageId": "kahf-1-4""#, #""pageId": "kahf\u0000""#)], "suwar.pages[2].pageId"),
         ("count above the cap", [(#""count": 57"#, #""count": 100000"#)], "tasbih.counts[3].count"),
+        ("repeated reading day", [(#""deck": "sleep",\#n        "date": "2026-10-29""#,
+                                   #""deck": "salawat",\#n        "date": "2026-10-30""#)], "readings.days[1]"),
+        ("unknown reading deck", [(#""deck": "salawat""#, #""deck": "night""#)], nil),
+        ("unknown reading key", [(#""itemId": "sleep-01""#, #""itemId": "sleep-01", "target": 1"#)],
+         "readings.items[2].target"),
     ]
 
     @Test(arguments: rejections.indices)

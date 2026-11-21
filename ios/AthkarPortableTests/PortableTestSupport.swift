@@ -65,6 +65,12 @@ final class PortableTestSupport {
     }
 
     @MainActor
+    func makeReading(_ deck: ReadingDeck, on date: String? = nil) throws -> ReadingDeckModel {
+        try ReadingDeckModel(deck, database: database, content: content, today: date ?? today,
+                             report: { XCTFail("Production database write failed: \($0)") })
+    }
+
+    @MainActor
     func makeTasbih(on date: String? = nil) throws -> TasbihModel {
         try TasbihModel(database: database, today: date ?? today,
                         report: { XCTFail("Production database write failed: \($0)") })
