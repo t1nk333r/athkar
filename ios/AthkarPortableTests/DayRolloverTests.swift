@@ -207,15 +207,20 @@ final class DayRolloverTests: XCTestCase {
     @MainActor
     func testReturningToTheShownDayEndsAPendingAdhkarLoad() throws {
         let decks = try Decks()
-        let tables = ["adhkar_item_progress", "ruqyah_segment_progress", "suwar_page_reads", "tasbih_counts"]
+        let tables = ["adhkar_item_progress", "ruqyah_segment_progress", "suwar_page_reads", "tasbih_counts",
+                      "reading_item_progress"]
+        // Both reading decks read reading_item_progress, so it fails two sessions.
+        let failures = tables.count + 1
         for table in tables { try decks.hide(table) }
         decks.today = Day.tomorrow
         XCTAssertEqual(decks.rollover.roll(to: Day.tomorrow), Set(DeckID.allCases))
         XCTAssertEqual(decks.adhkar.state.date, Day.today)
         XCTAssertEqual(decks.ruqyah.progress.date, Day.today)
         XCTAssertEqual(decks.suwar.date, Day.today)
+        XCTAssertEqual(decks.sleep.date, Day.today)
+        XCTAssertEqual(decks.salawat.date, Day.today)
         XCTAssertEqual(decks.tasbih.date, Day.today)
-        XCTAssertEqual(decks.reports.messages.count, tables.count)
+        XCTAssertEqual(decks.reports.messages.count, failures)
         for table in tables { try decks.restore(table) }
 
         decks.today = Day.today
@@ -230,7 +235,7 @@ final class DayRolloverTests: XCTestCase {
         XCTAssertEqual(try decks.database.adhkar.session(on: Day.today, period: .morning).progress,
                        ["morning-02": 1])
         XCTAssertNil(try decks.database.adhkar.session(on: Day.tomorrow, period: .evening).completion)
-        XCTAssertEqual(decks.reports.messages.count, tables.count)
+        XCTAssertEqual(decks.reports.messages.count, failures)
     }
 }
 

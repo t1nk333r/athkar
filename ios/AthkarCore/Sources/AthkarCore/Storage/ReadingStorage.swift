@@ -73,7 +73,7 @@ public struct ReadingRepository: Sendable {
 
     /// The day record of `deck` on `localDate`, or `nil` when the day is not complete (`completedAt`).
     public func day(_ deck: ReadingDeck, on localDate: String) throws -> ReadingDay? {
-        try writer.read { try ReadingDay.fetchOne($0, key: ["deck": deck, "local_date": localDate]) }
+        try writer.read { try ReadingDay.filter(Self.day(deck, localDate)).fetchOne($0) }
     }
 
     /// Stores one item's count, in one transaction with the day it completes: with
@@ -83,8 +83,7 @@ public struct ReadingRepository: Sendable {
         try writer.write { db in
             try ReadingItemProgress(deck: deck, localDate: localDate, itemId: itemId, count: count, updatedAt: now)
                 .upsert(db)
-            if let completedAt,
-               try ReadingDay.fetchOne(db, key: ["deck": deck, "local_date": localDate]) == nil {
+            if let completedAt, try ReadingDay.filter(Self.day(deck, localDate)).fetchCount(db) == 0 {
                 try ReadingDay(deck: deck, localDate: localDate, completedAt: completedAt).insert(db)
             }
         }
@@ -96,7 +95,7 @@ public struct ReadingRepository: Sendable {
         try writer.write { db in
             try ReadingItemProgress(deck: deck, localDate: localDate, itemId: itemId, count: 0, updatedAt: now)
                 .upsert(db)
-            _ = try ReadingDay.deleteOne(db, key: ["deck": deck, "local_date": localDate])
+            try ReadingDay.filter(Self.day(deck, localDate)).deleteAll(db)
         }
     }
 
@@ -113,6 +112,12 @@ public struct ReadingRepository: Sendable {
                 try ReadingDay.filter(rows && removal.covers()).deleteAll(db)
             }
         }
+    }
+
+    /// The row of `deck` on `localDate`. A filter rather than a key lookup, so a table that cannot be read fails with
+    /// SQLite's error instead of GRDB's unique-key check.
+    private static func day(_ deck: ReadingDeck, _ localDate: String) -> SQLExpression {
+        Column("deck") == deck && Column("local_date") == localDate
     }
 
     /// How many recorded days `removal` covers, as the reset confirmations count them: the dates before `today` with
