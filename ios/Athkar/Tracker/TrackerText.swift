@@ -85,6 +85,56 @@ enum TrackerText {
         return "\(names[parts[1] - 1]) \(ArabicFormat.number(parts[0]))"
     }
 
+    static let hijriMonths = ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب",
+                              "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"]
+
+    /// The Hijri months a Gregorian month spans: «جمادى الأولى – جمادى الآخرة ١٤٤٨ هـ», or across a year «ذو الحجة
+    /// ١٤٤٧ – محرم ١٤٤٨ هـ».
+    static func hijriSpan(_ month: String, offset: Int) -> String {
+        guard let days = LocalDate.days(inMonth: month), let firstDay = days.first, let lastDay = days.last,
+              let first = HijriDate.of(firstDay, offset: offset), let last = HijriDate.of(lastDay, offset: offset)
+        else { return "" }
+        let name = { (date: HijriDate) in hijriMonths[date.month - 1] }
+        let year = { (date: HijriDate) in ArabicFormat.number(date.year) }
+        if first.year != last.year { return "\(name(first)) \(year(first)) – \(name(last)) \(year(last)) هـ" }
+        if first.month != last.month { return "\(name(first)) – \(name(last)) \(year(last)) هـ" }
+        return "\(name(first)) \(year(first)) هـ"
+    }
+
+    /// The month's marked days (``HijriOccasion``), a run of days on one line: «رمضان: ١٨ – ٢٨»,
+    /// «عيد الفطر: الجمعة ٢٠».
+    static func occasions(_ month: String, offset: Int) -> [String] {
+        var runs: [(occasion: HijriOccasion, first: String, last: String)] = []
+        for date in LocalDate.days(inMonth: month) ?? [] {
+            guard let occasion = HijriDate.of(date, offset: offset).flatMap(HijriOccasion.of) else { continue }
+            if let run = runs.last, run.occasion == occasion, LocalDate.epochDay(run.last).map({ $0 + 1 })
+                == LocalDate.epochDay(date) {
+                runs[runs.count - 1].last = date
+            } else {
+                runs.append((occasion, date, date))
+            }
+        }
+        return runs.map { run in
+            run.first == run.last
+                ? "\(run.occasion.title): \(weekday(run.first)) \(dayNumber(run.first))"
+                : "\(run.occasion.title): \(dayNumber(run.first)) – \(dayNumber(run.last))"
+        }
+    }
+
+    /// «٢٠ جمادى الأولى ١٤٤٨ هـ», and the day it marks: «١ شوال ١٤٤٧ هـ، عيد الفطر».
+    static func hijri(_ date: String, offset: Int) -> String {
+        guard let hijri = HijriDate.of(date, offset: offset) else { return "" }
+        let text = "\(ArabicFormat.number(hijri.day)) \(hijriMonths[hijri.month - 1]) "
+            + "\(ArabicFormat.number(hijri.year)) هـ"
+        return HijriOccasion.of(hijri).map { "\(text)، \($0.title)" } ?? text
+    }
+
+    /// «الجمعة».
+    static func weekday(_ date: String) -> String {
+        // LocalDate.weekday: 1 Sunday … 7 Saturday; `weekdays` starts on Saturday.
+        LocalDate.weekday(date).map { weekdays[$0 % 7].name } ?? ""
+    }
+
     /// The day number of a `YYYY-MM-DD` date, «٣٠».
     static func dayNumber(_ date: String) -> String {
         ArabicFormat.number(Int(date.suffix(2)) ?? 0)

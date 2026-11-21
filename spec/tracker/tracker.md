@@ -104,6 +104,13 @@ The calendar shows one month (`month`: `YYYY-MM`) as one summary per day:
 with each). These are plain counts. The summary has no score, percentage, streak or missed count, and the
 calendar never styles `unrecorded` as a failure. A record or completion outside the month is ignored.
 
+**Hijri dates and marked days** (native). Each day also shows its Umm al-Qura Hijri day, shifted by the user's
+offset (`hijri_offset`) as «أوقات الصلاة» shows it, and the header names the Hijri months the month spans. Only these
+days are marked (`HijriOccasion`): every day of Ramadan, 1 Shawwal (عيد الفطر), 8–13 Dhu al-Hijjah (يوم التروية, يوم
+عرفة, عيد الأضحى, أيام التشريق) and 1 Muharram (بداية السنة الهجرية). They are tinted and listed under the grid. No other
+day is marked: no Mawlid, Isra and Mi'raj, mid-Sha'ban or any day the Sunnah does not single out. The calendar goes up
+to twelve months ahead, so the coming Ramadan and Eids can be seen; those days stay read-only.
+
 ## Next prayer across a DST change
 
 Today's next prayer is the first of the five prayers, in order, whose time is strictly after `now`. The prayers are

@@ -1,9 +1,11 @@
 import AthkarCore
 import SwiftUI
 
-/// «التقويم» in أخرى: a month of days, each with its prayers as a plain count and marks for the morning and evening
-/// adhkar and the ruqyah completed that day. Nothing scores a day, and a day without records looks like any other.
-/// A past day opens with the same controls as «اليوم»; days after today are read-only.
+/// «التقويم» in أخرى: a month of days, each with its Hijri day, its prayers as a plain count and marks for the
+/// morning and evening adhkar and the ruqyah completed that day. Nothing scores a day, and a day without records looks
+/// like any other. Ramadan, the two Eids, the days of Hajj and 1 Muharram are tinted and listed under the month
+/// (``HijriOccasion``), and nothing else. A past day opens with the same controls as «اليوم»; days after today are
+/// read-only, up to twelve months ahead.
 struct TrackerCalendarView: View {
     let app: AppModel
 
@@ -24,6 +26,7 @@ struct TrackerCalendarView: View {
                 if let summary = app.tracker.month(month) {
                     grid(summary, today: today)
                     legend
+                    occasions(month)
                     totals(summary.totals)
                 }
             }
@@ -42,14 +45,22 @@ struct TrackerCalendarView: View {
         HStack(spacing: 8) {
             monthButton("الشهر السابق", systemImage: "chevron.backward", identifier: "calendar.previous",
                         target: LocalDate.month(-1, from: month))
-            Text(TrackerText.month(month))
-                .font(.headline.weight(.bold))
-                .foregroundStyle(palette.textPrimary)
-                .frame(maxWidth: .infinity)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("calendar.month")
+            VStack(spacing: 2) {
+                Text(TrackerText.month(month))
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(palette.textPrimary)
+                    .accessibilityIdentifier("calendar.month")
+                Text(TrackerText.hijriSpan(month, offset: hijriOffset))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(palette.textSecondary)
+                    .accessibilityIdentifier("calendar.hijri")
+            }
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
             monthButton("الشهر التالي", systemImage: "chevron.forward", identifier: "calendar.next",
-                        target: month < current ? LocalDate.month(1, from: month) : nil)
+                        target: month < (LocalDate.month(Self.monthsAhead, from: current) ?? current)
+                            ? LocalDate.month(1, from: month) : nil)
         }
         .padding(8)
         .card(palette)
@@ -72,6 +83,11 @@ struct TrackerCalendarView: View {
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier)
     }
+
+    /// How far ahead the calendar goes, so the coming Ramadan and Eids can be seen.
+    static let monthsAhead = 12
+
+    private var hijriOffset: Int { app.prayer.settings.hijriOffset }
 
     private func grid(_ summary: PrayerCalendarMonth, today: String) -> some View {
         // Saturday first: Saturday (7) is column 0, Sunday (1) column 1, … Friday (6) column 6.
@@ -96,7 +112,9 @@ struct TrackerCalendarView: View {
     }
 
     private func cell(_ day: PrayerDaySummary, isToday: Bool) -> some View {
-        Button {
+        let hijri = HijriDate.of(day.date, offset: hijriOffset)
+        let occasion = hijri.flatMap(HijriOccasion.of)
+        return Button {
             openDay = CalendarDay(date: day.date)
         } label: {
             VStack(spacing: 2) {
@@ -116,13 +134,23 @@ struct TrackerCalendarView: View {
                 .foregroundStyle(palette.accent)
             }
             .frame(maxWidth: .infinity, minHeight: 52)
+            // The Hijri day, small in the corner.
+            .overlay(alignment: .topTrailing) {
+                Text(hijri.map { ArabicFormat.number($0.day) } ?? "")
+                    .font(.system(size: 9, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(palette.textSecondary)
+                    .padding(3)
+            }
+            .background(occasion == nil ? Color.clear : palette.accentSoft, in: Corner.box)
             .overlay(Corner.box.strokeBorder(isToday ? palette.accent : Color.clear))
             .contentShape(Corner.box)
         }
         .buttonStyle(.plain)
         .disabled(day.isFuture)
-        .opacity(day.isFuture ? 0.4 : 1)
-        .accessibilityLabel(PrayerDates.gregorian(day.date) + (isToday ? "، اليوم" : ""))
+        // A day ahead is read-only, but its tint and Hijri day stay legible.
+        .opacity(day.isFuture ? (occasion == nil ? 0.4 : 0.75) : 1)
+        .accessibilityLabel(PrayerDates.gregorian(day.date) + "، " + TrackerText.hijri(day.date, offset: hijriOffset)
+                            + (isToday ? "، اليوم" : ""))
         .accessibilityValue(TrackerText.dayDescription(day))
         .accessibilityIdentifier("calendar.day.\(day.date)")
     }
@@ -143,6 +171,26 @@ struct TrackerCalendarView: View {
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("العلامات تحت كل يوم: أذكار الصباح، أذكار المساء، الرقية")
+    }
+
+    /// The month's marked days, or nothing when it has none.
+    @ViewBuilder
+    private func occasions(_ month: String) -> some View {
+        let lines = TrackerText.occasions(month, offset: hijriOffset)
+        if !lines.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(lines, id: \.self) { line in
+                    Text(line)
+                }
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(palette.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 12).padding(.horizontal, 10)
+            .background(palette.accentSoft, in: Corner.box)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("calendar.occasions")
+        }
     }
 
     private func totals(_ totals: PrayerMonthTotals) -> some View {
@@ -185,7 +233,7 @@ struct TrackerDaySheet: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 10) {
-                    Text(PrayerDates.hijri(date, offset: app.prayer.settings.hijriOffset))
+                    Text(TrackerText.hijri(date, offset: app.prayer.settings.hijriOffset))
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(palette.textSecondary)
                         .frame(maxWidth: .infinity)

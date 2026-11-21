@@ -195,6 +195,24 @@ final class PrayerTrackerModelTests: XCTestCase {
         XCTAssertTrue(try XCTUnwrap(model.month("2026-11")).days.allSatisfy(\.isFuture))
     }
 
+    /// The calendar's Hijri line and marked days, in Umm al-Qura with the user's offset; nothing but Ramadan, the
+    /// two Eids, the days of Hajj and 1 Muharram is listed.
+    func testTheCalendarShowsTheHijriMonthsAndTheMarkedDays() {
+        XCTAssertEqual(TrackerText.hijriSpan("2026-11", offset: 0), "جمادى الأولى – جمادى الآخرة ١٤٤٨ هـ")
+        XCTAssertEqual(TrackerText.hijriSpan("2026-06", offset: 0), "ذو الحجة ١٤٤٧ – محرم ١٤٤٨ هـ")
+        XCTAssertEqual(TrackerText.occasions("2026-02", offset: 0), ["رمضان: ١٨ – ٢٨"])
+        XCTAssertEqual(TrackerText.occasions("2026-03", offset: 0), ["رمضان: ١ – ١٩", "عيد الفطر: الجمعة ٢٠"])
+        XCTAssertEqual(TrackerText.occasions("2026-05", offset: 0),
+                       ["يوم التروية: الاثنين ٢٥", "يوم عرفة: الثلاثاء ٢٦", "عيد الأضحى: الأربعاء ٢٧",
+                        "أيام التشريق: ٢٨ – ٣٠"])
+        XCTAssertEqual(TrackerText.occasions("2026-06", offset: 0), ["بداية السنة الهجرية: الثلاثاء ١٦"])
+        XCTAssertEqual(TrackerText.occasions("2026-11", offset: 0), [])
+        XCTAssertEqual(TrackerText.occasions("2026-03", offset: 1), ["رمضان: ١ – ١٨", "عيد الفطر: الخميس ١٩"])
+        XCTAssertEqual(TrackerText.hijri("2026-03-20", offset: 0), "١ شوال ١٤٤٧ هـ، عيد الفطر")
+        XCTAssertEqual(TrackerText.hijri("2026-11-22", offset: 0), "١٢ جمادى الآخرة ١٤٤٨ هـ")
+        XCTAssertEqual(TrackerText.weekday("2026-11-20"), "الجمعة")
+    }
+
     /// The tracker's words never call a prayer missed or a day failed.
     @MainActor
     func testWordingIsNeutral() throws {
