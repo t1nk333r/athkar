@@ -606,8 +606,9 @@ ruqyah or «سور» rule it follows. Storage is `athkar-sleep-v1` and `athkar-s
 
 ### Navigation, tap, completion
 
-- **Opening card.** The last card shown since the deck opened, otherwise the first incomplete counted card, or the
-  last card when the day is complete. A day rollover and a reset forget the last card.
+- **Opening card.** The last card shown since the deck opened, otherwise card 1 while no card has a count today
+  (so salawat opens on its opening card), the first incomplete counted card, or the last card when the day is
+  complete. A day rollover and a reset forget the last card.
 - **Forward lock.** As the adhkar lock: forward is enabled when the current card is complete (uncounted cards are).
 - **Tap.** `count += 1`, saved. The completion haptic plays when a card reaches its target, whatever the target (the
   ruqyah rule). When the tap completes the day, today is recorded complete in the same write (once; the first time

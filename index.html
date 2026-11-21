@@ -1473,12 +1473,12 @@
     }
 
     .sura-page { --fit-scale: 1; --fit-lead: 1; }
-    .sura-page[data-fit="1"] { --fit-scale: 0.94; --fit-lead: 0.97; }
-    .sura-page[data-fit="2"] { --fit-scale: 0.88; --fit-lead: 0.94; }
-    .sura-page[data-fit="3"] { --fit-scale: 0.82; --fit-lead: 0.91; }
-    .sura-page[data-fit="4"] { --fit-scale: 0.76; --fit-lead: 0.88; }
-    .sura-page[data-fit="5"] { --fit-scale: 0.70; --fit-lead: 0.85; }
-    .sura-page[data-fit="6"] { --fit-scale: 0.64; --fit-lead: 0.82; }
+    .sura-page[data-fit="1"], .reading-card[data-fit="1"] { --fit-scale: 0.94; --fit-lead: 0.97; }
+    .sura-page[data-fit="2"], .reading-card[data-fit="2"] { --fit-scale: 0.88; --fit-lead: 0.94; }
+    .sura-page[data-fit="3"], .reading-card[data-fit="3"] { --fit-scale: 0.82; --fit-lead: 0.91; }
+    .sura-page[data-fit="4"], .reading-card[data-fit="4"] { --fit-scale: 0.76; --fit-lead: 0.88; }
+    .sura-page[data-fit="5"], .reading-card[data-fit="5"] { --fit-scale: 0.70; --fit-lead: 0.85; }
+    .sura-page[data-fit="6"], .reading-card[data-fit="6"] { --fit-scale: 0.64; --fit-lead: 0.82; }
 
     .dhikr-card.sura-page .dhikr-text {
       font-size: calc(var(--quran-text-size) * var(--fit-scale));
@@ -1617,18 +1617,71 @@
       gap: 0.25rem 0.75rem;
     }
 
-    /* «الصلاة على النبي ﷺ» tab: one reading page from the salawat pack, with no counter; it scrolls when it is longer
-       than the screen. From Thursday's Maghrib to Friday's Maghrib its tab shows a dot and the page names the time. */
-    body[data-period="salawat"] .summary-row { display: none; }
+    /* «أذكار النوم» and «الصلاة على النبي ﷺ» tabs (renderReadingDeck): one card per item, its text stepped down as a
+       «سور» page is (fitSuraPage, data-fit 0…6) and scrolled inside the card past the last step (al-Mulk). The body's
+       auto margins centre a card that fits and start one that scrolls at its top. From Thursday's Maghrib to Friday's
+       the salawat tab shows a dot until the day is complete, and its opening card names the time. */
     .period-tab.is-due .period-status {
       display: inline;
       color: var(--accent);
     }
-    .salawat-page {
+    .reading-card { --fit-scale: 1; --fit-lead: 1; }
+    .reading-card .card-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden auto;
+    }
+    .reading-body {
       display: grid;
-      align-content: start;
-      gap: 1.3rem;
-      padding: 0.6rem 0.25rem 1.5rem;
+      gap: 0.85rem;
+      margin-block: auto;
+    }
+    .salawat-friday[hidden] { display: none; }
+    .reading-title {
+      margin: 0;
+      color: var(--accent-strong);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .dhikr-card.reading-card .dhikr-text {
+      font-size: calc(var(--dhikr-text-size) * var(--fit-scale));
+      line-height: max(1.5, calc(var(--dhikr-line-height) * var(--fit-lead)));
+    }
+    .dhikr-card.reading-card .dhikr-detail { font-size: calc(var(--detail-text-size) * var(--fit-scale)); }
+    .reading-basmala,
+    .reading-ayah {
+      margin: 0;
+      color: var(--text-primary);
+      font-family: "KFGQPC HAFS", "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      text-align: center;
+    }
+    .reading-basmala {
+      margin-block-end: 0.35rem;
+      font-size: calc(var(--quran-prefix-size) * var(--fit-scale));
+      line-height: 1.7;
+    }
+    .reading-ayah {
+      font-size: calc(var(--quran-text-size) * var(--fit-scale));
+      line-height: max(1.6, calc(var(--quran-line-height) * var(--fit-lead)));
+    }
+    .reading-ayah .ayah-number {
+      color: var(--text-secondary);
+      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
+      white-space: nowrap;
+    }
+    .reading-citation {
+      margin: 0.2rem 0 0;
+      color: var(--reference);
+      font-size: calc(var(--detail-text-size) * var(--fit-scale));
+      line-height: var(--detail-line-height);
+      text-align: center;
+    }
+    .reading-steps {
+      display: grid;
+      gap: 0.4rem;
+      margin: 0;
+      padding-inline-start: 1.4rem;
+      list-style: arabic-indic;
     }
     .salawat-friday {
       justify-self: center;
@@ -1640,67 +1693,27 @@
       font-size: 0.85rem;
       font-weight: 700;
     }
-    .salawat-friday[hidden] { display: none; }
-    .salawat-ayah {
-      margin: 0;
-      color: var(--text-primary);
-      font-family: "KFGQPC HAFS", "KFGQPC Uthman Taha Naskh", var(--font-arabic);
-      font-size: var(--quran-text-size);
-      line-height: var(--quran-line-height);
-      text-align: center;
+    .dhikr-card.reading-card .requirement-row {
+      align-items: center;
+      margin-block-start: 0.55rem;
+      padding-block-start: 0.5rem;
     }
-    .salawat-ayah .ayah-number {
-      font-family: "KFGQPC Uthman Taha Naskh", var(--font-arabic);
-      white-space: nowrap;
+    .dhikr-card.reading-card .counter-status,
+    .dhikr-card.reading-card .card-reset { min-height: 2.4rem; }
+    .reading-footnote {
+      display: inline-flex;
+      min-height: 2.4rem;
+      align-items: center;
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      color: var(--text-secondary);
+      font-family: "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
     }
-    .salawat-citation,
-    .salawat-virtue {
-      margin: 0;
-      color: var(--reference);
-      font-size: var(--detail-text-size);
-      line-height: var(--detail-line-height);
-      text-align: center;
-    }
-    .salawat-citation { margin-block-start: 0.2rem; }
-    .salawat-item {
-      display: grid;
-      gap: 0.75rem;
-      padding-block-start: 1.2rem;
-      border-block-start: 1px solid var(--border);
-    }
-    .salawat-item h3 {
-      margin: 0;
-      color: var(--accent-strong);
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    /* «أذكار النوم» tab: one reading page from the sleep pack, with no counter, set in the salawat page's styles. */
-    body[data-period="sleep"] .summary-row { display: none; }
-    .sleep-basmala {
-      margin: 0 0 0.35rem;
-      color: var(--text-primary);
-      font-family: "KFGQPC HAFS", "KFGQPC Uthman Taha Naskh", var(--font-arabic);
-      font-size: var(--quran-prefix-size);
-      line-height: 1.7;
-      text-align: center;
-    }
-    .sleep-steps {
-      display: grid;
-      gap: 0.4rem;
-      margin: 0;
-      padding-inline-start: 1.4rem;
-    }
-    .sleep-count {
-      justify-self: start;
-      margin: 0;
-      padding: 0.15rem 0.8rem;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
+    .dhikr-card.reading-card.is-uncounted { cursor: default; }
+    .dhikr-card.reading-card.is-uncounted:active::after { opacity: 0; }
 
     /* «مسبحة» tab: one tap surface (the whole card) with the phrase, a lap ring and the count. */
     body[data-period="tasbih"] .summary-row { display: none; }
@@ -2045,14 +2058,6 @@
         min-block-size: 0;
       }
 
-      #salawat-panel:not([hidden]),
-      #sleep-panel:not([hidden]) {
-        block-size: 100%;
-        min-block-size: 0;
-        overflow: hidden auto;
-        overscroll-behavior: contain;
-      }
-
       #tasbih-panel:not([hidden]) {
         display: grid;
         grid-template-rows: minmax(0, 1fr) auto auto;
@@ -2225,11 +2230,11 @@
           <span class="tab-label-full">سور</span><span class="tab-label-short">سور</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
-        <button class="period-tab" id="salawat-tab" type="button" role="tab" aria-controls="salawat-panel" aria-selected="false" data-period="salawat" tabindex="-1">
+        <button class="period-tab" id="salawat-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="salawat" tabindex="-1">
           <span class="tab-label-full">الصلاة على النبي ﷺ</span><span class="tab-label-short"><span class="tab-label-word">الصلاة </span><span class="tab-label-mark">ﷺ</span></span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
-        <button class="period-tab" id="sleep-tab" type="button" role="tab" aria-controls="sleep-panel" aria-selected="false" data-period="sleep" tabindex="-1">
+        <button class="period-tab" id="sleep-tab" type="button" role="tab" aria-controls="athkar-panel" aria-selected="false" data-period="sleep" tabindex="-1">
           <span class="tab-label-full">أذكار النوم</span><span class="tab-label-short">النوم</span>
           <span class="period-status" aria-hidden="true"></span>
         </button>
@@ -2282,12 +2287,6 @@
         <footer class="app-footer">
           <p class="deck-hint" id="deck-hint">اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.</p>
         </footer>
-      </section>
-      <section id="salawat-panel" role="tabpanel" aria-labelledby="salawat-tab" tabindex="-1" hidden>
-        <article class="salawat-page" id="salawat-page"></article>
-      </section>
-      <section id="sleep-panel" role="tabpanel" aria-labelledby="sleep-tab" tabindex="-1" hidden>
-        <article class="salawat-page" id="sleep-page"></article>
       </section>
       <section id="tasbih-panel" role="tabpanel" aria-labelledby="tasbih-tab" hidden>
         <button class="dhikr-card tasbih-card" id="tasbih-surface" type="button" aria-label="أضف واحدًا" aria-describedby="tasbih-sr-summary tasbih-status">
@@ -6443,6 +6442,23 @@
     const suwarById = Object.fromEntries(suwarContent.suwar.map(sura => [sura.id, sura]));
     const suwarStorageKey = "athkar-suwar-v1";
     const suwarHistoryDays = 7;
+    // «أذكار النوم» and «الصلاة على النبي ﷺ» (spec/sessions/deck-definition.md §12): reading decks, one card per item in
+    // pack order, counted per local date in their own store. The sleep pack's situational items are said when their
+    // occasion comes in the night, so like the salawat opening card (al-Ahzab 56 and the Friday virtue) they are
+    // uncounted: no counter, no lock, outside progress. The pack has no field for them yet.
+    const readingSituationalIds = ["sleep-14", "sleep-15", "sleep-16", "sleep-17"];
+    const readingDecks = {
+      sleep: {
+        storageKey: "athkar-sleep-v1",
+        items: sleepContent.items,
+        completionTitle: "تمت أذكار النوم بحمد الله"
+      },
+      salawat: {
+        storageKey: "athkar-salawat-v1",
+        items: [{ id: "salawat-quran", opening: true }, ...salawatContent.items],
+        completionTitle: "تمت الصلاة على النبي ﷺ بحمد الله"
+      }
+    };
     const ruqyahSuwar = groupRuqyahSuwar(ruqyahContent.segments);
     const ruqyahSuraById = Object.fromEntries(ruqyahSuwar.map(sura => [sura.id, sura]));
     const ruqyahStorageKey = "athkar-ruqyah-v1";
@@ -6570,10 +6586,6 @@
     const liveRegion = document.getElementById("live-region");
     const skipLink = document.getElementById("skip-link");
     const tasbihPanel = document.getElementById("tasbih-panel");
-    const salawatPanel = document.getElementById("salawat-panel");
-    const salawatPage = document.getElementById("salawat-page");
-    const sleepPanel = document.getElementById("sleep-panel");
-    const sleepPage = document.getElementById("sleep-page");
     const tasbihPicker = document.getElementById("tasbih-picker");
     const tasbihLabelButton = document.getElementById("tasbih-label-button");
     const tasbihTargetButton = document.getElementById("tasbih-target-button");
@@ -6618,6 +6630,8 @@
     const suwarIndices = { kahf: null, yasin: null, saffat: null, waqiah: null, mulk: null };
     // The card each ruqyah sura shows while the page is open; null opens its first incomplete segment (0 when complete).
     const ruqyahIndices = Object.fromEntries(ruqyahSuwar.map(sura => [sura.id, null]));
+    // The card each reading deck shows while the page is open; null opens its first incomplete counted card.
+    const readingIndices = { sleep: null, salawat: null };
     const decks = { morning: null, evening: null };
     const reminderTimers = { morning: null, evening: null };
     let swipeGesture = null;
@@ -6644,6 +6658,8 @@
     let state = loadState();
     let suwarState = loadSuwarState();
     let ruqyahState = loadRuqyahState();
+    // athkar-sleep-v1 and athkar-salawat-v1, by deck ID.
+    const readingStates = Object.fromEntries(Object.keys(readingDecks).map(id => [id, loadReadingState(id)]));
     // The ruqyah sura on screen. Not stored: the tab opens on ق unless a sura link (#jinn …) names another.
     let ruqyahSelected = ruqyahSuwar[0].id;
     // False once athkar-tasbih-v1 cannot be read or written (at startup too): the session then counts in memory and
@@ -6690,6 +6706,7 @@
     saveState();
     saveSuwarState();
     saveRuqyahState();
+    for (const id of Object.keys(readingDecks)) saveReadingState(id);
     saveTasbihState();
     saveReminderPreferences();
 
@@ -6969,6 +6986,115 @@
       if (dates === null) suwarState.history = {};
       else for (const date of dates) delete suwarState.history[date];
       for (const date of dates ?? recentDates(resetEpochDays)) markReset(suwarState, date);
+    }
+
+    // athkar-sleep-v1 / athkar-salawat-v1: one reading deck each. `counts` are today's ({ itemId: n }, counted cards
+    // only), `completedAt` is when every counted card first reached its target today, and `history` maps each earlier
+    // local date recorded complete to that instant, inside the reset-epoch window.
+    function emptyReadingState(date = localDateKey()) {
+      return { date, counts: {}, completedAt: null, history: {}, resets: {} };
+    }
+
+    function readingIsCounted(item) {
+      return !item.opening && !readingSituationalIds.includes(item.id);
+    }
+
+    function readingTarget(item) {
+      return Number.isInteger(item.count) && item.count > 0 ? item.count : 1;
+    }
+
+    function readingCount(id, item, candidate = readingStates[id]) {
+      const count = Math.floor(Number(candidate.counts[item.id]));
+      return Number.isFinite(count) && count > 0 ? Math.min(count, readingTarget(item)) : 0;
+    }
+
+    function readingItemIsComplete(id, item, candidate = readingStates[id]) {
+      return !readingIsCounted(item) || readingCount(id, item, candidate) >= readingTarget(item);
+    }
+
+    function readingCompletedCount(id, candidate = readingStates[id]) {
+      return readingDecks[id].items.filter(item => readingIsCounted(item) && readingCount(id, item, candidate) >= readingTarget(item)).length;
+    }
+
+    function readingDayIsComplete(id, candidate = readingStates[id]) {
+      return readingDecks[id].items.every(item => readingItemIsComplete(id, item, candidate));
+    }
+
+    function normalizeReadingState(id, parsed) {
+      const date = typeof parsed?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.date) ? parsed.date : localDateKey();
+      const normalized = emptyReadingState(date);
+      const counted = readingDecks[id].items.filter(readingIsCounted);
+      const stored = parsed?.counts && typeof parsed.counts === "object" ? parsed.counts : {};
+      for (const item of counted) {
+        const count = Object.hasOwn(stored, item.id) ? readingCount(id, item, { counts: stored }) : 0;
+        if (count > 0) normalized.counts[item.id] = count;
+      }
+      normalized.completedAt = readingDayIsComplete(id, normalized) && typeof parsed?.completedAt === "string" ? parsed.completedAt : null;
+      for (const [day, at] of Object.entries(parsed?.history && typeof parsed.history === "object" ? parsed.history : {})) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(day) && day < date && typeof at === "string") normalized.history[day] = at;
+      }
+      normalized.history = trimDailyHistory(normalized.history, date);
+      normalized.resets = normalizeResets(parsed?.resets, date, sub => (counted.some(item => item.id === sub) ? sub : null));
+      return normalized;
+    }
+
+    function rollReadingStateToDate(candidate, nextDate) {
+      const history = { ...candidate.history };
+      if (candidate.completedAt) history[candidate.date] = candidate.completedAt;
+      return { ...emptyReadingState(nextDate), history: trimDailyHistory(history, nextDate), resets: normalizeResets(candidate.resets, nextDate) };
+    }
+
+    // A stored reading deck, normalized and rolled to today's date.
+    function parseStoredReadingState(id, raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        const normalized = parsed && typeof parsed === "object" ? normalizeReadingState(id, parsed) : emptyReadingState();
+        const today = localDateKey();
+        return normalized.date === today ? normalized : rollReadingStateToDate(normalized, today);
+      } catch (_) {
+        return emptyReadingState();
+      }
+    }
+
+    function loadReadingState(id) {
+      try {
+        return parseStoredReadingState(id, localStorage.getItem(readingDecks[id].storageKey));
+      } catch (_) {
+        return emptyReadingState();
+      }
+    }
+
+    function saveReadingState(id) {
+      const key = readingDecks[id].storageKey;
+      if (journalHolds(key)) return;
+      try { localStorage.setItem(key, JSON.stringify(readingStates[id])); } catch (_) {}
+    }
+
+    function readingHasResettableState(id) {
+      const candidate = readingStates[id];
+      return Boolean(candidate.completedAt) || Object.keys(candidate.history).length > 0 ||
+        readingDecks[id].items.some(item => readingIsCounted(item) && readingCount(id, item) > 0);
+    }
+
+    // Scoped reset: today's counts and completion of the deck; deleteReadingHistory drops past days (the reset-epoch
+    // window when null). Both record reset epochs, as the «سور» resets do.
+    function resetReadingProgress(id) {
+      readingStates[id].counts = {};
+      readingStates[id].completedAt = null;
+      readingIndices[id] = null;
+      markReset(readingStates[id], readingStates[id].date);
+      saveReadingState(id);
+    }
+
+    function deleteReadingHistory(id, dates) {
+      if (dates === null) readingStates[id].history = {};
+      else for (const date of dates) delete readingStates[id].history[date];
+      for (const date of dates ?? recentDates(resetEpochDays)) markReset(readingStates[id], date);
+    }
+
+    // The earlier days either reading deck recorded complete, for the reset confirmations' day count.
+    function readingRecordedDates() {
+      return Object.keys(readingDecks).flatMap(id => Object.keys(readingStates[id].history));
     }
 
     // The ruqyah's suras in pack order, `{ id, surah, segments }`: a sura is the segments whose IDs share the prefix
@@ -7451,7 +7577,8 @@
       const suwarRolled = suwarState.date !== today;
       const ruqyahRolled = ruqyahState.date !== today;
       const tasbihRolled = tasbihState.date !== today;
-      if (!adhkarRolled && !suwarRolled && !ruqyahRolled && !tasbihRolled) return false;
+      const readingRolled = Object.keys(readingDecks).filter(id => readingStates[id].date !== today);
+      if (!adhkarRolled && !suwarRolled && !ruqyahRolled && !tasbihRolled && !readingRolled.length) return false;
       if (adhkarRolled) {
         state = rollStateToDate(state, today);
         currentIndices.morning = null;
@@ -7468,6 +7595,11 @@
         ruqyahState = rollRuqyahStateToDate(ruqyahState, today);
         for (const id of Object.keys(ruqyahIndices)) ruqyahIndices[id] = null;
         saveRuqyahState();
+      }
+      for (const id of readingRolled) {
+        readingStates[id] = rollReadingStateToDate(readingStates[id], today);
+        readingIndices[id] = null;
+        saveReadingState(id);
       }
       // Rolled from what is stored (loadTasbihState rolls it), not from this tab's copy: another tab may have counted
       // since, or rolled the day already.
@@ -7703,10 +7835,14 @@
       return ruqyahSuraById[ruqyahSelected];
     }
 
-    // The deck on screen: the adhkar of the active period, the pages of the selected sura, or the segments of the
-    // ruqyah sura shown.
+    function isReadingDeck(period = activePeriod) {
+      return Object.hasOwn(readingDecks, period);
+    }
+
+    // The deck on screen: the adhkar of the active period, the pages of the selected sura, the segments of the
+    // ruqyah sura shown, or the cards of a reading deck.
     function activeItems() {
-      if (activePeriod === "salawat" || activePeriod === "sleep") return [];
+      if (isReadingDeck()) return readingDecks[activePeriod].items;
       if (activePeriod === "suwar") return activeSura().pages;
       if (activePeriod === "ruqyah") return activeRuqyahSura().segments;
       return deck(activePeriod);
@@ -7715,17 +7851,19 @@
     function activeIndex() {
       if (activePeriod === "suwar") return suwarIndices[suwarState.selected] ?? 0;
       if (activePeriod === "ruqyah") return ruqyahIndices[ruqyahSelected] ?? 0;
+      if (isReadingDeck()) return readingIndices[activePeriod] ?? 0;
       return currentIndices[activePeriod] ?? 0;
     }
 
     function setActiveIndex(index) {
       if (activePeriod === "suwar") suwarIndices[suwarState.selected] = index;
       else if (activePeriod === "ruqyah") ruqyahIndices[ruqyahSelected] = index;
+      else if (isReadingDeck()) readingIndices[activePeriod] = index;
       else currentIndices[activePeriod] = index;
     }
 
     function fitCardContent(card) {
-      if (card?.classList.contains("sura-page")) {
+      if (card?.classList.contains("sura-page") || card?.classList.contains("reading-card")) {
         fitSuraPage(card);
         return;
       }
@@ -7756,11 +7894,21 @@
     function updateDeckNavigation() {
       // Every change to the card on screen or its count ends here, so the armed haptic switch follows it.
       syncHapticArm();
-      // The tasbih and the salawat and sleep pages have no deck; the tasbih's own controls are drawn by renderTasbih.
-      if (activePeriod === "tasbih" || activePeriod === "salawat" || activePeriod === "sleep") return;
+      // The tasbih has no deck; its own controls are drawn by renderTasbih.
+      if (activePeriod === "tasbih") return;
       const items = activeItems();
       const index = activeIndex();
       const item = items[index];
+      if (isReadingDeck()) {
+        // As the adhkar lock: forward once the card is complete; uncounted cards always are.
+        const position = `البطاقة ${formatNumber(index + 1)} من ${formatNumber(items.length)}`;
+        previousCardButton.disabled = index <= 0;
+        nextCardButton.disabled = index >= items.length - 1 || !(item && readingItemIsComplete(activePeriod, item));
+        cardPosition.textContent = `${formatNumber(index + 1)} من ${formatNumber(items.length)}`;
+        cardPosition.setAttribute("aria-label", position);
+        list.setAttribute("aria-label", `بطاقات ${sectionNames[activePeriod]}، ${position}`);
+        return;
+      }
       if (activePeriod === "suwar") {
         const read = Boolean(item && suwarState.read[activeSura().id][item.id]);
         previousCardButton.disabled = index <= 0;
@@ -7815,7 +7963,7 @@
 
       updateDeckNavigation();
       if (announce) {
-        const noun = activePeriod === "suwar" ? "الصفحة" : activePeriod === "ruqyah" ? "المقطع" : "الذكر";
+        const noun = activePeriod === "suwar" ? "الصفحة" : activePeriod === "ruqyah" ? "المقطع" : isReadingDeck() ? "البطاقة" : "الذكر";
         liveRegion.textContent = `${noun} ${formatNumber(nextIndex + 1)} من ${formatNumber(items.length)}`;
       }
       if (scrollToCard) {
@@ -8008,7 +8156,8 @@
       if (announce) liveRegion.textContent = label;
     }
 
-    // Steps down font size and leading (data-fit 1…6) until the page needs no scrolling, as ruqyah-al-qareen does.
+    // Steps down font size and leading (data-fit 1…6) until the page needs no scrolling, as ruqyah-al-qareen does. A
+    // reading card uses the same steps; one that still overflows at the last step scrolls inside the card.
     function fitSuraPage(card) {
       const content = card.querySelector(".card-content");
       for (let step = 0; step <= 6; step += 1) {
@@ -8358,67 +8507,214 @@
 
     const fridayPhaseNames = { night: "ليلة الجمعة", day: "يوم الجمعة" };
 
-    // The salawat page: al-Ahzab 56, the Friday virtue and each salawat with its note; in the Friday window, its name.
-    function renderSalawatPanel() {
-      const { quran, virtue, items } = salawatContent;
-      const phase = fridayPhase(new Date());
-      salawatPage.innerHTML = `
-        <p class="salawat-friday"${phase ? "" : " hidden"}>${phase ? fridayPhaseNames[phase] : ""}</p>
-        <div>
-          <p class="salawat-ayah">${quranTextMarkup(quran.text)}</p>
-          <p class="salawat-citation">${escapeHtml(quran.citation)}</p>
-        </div>
-        <p class="salawat-virtue">${escapeHtml(virtue.text)}</p>
-        ${items.map(item => `
-          <section class="salawat-item" aria-labelledby="${item.id}-title">
-            <h3 id="${item.id}-title">${escapeHtml(item.title)}</h3>
-            <p class="dhikr-text">${escapeHtml(item.text)}</p>
-            ${item.note ? `<p class="dhikr-detail">${escapeHtml(item.note.text)}</p>` : ""}
-          </section>`).join("")}`;
-    }
-
-    // The sleep page: each item of the sleep pack under its title, in pack order. A Quran passage that opens a sura has
-    // the basmala above it; a sura item reads that sura of «سور» whole. A repeated item names its count.
-    function renderSleepPanel() {
+    // «أذكار النوم» and «الصلاة على النبي ﷺ» (spec/sessions/deck-definition.md §12): one card per item, tapped after
+    // reading until its target is reached. A sleep card shows its heading, prefix, Quran passages (a sura item reads
+    // that sura of «سور» whole, under the basmala), text, steps and note; the salawat opening card holds al-Ahzab 56 and
+    // the Friday virtue, under the Friday window's name while it lasts. Uncounted cards have no counter, reset or tap
+    // target, only a footer line.
+    function readingCardMarkup(id, item, index) {
+      const domId = `reading-${item.id}`;
       const passageMarkup = ({ basmala, text, citation }) => `
-        <div>
-          ${basmala ? `<p class="sleep-basmala">${quranTextMarkup(suwarContent.basmala)}</p>` : ""}
-          <p class="salawat-ayah">${quranTextMarkup(text)}</p>
-          <p class="salawat-citation">${escapeHtml(citation)}</p>
+        <div class="reading-passage">
+          ${basmala ? `<p class="reading-basmala">${quranTextMarkup(suwarContent.basmala)}</p>` : ""}
+          <p class="reading-ayah">${quranTextMarkup(text)}</p>
+          <p class="reading-citation">${escapeHtml(citation)}</p>
         </div>`;
-      const suraPassage = id => {
-        const sura = suwarById[id];
+      const suraPassage = suraId => {
+        const sura = suwarById[suraId];
         const text = sura.pages.flatMap(page => page.ayahs).map(ayah => `${ayah.text} ﴿${formatNumber(ayah.number)}﴾`).join(" ");
         return { basmala: true, text, citation: suraShortName(sura) };
       };
-      sleepPage.innerHTML = sleepContent.items.map(item => `
-        <section class="salawat-item" id="${item.id}"${item.title ? ` aria-labelledby="${item.id}-title"` : ""}>
-          ${item.title ? `<h3 id="${item.id}-title">${escapeHtml(item.title)}</h3>` : ""}
-          ${item.prefix ? `<p class="dhikr-detail">${escapeHtml(item.prefix)}</p>` : ""}
-          ${(item.quran ?? (item.sura ? [suraPassage(item.sura)] : [])).map(passageMarkup).join("")}
-          ${item.text ? `<p class="dhikr-text">${escapeHtml(item.text)}</p>` : ""}
-          ${item.steps ? `<ol class="sleep-steps">${item.steps.map(step => `<li class="dhikr-text">${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
-          ${item.countLabel ? `<p class="sleep-count">${escapeHtml(item.countLabel)}</p>` : ""}
-          ${item.note ? `<p class="dhikr-detail">${escapeHtml(item.note.text)}</p>` : ""}
-        </section>`).join("");
+      const content = item.opening ? `
+              <p class="salawat-friday" hidden></p>
+              ${passageMarkup(salawatContent.quran)}
+              <p class="dhikr-detail">${escapeHtml(salawatContent.virtue.text)}</p>` : `
+              ${item.title ? `<h3 class="reading-title">${escapeHtml(item.title)}</h3>` : ""}
+              ${item.prefix ? `<p class="dhikr-detail">${escapeHtml(item.prefix)}</p>` : ""}
+              ${(item.quran ?? (item.sura ? [suraPassage(item.sura)] : [])).map(passageMarkup).join("")}
+              ${item.text ? `<p class="dhikr-text">${escapeHtml(item.text)}</p>` : ""}
+              ${item.steps ? `<ol class="reading-steps">${item.steps.map(step => `<li class="dhikr-text">${escapeHtml(step)}</li>`).join("")}</ol>` : ""}
+              ${item.note ? `<p class="dhikr-detail">${escapeHtml(item.note.text)}</p>` : ""}`;
+      const counted = readingIsCounted(item);
+      const target = readingTarget(item);
+      const status = target === 1
+        ? `<output class="counter-status" id="${domId}-status"><span class="single-copy">اضغط بعد القراءة</span><span class="counter-check" aria-hidden="true">✓</span></output>`
+        : `<output class="counter-status numeric" id="${domId}-status"><span class="counter-current"></span><span aria-hidden="true">/</span><span class="counter-target">${formatNumber(target)}</span><span class="counter-check" aria-hidden="true">✓</span></output>`;
+      const footer = counted ? `
+            <div class="requirement-row">
+              <div>
+                <p class="count-requirement">${escapeHtml(item.countLabel ?? "مرة واحدة")}</p>
+              </div>
+              <div class="counter-cluster">
+                ${status}
+                <button class="card-reset" type="button" aria-label="إعادة عداد البطاقة ${formatNumber(index + 1)}">
+                  <span aria-hidden="true">↻</span><span>إعادة</span>
+                </button>
+              </div>
+            </div>
+            <button class="card-tap-target" type="button" aria-describedby="${domId}-status"></button>` : `
+            <div class="requirement-row">
+              <div></div>
+              <output class="reading-footnote" id="${domId}-status">${item.opening ? "اقرأ ثم اسحب" : "عند الحاجة"}</output>
+            </div>`;
+      return `
+        <li data-card-index="${index}">
+          <article class="dhikr-card reading-card${counted ? "" : " is-uncounted"}" id="${domId}" data-id="${item.id}">
+            <div class="card-content">
+              <div class="reading-body">${content}
+              </div>
+            </div>${footer}
+          </article>
+        </li>`;
     }
 
-    // Every minute: the salawat tab's Friday dot, its page and the last third in the settings follow the clock.
+    function readingCardLabel(id, item, index) {
+      const card = `البطاقة ${formatNumber(index + 1)}`;
+      if (item.opening) return `${card}، الآية والفضل`;
+      if (!readingIsCounted(item)) return `${card}، عند الحاجة`;
+      const count = readingCount(id, item);
+      const target = readingTarget(item);
+      if (target === 1) return `${card}، ${count ? "قُرئت" : "لم تُعلَّم كمقروءة"}`;
+      return `${card}، كُرّر ${formatNumber(count)} من أصل ${formatNumber(target)} مرات${count >= target ? "، اكتمل" : ""}`;
+    }
+
+    function updateReadingCard(id, item, card, index, announce = false) {
+      const label = readingCardLabel(id, item, index);
+      if (readingIsCounted(item)) {
+        const count = readingCount(id, item);
+        const target = readingTarget(item);
+        const complete = count >= target;
+        const number = formatNumber(index + 1);
+        card.classList.toggle("is-complete", complete);
+        card.querySelector(".card-reset").disabled = count === 0;
+        const tapTarget = card.querySelector(".card-tap-target");
+        tapTarget.setAttribute("aria-disabled", String(complete));
+        tapTarget.setAttribute("aria-label", complete ? `اكتمل، البطاقة ${number}. ${label}`
+          : target === 1 ? `تحديد كمقروءة، البطاقة ${number}. ${label}` : `زيادة عداد البطاقة ${number}. ${label}`);
+        const status = card.querySelector(".counter-status");
+        status.setAttribute("aria-label", label);
+        if (target === 1) status.querySelector(".single-copy").textContent = complete ? "تمت القراءة" : "اضغط بعد القراءة";
+        else status.querySelector(".counter-current").textContent = formatNumber(count);
+      } else {
+        card.querySelector(".reading-footnote").setAttribute("aria-label", label);
+      }
+      if (announce) liveRegion.textContent = label;
+    }
+
+    // The salawat opening card names the Friday window, from Thursday's Maghrib to Friday's, and follows the clock.
+    function updateReadingFridayPill() {
+      const card = document.getElementById("reading-salawat-quran");
+      const pill = card?.querySelector(".salawat-friday");
+      if (!pill) return;
+      const phase = fridayPhase(new Date());
+      const text = phase ? fridayPhaseNames[phase] : "";
+      if (pill.hidden === !phase && pill.textContent === text) return;
+      pill.hidden = !phase;
+      pill.textContent = text;
+      if (!card.closest("li").hidden) fitVisibleCard();
+    }
+
+    function scheduleReadingAdvance(id, item, index) {
+      if (index >= readingDecks[id].items.length - 1) return;
+      advanceTimer = setTimeout(() => {
+        if (activePeriod !== id || activeIndex() !== index) return;
+        if (!readingItemIsComplete(id, item)) return;
+        showCard(index + 1, "forward", true, true);
+      }, motionIsReduced.matches ? 20 : 320);
+    }
+
+    // A tap that completes the last counted card records the day complete in the same write (the first time is kept)
+    // and opens the completion dialog; any other completing tap auto-advances. The haptic marks every completed card.
+    function countReadingCard(id, item, card, index) {
+      if (ensureCurrentDay()) return;
+      if (readingItemIsComplete(id, item)) return;
+      const readingState = readingStates[id];
+      const next = readingCount(id, item) + 1;
+      const completesCard = next >= readingTarget(item);
+      if (completesCard) triggerHaptic(hapticDurationMs);
+      readingState.counts[item.id] = next;
+      const completesDay = completesCard && readingDayIsComplete(id);
+      if (completesDay && !readingState.completedAt) readingState.completedAt = new Date().toISOString();
+      saveReadingState(id);
+      updateReadingCard(id, item, card, index, true);
+      updateSessionProgress();
+      updateDeckNavigation();
+      if (completesDay) openReadingCompletionDialog(id);
+      else if (completesCard) scheduleReadingAdvance(id, item, index);
+    }
+
+    // Never asks («سور»'s rule). Today's record goes with the count, so completion follows the counters.
+    function resetReadingCard(id, item, card, index) {
+      if (ensureCurrentDay()) return;
+      if (!readingCount(id, item)) return;
+      readingStates[id].counts[item.id] = 0;
+      readingStates[id].completedAt = null;
+      markReset(readingStates[id], `${readingStates[id].date}|${item.id}`);
+      saveReadingState(id);
+      updateReadingCard(id, item, card, index, true);
+      updateSessionProgress();
+      updateDeckNavigation();
+    }
+
+    // Opens on the card shown last since the page opened, otherwise the first card while nothing is counted today, the
+    // first incomplete counted card, or the last card once the day is complete.
+    function renderReadingDeck(id) {
+      const items = readingDecks[id].items;
+      if (!Number.isInteger(readingIndices[id])) {
+        const firstIncomplete = items.findIndex(item => !readingItemIsComplete(id, item));
+        const counted = items.some(item => readingCount(id, item) > 0);
+        readingIndices[id] = !counted ? 0 : firstIncomplete === -1 ? items.length - 1 : firstIncomplete;
+      }
+      readingIndices[id] = Math.min(readingIndices[id], items.length - 1);
+      list.innerHTML = items.map((item, index) => readingCardMarkup(id, item, index)).join("");
+      list.classList.remove("is-entering");
+      requestAnimationFrame(() => list.classList.add("is-entering"));
+      items.forEach((item, index) => {
+        const card = document.getElementById(`reading-${item.id}`);
+        updateReadingCard(id, item, card, index);
+        if (!readingIsCounted(item)) return;
+        card.addEventListener("click", event => {
+          if (performance.now() < suppressCardClicksUntil) return;
+          if (event.target.closest(".card-reset")) return;
+          countReadingCard(id, item, card, index);
+        });
+        card.querySelector(".card-reset").addEventListener("click", () => resetReadingCard(id, item, card, index));
+      });
+      updateReadingFridayPill();
+      showCard(readingIndices[id], "forward");
+      updateSessionProgress();
+    }
+
+    function updateReadingProgress(id) {
+      const total = readingDecks[id].items.filter(readingIsCounted).length;
+      const done = readingCompletedCount(id);
+      const complete = done === total;
+      progressCopy.textContent = complete ? `اكتملت ${sectionNames[id]} اليوم` : `${formatNumber(done)} من ${formatNumber(total)}`;
+      progressBar.max = total;
+      progressBar.value = done;
+      progressBar.setAttribute("aria-label", `${sectionNames[id]}: ${formatNumber(done)} من ${formatNumber(total)}`);
+      sessionSummary.classList.toggle("is-complete", complete);
+    }
+
+    function openReadingCompletionDialog(id) {
+      completionTitle.textContent = readingDecks[id].completionTitle;
+      completionCopy.textContent = "حُفظ إكمال اليوم على هذا الجهاز.";
+      completionTime.textContent = `وقت الإكمال: ${timeFormatter.format(new Date(readingStates[id].completedAt))}`;
+      completionClose.textContent = "تم";
+      completionSwitch.hidden = true;
+      completionDialog.showModal();
+    }
+
+    // Every minute: the salawat tab's Friday dot, its opening card and the last third in the settings follow the clock.
     function refreshNightTimes() {
       updatePeriodTabs();
-      if (activePeriod === "salawat") renderSalawatPanel();
+      if (activePeriod === "salawat") updateReadingFridayPill();
       updateReminderControls();
     }
 
     function renderCards() {
-      if (activePeriod === "salawat") {
-        renderSalawatPanel();
-        updateSessionProgress();
-        return;
-      }
-      if (activePeriod === "sleep") {
-        renderSleepPanel();
-        updateSessionProgress();
+      if (isReadingDeck()) {
+        renderReadingDeck(activePeriod);
         return;
       }
       if (activePeriod === "suwar") {
@@ -8502,7 +8798,7 @@
     // inside a user gesture (CheckboxInputType::willDispatchClick); since iOS 26.5 (WebKit bug 309082) a scripted click,
     // even on the switch's label, no longer plays it. So while the NEXT tap on the surface on screen is the one that
     // completes (tasbih: count + 1 is a multiple of the target; a repeated dhikr: its count is target − 1; a sura page: unread;
-    // a ruqyah segment: its count is repeat − 1),
+    // a ruqyah segment: its count is repeat − 1; a counted reading card: its count is target − 1),
     // an invisible switch lies over that surface's tap area and the user's own tap lands on it. Its change event runs the
     // surface's normal action once (runHapticArmAction); every redraw calls this again, which re-arms or disarms it.
     // - opacity 0 and appearance none: WebKit needs the switch rendered (it checks for a renderer), not painted; appearance
@@ -8529,14 +8825,16 @@
         return target && count < tasbihMaxCount && (count + 1) % target === 0 ? tasbihSurface : null;
       }
       const item = activeItems()[activeIndex()];
-      if (!item || item.review) return null;
-      const domId = activePeriod === "suwar" ? `page-${item.id}` : activePeriod === "ruqyah" ? `segment-${item.id}` : item.id;
+      if (!item || item.review || (isReadingDeck() && !readingIsCounted(item))) return null;
+      const domId = activePeriod === "suwar" ? `page-${item.id}` : activePeriod === "ruqyah" ? `segment-${item.id}`
+        : isReadingDeck() ? `reading-${item.id}` : item.id;
       const card = document.getElementById(domId);
       if (!card || card.closest("li")?.hidden) return null;
       observeHapticArmContent(card);
       if (hapticArmCardOverflows) return null;
       if (activePeriod === "suwar") return suwarState.read[activeSura().id][item.id] ? null : card;
       if (activePeriod === "ruqyah") return ruqyahCount(item) === item.repeat - 1 ? card : null;
+      if (isReadingDeck()) return readingCount(activePeriod, item) === readingTarget(item) - 1 ? card : null;
       const target = targetFor(item);
       return target > 1 && countFor(item) === target - 1 ? card : null;
     }
@@ -8675,16 +8973,20 @@
       document.querySelectorAll(".period-tab").forEach(tab => {
         const period = tab.dataset.period;
         if (!period) return;
-        // The salawat page has no progress; from Thursday's Maghrib to Friday's its tab shows a dot.
-        if (period === "salawat") {
-          const phase = fridayPhase(new Date());
+        // A reading deck's ✓ is today's completion; from Thursday's Maghrib to Friday's the salawat tab shows a dot
+        // until then.
+        if (isReadingDeck(period)) {
+          const complete = readingDayIsComplete(period);
+          const phase = period === "salawat" && !complete ? fridayPhase(new Date()) : null;
+          tab.classList.toggle("is-complete", complete);
           tab.classList.toggle("is-due", Boolean(phase));
-          tab.querySelector(".period-status").textContent = phase ? "•" : "";
-          tab.setAttribute("aria-label", phase ? `${sectionNames.salawat}، ${fridayPhaseNames[phase]}` : sectionNames.salawat);
+          tab.querySelector(".period-status").textContent = complete ? "✓" : phase ? "•" : "";
+          tab.setAttribute("aria-label", complete ? `${sectionNames[period]}، مكتملة اليوم`
+            : phase ? `${sectionNames[period]}، ${fridayPhaseNames[phase]}` : sectionNames[period]);
           return;
         }
-        // The tasbih is open-ended and the sleep page has no progress: their tabs never show a ✓.
-        if (period === "tasbih" || period === "sleep") {
+        // The tasbih is open-ended: its tab never shows a ✓.
+        if (period === "tasbih") {
           tab.setAttribute("aria-label", sectionNames[period]);
           return;
         }
@@ -8719,11 +9021,13 @@
     }
 
     // Same entries envelope v1 carries: real calendar days before today, de-duplicated, newest first (backupHistory).
-    // The suras completed on a day (athkar-suwar-v1), its ruqyah (athkar-ruqyah-v1) and its tasbih counts
-    // (athkar-tasbih-v1), none in envelope v1, are listed under its row.
+    // The suras completed on a day (athkar-suwar-v1), its ruqyah (athkar-ruqyah-v1), its completed reading decks
+    // (athkar-sleep-v1, athkar-salawat-v1) and its tasbih counts (athkar-tasbih-v1), none in envelope v1, are listed
+    // under its row.
     function updateHistoryView() {
       const adhkarDays = new Map(backupHistory(state.history, state.date).map(entry => [entry.date, entry]));
-      const localDays = [...Object.keys(suwarState.history), ...Object.keys(ruqyahState.history), ...Object.keys(tasbihState.history)]
+      const localDays = [...Object.keys(suwarState.history), ...Object.keys(ruqyahState.history), ...Object.keys(tasbihState.history),
+        ...readingRecordedDates()]
         .filter(date => date < state.date);
       const pastDates = [...new Set([...adhkarDays.keys(), ...localDays])]
         .sort().reverse().slice(0, suwarHistoryDays);
@@ -8738,6 +9042,7 @@
             completedAt: ruqyahState.dayCompletedAt,
             suwar: Object.fromEntries(ruqyahSuwar.filter(sura => ruqyahSuraIsComplete(sura)).map(sura => [sura.id, true]))
           },
+          reading: Object.keys(readingDecks).filter(id => readingDayIsComplete(id)),
           tasbih: tasbihDayCounts(),
           isToday: true
         },
@@ -8747,6 +9052,7 @@
           evening: Boolean(adhkarDays.get(date)?.evening),
           suwar: suwarState.history[date] || {},
           ruqyah: ruqyahState.history[date] || { completedAt: null, suwar: {} },
+          reading: Object.keys(readingDecks).filter(id => Object.hasOwn(readingStates[id].history, date)),
           tasbih: tasbihState.history[date] || {},
           isToday: false
         }))
@@ -8760,6 +9066,7 @@
           ${historyStateMarkup("المساء", entry.evening)}
           ${suwar.length ? `<span class="history-suwar">${suwar.map(sura => historyStateMarkup(suraShortName(sura), true)).join("")}</span>` : ""}
           ${ruqyahHistoryMarkup(entry.ruqyah)}
+          ${entry.reading.length ? `<span class="history-suwar">${entry.reading.map(id => historyStateMarkup(sectionNames[id], true)).join("")}</span>` : ""}
           ${tasbihHistoryMarkup(entry.tasbih)}
         </li>
       `;
@@ -9189,7 +9496,8 @@
     function updateSessionProgress() {
       if (activePeriod === "suwar") updateSuraProgress();
       else if (activePeriod === "ruqyah") updateRuqyahProgress();
-      else if (activePeriod === "tasbih" || activePeriod === "salawat" || activePeriod === "sleep") sessionSummary.classList.remove("is-complete");
+      else if (isReadingDeck()) updateReadingProgress(activePeriod);
+      else if (activePeriod === "tasbih") sessionSummary.classList.remove("is-complete");
       else updateAdhkarProgress();
       sessionReset.disabled = !hasResettableState();
       updatePeriodTabs();
@@ -9225,8 +9533,6 @@
     function switchPeriod(period, updateHash = true) {
       if (!collections[period] && !["ruqyah", "suwar", "salawat", "sleep", "tasbih"].includes(period)) return;
       const tasbihActive = period === "tasbih";
-      const salawatActive = period === "salawat";
-      const sleepActive = period === "sleep";
       activePeriod = period;
       body.dataset.period = period;
       suraPicker.hidden = period !== "suwar";
@@ -9236,12 +9542,10 @@
         ? "اضغط على البطاقة بعد كل قراءة؛ واسحب للتنقل بين المقاطع."
         : "اسحب للتنقل؛ ويظهر التالي تلقائيًا بعد الإكمال.";
       tasbihPicker.hidden = !tasbihActive;
-      panel.hidden = tasbihActive || salawatActive || sleepActive;
+      panel.hidden = tasbihActive;
       tasbihPanel.hidden = !tasbihActive;
-      salawatPanel.hidden = !salawatActive;
-      sleepPanel.hidden = !sleepActive;
-      skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : salawatActive ? "تخطَّ إلى الصلاة على النبي ﷺ"
-        : sleepActive ? "تخطَّ إلى أذكار النوم" : "تخطَّ إلى الأذكار";
+      skipLink.textContent = tasbihActive ? "تخطَّ إلى المسبحة" : period === "salawat" ? "تخطَّ إلى الصلاة على النبي ﷺ"
+        : period === "sleep" ? "تخطَّ إلى أذكار النوم" : "تخطَّ إلى الأذكار";
       // Only "open in new tab" follows it (a click moves focus instead), and that should open this same tab.
       skipLink.setAttribute("href", `#${period}`);
       if (!tasbihActive) {
@@ -9249,7 +9553,7 @@
         tasbihAnnounceTimer = null;
       }
       sessionReset.setAttribute("aria-label", "خيارات الإعادة");
-      if (!tasbihActive && !salawatActive && !sleepActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
+      if (!tasbihActive) panel.setAttribute("aria-labelledby", `${period}-tab`);
       updateSessionTitle();
 
       document.querySelectorAll(".period-tab").forEach(tab => {
@@ -9288,7 +9592,7 @@
       );
       const anyManual = ["morning", "evening"].some(period => periodIsManuallyComplete(period));
       return anyProgress || anyManual || state.history.length > 0 || suwarHasResettableState() || ruqyahHasResettableState() ||
-        tasbihHasResettableState();
+        tasbihHasResettableState() || Object.keys(readingDecks).some(id => readingHasResettableState(id));
     }
 
     function resetDayProgress(announce = true) {
@@ -9302,6 +9606,7 @@
       saveState();
       resetSuwarProgress();
       resetRuqyahProgress();
+      for (const id of Object.keys(readingDecks)) resetReadingProgress(id);
       resetTasbihProgress();
       scheduleReminders();
       renderCards();
@@ -9327,7 +9632,7 @@
     function resetWeek() {
       const dates = recentDates(7);
       const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...ruqyahRecordedDates(),
-        ...Object.keys(tasbihState.history)].filter(date => dates.includes(date))).size;
+        ...Object.keys(tasbihState.history), ...readingRecordedDates()].filter(date => dates.includes(date))).size;
       openConfirmation(
         "حذف سجل هذا الأسبوع؟",
         `ستُعاد عدادات اليوم، وسيُحذف ${recorded ? `سجل ${dayCountLabel(recorded)} من آخر أسبوع` : "سجل آخر سبعة أيام"}. لا يمكن التراجع.`,
@@ -9336,6 +9641,7 @@
           for (const date of dates) markReset(state, date);
           deleteSuwarHistory(dates);
           deleteRuqyahHistory(dates);
+          for (const id of Object.keys(readingDecks)) deleteReadingHistory(id, dates);
           deleteTasbihHistory(dates);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف سجل آخر سبعة أيام";
@@ -9345,7 +9651,7 @@
 
     function resetEverything() {
       const recorded = new Set([...state.history.map(entry => entry.date), ...Object.keys(suwarState.history), ...ruqyahRecordedDates(),
-        ...Object.keys(tasbihState.history)]).size;
+        ...Object.keys(tasbihState.history), ...readingRecordedDates()]).size;
       openConfirmation(
         "حذف كل شيء؟",
         `ستُعاد العدادات وسيُحذف السجل كاملًا${recorded ? ` (${dayCountLabel(recorded)})` : ""}. لا يمكن التراجع.`,
@@ -9354,6 +9660,7 @@
           for (const date of recentDates(resetEpochDays)) markReset(state, date);
           deleteSuwarHistory(null);
           deleteRuqyahHistory(null);
+          for (const id of Object.keys(readingDecks)) deleteReadingHistory(id, null);
           deleteTasbihHistory(null);
           resetDayProgress(false);
           liveRegion.textContent = "حُذف السجل كاملًا";
@@ -10031,14 +10338,6 @@
       event.preventDefault();
       if (activePeriod === "tasbih") {
         tasbihSurface.focus();
-        return;
-      }
-      if (activePeriod === "salawat") {
-        salawatPanel.focus();
-        return;
-      }
-      if (activePeriod === "sleep") {
-        sleepPanel.focus();
         return;
       }
       list.tabIndex = -1;
@@ -11669,6 +11968,12 @@
       else updateSessionProgress();
     }
 
+    function showStoredReadingState(id) {
+      readingStates[id] = loadReadingState(id);
+      if (activePeriod === id) renderCards();
+      else updateSessionProgress();
+    }
+
     // «نقل التقدّم» (spec/transfer/transfer-v1.md): #transfer-dialog opens over Settings in send mode (send → qr) or
     // receive mode (receive → scan → preview → result). The QR libraries in vendor/ load only when a QR view opens.
     const transferDialog = document.getElementById("transfer-dialog");
@@ -13080,6 +13385,9 @@
       if (event.key === storageKey || event.key === null) showStoredProgressState();
       if (event.key === suwarStorageKey || event.key === null) showStoredSuwarState();
       if (event.key === ruqyahStorageKey || event.key === null) showStoredRuqyahState();
+      for (const id of Object.keys(readingDecks)) {
+        if (event.key === readingDecks[id].storageKey || event.key === null) showStoredReadingState(id);
+      }
     });
 
     dialogCancel.addEventListener("click", () => {
