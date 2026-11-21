@@ -95,7 +95,7 @@ final class PrayerTrackerWiringTests: XCTestCase {
         XCTAssertNil(app.failure)
     }
 
-    /// The lock-screen widget gets the five times of yesterday and the coming days with their iqama, again when an
+    /// The lock-screen widget gets the five times and sunrise of yesterday and the coming days with their iqama, again when an
     /// iqama delay changes, and none without a location. A Friday's Dhuhr has no iqama: Jumu'ah's follows the khutbah.
     @MainActor
     func testTheWidgetGetsTheTimesOfTheComingDays() throws {
@@ -110,12 +110,14 @@ final class PrayerTrackerWiringTests: XCTestCase {
         let app = try support.makeAppModel(widget: widget)
         let snapshot = try XCTUnwrap(widget.published.last ?? nil)
         XCTAssertEqual(snapshot.zone, "Asia/Riyadh")
-        XCTAssertEqual(snapshot.prayers.count, (PrayerWidgetSnapshot.days + 1) * 5)
+        XCTAssertEqual(snapshot.prayers.count, (PrayerWidgetSnapshot.days + 1) * 6)
         let now = Date()
         let days = (0..<7).compactMap { app.prayer.schedule(dayOffset: $0, now: now) }
         let weekday = try XCTUnwrap(days.first { !LocalDate.isFriday($0.localDate) })
         let friday = try XCTUnwrap(days.first { LocalDate.isFriday($0.localDate) })
         let dhuhr = try XCTUnwrap(weekday.dhuhr)
+        let sunrise = try XCTUnwrap(weekday.sunrise)
+        XCTAssertTrue(snapshot.prayers.contains(.init(prayer: .sunrise, adhan: sunrise, iqama: nil)))
         XCTAssertTrue(snapshot.prayers.contains(.init(prayer: .dhuhr, adhan: dhuhr,
                                                       iqama: dhuhr.addingTimeInterval(20 * 60))))
         let jumuah = try XCTUnwrap(friday.dhuhr)
@@ -126,5 +128,23 @@ final class PrayerTrackerWiringTests: XCTestCase {
         XCTAssertTrue(changed.prayers.contains(.init(prayer: .dhuhr, adhan: dhuhr,
                                                      iqama: dhuhr.addingTimeInterval(5 * 60))))
         XCTAssertNil(app.failure)
+    }
+
+    /// The table marks the prayer counted to, and sunrise between Fajr's iqama and sunrise, since sunrise ends Fajr's
+    /// time. Another day's countdown marks nothing.
+    func testTheTableMarksSunriseAfterFajrsIqama() {
+        let zone = TimeZone(identifier: "Asia/Riyadh")!
+        func at(_ hour: Int, _ minute: Int = 0) -> Date {
+            Date(timeIntervalSince1970: TimeInterval(((4 * 24 + hour - 3) * 60 + minute) * 60))
+        }
+        let day = PrayerSchedule(localDate: "1970-01-05", zone: zone, fajr: at(4), sunrise: at(5, 30), dhuhr: at(12),
+                                 asr: at(15, 30), maghrib: at(18), isha: at(19, 30))
+        let fajrIqama = PrayerCountdown(event: .iqama, prayer: .fajr, at: at(4, 25), date: day.localDate)
+        let dhuhr = PrayerCountdown(event: .adhan, prayer: .dhuhr, at: at(12), date: day.localDate)
+        XCTAssertEqual(PrayerTimesView.highlighted(fajrIqama, in: day, now: at(4, 10)), .fajr)
+        XCTAssertEqual(PrayerTimesView.highlighted(dhuhr, in: day, now: at(4, 30)), .sunrise)
+        XCTAssertEqual(PrayerTimesView.highlighted(dhuhr, in: day, now: at(5, 30)), .dhuhr)
+        let tomorrow = PrayerCountdown(event: .adhan, prayer: .fajr, at: at(28), date: "1970-01-06")
+        XCTAssertNil(PrayerTimesView.highlighted(tomorrow, in: day, now: at(20)))
     }
 }

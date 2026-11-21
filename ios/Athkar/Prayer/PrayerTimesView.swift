@@ -28,7 +28,10 @@ struct PrayerTimesView: View {
                             countdown(now: context.date)
                         }
                     }
-                    times
+                    // Redrawn every minute, so the marked time moves on at each adhan, iqama and sunrise.
+                    TimelineView(.everyMinute) { context in
+                        times(now: context.date)
+                    }
                     prohibitedNote
                     locationCard
                 }
@@ -256,16 +259,15 @@ struct PrayerTimesView: View {
 
     // MARK: Times
 
-    private var times: some View {
+    private func times(now: Date) -> some View {
         let schedule = model.shownSchedule
-        // The prayer counted to: the next adhan's, or the one whose iqama is still ahead.
-        let next = model.dayOffset == 0 ? model.countdown() : nil
+        let highlighted = model.dayOffset == 0
+            ? Self.highlighted(model.countdown(now: now), in: schedule, now: now) : nil
         return VStack(spacing: 0) {
             ForEach(Array(PrayerTime.allCases.enumerated()), id: \.element) { index, time in
                 if index > 0 { Rule() }
-                let isNext = next?.prayer == time && next?.date == schedule?.localDate
-                let ink = isNext ? palette.accentStrong
-                    : (time == .sunrise ? palette.textSecondary : palette.textPrimary)
+                let isNext = highlighted == time
+                let ink = isNext ? palette.accentStrong : palette.textPrimary
                 HStack(spacing: 12) {
                     Text(PrayerNames.name(time))
                         .font(.title3.weight(isNext ? .bold : .semibold))
@@ -295,6 +297,17 @@ struct PrayerTimesView: View {
             }
         }
         .card(palette)
+    }
+
+    /// The time the table marks today: the prayer counted to (the next adhan's, or the one whose iqama is still
+    /// ahead), or sunrise once Fajr's iqama has passed and the sun has not yet risen, since sunrise ends Fajr's time.
+    static func highlighted(_ countdown: PrayerCountdown?, in schedule: PrayerSchedule?, now: Date = Date())
+        -> PrayerTime? {
+        guard let countdown, countdown.date == schedule?.localDate else { return nil }
+        if countdown.event == .adhan, let sunrise = schedule?.sunrise, now < sunrise, sunrise < countdown.at {
+            return .sunrise
+        }
+        return countdown.prayer
     }
 
     /// «الثلث الأخير» of the night after the shown day's Maghrib; today, of the night under way until Fajr, marked
